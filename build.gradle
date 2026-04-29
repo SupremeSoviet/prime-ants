@@ -1,0 +1,97 @@
+plugins {
+	id "fabric-loom" version "${loom_version}"
+	id "maven-publish"
+}
+
+base {
+	archivesName = project.archives_base_name
+}
+
+version = project.mod_version
+group = project.maven_group
+
+loom {
+	splitEnvironmentSourceSets()
+
+	mods {
+		formic_frontier {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+}
+
+fabricApi {
+	configureTests {
+		createSourceSet = true
+		modId = "formic_frontier_test"
+		enableGameTests = true
+		enableClientGameTests = false
+		eula = true
+	}
+}
+
+repositories {
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${minecraft_version}"
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${loader_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+
+	testImplementation "net.fabricmc:fabric-loader-junit:${loader_version}"
+}
+
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": inputs.properties.version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 21
+}
+
+java {
+	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
+test {
+	useJUnitPlatform()
+	maxHeapSize = "2G"
+	def loomLaunchConfig = file(".gradle/loom-cache/launch.cfg")
+	if (loomLaunchConfig.exists()) {
+		loomLaunchConfig.eachLine { line ->
+			def trimmed = line.trim()
+			if (trimmed.startsWith("fabric.remapClasspathFile=")
+					|| trimmed.startsWith("fabric.gameJarPath=")
+					|| trimmed.startsWith("fabric.gameJarPath.client=")
+					|| trimmed.startsWith("fabric.classPathGroups=")) {
+				def parts = trimmed.split("=", 2)
+				systemProperty parts[0], parts[1]
+			}
+		}
+	}
+}
+
+jar {
+	inputs.property "archivesName", project.base.archivesName
+	from("LICENSE") {
+		rename { "${it}_${inputs.properties.archivesName}" }
+	}
+}
+
+publishing {
+	publications {
+		create("mavenJava", MavenPublication) {
+			artifactId = project.archives_base_name
+			from components.java
+		}
+	}
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "RRR",
+    "RCR",
+    "MMM"
+  ],
+  "key": {
+    "R": "formic_frontier:resin_glob",
+    "C": "minecraft:chest",
+    "M": "minecraft:packed_mud"
+  },
+  "result": {
+    "id": "formic_frontier:resin_depot",
+    "count": 1
+  }
+}

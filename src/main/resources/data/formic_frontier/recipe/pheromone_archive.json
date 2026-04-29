@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ASA",
+    "SBS",
+    "ARA"
+  ],
+  "key": {
+    "A": "minecraft:amethyst_shard",
+    "S": "formic_frontier:colony_seal",
+    "B": "minecraft:book",
+    "R": "formic_frontier:resin_glob"
+  },
+  "result": {
+    "id": "formic_frontier:pheromone_archive",
+    "count": 1
+  }
+}

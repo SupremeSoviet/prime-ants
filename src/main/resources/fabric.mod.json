@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "formic_frontier",
+  "version": "${version}",
+  "name": "Formic Frontier",
+  "description": "A single-colony MVP for large ant economies, castes, chambers, and debug-driven testing.",
+  "authors": [
+    "Formic Frontier contributors"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/formic_frontier/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.formicfrontier.FormicFrontier"
+    ],
+    "client": [
+      "com.formicfrontier.client.FormicFrontierClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.2",
+    "minecraft": "1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

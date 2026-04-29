@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "  P",
+    " M ",
+    "S  "
+  ],
+  "key": {
+    "P": "formic_frontier:mandible_plate",
+    "M": "formic_frontier:chitin_plate",
+    "S": "minecraft:stick"
+  },
+  "result": {
+    "id": "formic_frontier:mandible_saber",
+    "count": 1
+  }
+}

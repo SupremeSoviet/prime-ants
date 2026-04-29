@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:spider_eye",
+    "minecraft:slime_ball",
+    "formic_frontier:pheromone_dust"
+  ],
+  "result": {
+    "id": "formic_frontier:venom_sac",
+    "count": 2
+  }
+}

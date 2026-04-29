@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "formic_frontier:chitin_shard",
+    "formic_frontier:chitin_shard",
+    "formic_frontier:chitin_shard"
+  ],
+  "result": {
+    "id": "formic_frontier:chitin_fiber",
+    "count": 2
+  }
+}

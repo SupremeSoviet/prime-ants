@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "formic_frontier:item/pheromone_dust"
+  }
+}

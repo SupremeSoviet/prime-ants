@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "C C",
+    "CCC",
+    "CCC"
+  ],
+  "key": {
+    "C": "formic_frontier:chitin_plate"
+  },
+  "result": {
+    "id": "formic_frontier:chitin_chestplate"
+  }
+}

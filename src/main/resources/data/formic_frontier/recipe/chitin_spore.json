@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "formic_frontier:chitin_shard",
+    "minecraft:brown_mushroom"
+  ],
+  "result": {
+    "id": "formic_frontier:chitin_spore",
+    "count": 2
+  }
+}

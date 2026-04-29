@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "age=0": {
+      "model": "formic_frontier:block/chitin_bed"
+    },
+    "age=1": {
+      "model": "formic_frontier:block/chitin_bed"
+    },
+    "age=2": {
+      "model": "formic_frontier:block/chitin_bed"
+    },
+    "age=3": {
+      "model": "formic_frontier:block/chitin_bed"
+    },
+    "age=4": {
+      "model": "formic_frontier:block/chitin_bed"
+    }
+  }
+}
