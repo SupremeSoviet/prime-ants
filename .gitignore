@@ -1,0 +1,14 @@
+.gradle/
+.local/
+.fabric/
+build/
+out/
+run/
+logs/
+mods/
+*.log
+*.iml
+.idea/
+.vscode/
+*.class
+/II, data*

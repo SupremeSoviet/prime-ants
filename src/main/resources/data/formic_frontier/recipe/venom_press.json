@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " V ",
+    "RPR",
+    " M "
+  ],
+  "key": {
+    "V": "formic_frontier:venom_sac",
+    "R": "formic_frontier:resin_glob",
+    "P": "minecraft:piston",
+    "M": "formic_frontier:mandible_plate"
+  },
+  "result": {
+    "id": "formic_frontier:venom_press",
+    "count": 1
+  }
+}

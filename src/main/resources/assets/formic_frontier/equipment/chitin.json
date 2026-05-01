@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "formic_frontier:chitin"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "formic_frontier:chitin"
+      }
+    ]
+  }
+}

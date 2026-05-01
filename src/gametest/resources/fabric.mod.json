@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "formic_frontier_test",
+  "version": "1.0.0",
+  "name": "Formic Frontier Tests",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-gametest": [
+      "com.formicfrontier.test.FormicFrontierGameTest"
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "FFF",
+    "FRF",
+    "FFF"
+  ],
+  "key": {
+    "F": "formic_frontier:chitin_fiber",
+    "R": "formic_frontier:resin_glob"
+  },
+  "result": {
+    "id": "formic_frontier:chitin_plate"
+  }
+}

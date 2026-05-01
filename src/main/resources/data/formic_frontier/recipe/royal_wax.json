@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:honeycomb",
+    "formic_frontier:royal_jelly",
+    "formic_frontier:resin_glob"
+  ],
+  "result": {
+    "id": "formic_frontier:royal_wax",
+    "count": 2
+  }
+}

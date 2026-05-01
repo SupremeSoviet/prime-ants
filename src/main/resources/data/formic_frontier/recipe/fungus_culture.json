@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:brown_mushroom",
+    "minecraft:red_mushroom",
+    "formic_frontier:leaf_mash"
+  ],
+  "result": {
+    "id": "formic_frontier:fungus_culture",
+    "count": 2
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "IPI",
+    "RCR",
+    "IPI"
+  ],
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "P": "formic_frontier:chitin_plate",
+    "R": "formic_frontier:resin_glob",
+    "C": "minecraft:crafting_table"
+  },
+  "result": {
+    "id": "formic_frontier:armory",
+    "count": 1
+  }
+}

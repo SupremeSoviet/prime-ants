@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " T ",
+    "DCD",
+    " P "
+  ],
+  "key": {
+    "T": "formic_frontier:pheromone_token",
+    "D": "formic_frontier:pheromone_dust",
+    "C": "formic_frontier:chitin_plate",
+    "P": "minecraft:paper"
+  },
+  "result": {
+    "id": "formic_frontier:colony_seal"
+  }
+}

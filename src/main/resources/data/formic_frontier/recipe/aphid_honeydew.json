@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:honey_bottle",
+    "formic_frontier:leaf_mash"
+  ],
+  "result": {
+    "id": "formic_frontier:aphid_honeydew",
+    "count": 2
+  }
+}
