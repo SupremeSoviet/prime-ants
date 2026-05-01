@@ -41,7 +41,12 @@ def main() -> int:
             errors.append(f"ru_ru.json missing keys: {missing_ru}")
         if extra_ru:
             errors.append(f"ru_ru.json extra keys: {extra_ru}")
-        mojibake = [key for key, value in ru.items() if isinstance(value, str) and any(token in value for token in ("Ð", "Ñ", "\ufffd"))]
+        mojibake_tokens = ("Ã", "Â", "Ð", "Ñ", "\ufffd")
+        mojibake = [
+            key
+            for key, value in ru.items()
+            if isinstance(value, str) and any(token in value for token in mojibake_tokens)
+        ]
         if mojibake:
             errors.append(f"ru_ru.json contains mojibake-looking values: {mojibake[:20]}")
     except Exception as exception:  # noqa: BLE001

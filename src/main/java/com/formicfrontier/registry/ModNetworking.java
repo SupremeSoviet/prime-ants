@@ -1,6 +1,7 @@
 package com.formicfrontier.registry;
 
 import com.formicfrontier.network.ColonyUiPayload;
+import com.formicfrontier.network.ContractRequestPayload;
 import com.formicfrontier.network.DiplomacyRequestPayload;
 import com.formicfrontier.network.PriorityRequestPayload;
 import com.formicfrontier.network.ResearchRequestPayload;
@@ -15,10 +16,14 @@ public final class ModNetworking {
 
 	public static void initialize() {
 		PayloadTypeRegistry.playS2C().register(ColonyUiPayload.TYPE, ColonyUiPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(ContractRequestPayload.TYPE, ContractRequestPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(TradeRequestPayload.TYPE, TradeRequestPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(PriorityRequestPayload.TYPE, PriorityRequestPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(DiplomacyRequestPayload.TYPE, DiplomacyRequestPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(ResearchRequestPayload.TYPE, ResearchRequestPayload.CODEC);
+		ServerPlayNetworking.registerGlobalReceiver(ContractRequestPayload.TYPE, (payload, context) ->
+				context.server().execute(() -> ColonyService.completeContract(context.player(), payload.contractId()))
+		);
 		ServerPlayNetworking.registerGlobalReceiver(TradeRequestPayload.TYPE, (payload, context) ->
 				context.server().execute(() -> ColonyService.trade(context.player(), payload.offerId()))
 		);

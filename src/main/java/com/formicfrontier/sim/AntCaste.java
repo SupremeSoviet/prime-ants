@@ -50,7 +50,12 @@ public enum AntCaste {
 	}
 
 	public float visualScale() {
-		return height / 1.5f;
+		return switch (this) {
+			case WORKER -> 1.08f;
+			case SCOUT -> 1.14f;
+			case MINER -> 1.18f;
+			default -> height / 1.5f;
+		};
 	}
 
 	public double health() {

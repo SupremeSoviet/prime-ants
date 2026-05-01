@@ -2,6 +2,7 @@ package com.formicfrontier.sim;
 
 import com.mojang.serialization.Codec;
 
+import java.util.List;
 import java.util.Locale;
 
 public enum ColonyCulture {
@@ -74,6 +75,15 @@ public enum ColonyCulture {
 
 	public int constructionBonus() {
 		return constructionBonus;
+	}
+
+	public List<BuildingType> starterQueue() {
+		return switch (this) {
+			case AMBER -> List.of(BuildingType.DIPLOMACY_SHRINE, BuildingType.MARKET, BuildingType.PHEROMONE_ARCHIVE);
+			case LEAFCUTTER -> List.of(BuildingType.FUNGUS_GARDEN, BuildingType.CHITIN_FARM, BuildingType.MARKET, BuildingType.PHEROMONE_ARCHIVE);
+			case FIRE -> List.of(BuildingType.WATCH_POST, BuildingType.ARMORY, BuildingType.MARKET, BuildingType.PHEROMONE_ARCHIVE);
+			case CARPENTER -> List.of(BuildingType.RESIN_DEPOT, BuildingType.MARKET, BuildingType.PHEROMONE_ARCHIVE);
+		};
 	}
 
 	public static ColonyCulture rivalFor(int id) {

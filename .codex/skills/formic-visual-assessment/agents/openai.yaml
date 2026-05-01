@@ -1,0 +1,4 @@
+interface:
+  display_name: "Formic Visual Assessment"
+  short_description: "Strict Formic Frontier screenshot QA"
+  default_prompt: "Use $formic-visual-assessment to review the latest Formic Frontier visual QA screenshots and produce a strict fix report."

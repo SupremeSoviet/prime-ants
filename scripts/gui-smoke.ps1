@@ -13,6 +13,33 @@ $VisualQaDir = Join-Path $RepoRoot "build\visual-qa"
 $ClientLog = Join-Path $VisualQaDir "runClient.log"
 $ClientErr = Join-Path $VisualQaDir "runClient.err.log"
 
+function Initialize-VisualQaOptions {
+    param(
+        [string]$Language = "en_us"
+    )
+    $runDir = Join-Path $RepoRoot "run"
+    $optionsPath = Join-Path $runDir "options.txt"
+    $optionsBackup = Join-Path $VisualQaDir "options.before-visual-qa.txt"
+    New-Item -ItemType Directory -Force -Path $runDir | Out-Null
+    if (Test-Path -LiteralPath $optionsPath) {
+        Copy-Item -LiteralPath $optionsPath -Destination $optionsBackup -Force
+    }
+    $visualOptions = @(
+        "lang:$Language",
+        "tutorialStep:none",
+        "guiScale:0",
+        "fullscreen:false",
+        "maxFps:120",
+        'renderClouds:"false"',
+        "cloudRange:2",
+        "renderDistance:12",
+        "simulationDistance:8",
+        "particles:0",
+        "pauseOnLostFocus:false"
+    )
+    Set-Content -LiteralPath $optionsPath -Value $visualOptions -Encoding UTF8
+}
+
 function Set-ClientOption {
     param(
         [string]$Key,
@@ -46,7 +73,7 @@ try {
     if (-not $resolvedQa.StartsWith($resolvedRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
         throw "Refusing to write visual QA outside workspace: $resolvedQa"
     }
-    if (Test-Path -LiteralPath $VisualQaDir) {
+    if ((-not $NoLaunch) -and (Test-Path -LiteralPath $VisualQaDir)) {
         Remove-Item -LiteralPath $VisualQaDir -Recurse -Force
     }
     New-Item -ItemType Directory -Force -Path $VisualQaDir | Out-Null
@@ -60,6 +87,7 @@ try {
         if (-not $SkipWorldPrepare) {
             & (Join-Path $PSScriptRoot "prepare-gui-world.ps1") -WorldName $QuickPlayWorld
         }
+        Initialize-VisualQaOptions
         Set-ClientOption "tutorialStep" "none"
         $quickPlayLog = Join-Path $VisualQaDir "quickplay.json"
         $quickPlayArgs = "--quickPlayPath $quickPlayLog --quickPlaySingleplayer=$QuickPlayWorld --width $Width --height $Height"
@@ -85,8 +113,13 @@ try {
             Stop-Process -Id $process.Id -Force
             throw "Visual QA client timed out after $TimeoutSeconds seconds."
         }
-        if ($process.ExitCode -ne 0) {
-            Write-Host "runClient exited with $($process.ExitCode). Continuing to report collected artifacts."
+        $process.WaitForExit()
+        $clientExitCode = if ($null -eq $process.ExitCode) { 0 } else { $process.ExitCode }
+        if ($clientExitCode -ne 0) {
+            Write-Host "runClient exited with $clientExitCode. Continuing to report collected artifacts."
+        }
+        if (Test-Path -LiteralPath $ClientLog) {
+            Copy-Item -LiteralPath $ClientLog -Destination (Join-Path $VisualQaDir "latest.log") -Force
         }
     }
 

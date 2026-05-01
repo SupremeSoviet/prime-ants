@@ -5,10 +5,12 @@ import com.formicfrontier.network.ColonyUiPayload;
 import com.formicfrontier.network.ColonyUiSnapshot;
 import com.formicfrontier.registry.ModBlocks;
 import com.formicfrontier.registry.ModEntities;
+import com.formicfrontier.registry.ModItems;
 import com.formicfrontier.sim.AntCaste;
 import com.formicfrontier.sim.BuildingType;
 import com.formicfrontier.sim.ColonyCulture;
 import com.formicfrontier.sim.ColonyBuilding;
+import com.formicfrontier.sim.ColonyContract;
 import com.formicfrontier.sim.ColonyData;
 import com.formicfrontier.sim.ColonyLogistics;
 import com.formicfrontier.sim.ColonyProgress;
@@ -16,6 +18,7 @@ import com.formicfrontier.sim.ColonyRequest;
 import com.formicfrontier.sim.ColonyRank;
 import com.formicfrontier.sim.ColonyTradeCatalog;
 import com.formicfrontier.sim.ColonyTrades;
+import com.formicfrontier.sim.ContractDeliveryOption;
 import com.formicfrontier.sim.DiplomacyAction;
 import com.formicfrontier.sim.DiplomacyState;
 import com.formicfrontier.sim.NestChamber;
@@ -29,6 +32,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -49,22 +53,43 @@ public final class ColonyService {
 	}
 
 	public static ColonyData createColony(ServerLevel level, BlockPos origin, boolean playerAllied) {
+		return createColony(level, origin, id -> playerAllied
+				? ColonyProgress.allied(id)
+				: ColonyProgress.rival(id, ColonyCulture.rivalFor(id)));
+	}
+
+	public static ColonyData createWildColony(ServerLevel level, BlockPos origin, ColonyCulture culture) {
+		return createColony(level, origin, id -> ColonyProgress.wild(id, culture));
+	}
+
+	private static ColonyData createColony(ServerLevel level, BlockPos origin, ProgressFactory progressFactory) {
 		ColonySavedState savedState = ColonySavedState.get(level.getServer());
 		BlockPos anchoredOrigin = anchorToSurface(level, origin);
 		ColonyData colony = new ColonyData(savedState.nextId(), anchoredOrigin);
-		colony.setProgress(playerAllied ? ColonyProgress.allied(colony.id()) : ColonyProgress.rival(colony.id(), ColonyCulture.rivalFor(colony.id())));
+		colony.setProgress(progressFactory.create(colony.id()));
 		seedEconomy(colony);
 		colony.addEvent("Colony founded at " + anchoredOrigin.toShortString());
 		placeNest(level, colony);
 		spawnStarterCastes(level, colony);
 		for (ColonyData existing : savedState.colonies()) {
-			DiplomacyState relation = existing.progress().playerAllied() == colony.progress().playerAllied() ? DiplomacyState.NEUTRAL : DiplomacyState.RIVAL;
+			DiplomacyState relation = initialRelation(existing, colony);
 			existing.progress().setRelation(colony.id(), relation);
 			colony.progress().setRelation(existing.id(), relation);
 		}
 		savedState.put(colony);
 		ColonyLabelService.syncLabels(level, colony);
 		return colony;
+	}
+
+	private static DiplomacyState initialRelation(ColonyData first, ColonyData second) {
+		if (isWild(first) || isWild(second)) {
+			return DiplomacyState.NEUTRAL;
+		}
+		return first.progress().playerAllied() == second.progress().playerAllied() ? DiplomacyState.NEUTRAL : DiplomacyState.RIVAL;
+	}
+
+	private static boolean isWild(ColonyData colony) {
+		return "wild".equals(colony.progress().faction());
 	}
 
 	public static BlockPos anchorToSurface(ServerLevel level, BlockPos requested) {
@@ -124,6 +149,52 @@ public final class ColonyService {
 		}
 		openColonyScreen(player, colony, "Trade", result.message());
 		return result.success();
+	}
+
+	public static boolean completeContract(ServerPlayer player, String contractId) {
+		ServerLevel level = player.level();
+		ColonySavedState savedState = ColonySavedState.get(level.getServer());
+		ColonyData colony = savedState.nearestColony(player.blockPosition(), 128).orElse(null);
+		if (colony == null) {
+			player.displayClientMessage(net.minecraft.network.chat.Component.translatable("formic_frontier.feedback.no_colony"), true);
+			return false;
+		}
+
+		ColonyContract contract = ColonyLogistics.contract(colony, contractId).orElse(null);
+		if (contract == null) {
+			openColonyScreen(player, colony, "Needs", "Contract is no longer open.");
+			return false;
+		}
+		ContractBundle bundle = contractBundle(contract.resource());
+		int delivered = Math.min(contract.missing(), bundle.resourceAmount());
+		int itemCount = bundle.itemCountFor(delivered);
+		if (!removeItems(player, bundle.item(), itemCount)) {
+			openColonyScreen(player, colony, "Needs", "Need " + itemCount + " " + itemName(bundle.item()) + " for this contract.");
+			return false;
+		}
+
+		ColonyLogistics.ContractDeliveryResult result = ColonyLogistics.fulfillContract(colony, contract.id(), delivered);
+		if (!result.success()) {
+			openColonyScreen(player, colony, "Needs", result.message());
+			return false;
+		}
+		giveItem(player, new ItemStack(ModItems.PHEROMONE_TOKEN, result.rewardTokens()));
+		boolean constructionStarted = result.complete()
+				&& advanceConstructionContract(level, colony, result.contract());
+		boolean expansionSecured = result.complete()
+				&& ColonyRecurringEvents.EXPANSION_OPPORTUNITY_REASON.equals(result.contract().reason())
+				&& ColonyRecurringEvents.completeExpansionOutpost(level, colony);
+		savedState.setDirty();
+		String feedback = expansionSecured
+				? "Expansion outpost secured"
+				: constructionStarted
+				? "Construction started: " + result.contract().building().id()
+				: !result.payoffMessage().isBlank()
+				? result.payoffMessage()
+				: "Delivered " + result.delivered() + " " + contract.resource().id();
+		openColonyScreen(player, colony, "Needs", feedback
+				+ " | +" + result.rewardTokens() + " tokens, +" + result.reputationDelta() + " rep");
+		return true;
 	}
 
 	public static boolean setTopPriority(ServerPlayer player, String priorityId) {
@@ -206,7 +277,14 @@ public final class ColonyService {
 		colony.progress().addReputation(action.reputationDelta());
 		colony.addEvent(player.getScoreboardName() + " performed " + action.id() + " toward colony #" + target.id() + ": " + before.id() + " -> " + after.id());
 		target.addEvent("Diplomacy from colony #" + colony.id() + ": " + before.id() + " -> " + after.id());
-		colony.setCurrentTask("Diplomacy: " + action.label() + " with colony #" + target.id());
+		boolean placedConsequence = DiplomacyConsequences.apply(level, colony, target, action, after);
+		if (placedConsequence) {
+			colony.addEvent(DiplomacyConsequences.sourceEvent(action, target.id()));
+			target.addEvent(DiplomacyConsequences.targetEvent(action, colony.id()));
+		}
+		colony.setCurrentTask(placedConsequence
+				? DiplomacyConsequences.currentTask(action, target.id())
+				: "Diplomacy: " + action.label() + " with colony #" + target.id());
 		savedState.setDirty();
 		openColonyScreen(player, colony, "Diplomacy", action.label() + ": colony #" + target.id() + " is now " + after.id());
 		return true;
@@ -348,10 +426,12 @@ public final class ColonyService {
 		active.addConstructionProgress(Math.max(1, amount));
 		colony.setCurrentTask(caste.id() + " carries resin to " + active.type().id() + " " + active.constructionProgress() + "%");
 		if (active.complete()) {
-			StructurePlacer.placeBuilding(level, active.pos(), active.type());
+			StructurePlacer.placeBuilding(level, active.pos(), active.type(), active.visualStage(), colony.progress().culture());
 			ColonyLabelService.syncLabels(level, colony);
 			colony.setCurrentTask("Completed " + active.type().id());
 			colony.addEvent("Worker crew completed " + active.type().id());
+		} else {
+			StructurePlacer.placeBuilding(level, active.pos(), active.type(), active.visualStage(), colony.progress().culture());
 		}
 		savedState.setDirty();
 		return true;
@@ -374,10 +454,10 @@ public final class ColonyService {
 			oldBuildings.add(0, ColonyBuilding.complete(BuildingType.QUEEN_CHAMBER, colony.origin()));
 		}
 
-		clearSettlement(level, colony.origin(), 46, 7);
-		BlockPos foodNode = colony.origin().offset(32, 0, 4);
-		BlockPos oreNode = colony.origin().offset(4, 0, 32);
-		BlockPos chitinNode = colony.origin().offset(-32, 0, 4);
+		clearSettlement(level, colony.origin(), 72, 10);
+		BlockPos foodNode = colony.origin().offset(54, 0, 8);
+		BlockPos oreNode = colony.origin().offset(8, 0, 54);
+		BlockPos chitinNode = colony.origin().offset(-54, 0, 8);
 		placeResourceCluster(level, foodNode, ModBlocks.FOOD_NODE, Blocks.MOSS_BLOCK, Blocks.BROWN_MUSHROOM_BLOCK);
 		placeResourceCluster(level, oreNode, ModBlocks.ORE_NODE, Blocks.COBBLED_DEEPSLATE, Blocks.IRON_ORE);
 		placeResourceCluster(level, chitinNode, ModBlocks.CHITIN_NODE, Blocks.BONE_BLOCK, Blocks.HONEYCOMB_BLOCK);
@@ -398,9 +478,7 @@ public final class ColonyService {
 			if (rebuilt.type() != BuildingType.QUEEN_CHAMBER) {
 				placeWidePath(level, colony.origin(), nextPos);
 			}
-			if (rebuilt.complete()) {
-				StructurePlacer.placeBuilding(level, nextPos, rebuilt.type());
-			}
+			StructurePlacer.placeBuilding(level, nextPos, rebuilt.type(), rebuilt.visualStage(), colony.progress().culture());
 		}
 		colony.setCurrentTask("Renovated colony campus");
 		colony.addEvent("Colony renovated into Queen Hall campus");
@@ -430,6 +508,63 @@ public final class ColonyService {
 			}
 		}
 		return true;
+	}
+
+	private static void giveItem(ServerPlayer player, ItemStack stack) {
+		if (stack.isEmpty()) {
+			return;
+		}
+		if (!player.addItem(stack)) {
+			player.drop(stack, false);
+		}
+	}
+
+	private static String itemName(Item item) {
+		return item.getName().getString();
+	}
+
+	private static ContractBundle contractBundle(ResourceType resource) {
+		return new ContractBundle(contractItem(resource), ContractDeliveryOption.forResource(resource));
+	}
+
+	private static Item contractItem(ResourceType resource) {
+		return switch (resource) {
+			case FOOD -> Items.WHEAT;
+			case ORE -> Items.RAW_IRON;
+			case CHITIN -> ModItems.CHITIN_SHARD;
+			case RESIN -> ModItems.RESIN_GLOB;
+			case FUNGUS -> ModItems.FUNGUS_CULTURE;
+			case VENOM -> ModItems.VENOM_SAC;
+			case KNOWLEDGE -> ModItems.PHEROMONE_DUST;
+		};
+	}
+
+	private static boolean isConstructionContract(ColonyContract contract) {
+		return contract != null && contract.reason().startsWith("construction ");
+	}
+
+	private static boolean advanceConstructionContract(ServerLevel level, ColonyData colony, ColonyContract contract) {
+		if (!isConstructionContract(contract) || colony.progress().firstIncomplete().isPresent()) {
+			return false;
+		}
+		ColonyBuilder.tick(level, colony);
+		return colony.progress().firstIncomplete()
+				.filter(building -> building.type() == contract.building())
+				.isPresent();
+	}
+
+	private record ContractBundle(Item item, ContractDeliveryOption option) {
+		int resourceAmount() {
+			return option.resourceAmount();
+		}
+
+		int itemCountFor(int deliveredResources) {
+			return option.itemCountFor(deliveredResources);
+		}
+	}
+
+	private interface ProgressFactory {
+		ColonyProgress create(int colonyId);
 	}
 
 	private static boolean hasItems(ServerPlayer player, net.minecraft.world.item.Item item, int count) {
@@ -518,11 +653,11 @@ public final class ColonyService {
 		BlockPos nursery = ColonyBuilder.siteFor(origin, BuildingType.NURSERY, 0);
 		BlockPos mine = ColonyBuilder.siteFor(origin, BuildingType.MINE, 0);
 		BlockPos barracks = ColonyBuilder.siteFor(origin, BuildingType.BARRACKS, 0);
-		BlockPos foodNode = origin.offset(32, 0, 4);
-		BlockPos oreNode = origin.offset(4, 0, 32);
-		BlockPos chitinNode = origin.offset(-32, 0, 4);
+		BlockPos foodNode = origin.offset(54, 0, 8);
+		BlockPos oreNode = origin.offset(8, 0, 54);
+		BlockPos chitinNode = origin.offset(-54, 0, 8);
 
-		clearSettlement(level, origin, 42, 7);
+		clearSettlement(level, origin, 72, 10);
 		placeWidePath(level, origin, foodNode);
 		placeWidePath(level, origin, nursery);
 		placeWidePath(level, origin, oreNode);
@@ -530,11 +665,12 @@ public final class ColonyService {
 		placeWidePath(level, origin, food);
 		placeWidePath(level, origin, mine);
 
-		StructurePlacer.placeBuilding(level, origin, BuildingType.QUEEN_CHAMBER);
-		StructurePlacer.placeBuilding(level, food, BuildingType.FOOD_STORE);
-		StructurePlacer.placeBuilding(level, nursery, BuildingType.NURSERY);
-		StructurePlacer.placeBuilding(level, mine, BuildingType.MINE);
-		StructurePlacer.placeBuilding(level, barracks, BuildingType.BARRACKS);
+		ColonyCulture culture = colony.progress().culture();
+		StructurePlacer.placeBuilding(level, origin, BuildingType.QUEEN_CHAMBER, com.formicfrontier.sim.BuildingVisualStage.COMPLETE, culture);
+		StructurePlacer.placeBuilding(level, food, BuildingType.FOOD_STORE, com.formicfrontier.sim.BuildingVisualStage.COMPLETE, culture);
+		StructurePlacer.placeBuilding(level, nursery, BuildingType.NURSERY, com.formicfrontier.sim.BuildingVisualStage.COMPLETE, culture);
+		StructurePlacer.placeBuilding(level, mine, BuildingType.MINE, com.formicfrontier.sim.BuildingVisualStage.COMPLETE, culture);
+		StructurePlacer.placeBuilding(level, barracks, BuildingType.BARRACKS, com.formicfrontier.sim.BuildingVisualStage.COMPLETE, culture);
 		placeResourceCluster(level, foodNode, ModBlocks.FOOD_NODE, Blocks.MOSS_BLOCK, Blocks.BROWN_MUSHROOM_BLOCK);
 		placeResourceCluster(level, oreNode, ModBlocks.ORE_NODE, Blocks.COBBLED_DEEPSLATE, Blocks.IRON_ORE);
 		placeResourceCluster(level, chitinNode, ModBlocks.CHITIN_NODE, Blocks.BONE_BLOCK, Blocks.HONEYCOMB_BLOCK);
@@ -553,9 +689,7 @@ public final class ColonyService {
 		colony.addChamber(new NestChamber("nursery", nursery, 1));
 		colony.addChamber(new NestChamber("mine_chamber", mine, 1));
 		colony.addChamber(new NestChamber("barracks", barracks, 1));
-		colony.progress().buildQueue().add(BuildingType.CHITIN_FARM);
-		colony.progress().buildQueue().add(BuildingType.MARKET);
-		colony.progress().buildQueue().add(BuildingType.PHEROMONE_ARCHIVE);
+		colony.progress().buildQueue().addAll(colony.progress().culture().starterQueue());
 	}
 
 	private static void registerChamberForBuilding(ColonyData colony, ColonyBuilding building) {
@@ -728,17 +862,16 @@ public final class ColonyService {
 
 	private static void spawnStarterCastes(ServerLevel level, ColonyData colony) {
 		BlockPos origin = colony.origin();
-		BlockPos spawnOrigin = origin.above();
-		spawnAnt(level, spawnOrigin, AntCaste.QUEEN, colony.id());
-		AntEntity foreman = spawnAnt(level, spawnOrigin.offset(2, 0, -2), AntCaste.WORKER, colony.id());
+		spawnAnt(level, origin.offset(0, 1, -11), AntCaste.QUEEN, colony.id());
+		AntEntity foreman = spawnAnt(level, origin.offset(2, 1, -11), AntCaste.WORKER, colony.id());
 		if (foreman != null) {
 			applyAntName(foreman, AntCaste.WORKER, colony.id(), true);
 		}
-		spawnAnt(level, spawnOrigin.offset(-2, 0, -2), AntCaste.WORKER, colony.id());
-		spawnAnt(level, spawnOrigin.offset(-1, 0, 0), AntCaste.WORKER, colony.id());
-		spawnAnt(level, spawnOrigin.offset(0, 0, 3), AntCaste.MINER, colony.id());
-		spawnAnt(level, spawnOrigin.offset(0, 0, -4), AntCaste.SOLDIER, colony.id());
-		spawnAnt(level, spawnOrigin.offset(4, 0, -3), AntCaste.MAJOR, colony.id());
+		spawnAnt(level, origin.offset(-2, 1, -11), AntCaste.WORKER, colony.id());
+		spawnAnt(level, origin.offset(0, 1, -13), AntCaste.WORKER, colony.id());
+		spawnAnt(level, origin.offset(3, 1, -13), AntCaste.MINER, colony.id());
+		spawnAnt(level, origin.offset(-4, 1, -12), AntCaste.SOLDIER, colony.id());
+		spawnAnt(level, origin.offset(4, 1, -12), AntCaste.MAJOR, colony.id());
 	}
 
 	private static void applyAntName(AntEntity ant, AntCaste caste, int colonyId, boolean foreman) {

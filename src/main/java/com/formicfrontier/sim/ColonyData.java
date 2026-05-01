@@ -184,6 +184,8 @@ public final class ColonyData {
 		StringJoiner joiner = new StringJoiner("\n");
 		joiner.add("Colony #" + id + " at " + origin.toShortString());
 		joiner.add("Culture: " + progress.culture().displayName() + " (" + progress.culture().id() + ")");
+		joiner.add("Personality: " + ColonyIdentity.personality(this).id());
+		joiner.add("Relationship: " + ColonyIdentity.relationshipId(this) + " | goal=" + currentTask);
 		joiner.add("Resources: " + resourcesSummary());
 		joiner.add("Queen: " + queenHealth + " hp, alive=" + queenAlive());
 		joiner.add("Population: " + population() + " | upkeep/tick=" + upkeepPerEconomyTick());

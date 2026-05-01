@@ -61,8 +61,12 @@ For Codex-driven development, run:
 .\scripts\test-mod.cmd
 .\scripts\prepare-gui-world.cmd
 .\scripts\gui-smoke.cmd
+.\scripts\autonomous-gate.cmd -AllowMissingGitHub
 ```
 
 `doctor.cmd` requires Java 21+ on `PATH`; the current project target remains
-Java 21. Visual QA scenes are available through `/formic qa scene <name>` and
-are described in `docs/autonomous-dev.md`.
+Java 21 and will auto-select a compatible JDK from common Windows install
+locations when one is present. Visual QA scenes are available through
+`/formic qa scene <name>` and are described in `docs/autonomous-dev.md`.
+
+The long-term roadmap is tracked in `docs/roadmap.md`.

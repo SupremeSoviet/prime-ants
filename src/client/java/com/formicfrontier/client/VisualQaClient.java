@@ -11,15 +11,29 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public final class VisualQaClient {
 	private static final String[] SCENES = {
 			"colony_overview",
 			"colony_ground",
 			"ant_lineup",
+			"work_cycle",
 			"tablet_en",
 			"tablet_ru",
-			"progression_scene"
+			"tablet_guide",
+			"tablet_trade",
+			"tablet_research_map",
+			"tablet_market",
+			"tablet_requests",
+			"progression_scene",
+			"settlement_scale",
+			"construction_stage",
+			"repair_scene",
+			"culture_styles",
+			"diplomacy_scene",
+			"worldgen_encounter",
+			"endgame_project"
 	};
 	private static final int WAIT_FOR_WORLD_TICKS = Integer.getInteger("formic.visualQa.worldWaitTicks", 600);
 	private static final int COMMAND_TO_SCREENSHOT_TICKS = Integer.getInteger("formic.visualQa.captureDelayTicks", 70);
@@ -29,13 +43,18 @@ public final class VisualQaClient {
 	private static final Path OUTPUT_DIR = Path.of(System.getProperty("formic.visualQa.dir", "build/visual-qa"));
 	private static final Path SCREENSHOT_DIR = OUTPUT_DIR.resolve("screenshots");
 	private static final List<String> CAPTURES = new ArrayList<>();
+	private static final String DEFAULT_LANGUAGE = "en_us";
 	private static int waitTicks;
 	private static int sceneIndex = -1;
 	private static int sceneTicks;
 	private static boolean openWorldRequested;
+	private static boolean sceneCommandSent;
 	private static boolean tutorialDisabled;
 	private static boolean wroteWaitingReport;
 	private static boolean wroteFinalReport;
+	private static String activeQaLanguage = "";
+	private static String pendingQaLanguage = "";
+	private static CompletableFuture<Void> languageReload;
 
 	private VisualQaClient() {
 	}
@@ -70,20 +89,65 @@ public final class VisualQaClient {
 		}
 
 		String scene = SCENES[sceneIndex];
-		sceneTicks++;
-		if (sceneTicks == 1) {
+		if (!sceneCommandSent) {
 			if (client.screen != null) {
 				client.setScreen(null);
 			}
+			if (!ensureLanguage(client, languageForScene(scene))) {
+				return;
+			}
 			client.getConnection().sendCommand("formic qa scene " + scene);
+			sceneCommandSent = true;
+			sceneTicks = 0;
+			return;
 		}
+
+		sceneTicks++;
 		if (sceneTicks == COMMAND_TO_SCREENSHOT_TICKS) {
+			if (!scene.startsWith("tablet") && client.screen != null) {
+				client.setScreen(null);
+				sceneTicks--;
+				return;
+			}
 			capture(client, scene);
 		}
 		if (sceneTicks >= SCENE_TOTAL_TICKS) {
 			sceneIndex++;
 			sceneTicks = 0;
+			sceneCommandSent = false;
 		}
+	}
+
+	private static String languageForScene(String scene) {
+		return "tablet_ru".equals(scene) ? "ru_ru" : DEFAULT_LANGUAGE;
+	}
+
+	private static boolean ensureLanguage(Minecraft client, String language) {
+		if (!pendingQaLanguage.isEmpty()) {
+			if (!pendingQaLanguage.equals(language)) {
+				languageReload = null;
+				pendingQaLanguage = "";
+			} else if (languageReload != null && !languageReload.isDone()) {
+				return false;
+			} else {
+				activeQaLanguage = language;
+				pendingQaLanguage = "";
+				languageReload = null;
+				return true;
+			}
+		}
+
+		if (language.equals(activeQaLanguage) || language.equals(client.getLanguageManager().getSelected())) {
+			activeQaLanguage = language;
+			return true;
+		}
+
+		pendingQaLanguage = language;
+		client.getLanguageManager().setSelected(language);
+		client.options.languageCode = language;
+		client.options.save();
+		languageReload = client.reloadResourcePacks();
+		return false;
 	}
 
 	private static void waitForWorld(Minecraft client) {

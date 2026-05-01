@@ -9,6 +9,7 @@ import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.util.Mth;
+import com.formicfrontier.sim.AntCaste;
 import com.formicfrontier.sim.AntWorkState;
 
 public final class AntEntityModel extends EntityModel<AntEntityRenderState> {
@@ -122,6 +123,10 @@ public final class AntEntityModel extends EntityModel<AntEntityRenderState> {
 		} else {
 			abdomen.xRot = pulse * 0.35f;
 		}
+		applyCasteSilhouette(state);
+	}
+
+	private void applyCasteSilhouette(AntEntityRenderState state) {
 		float scale = state.caste.visualScale();
 		scalePart(head, scale);
 		scalePart(body, scale);
@@ -136,11 +141,40 @@ public final class AntEntityModel extends EntityModel<AntEntityRenderState> {
 		scalePart(rightMiddleLeg, scale);
 		scalePart(leftBackLeg, scale);
 		scalePart(rightBackLeg, scale);
+
+		if (state.caste == AntCaste.SCOUT) {
+			scalePart(head, scale * 0.94f);
+			scalePart(body, scale * 0.92f, scale * 0.96f, scale * 0.9f);
+			scalePart(abdomen, scale * 0.82f, scale * 0.9f, scale * 0.84f);
+			scalePart(leftAntenna, scale * 0.9f, scale * 1.32f, scale * 0.9f);
+			scalePart(rightAntenna, scale * 0.9f, scale * 1.32f, scale * 0.9f);
+			scalePart(leftFrontLeg, scale * 0.76f, scale * 1.22f, scale * 0.76f);
+			scalePart(rightFrontLeg, scale * 0.76f, scale * 1.22f, scale * 0.76f);
+			scalePart(leftMiddleLeg, scale * 0.76f, scale * 1.18f, scale * 0.76f);
+			scalePart(rightMiddleLeg, scale * 0.76f, scale * 1.18f, scale * 0.76f);
+			scalePart(leftBackLeg, scale * 0.76f, scale * 1.16f, scale * 0.76f);
+			scalePart(rightBackLeg, scale * 0.76f, scale * 1.16f, scale * 0.76f);
+		} else if (state.caste == AntCaste.MINER) {
+			scalePart(head, scale * 1.16f);
+			scalePart(body, scale * 1.08f, scale, scale * 1.04f);
+			scalePart(leftMandible, scale * 1.36f, scale * 1.12f, scale * 1.42f);
+			scalePart(rightMandible, scale * 1.36f, scale * 1.12f, scale * 1.42f);
+			scalePart(leftFrontLeg, scale * 1.12f);
+			scalePart(rightFrontLeg, scale * 1.12f);
+		} else if (state.caste == AntCaste.WORKER) {
+			scalePart(abdomen, scale * 1.08f, scale * 1.02f, scale * 1.08f);
+			scalePart(leftAntenna, scale * 0.96f, scale * 1.12f, scale * 0.96f);
+			scalePart(rightAntenna, scale * 0.96f, scale * 1.12f, scale * 0.96f);
+		}
 	}
 
 	private static void scalePart(ModelPart part, float scale) {
-		part.xScale = scale;
-		part.yScale = scale;
-		part.zScale = scale;
+		scalePart(part, scale, scale, scale);
+	}
+
+	private static void scalePart(ModelPart part, float xScale, float yScale, float zScale) {
+		part.xScale = xScale;
+		part.yScale = yScale;
+		part.zScale = zScale;
 	}
 }

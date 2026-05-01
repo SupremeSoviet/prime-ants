@@ -25,6 +25,7 @@ public final class ColonyEconomy {
 		int fungusGardens = completed(colony, BuildingType.FUNGUS_GARDEN);
 		int venomPresses = completed(colony, BuildingType.VENOM_PRESS);
 		int armories = completed(colony, BuildingType.ARMORY);
+		int watchPosts = completed(colony, BuildingType.WATCH_POST);
 		ColonyRank rank = ColonyRank.current(colony);
 		ColonyCulture culture = colony.progress().culture();
 
@@ -45,6 +46,15 @@ public final class ColonyEconomy {
 			venomIncome += Math.max(1, soldiers / 3 + armories);
 		}
 		int knowledgeIncome = archives > 0 && colony.progress().activeResearch().isEmpty() ? archives : 0;
+		switch (culture) {
+			case AMBER -> knowledgeIncome += diplomacyShrines + Math.min(markets, diplomacyShrines);
+			case LEAFCUTTER -> {
+				foodIncome += fungusGardens * 2;
+				fungusIncome += fungusGardens;
+			}
+			case FIRE -> venomIncome += armories * 2 + watchPosts;
+			case CARPENTER -> resinIncome += resinDepots * 2 + Math.min(resinDepots, archives);
+		}
 		int upkeep = colony.upkeepPerEconomyTick();
 
 		colony.addResource(ResourceType.FOOD, foodIncome - upkeep);

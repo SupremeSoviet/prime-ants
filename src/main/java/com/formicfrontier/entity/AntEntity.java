@@ -10,6 +10,9 @@ import com.formicfrontier.sim.ColonyRequest;
 import com.formicfrontier.sim.ResourceType;
 import com.formicfrontier.world.ColonyBuilder;
 import com.formicfrontier.world.ColonyService;
+import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ItemParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -33,6 +36,8 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.storage.ValueInput;
@@ -133,6 +138,38 @@ public final class AntEntity extends PathfinderMob {
 		if (tickCount % 40 == 0) {
 			applyCasteAttributes(caste());
 		}
+		if (tickCount % 6 == 0 && level() instanceof ServerLevel serverLevel) {
+			emitWorkCue(serverLevel);
+		}
+	}
+
+	private void emitWorkCue(ServerLevel level) {
+		AntWorkState state = workState();
+		if (state == AntWorkState.IDLE) {
+			return;
+		}
+		double x = getX();
+		double y = getY() + getBbHeight() + 0.15;
+		double z = getZ();
+		if (state == AntWorkState.WORKING) {
+			level.sendParticles(ParticleTypes.DUST_PLUME, x, y, z, 3, 0.22, 0.08, 0.22, 0.015);
+		} else if (state == AntWorkState.PATROLLING) {
+			level.sendParticles(new DustParticleOptions(0x6fc6ff, 0.85f), x, y, z, 2, 0.18, 0.04, 0.18, 0.0);
+		} else if (state.name().startsWith("CARRYING")) {
+			level.sendParticles(new ItemParticleOption(ParticleTypes.ITEM, workCueStack(state)), x, y, z, 2, 0.18, 0.04, 0.18, 0.02);
+		}
+	}
+
+	private static ItemStack workCueStack(AntWorkState state) {
+		return switch (state) {
+			case CARRYING_FOOD -> new ItemStack(Items.WHEAT);
+			case CARRYING_ORE -> new ItemStack(Items.RAW_IRON);
+			case CARRYING_CHITIN -> new ItemStack(Items.BONE);
+			case CARRYING_RESIN -> new ItemStack(Items.HONEYCOMB);
+			case CARRYING_FUNGUS -> new ItemStack(Items.BROWN_MUSHROOM);
+			case CARRYING_VENOM -> new ItemStack(Items.SLIME_BALL);
+			default -> ItemStack.EMPTY;
+		};
 	}
 
 	@Override
@@ -344,10 +381,20 @@ public final class AntEntity extends PathfinderMob {
 			List<BlockPos> patrols = colony.progress().buildingsView().stream()
 					.filter(building -> building.complete() && isPatrolBuilding(building.type()))
 					.sorted((first, second) -> Integer.compare(patrolPriority(first.type()), patrolPriority(second.type())))
-					.map(ColonyBuilding::pos)
+					.map(AntWorkGoal::patrolPoint)
 					.toList();
 			BlockPos patrol = patrols.isEmpty() ? colony.origin() : patrols.get(Math.floorMod(selector, patrols.size()));
 			return new AntWorkAssignment(AntWorkKind.PATROL, patrol, null, null, 0, 18);
+		}
+
+		private static BlockPos patrolPoint(ColonyBuilding building) {
+			return switch (building.type()) {
+				case BARRACKS -> building.pos().north(13);
+				case WATCH_POST -> building.pos().north(6);
+				case QUEEN_CHAMBER -> building.pos().north(17);
+				case ROAD -> building.pos();
+				default -> building.pos();
+			};
 		}
 
 		private static boolean isPatrolBuilding(BuildingType type) {
@@ -385,9 +432,9 @@ public final class AntEntity extends PathfinderMob {
 
 		private static BlockPos resourceSource(ServerLevel level, ColonyData colony, ResourceType resourceType) {
 			BlockPos expected = switch (resourceType) {
-				case FOOD -> colony.origin().offset(32, 0, 4);
-				case ORE -> colony.origin().offset(4, 0, 32);
-				case CHITIN -> colony.origin().offset(-32, 0, 4);
+				case FOOD -> colony.origin().offset(54, 0, 8);
+				case ORE -> colony.origin().offset(8, 0, 54);
+				case CHITIN -> colony.origin().offset(-54, 0, 8);
 				case RESIN -> buildingTarget(colony, BuildingType.RESIN_DEPOT);
 				case FUNGUS -> buildingTarget(colony, BuildingType.FUNGUS_GARDEN);
 				case VENOM -> buildingTarget(colony, BuildingType.VENOM_PRESS);

@@ -9,6 +9,8 @@ import net.minecraft.world.item.Items;
 import java.util.List;
 
 public final class ColonyTradeCatalog {
+	private static final double TRADE_HUB_TOKEN_COST_MULTIPLIER = 0.85;
+	private static final int TRADE_HUB_TOKEN_REWARD_BONUS = 1;
 	private static List<Offer> offers;
 
 	private ColonyTradeCatalog() {
@@ -94,6 +96,9 @@ public final class ColonyTradeCatalog {
 		} else if (colony.progress().reputation() < 0) {
 			multiplier = 1.25;
 		}
+		if (hasTradeHub(colony)) {
+			multiplier *= TRADE_HUB_TOKEN_COST_MULTIPLIER;
+		}
 		return Math.max(1, (int) Math.ceil(offer.inputCount() * multiplier));
 	}
 
@@ -102,7 +107,14 @@ public final class ColonyTradeCatalog {
 			return offer.outputCount();
 		}
 		int bonus = colony.progress().reputation() >= 50 && offer.outputCount() < 8 ? 1 : 0;
+		if (hasTradeHub(colony) && offer.outputCount() < 8) {
+			bonus += TRADE_HUB_TOKEN_REWARD_BONUS;
+		}
 		return offer.outputCount() + bonus;
+	}
+
+	private static boolean hasTradeHub(ColonyData colony) {
+		return colony.progress().hasCompleted(BuildingType.TRADE_HUB);
 	}
 
 	public static boolean isVisible(ColonyData colony, Offer offer) {
@@ -128,7 +140,24 @@ public final class ColonyTradeCatalog {
 		if (!isVisible(colony, offer)) {
 			return "Requires " + offer.requiredCulture().id() + " culture";
 		}
+		String tradeHubText = tradeHubText(colony, offer);
+		if (!tradeHubText.isEmpty()) {
+			return tradeHubText;
+		}
 		return "Available";
+	}
+
+	private static String tradeHubText(ColonyData colony, Offer offer) {
+		if (!hasTradeHub(colony)) {
+			return "";
+		}
+		if (offer.output() == ModItems.PHEROMONE_TOKEN && offer.outputCount() < 8) {
+			return "Trade Hub: +1 token";
+		}
+		if (offer.input() == ModItems.PHEROMONE_TOKEN) {
+			return "Trade Hub: lower token cost";
+		}
+		return "";
 	}
 
 	private static boolean removeItems(ServerPlayer player, Item item, int count) {

@@ -59,12 +59,42 @@ public final class ColonyBuilding {
 		return constructionProgress >= 100;
 	}
 
+	public boolean damaged() {
+		return disabledTicks > 0;
+	}
+
+	public boolean repairing() {
+		return damaged() && !complete();
+	}
+
+	public BuildingVisualStage visualStage() {
+		return BuildingVisualStage.from(this);
+	}
+
 	public void addConstructionProgress(int amount) {
 		constructionProgress = Math.max(0, Math.min(100, constructionProgress + amount));
 	}
 
 	public void disableFor(int ticks) {
 		disabledTicks = Math.max(disabledTicks, ticks);
+	}
+
+	public void beginRepair(int startingProgress) {
+		if (damaged() && complete()) {
+			constructionProgress = Math.max(0, Math.min(99, startingProgress));
+		}
+	}
+
+	public boolean repair(int amount) {
+		if (!damaged()) {
+			return false;
+		}
+		addConstructionProgress(amount);
+		if (complete()) {
+			disabledTicks = 0;
+			return true;
+		}
+		return false;
 	}
 
 	public void tickDisabled() {

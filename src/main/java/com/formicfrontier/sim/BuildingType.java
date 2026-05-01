@@ -19,6 +19,9 @@ public enum BuildingType {
 	FUNGUS_GARDEN("fungus_garden", 28, 0, 8, 4, 0, 0, 0),
 	VENOM_PRESS("venom_press", 36, 18, 18, 12, 6, 0, 0),
 	ARMORY("armory", 42, 28, 24, 16, 0, 4, 0),
+	GREAT_MOUND("great_mound", 120, 48, 96, 48, 24, 0, 36),
+	QUEEN_VAULT("queen_vault", 80, 36, 120, 42, 18, 0, 48),
+	TRADE_HUB("trade_hub", 96, 30, 72, 54, 12, 0, 54),
 	ROAD("road", 4, 0, 0);
 
 	public static final Codec<BuildingType> CODEC = Codec.STRING.xmap(BuildingType::fromId, BuildingType::id);

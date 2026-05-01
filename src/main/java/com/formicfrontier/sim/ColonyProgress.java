@@ -77,6 +77,10 @@ public final class ColonyProgress {
 		return new ColonyProgress(culture, "rival", culture.displayName() + " " + id, culture.color(), false, -10, 18, List.of(), List.of(), Map.of(), List.of(), culture == ColonyCulture.FIRE ? 120 : 200, List.of(), List.of(), List.of(), Optional.empty());
 	}
 
+	public static ColonyProgress wild(int id, ColonyCulture culture) {
+		return new ColonyProgress(culture, "wild", culture.displayName() + " Wild Nest " + id, culture.color(), false, -2, 18, List.of(), List.of(), Map.of(), List.of(), 240, List.of(), List.of(), List.of(), Optional.empty());
+	}
+
 	public ColonyCulture culture() {
 		return culture;
 	}

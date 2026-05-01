@@ -100,12 +100,13 @@ public final class ColonySavedState extends SavedData {
 	}
 
 	public boolean tickWorld(ServerLevel level) {
+		boolean changed = ColonyDiscoveryService.tick(level, this);
 		if (colonies.isEmpty()) {
-			return false;
+			return changed;
 		}
-		boolean changed = false;
-		for (ColonyData colony : colonies.values()) {
+		for (ColonyData colony : List.copyOf(colonies.values())) {
 			changed |= ColonyBuilder.tick(level, colony);
+			changed |= ColonyRecurringEvents.tick(level, colony);
 		}
 		changed |= RaidPlanner.tick(level, this);
 		return changed;

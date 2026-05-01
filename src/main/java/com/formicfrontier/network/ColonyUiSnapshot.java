@@ -2,13 +2,19 @@ package com.formicfrontier.network;
 
 import com.formicfrontier.sim.AntCaste;
 import com.formicfrontier.sim.BuildingType;
+import com.formicfrontier.sim.BuildingVisualStage;
 import com.formicfrontier.sim.ColonyBuilding;
+import com.formicfrontier.sim.ColonyContract;
 import com.formicfrontier.sim.ColonyData;
 import com.formicfrontier.sim.ColonyEvent;
+import com.formicfrontier.sim.ColonyIdentity;
+import com.formicfrontier.sim.ColonyPersonality;
 import com.formicfrontier.sim.ColonyRank;
 import com.formicfrontier.sim.ColonyRequest;
 import com.formicfrontier.sim.ColonyTradeCatalog;
+import com.formicfrontier.sim.ContractDeliveryOption;
 import com.formicfrontier.sim.DiplomacyAction;
+import com.formicfrontier.sim.GuideChapter;
 import com.formicfrontier.sim.ResearchNode;
 import com.formicfrontier.sim.ResearchState;
 import com.formicfrontier.sim.ResourceType;
@@ -29,6 +35,10 @@ public record ColonyUiSnapshot(
 		String initialTab,
 		String feedbackMessage,
 		String cultureKey,
+		String personalityKey,
+		String personalityDetailKey,
+		String relationshipKey,
+		int relationshipColor,
 		String rank,
 		String currentTask,
 		int queenHealth,
@@ -42,12 +52,15 @@ public record ColonyUiSnapshot(
 		List<RequestEntry> requests,
 		List<ResearchEntry> research,
 		List<TradeEntry> trades,
+		String tradeActivity,
 		List<Metric> instinct,
 		List<DiplomacyEntry> diplomacy,
 		List<RelationEntry> relations,
+		List<GuideEntry> guide,
 		List<EventEntry> events
 ) {
 	public static ColonyUiSnapshot from(ColonyData colony, String initialTab, String feedbackMessage) {
+		ColonyPersonality personality = ColonyIdentity.personality(colony);
 		List<Metric> resources = new ArrayList<>();
 		for (ResourceType type : ResourceType.values()) {
 			resources.add(new Metric(type.id(), resourceLabelKey(type), colony.resource(type), 0, resourceColor(type)));
@@ -77,6 +90,9 @@ public record ColonyUiSnapshot(
 
 		List<RequestEntry> requests = new ArrayList<>();
 		for (ColonyRequest request : colony.progress().requestsView()) {
+			ColonyContract contract = ColonyContract.from(request);
+			ContractDeliveryOption delivery = ContractDeliveryOption.forResource(request.resource());
+			int deliveryAmount = delivery.deliveredAmount(contract.resourceCost());
 			requests.add(new RequestEntry(
 					request.building().id(),
 					buildingLabelKey(request.building()),
@@ -84,9 +100,18 @@ public record ColonyUiSnapshot(
 					resourceLabelKey(request.resource()),
 					request.fulfilled(),
 					request.needed(),
-					request.reason()
+					request.reason(),
+					contract.id(),
+					contract.resourceCost(),
+					delivery.itemKey(),
+					delivery.itemCountFor(deliveryAmount),
+					deliveryAmount,
+					contract.priority(),
+					contract.rewardTokens(),
+					contract.reputationDelta()
 			));
 		}
+		requests.sort(ColonyUiSnapshot::compareRequests);
 
 		List<ResearchEntry> research = new ArrayList<>();
 		Optional<ResearchState> activeResearch = colony.progress().activeResearch();
@@ -122,7 +147,7 @@ public record ColonyUiSnapshot(
 						ColonyTradeCatalog.availabilityText(colony, offer)
 				));
 			}
-		} catch (IllegalArgumentException | ExceptionInInitializerError exception) {
+		} catch (IllegalArgumentException | LinkageError exception) {
 			// Pure unit tests can build snapshots before Minecraft bootstraps item registries.
 		}
 
@@ -143,6 +168,18 @@ public record ColonyUiSnapshot(
 			relations.add(new RelationEntry(id, entry.getValue().id(), relationLabelKey(entry.getValue().id())));
 		}
 
+		List<GuideEntry> guide = new ArrayList<>();
+		for (GuideChapter chapter : GuideChapter.values()) {
+			boolean unlocked = chapter.unlocked(colony);
+			guide.add(new GuideEntry(
+					chapter.id(),
+					chapter.titleKey(),
+					unlocked ? chapter.detailKey() : chapter.lockedKey(),
+					unlocked,
+					chapter.color()
+			));
+		}
+
 		List<EventEntry> events = new ArrayList<>();
 		for (ColonyEvent event : colony.progress().eventsView()) {
 			events.add(new EventEntry(event.ageTicks(), event.message()));
@@ -155,7 +192,11 @@ public record ColonyUiSnapshot(
 				initialTab == null || initialTab.isBlank() ? "Overview" : initialTab,
 				feedbackMessage == null ? "" : feedbackMessage,
 				"formic_frontier.culture." + colony.progress().culture().id(),
-				ColonyRank.current(colony).displayName(),
+				personality.labelKey(),
+				personality.detailKey(),
+				ColonyIdentity.relationshipKey(colony),
+				ColonyIdentity.relationshipColor(colony),
+				"formic_frontier.rank." + ColonyRank.current(colony).id(),
 				colony.currentTask(),
 				colony.queenHealth(),
 				colony.queenAlive(),
@@ -168,9 +209,11 @@ public record ColonyUiSnapshot(
 				List.copyOf(requests),
 				List.copyOf(research),
 				List.copyOf(trades),
+				tradeActivity(colony),
 				List.copyOf(instinct),
 				List.copyOf(diplomacy),
 				List.copyOf(relations),
+				List.copyOf(guide),
 				List.copyOf(events)
 		);
 	}
@@ -181,6 +224,10 @@ public record ColonyUiSnapshot(
 		writeString(buf, initialTab);
 		writeString(buf, feedbackMessage);
 		writeString(buf, cultureKey);
+		writeString(buf, personalityKey);
+		writeString(buf, personalityDetailKey);
+		writeString(buf, relationshipKey);
+		writeInt(buf, relationshipColor);
 		writeString(buf, rank);
 		writeString(buf, currentTask);
 		writeInt(buf, queenHealth);
@@ -194,9 +241,11 @@ public record ColonyUiSnapshot(
 		writeList(buf, requests, (target, entry) -> entry.write(target));
 		writeList(buf, research, (target, entry) -> entry.write(target));
 		writeList(buf, trades, (target, entry) -> entry.write(target));
+		writeString(buf, tradeActivity);
 		writeList(buf, instinct, (target, entry) -> entry.write(target));
 		writeList(buf, diplomacy, (target, entry) -> entry.write(target));
 		writeList(buf, relations, (target, entry) -> entry.write(target));
+		writeList(buf, guide, (target, entry) -> entry.write(target));
 		writeList(buf, events, (target, entry) -> entry.write(target));
 	}
 
@@ -207,6 +256,10 @@ public record ColonyUiSnapshot(
 				readString(buf),
 				readString(buf),
 				readString(buf),
+				readString(buf),
+				readString(buf),
+				readString(buf),
+				readInt(buf),
 				readString(buf),
 				readString(buf),
 				readInt(buf),
@@ -220,9 +273,11 @@ public record ColonyUiSnapshot(
 				readList(buf, RequestEntry::read),
 				readList(buf, ResearchEntry::read),
 				readList(buf, TradeEntry::read),
+				readString(buf),
 				readList(buf, Metric::read),
 				readList(buf, DiplomacyEntry::read),
 				readList(buf, RelationEntry::read),
+				readList(buf, GuideEntry::read),
 				readList(buf, EventEntry::read)
 		);
 	}
@@ -243,6 +298,9 @@ public record ColonyUiSnapshot(
 			case FUNGUS_GARDEN -> "block.formic_frontier.fungus_garden";
 			case VENOM_PRESS -> "block.formic_frontier.venom_press";
 			case ARMORY -> "block.formic_frontier.armory";
+			case GREAT_MOUND -> "formic_frontier.building.great_mound";
+			case QUEEN_VAULT -> "formic_frontier.building.queen_vault";
+			case TRADE_HUB -> "formic_frontier.building.trade_hub";
 			case ROAD -> "formic_frontier.building.road";
 		};
 	}
@@ -251,21 +309,37 @@ public record ColonyUiSnapshot(
 		return "formic_frontier.resource." + type.id();
 	}
 
+	private static int compareRequests(RequestEntry first, RequestEntry second) {
+		int priority = Integer.compare(second.priority(), first.priority());
+		if (priority != 0) {
+			return priority;
+		}
+		int missing = Integer.compare(second.resourceCost(), first.resourceCost());
+		if (missing != 0) {
+			return missing;
+		}
+		int reward = Integer.compare(second.rewardTokens(), first.rewardTokens());
+		if (reward != 0) {
+			return reward;
+		}
+		return first.buildingId().compareTo(second.buildingId());
+	}
+
 	private static BuildingEntry buildingEntry(ColonyData colony, ColonyBuilding building, boolean queued) {
 		String statusKey;
 		String detail;
 		if (queued) {
 			statusKey = "formic_frontier.ui.status.queued";
 			detail = buildingCostText(colony, building.type());
-		} else if (building.disabledTicks() > 0) {
-			statusKey = "formic_frontier.ui.status.disabled";
-			detail = building.disabledTicks() + "t";
-		} else if (building.complete()) {
-			statusKey = "formic_frontier.ui.status.complete";
-			detail = "";
 		} else {
-			statusKey = "formic_frontier.ui.status.building";
-			detail = missingRequestText(colony, building.type());
+			BuildingVisualStage stage = building.visualStage();
+			statusKey = stage.statusKey();
+			detail = switch (stage) {
+				case PLANNED -> buildingCostText(colony, building.type());
+				case CONSTRUCTION, REPAIRING -> missingRequestText(colony, building.type());
+				case DAMAGED -> building.disabledTicks() + "t";
+				default -> "";
+			};
 		}
 		return new BuildingEntry(
 				building.type().id(),
@@ -283,7 +357,7 @@ public record ColonyUiSnapshot(
 		StringJoiner joiner = new StringJoiner(", ");
 		for (ColonyRequest request : colony.progress().requestsView()) {
 			if (request.building() == type && !request.complete()) {
-				joiner.add(request.resource().id() + " " + request.missing());
+				joiner.add(humanizeId(request.resource().id()) + " " + request.missing());
 			}
 		}
 		return joiner.length() == 0 ? "" : "Needs " + joiner;
@@ -295,7 +369,7 @@ public record ColonyUiSnapshot(
 			int cost = type.cost(resource);
 			if (cost > 0) {
 				int missing = Math.max(0, cost - colony.resource(resource));
-				joiner.add(resource.id() + " " + cost + (missing > 0 ? " (-" + missing + ")" : ""));
+				joiner.add(humanizeId(resource.id()) + " " + cost + (missing > 0 ? " (-" + missing + ")" : ""));
 			}
 		}
 		return joiner.length() == 0 ? "" : joiner.toString();
@@ -316,18 +390,18 @@ public record ColonyUiSnapshot(
 			return "Requires Pheromone Archive";
 		}
 		if (!colony.progress().hasCompleted(node.requiredBuilding())) {
-			return "Requires " + node.requiredBuilding().id();
+			return "Requires " + humanizeId(node.requiredBuilding().id());
 		}
 		for (String prerequisite : node.prerequisites()) {
 			if (!colony.progress().hasResearch(prerequisite)) {
-				return "Requires " + prerequisite;
+				return "Requires " + humanizeId(prerequisite);
 			}
 		}
 		StringJoiner missing = new StringJoiner(", ");
 		for (Map.Entry<ResourceType, Integer> entry : node.costsView().entrySet()) {
 			int shortage = entry.getValue() - colony.resource(entry.getKey());
 			if (shortage > 0) {
-				missing.add(entry.getKey().id() + " " + shortage);
+				missing.add(humanizeId(entry.getKey().id()) + " " + shortage);
 			}
 		}
 		return missing.length() == 0 ? "Ready" : "Needs " + missing;
@@ -336,6 +410,7 @@ public record ColonyUiSnapshot(
 	private static List<OverviewEntry> overviewRows(ColonyData colony, List<BuildingEntry> buildings, List<RequestEntry> requests, List<ResearchEntry> research) {
 		List<OverviewEntry> rows = new ArrayList<>();
 		rows.add(new OverviewEntry("formic_frontier.ui.current_task", colony.currentTask(), 0, 0xC9974B));
+		recurringEventSummary(colony).ifPresent(message -> rows.add(new OverviewEntry("formic_frontier.ui.tab.events", message, 0, 0xB58BFF)));
 		rows.add(new OverviewEntry(
 				"formic_frontier.ui.workforce",
 				colony.casteCount(AntCaste.WORKER) + " workers, " + colony.casteCount(AntCaste.MINER) + " miners, " + colony.casteCount(AntCaste.SOLDIER) + " guards",
@@ -347,7 +422,7 @@ public record ColonyUiSnapshot(
 				.findFirst()
 				.ifPresent(entry -> rows.add(new OverviewEntry(
 						"formic_frontier.ui.active_building",
-						entry.typeId() + " " + entry.progress() + "% " + entry.detail(),
+						activeBuildingSummary(entry),
 						entry.progress(),
 						entry.complete() ? 0x6DD08E : 0xD69042
 				)));
@@ -357,7 +432,7 @@ public record ColonyUiSnapshot(
 				.findFirst()
 				.ifPresent(entry -> rows.add(new OverviewEntry(
 						"formic_frontier.ui.top_need",
-						entry.resourceId() + " " + (entry.needed() - entry.fulfilled()) + " -> " + entry.buildingId(),
+						humanizeId(entry.resourceId()) + " " + (entry.needed() - entry.fulfilled()) + " -> " + humanizeId(entry.buildingId()),
 						percent(entry.fulfilled(), entry.needed()),
 						resourceColor(ResourceType.fromId(entry.resourceId()))
 				)));
@@ -371,8 +446,71 @@ public record ColonyUiSnapshot(
 						entry.complete() ? 100 : percent(entry.progress(), entry.duration()),
 						entry.active() ? 0xB58BFF : 0x8A6D47
 				)));
-		rows.add(new OverviewEntry("formic_frontier.ui.queen", colony.queenHealth() + " hp / " + colony.queenAlive(), colony.queenAlive() ? 100 : 0, 0xF0C26E));
+		rows.add(new OverviewEntry("formic_frontier.caste.queen", colony.queenHealth() + " hp / " + (colony.queenAlive() ? "alive" : "lost"), colony.queenAlive() ? 100 : 0, 0xF0C26E));
 		return rows.stream().limit(6).toList();
+	}
+
+	private static Optional<String> recurringEventSummary(ColonyData colony) {
+		return colony.progress().eventsView().stream()
+				.map(ColonyEvent::message)
+				.filter(message -> message.startsWith("Recurring event: "))
+				.findFirst()
+				.map(message -> message.substring("Recurring event: ".length()));
+	}
+
+	private static String tradeActivity(ColonyData colony) {
+		return colony.progress().eventsView().stream()
+				.map(ColonyEvent::message)
+				.filter(message -> message.startsWith("Recurring event: trade caravan "))
+				.findFirst()
+				.map(ColonyUiSnapshot::compactTradeActivity)
+				.orElse("");
+	}
+
+	private static String compactTradeActivity(String message) {
+		String value = message.substring("Recurring event: trade caravan ".length());
+		if (value.startsWith("exchanged ")) {
+			value = value.substring("exchanged ".length());
+		}
+		value = value.replace(" for ", " -> ").replace(" with colony #", " with #");
+		return "Caravan: " + humanizeTradeTokens(value);
+	}
+
+	private static String humanizeTradeTokens(String value) {
+		StringJoiner joiner = new StringJoiner(" ");
+		for (String token : value.split(" ")) {
+			String normalized = token.toLowerCase(Locale.ROOT);
+			String display = token;
+			for (ResourceType type : ResourceType.values()) {
+				if (type.id().equals(normalized)) {
+					display = humanizeId(type.id());
+					break;
+				}
+			}
+			joiner.add(display);
+		}
+		return joiner.toString();
+	}
+
+	private static String activeBuildingSummary(BuildingEntry entry) {
+		StringBuilder builder = new StringBuilder();
+		builder.append(humanizeId(entry.typeId())).append(" ").append(entry.progress()).append("%");
+		if (!entry.detail().isBlank()) {
+			builder.append(" | ").append(entry.detail());
+		}
+		return builder.toString();
+	}
+
+	private static String humanizeId(String id) {
+		String[] parts = id.replace('-', '_').split("_");
+		StringJoiner joiner = new StringJoiner(" ");
+		for (String part : parts) {
+			if (part.isBlank()) {
+				continue;
+			}
+			joiner.add(part.substring(0, 1).toUpperCase(Locale.ROOT) + part.substring(1));
+		}
+		return joiner.toString();
 	}
 
 	private static int percent(int value, int max) {
@@ -527,7 +665,7 @@ public record ColonyUiSnapshot(
 		}
 	}
 
-	public record RequestEntry(String buildingId, String buildingKey, String resourceId, String resourceKey, int fulfilled, int needed, String reason) {
+	public record RequestEntry(String buildingId, String buildingKey, String resourceId, String resourceKey, int fulfilled, int needed, String reason, String contractId, int resourceCost, String deliveryItemKey, int deliveryItemCount, int deliveryAmount, int priority, int rewardTokens, int reputationDelta) {
 		private void write(RegistryFriendlyByteBuf buf) {
 			writeString(buf, buildingId);
 			writeString(buf, buildingKey);
@@ -536,10 +674,18 @@ public record ColonyUiSnapshot(
 			writeInt(buf, fulfilled);
 			writeInt(buf, needed);
 			writeString(buf, reason);
+			writeString(buf, contractId);
+			writeInt(buf, resourceCost);
+			writeString(buf, deliveryItemKey);
+			writeInt(buf, deliveryItemCount);
+			writeInt(buf, deliveryAmount);
+			writeInt(buf, priority);
+			writeInt(buf, rewardTokens);
+			writeInt(buf, reputationDelta);
 		}
 
 		private static RequestEntry read(RegistryFriendlyByteBuf buf) {
-			return new RequestEntry(readString(buf), readString(buf), readString(buf), readString(buf), readInt(buf), readInt(buf), readString(buf));
+			return new RequestEntry(readString(buf), readString(buf), readString(buf), readString(buf), readInt(buf), readInt(buf), readString(buf), readString(buf), readInt(buf), readString(buf), readInt(buf), readInt(buf), readInt(buf), readInt(buf), readInt(buf));
 		}
 	}
 
@@ -601,6 +747,20 @@ public record ColonyUiSnapshot(
 
 		private static RelationEntry read(RegistryFriendlyByteBuf buf) {
 			return new RelationEntry(readInt(buf), readString(buf), readString(buf));
+		}
+	}
+
+	public record GuideEntry(String chapterId, String titleKey, String detailKey, boolean unlocked, int color) {
+		private void write(RegistryFriendlyByteBuf buf) {
+			writeString(buf, chapterId);
+			writeString(buf, titleKey);
+			writeString(buf, detailKey);
+			writeBoolean(buf, unlocked);
+			writeInt(buf, color);
+		}
+
+		private static GuideEntry read(RegistryFriendlyByteBuf buf) {
+			return new GuideEntry(readString(buf), readString(buf), readString(buf), readBoolean(buf), readInt(buf));
 		}
 	}
 

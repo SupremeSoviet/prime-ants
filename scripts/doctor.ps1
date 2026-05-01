@@ -5,6 +5,7 @@ param(
 $ErrorActionPreference = "Stop"
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $Failures = New-Object System.Collections.Generic.List[string]
+. (Join-Path $PSScriptRoot "java-env.ps1")
 
 function Add-Check {
     param(
@@ -20,28 +21,13 @@ function Add-Check {
     }
 }
 
-function Get-JavaMajor {
-    try {
-        $versionText = (& cmd.exe /d /c "java -version 2>&1") -join "`n"
-    } catch {
-        return @{ Major = 0; Text = "java is not on PATH" }
-    }
-    if ($versionText -match 'version "1\.(\d+)') {
-        return @{ Major = [int]$Matches[1]; Text = $versionText }
-    }
-    if ($versionText -match 'version "(\d+)') {
-        return @{ Major = [int]$Matches[1]; Text = $versionText }
-    }
-    return @{ Major = 0; Text = $versionText }
-}
-
 Push-Location $RepoRoot
 try {
     Write-Host "Formic Frontier environment doctor"
     Write-Host "Repo: $RepoRoot"
 
-    $java = Get-JavaMajor
-    Add-Check "Java 21+" ($java.Major -ge 21) ("major={0}; JAVA_HOME={1}" -f $java.Major, $env:JAVA_HOME)
+    $java = Use-FormicJava -MinimumMajor 21
+    Add-Check "Java 21+" $java.Ok $java.Detail
 
     Add-Check "Gradle wrapper" (Test-Path ".\gradlew.bat") "gradlew.bat present"
 

@@ -12,9 +12,22 @@ EXPECTED = [
     "colony_overview.png",
     "colony_ground.png",
     "ant_lineup.png",
+    "work_cycle.png",
     "tablet_en.png",
     "tablet_ru.png",
+    "tablet_guide.png",
+    "tablet_trade.png",
+    "tablet_research_map.png",
+    "tablet_market.png",
+    "tablet_requests.png",
     "progression_scene.png",
+    "settlement_scale.png",
+    "construction_stage.png",
+    "repair_scene.png",
+    "culture_styles.png",
+    "diplomacy_scene.png",
+    "worldgen_encounter.png",
+    "endgame_project.png",
 ]
 
 
