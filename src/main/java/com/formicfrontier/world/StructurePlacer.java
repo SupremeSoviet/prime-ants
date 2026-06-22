@@ -1548,6 +1548,94 @@ public final class StructurePlacer {
 		}
 		safeSet(level, center.offset(-2, 1, -8), accent);
 		safeSet(level, center.offset(2, 1, -8), accent);
+		placeCampusCrownAndTunnelMouth(level, center, type, culture);
+	}
+
+	/**
+	 * R2 organic-chamber massing for satellite campus buildings.
+	 * Adds a tapering native-earth crown (NEST_MOUND / ROOTED_DIRT / MANGROVE_ROOTS)
+	 * rising from y=6 to y=15 above the core, plus a deep dark tunnel mouth carved
+	 * into the south face so each satellite reads as a substantial ant-hill chamber
+	 * volume rather than a low stepped pad.
+	 *
+	 * CARDINAL REACH IS CAPPED AT 5. The diplomacy tribute/truce cache sits at the
+	 * midpoint between two colony origins, which lands exactly 6 blocks from a
+	 * FOOD_STORE center (and 6 blocks from the partner colony's NURSERY center).
+	 * anchorToSurface() in placeTributeCache/placeTruceCache resolves the cache base
+	 * to the top of whatever is in that column, so any campus block at relative
+	 * distance 6+ lifts the cache and breaks the column assertion. Keeping reach <= 5
+	 * leaves a 1-block clearance on both sides.
+	 *
+	 * Geometry is otherwise strictly additive and stage-gated to COMPLETE: all
+	 * playtest assertions on campus buildings live at y <= 4, and this only writes
+	 * y >= 5 using blocks present in canReplace().
+	 */
+	private static void placeCampusCrownAndTunnelMouth(ServerLevel level, BlockPos center, BuildingType type, ColonyCulture culture) {
+		// Tapering crown: widest layer (radius 5) at y=6, narrowing to the spire.
+		// y=6 -> r=5, y=7 -> r=4, y=8 -> r=3, y=9 -> r=3, y=10 -> r=2,
+		// y=11 -> r=2, y=12 -> r=1, y=13 -> r=1, y=14..15 -> spire column.
+		for (int y = 6; y <= 15; y++) {
+			int radius;
+			if (y >= 14) {
+				radius = 15 - y; // 1, 0
+				if (radius < 0) {
+					continue;
+				}
+			} else {
+				radius = Math.max(1, 5 - ((y - 6) / 2)); // 5,5,4,4,3,3,2,2
+			}
+			for (int x = -radius; x <= radius; x++) {
+				for (int z = -radius; z <= radius; z++) {
+					if (Math.abs(x) + Math.abs(z) > radius + 1) {
+						continue;
+					}
+					BlockPos pos = center.offset(x, y, z);
+					safeSet(level, pos, campusCrownBlock(type, culture, x, y, z));
+				}
+			}
+		}
+		// Spire cap.
+		safeSet(level, center.above(16), Blocks.ROOTED_DIRT);
+		// Deep dark tunnel mouth on the south face (-z), carved down to y=1,
+		// with a thickened earthen lip so it reads as a deep void from gameplay distance.
+		for (int yy = 1; yy <= 4; yy++) {
+			for (int xx = -1; xx <= 1; xx++) {
+				BlockPos pos = center.offset(xx, yy, -9);
+				safeSet(level, pos, Blocks.AIR);
+				if (xx != 0) {
+					safeSet(level, pos.south(), Blocks.ROOTED_DIRT);
+				}
+			}
+		}
+		// Worn approach path leading into the mouth.
+		for (int step = 10; step <= 14; step++) {
+			safeSet(level, center.offset(0, 0, -step), Blocks.DIRT_PATH);
+			safeSet(level, center.offset(-1, 0, -step), Blocks.COARSE_DIRT);
+			safeSet(level, center.offset(1, 0, -step), Blocks.PODZOL);
+		}
+		// Buttress ribs on east/west to break the silhouette into organic mass.
+		for (int yy = 5; yy <= 9; yy++) {
+			safeSet(level, center.offset(7, yy, 0), Blocks.MANGROVE_ROOTS);
+			safeSet(level, center.offset(-7, yy, 0), Blocks.MANGROVE_ROOTS);
+		}
+		// Brood/resin gleam just inside the mouth (subordinate native accent).
+		safeSet(level, center.offset(0, 1, -8), ModBlocks.FOOD_NODE);
+	}
+
+	private static Block campusCrownBlock(BuildingType type, ColonyCulture culture, int x, int y, int z) {
+		// Native Formic earth palette: NEST_MOUND dominant, ROOTED_DIRT skin breaks,
+		// MANGROVE_ROOTS ribs, so bright borrowed accents stay subordinate to the mass.
+		int h = Math.floorMod(x * 3 + z * 5 + y * 2 + type.ordinal(), 11);
+		if (y >= 14) {
+			return h % 3 == 0 ? Blocks.ROOTED_DIRT : ModBlocks.NEST_MOUND;
+		}
+		if (Math.abs(x) + Math.abs(z) >= 3) {
+			return h % 4 == 0 ? Blocks.ROOTED_DIRT : ModBlocks.NEST_MOUND;
+		}
+		if (h == 0 || h == 7) {
+			return Blocks.MANGROVE_ROOTS;
+		}
+		return ModBlocks.NEST_MOUND;
 	}
 
 	private static void placeUpgradeOverlay(ServerLevel level, BlockPos center, BuildingType type, ColonyCulture culture) {
