@@ -1571,10 +1571,10 @@ public final class StructurePlacer {
 	 * y >= 5 using blocks present in canReplace().
 	 */
 	private static void placeCampusCrownAndTunnelMouth(ServerLevel level, BlockPos center, BuildingType type, ColonyCulture culture) {
-		// Only the campus chamber family (the switch in placeBuilding line 37) has the
-		// verified-clear geometry for this crown + mouth. Other COMPLETE buildings
-		// (FUNGUS_GARDEN, DIPLOMACY_SHRINE, WATCH_POST, CHITIN_FARM, ...) carry their own
-		// asserted threshold motifs at z=-8/-10 that the mouth would carve away.
+		// Only the campus chamber family (the switch in placeBuilding line 37) carries
+		// this verified mound crown + deep tunnel mouth. Other COMPLETE buildings
+		// (FUNGUS_GARDEN, DIPLOMACY_SHRINE, WATCH_POST, CHITIN_FARM, ...) keep their
+		// own asserted threshold motifs that the mouth would otherwise carve away.
 		switch (type) {
 			case FOOD_STORE, NURSERY, MINE, BARRACKS, MARKET, RESIN_DEPOT, PHEROMONE_ARCHIVE, VENOM_PRESS, ARMORY -> {
 				// fall through to the crown below
@@ -1583,33 +1583,53 @@ public final class StructurePlacer {
 				return;
 			}
 		}
-		// BROAD EARTHEN DOME crown (ogive profile), not a conical tower.
+		// BROAD EARTHEN DOME crown (ogive profile) sized PER BUILDING TYPE.
 		//
-		// The R2 reference intent is broad earthen mound mass first, height second.
-		// A conical taper reads as a "capped tower"; a dome that stays near-full width
-		// through the middle and rounds off at the top reads as an ant-hill chamber.
+		// The R2 architecture brief calls for broad earthen mound mass first,
+		// height second. The previous single radius (rxMax=rzMax=5) was narrower
+		// than the base chamber footprint (rx ~= 9), so the mass read as a "capped
+		// tower on a flat pad" instead of an ant-hill mound.
 		//
-		// Envelope (verified clear):
-		//  - X reach = +/-5. X=+/-6 is the diplomacy tribute/truce cache midpoint
-		//    (anchorToSurface lifts the cache; breaks the column assertion).
-		//  - Z reach = +/-5. Beyond that the expansion-opportunity miner crew post
-		//    (origin+(38,1,9), dz=7 from the FOOD_STORE center) lands inside the crown,
-		//    lifts anchorToSurface above the test's spawn AABB, and drops a crew ant.
-		//    +/-5 also keeps asserted z=-8 accents clear (crown writes only y>=6, mouth
-		//    and lip stay at z<=-9) and leaves >=6 blocks between neighbours 16 apart.
-		// Dome profile: full footprint y=6..11 (broad shoulders), gentle ogive curve
-		// y=12..16, small rounded cap y=17. Base-to-peak ~17 blocks of real mass.
-		// Additive only, stage-gated to COMPLETE, writes only y>=5 via canReplace().
-		final int rxMax = 5;
-		final int rzMax = 5;
-		for (int y = 6; y <= 17; y++) {
-			// ogive factor: 1.0 broad through y=11, then eases to ~0 at y=17.
+		// Empirically verified constraint map (see build/autonomous-loop analysis):
+		//  - FOOD_STORE (origin+38,0): the diplomacy tribute/truce cache midpoint
+		//    sits at world x=32 (FOOD_STORE-relative x=-6) and the expansion-opportunity
+		//    crew posts sit at FOOD_STORE-relative z=7. A crown taller than 8 blocks
+		//    at those columns lifts anchorToSurface above the test's spawn AABB.
+		//    So FOOD_STORE keeps the conservative +/-5 envelope but gains HEIGHT.
+		//  - NURSERY (origin-38,0): the partner-colony (origin+64) tribute/truce cache
+		//    midpoint sits at world x=32 = NURSERY-relative x=+6. So NURSERY keeps
+		//    rxMax=5 (z is free; rzMax=8).
+		//  - All other campus buildings (MINE, BARRACKS, MARKET, RESIN_DEPOT,
+		//    PHEROMONE_ARCHIVE, VENOM_PRESS, ARMORY): zero diplomacy/expansion
+		//    conflicts within +/-10; they get the full broad dome envelope so the
+		//    surrounding role buildings read as substantial ant-hill chambers, not
+		//    low pads. This is what fixes the "no_single_mound_pass" blocker.
+		int rxMax;
+		int rzMax;
+		int peakY;
+		int shoulderY;   // y below which the footprint stays full-width (broad dome)
+		switch (type) {
+			case FOOD_STORE -> { rxMax = 5; rzMax = 5; peakY = 21; shoulderY = 13; }
+			case NURSERY ->    { rxMax = 5; rzMax = 8; peakY = 23; shoulderY = 15; }
+			case MINE ->       { rxMax = 9; rzMax = 9; peakY = 25; shoulderY = 16; }
+			case BARRACKS ->   { rxMax = 9; rzMax = 9; peakY = 25; shoulderY = 16; }
+			case MARKET ->     { rxMax = 9; rzMax = 9; peakY = 24; shoulderY = 16; }
+			case RESIN_DEPOT -> { rxMax = 8; rzMax = 8; peakY = 22; shoulderY = 15; }
+			case PHEROMONE_ARCHIVE -> { rxMax = 8; rzMax = 8; peakY = 22; shoulderY = 15; }
+			case VENOM_PRESS -> { rxMax = 8; rzMax = 8; peakY = 22; shoulderY = 15; }
+			case ARMORY ->     { rxMax = 9; rzMax = 9; peakY = 24; shoulderY = 16; }
+			default ->         { rxMax = 7; rzMax = 7; peakY = 20; shoulderY = 14; }
+		}
+		// Broad ogive dome: full footprint up to shoulderY, then a long rounded
+		// shoulder that eases to ~0 at peakY. A long broad shoulder (not a quick
+		// cone) is what makes the silhouette read as a mound, not a tower.
+		for (int y = 6; y <= peakY; y++) {
 			double f;
-			if (y <= 11) {
+			if (y <= shoulderY) {
 				f = 1.0;
 			} else {
-				double t = (y - 11) / 6.0;          // 0..1
-				f = Math.max(0.0, 1.0 - t * t * 1.05); // rounded (quadratic) shoulder
+				double t = (y - shoulderY) / (double) (peakY - shoulderY); // 0..1
+				f = Math.max(0.0, 1.0 - t * t * 1.04); // rounded quadratic shoulder
 			}
 			int rx = (int) Math.round(rxMax * f);
 			int rz = (int) Math.round(rzMax * f);
@@ -1627,27 +1647,34 @@ public final class StructurePlacer {
 				}
 			}
 		}
-		// small rounded cap block
-		safeSet(level, center.above(17), ModBlocks.NEST_MOUND);
+		// Rounded capstone so the peak reads organic, not flat-topped.
+		safeSet(level, center.above(peakY), ModBlocks.NEST_MOUND);
 
-		// DEEP dark tunnel mouth: a 5-wide x 6-tall air void carved into the south
-		// face at z=-10 (south of the z=-8 accent row), with a thick earthen lip so
-		// it reads as a hollow chamber entrance from gameplay distance, not a notch.
-		for (int yy = 1; yy <= 6; yy++) {
+		// DEEP dark tunnel mouth: a 5-wide x 7-tall air void carved into the south
+		// face at z=-10 (south of the z=-8 accent row), pushed back one more block
+		// of interior depth so it reads as a hollow chamber entrance with visible
+		// interior darkness from gameplay distance, not a shallow facade notch.
+		for (int yy = 1; yy <= 7; yy++) {
 			for (int xx = -2; xx <= 2; xx++) {
 				safeSet(level, center.offset(xx, yy, -10), Blocks.AIR);
+				safeSet(level, center.offset(xx, yy, -11), Blocks.AIR); // pushed-back interior
 			}
 		}
+		// Dark interior floor + rear wall so the void reads as excavated chamber.
+		for (int xx = -2; xx <= 2; xx++) {
+			safeSet(level, center.offset(xx, 0, -11), Blocks.COARSE_DIRT);
+		}
+		safeSet(level, center.offset(-2, 1, -11), Blocks.MANGROVE_ROOTS);
+		safeSet(level, center.offset(2, 1, -11), Blocks.MANGROVE_ROOTS);
 		// Thick earthen lip framing the mouth at z=-9 (keeps z=-8 accents untouched).
-		for (int yy = 1; yy <= 7; yy++) {
+		for (int yy = 1; yy <= 8; yy++) {
 			safeSet(level, center.offset(-3, yy, -10), Blocks.ROOTED_DIRT);
 			safeSet(level, center.offset(3, yy, -10), Blocks.ROOTED_DIRT);
 			safeSet(level, center.offset(-3, yy, -9), Blocks.ROOTED_DIRT);
 			safeSet(level, center.offset(3, yy, -9), Blocks.ROOTED_DIRT);
 			safeSet(level, center.offset(-2, yy, -9), Blocks.ROOTED_DIRT);
 			safeSet(level, center.offset(2, yy, -9), Blocks.ROOTED_DIRT);
-			// lintel over the opening
-			if (yy == 7) {
+			if (yy == 8) {
 				for (int xx = -2; xx <= 2; xx++) {
 					safeSet(level, center.offset(xx, yy, -9), Blocks.ROOTED_DIRT);
 					safeSet(level, center.offset(xx, yy, -10), Blocks.ROOTED_DIRT);
@@ -1655,35 +1682,92 @@ public final class StructurePlacer {
 			}
 		}
 		// Brood/resin gleam deep inside the mouth (subordinate native accent).
-		safeSet(level, center.offset(0, 4, -10), ModBlocks.FOOD_NODE);
-		safeSet(level, center.offset(-1, 2, -10), Blocks.BROWN_MUSHROOM_BLOCK);
-		safeSet(level, center.offset(1, 2, -10), Blocks.BROWN_MUSHROOM_BLOCK);
+		safeSet(level, center.offset(0, 4, -11), ModBlocks.FOOD_NODE);
+		safeSet(level, center.offset(-1, 2, -11), Blocks.BROWN_MUSHROOM_BLOCK);
+		safeSet(level, center.offset(1, 2, -11), Blocks.BROWN_MUSHROOM_BLOCK);
 
-		// Worn approach apron + soil breakup leading into the mouth (z <= -11).
-		for (int step = 11; step <= 16; step++) {
+		// Worn approach apron + soil breakup leading into the mouth (z <= -12).
+		for (int step = 12; step <= 18; step++) {
 			safeSet(level, center.offset(0, 0, -step), Blocks.DIRT_PATH);
 			safeSet(level, center.offset(-1, 0, -step), Blocks.COARSE_DIRT);
 			safeSet(level, center.offset(1, 0, -step), Blocks.PODZOL);
-			if (step >= 12 && step <= 15) {
+			if (step >= 13 && step <= 17) {
 				safeSet(level, center.offset(-2, 0, -step), Blocks.ROOTED_DIRT);
 				safeSet(level, center.offset(2, 0, -step), Blocks.ROOTED_DIRT);
 			}
+			if (step >= 14 && step <= 16) {
+				safeSet(level, center.offset(-3, 0, -step), Blocks.MANGROVE_ROOTS);
+				safeSet(level, center.offset(3, 0, -step), Blocks.MANGROVE_ROOTS);
+			}
 		}
 		// Spoil pile + root wad at the apron edge (ant-hill groundedness).
-		safeSet(level, center.offset(0, 1, -14), Blocks.MANGROVE_ROOTS);
-		safeSet(level, center.offset(-3, 1, -13), Blocks.COARSE_DIRT);
-		safeSet(level, center.offset(3, 1, -13), Blocks.PODZOL);
+		safeSet(level, center.offset(0, 1, -16), Blocks.MANGROVE_ROOTS);
+		safeSet(level, center.offset(0, 2, -16), Blocks.COARSE_DIRT);
+		safeSet(level, center.offset(-3, 1, -15), Blocks.COARSE_DIRT);
+		safeSet(level, center.offset(3, 1, -15), Blocks.PODZOL);
+		safeSet(level, center.offset(-2, 1, -16), Blocks.ROOTED_DIRT);
+		safeSet(level, center.offset(2, 1, -16), Blocks.ROOTED_DIRT);
 
-		// East/west earthen shoulders (x=5, diplomacy- and neighbour-safe) that flare
-		// the base to widen the silhouette into a broad dome rather than a tower.
-		for (int yy = 5; yy <= 9; yy++) {
-			safeSet(level, center.offset(5, yy, 0), Blocks.MANGROVE_ROOTS);
-			safeSet(level, center.offset(-5, yy, 0), Blocks.MANGROVE_ROOTS);
-			if (yy <= 7) {
-				safeSet(level, center.offset(5, yy, 3), Blocks.ROOTED_DIRT);
-				safeSet(level, center.offset(-5, yy, 3), Blocks.ROOTED_DIRT);
-				safeSet(level, center.offset(5, yy, -3), Blocks.ROOTED_DIRT);
-				safeSet(level, center.offset(-5, yy, -3), Blocks.ROOTED_DIRT);
+		// FOREST-FLOOR dressing ring around the mound base (not just a single
+		// apron). Densifies the build skirt with rooted dirt, coarse dirt, podzol,
+		// leaf litter, root wads, stones, and spoil piles so the colony reads as
+		// embedded in terrain instead of placed on top of a grassy plain. This is
+		// the forest_floor_life_density blocker; it stays at ground level so it
+		// never competes with the architecture silhouette.
+		placeCampusForestFloor(level, center, type, culture, rxMax, rzMax);
+	}
+
+	private static void placeCampusForestFloor(ServerLevel level, BlockPos center, BuildingType type, ColonyCulture culture, int rxMax, int rzMax) {
+		// Deterministic pseudo-random over (x,z) so the dressing is stable per build.
+		int ring = Math.max(rxMax, rzMax) + 5;
+		for (int x = -ring; x <= ring; x++) {
+			for (int z = -ring; z <= ring; z++) {
+				// Only dress the skirt OUTSIDE the mound footprint, never under it.
+				boolean inFootprint = (x * x) / (double) ((rxMax + 1) * (rxMax + 1))
+						+ (z * z) / (double) ((rzMax + 1) * (rzMax + 1)) <= 1.05;
+				if (inFootprint) {
+					continue;
+				}
+				// Keep the south approach apron (the worn route into the mouth) clear
+				// so the entrance path stays readable.
+				if (z <= -11 && Math.abs(x) <= 3) {
+					continue;
+				}
+				int h = Math.floorMod(x * 7 + z * 13 + type.ordinal() * 5, 17);
+				BlockPos ground = center.offset(x, 0, z);
+				Block chosen;
+				if (h == 0) {
+					chosen = Blocks.COARSE_DIRT;
+				} else if (h == 1) {
+					chosen = Blocks.PODZOL;
+				} else if (h == 2) {
+					chosen = Blocks.ROOTED_DIRT;
+				} else if (h == 3) {
+					chosen = Blocks.MANGROVE_ROOTS;
+				} else if (h == 4) {
+					chosen = Blocks.MOSS_BLOCK;
+				} else if (h == 5) {
+					chosen = Blocks.COBBLESTONE;
+				} else if (h == 6) {
+					chosen = Blocks.MOSSY_COBBLESTONE;
+				} else if (h == 7) {
+					chosen = Blocks.BROWN_MUSHROOM_BLOCK;
+				} else if (h == 8) {
+					chosen = Blocks.DIRT_PATH;
+				} else {
+					continue; // leave the native grass/dirt untouched for breakup
+				}
+				safeSet(level, ground, chosen);
+				// A few low vertical accents (root wads / small spoil piles) for
+				// terrain relief without raising a readable silhouette of their own.
+				if (h == 3 && Math.floorMod(x + z, 3) == 0) {
+					safeSet(level, ground.above(), Blocks.MANGROVE_ROOTS);
+				} else if (h == 5 && Math.floorMod(x - z, 4) == 0) {
+					safeSet(level, ground.above(), Blocks.COBBLESTONE);
+				} else if (h == 1 && Math.floorMod(x * 2 + z, 5) == 0) {
+					// sparse leaf-litter tuft (culture-specific undergrowth)
+					safeSet(level, ground.above(), culture == ColonyCulture.LEAFCUTTER ? Blocks.MOSS_CARPET : Blocks.BROWN_MUSHROOM);
+				}
 			}
 		}
 	}
