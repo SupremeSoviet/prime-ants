@@ -1571,85 +1571,120 @@ public final class StructurePlacer {
 	 * y >= 5 using blocks present in canReplace().
 	 */
 	private static void placeCampusCrownAndTunnelMouth(ServerLevel level, BlockPos center, BuildingType type, ColonyCulture culture) {
-		// TALLER organic chamber crown (base-to-peak ~18 blocks) on a ?5 footprint.
+		// Only the campus chamber family (the switch in placeBuilding line 37) has the
+		// verified-clear geometry for this crown + mouth. Other COMPLETE buildings
+		// (FUNGUS_GARDEN, DIPLOMACY_SHRINE, WATCH_POST, CHITIN_FARM, ...) carry their own
+		// asserted threshold motifs at z=-8/-10 that the mouth would carve away.
+		switch (type) {
+			case FOOD_STORE, NURSERY, MINE, BARRACKS, MARKET, RESIN_DEPOT, PHEROMONE_ARCHIVE, VENOM_PRESS, ARMORY -> {
+				// fall through to the crown below
+			}
+			default -> {
+				return;
+			}
+		}
+		// BROAD EARTHEN DOME crown (ogive profile), not a conical tower.
 		//
-		// Reach is capped at +/-5 on BOTH axes:
-		//  - X=+/-6 is the diplomacy tribute/truce cache midpoint column relative to a
-		//    FOOD_STORE (or partner NURSERY) center; anchorToSurface() lifts the cache and
-		//    breaks the column assertion (verified empirically).
-		//  - Z reach must also stay <=5 because (a) placeCompleteOverlay writes accent
-		//    markers at center + (-2,1,-8)/(2,1,-8) which tests assert, and (b) staged /
-		//    repair / construction scene buildings sit only 16 blocks apart, so any larger
-		//    Z footprint would collide with a neighbour's asserted blocks.
-		// With +/-5 on both axes, neighbouring crowns (16 apart) clear by 6 blocks and the
-		// z=-8 accent row is untouched.
+		// The R2 reference intent is broad earthen mound mass first, height second.
+		// A conical taper reads as a "capped tower"; a dome that stays near-full width
+		// through the middle and rounds off at the top reads as an ant-hill chamber.
 		//
-		// The visual win comes from HEIGHT, not width: layers y=6..18 taper from radius 5
-		// to a spire, so each satellite reads as a real tapered ant-hill cone rather than
-		// a low stepped pad, while staying inside the verified-clear envelope.
-		// Additive only, stage-gated to COMPLETE, writes only y >= 5 via canReplace() blocks.
-		for (int y = 6; y <= 18; y++) {
-			double taper = Math.max(0.0, (18.0 - y) / 12.0); // 1.0 at base -> 0.0 at top
-			int radius = (int) Math.round(5.0 * taper);
-			if (radius < 1) {
-				if (y <= 19) {
-					// very top: narrow spire column
-					safeSet(level, center.offset(0, y, 0), ModBlocks.NEST_MOUND);
-				}
+		// Envelope (verified clear):
+		//  - X reach = +/-5. X=+/-6 is the diplomacy tribute/truce cache midpoint
+		//    (anchorToSurface lifts the cache; breaks the column assertion).
+		//  - Z reach = +/-5. Beyond that the expansion-opportunity miner crew post
+		//    (origin+(38,1,9), dz=7 from the FOOD_STORE center) lands inside the crown,
+		//    lifts anchorToSurface above the test's spawn AABB, and drops a crew ant.
+		//    +/-5 also keeps asserted z=-8 accents clear (crown writes only y>=6, mouth
+		//    and lip stay at z<=-9) and leaves >=6 blocks between neighbours 16 apart.
+		// Dome profile: full footprint y=6..11 (broad shoulders), gentle ogive curve
+		// y=12..16, small rounded cap y=17. Base-to-peak ~17 blocks of real mass.
+		// Additive only, stage-gated to COMPLETE, writes only y>=5 via canReplace().
+		final int rxMax = 5;
+		final int rzMax = 5;
+		for (int y = 6; y <= 17; y++) {
+			// ogive factor: 1.0 broad through y=11, then eases to ~0 at y=17.
+			double f;
+			if (y <= 11) {
+				f = 1.0;
+			} else {
+				double t = (y - 11) / 6.0;          // 0..1
+				f = Math.max(0.0, 1.0 - t * t * 1.05); // rounded (quadratic) shoulder
+			}
+			int rx = (int) Math.round(rxMax * f);
+			int rz = (int) Math.round(rzMax * f);
+			if (rx < 1 && rz < 1) {
 				continue;
 			}
-			for (int x = -radius; x <= radius; x++) {
-				for (int z = -radius; z <= radius; z++) {
-					int dist = Math.abs(x) + Math.abs(z);
-					if (dist > radius + 1) {
+			for (int x = -rx; x <= rx; x++) {
+				for (int z = -rz; z <= rz; z++) {
+					double ex = (rx == 0) ? 0.0 : (x * x) / (double) (rx * rx);
+					double ez = (rz == 0) ? 0.0 : (z * z) / (double) (rz * rz);
+					if (ex + ez > 1.05) {
 						continue;
 					}
 					safeSet(level, center.offset(x, y, z), campusCrownBlock(type, culture, x, y, z));
 				}
 			}
 		}
-		safeSet(level, center.above(19), Blocks.ROOTED_DIRT);
+		// small rounded cap block
+		safeSet(level, center.above(17), ModBlocks.NEST_MOUND);
 
-		// Deep dark tunnel mouth carved into the south face, entirely SOUTH of the z=-8
-		// accent row (so it never clobbers placeCompleteOverlay's asserted OCHRE_FROGLIGHT
-		// accents at (?2,1,-8)). 5 wide x 5 tall void at z=-10 with a thick earthen lip,
-		// reading as a deep chamber entrance from gameplay distance.
-		for (int yy = 2; yy <= 6; yy++) {
+		// DEEP dark tunnel mouth: a 5-wide x 6-tall air void carved into the south
+		// face at z=-10 (south of the z=-8 accent row), with a thick earthen lip so
+		// it reads as a hollow chamber entrance from gameplay distance, not a notch.
+		for (int yy = 1; yy <= 6; yy++) {
 			for (int xx = -2; xx <= 2; xx++) {
 				safeSet(level, center.offset(xx, yy, -10), Blocks.AIR);
 			}
 		}
-		// Thick earthen lip framing the mouth (z=-9 rim, y=1..6) ? native earth, not accent.
-		for (int yy = 1; yy <= 6; yy++) {
+		// Thick earthen lip framing the mouth at z=-9 (keeps z=-8 accents untouched).
+		for (int yy = 1; yy <= 7; yy++) {
 			safeSet(level, center.offset(-3, yy, -10), Blocks.ROOTED_DIRT);
 			safeSet(level, center.offset(3, yy, -10), Blocks.ROOTED_DIRT);
+			safeSet(level, center.offset(-3, yy, -9), Blocks.ROOTED_DIRT);
+			safeSet(level, center.offset(3, yy, -9), Blocks.ROOTED_DIRT);
 			safeSet(level, center.offset(-2, yy, -9), Blocks.ROOTED_DIRT);
 			safeSet(level, center.offset(2, yy, -9), Blocks.ROOTED_DIRT);
-			safeSet(level, center.offset(0, yy, -9), yy >= 2 && yy <= 6 ? Blocks.AIR : Blocks.ROOTED_DIRT);
-			safeSet(level, center.offset(-1, yy, -9), Blocks.ROOTED_DIRT);
-			safeSet(level, center.offset(1, yy, -9), Blocks.ROOTED_DIRT);
+			// lintel over the opening
+			if (yy == 7) {
+				for (int xx = -2; xx <= 2; xx++) {
+					safeSet(level, center.offset(xx, yy, -9), Blocks.ROOTED_DIRT);
+					safeSet(level, center.offset(xx, yy, -10), Blocks.ROOTED_DIRT);
+				}
+			}
 		}
-		// Brood gleam just inside the mouth (subordinate native accent).
+		// Brood/resin gleam deep inside the mouth (subordinate native accent).
 		safeSet(level, center.offset(0, 4, -10), ModBlocks.FOOD_NODE);
+		safeSet(level, center.offset(-1, 2, -10), Blocks.BROWN_MUSHROOM_BLOCK);
+		safeSet(level, center.offset(1, 2, -10), Blocks.BROWN_MUSHROOM_BLOCK);
 
 		// Worn approach apron + soil breakup leading into the mouth (z <= -11).
-		for (int step = 11; step <= 15; step++) {
+		for (int step = 11; step <= 16; step++) {
 			safeSet(level, center.offset(0, 0, -step), Blocks.DIRT_PATH);
 			safeSet(level, center.offset(-1, 0, -step), Blocks.COARSE_DIRT);
 			safeSet(level, center.offset(1, 0, -step), Blocks.PODZOL);
-			if (step >= 12) {
+			if (step >= 12 && step <= 15) {
 				safeSet(level, center.offset(-2, 0, -step), Blocks.ROOTED_DIRT);
 				safeSet(level, center.offset(2, 0, -step), Blocks.ROOTED_DIRT);
 			}
 		}
-		// Spoil pile at the apron edge (ant-hill groundedness), well clear of accents.
+		// Spoil pile + root wad at the apron edge (ant-hill groundedness).
 		safeSet(level, center.offset(0, 1, -14), Blocks.MANGROVE_ROOTS);
+		safeSet(level, center.offset(-3, 1, -13), Blocks.COARSE_DIRT);
+		safeSet(level, center.offset(3, 1, -13), Blocks.PODZOL);
 
-		// Buttress ribs on east/west (x=5, diplomacy- and neighbour-safe) to break the
-		// silhouette into organic mass.
-		for (int yy = 5; yy <= 12; yy++) {
+		// East/west earthen shoulders (x=5, diplomacy- and neighbour-safe) that flare
+		// the base to widen the silhouette into a broad dome rather than a tower.
+		for (int yy = 5; yy <= 9; yy++) {
 			safeSet(level, center.offset(5, yy, 0), Blocks.MANGROVE_ROOTS);
 			safeSet(level, center.offset(-5, yy, 0), Blocks.MANGROVE_ROOTS);
+			if (yy <= 7) {
+				safeSet(level, center.offset(5, yy, 3), Blocks.ROOTED_DIRT);
+				safeSet(level, center.offset(-5, yy, 3), Blocks.ROOTED_DIRT);
+				safeSet(level, center.offset(5, yy, -3), Blocks.ROOTED_DIRT);
+				safeSet(level, center.offset(-5, yy, -3), Blocks.ROOTED_DIRT);
+			}
 		}
 	}
 
