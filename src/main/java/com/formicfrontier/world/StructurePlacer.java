@@ -1719,6 +1719,12 @@ public final class StructurePlacer {
 
 	private static void placeCampusForestFloor(ServerLevel level, BlockPos center, BuildingType type, ColonyCulture culture, int rxMax, int rzMax) {
 		// Deterministic pseudo-random over (x,z) so the dressing is stable per build.
+		// SAFETY: this dressing only ever REPLACES native ground (grass/dirt/mycelium).
+		// It must never overwrite DIRT_PATH routes, event trails, chamber entrances,
+		// resource markers, or any other structure block, because game-test
+		// assertions pin many of those positions. canReplace() is too permissive
+		// (it allows DIRT_PATH / mushroom blocks), so we gate on isNativeGround()
+		// here instead and additionally skip the known path/entrance corridors.
 		int ring = Math.max(rxMax, rzMax) + 5;
 		for (int x = -ring; x <= ring; x++) {
 			for (int z = -ring; z <= ring; z++) {
@@ -1728,13 +1734,29 @@ public final class StructurePlacer {
 				if (inFootprint) {
 					continue;
 				}
-				// Keep the south approach apron (the worn route into the mouth) clear
-				// so the entrance path stays readable.
-				if (z <= -11 && Math.abs(x) <= 3) {
+				// Keep the south approach corridor (worn route + event attachment
+				// trail + famine trail) fully clear so entrances and trails stay
+				// readable and asserted. The famine/attachment trails run along
+				// (|x|<=1, z in -9..-2) and the approach apron is (|x|<=3, z<=-11).
+				if (z <= -2 && Math.abs(x) <= 3) {
+					continue;
+				}
+				// Keep the four cardinal side entrances (|x|<=1 at |z|>=8,
+				// |z|<=1 at |x|>=8) clear so chamber doorways read.
+				if (Math.abs(x) <= 1 && Math.abs(z) >= 8) {
+					continue;
+				}
+				if (Math.abs(z) <= 1 && Math.abs(x) >= 8) {
+					continue;
+				}
+				BlockPos ground = center.offset(x, 0, z);
+				// ONLY replace native terrain ground. This is the key safety gate:
+				// it leaves DIRT_PATH, ROOTED_DIRT, MANGROVE_ROOTS, mushroom markers,
+				// packed mud, and every structure block untouched.
+				if (!isNativeGround(level, ground)) {
 					continue;
 				}
 				int h = Math.floorMod(x * 7 + z * 13 + type.ordinal() * 5, 17);
-				BlockPos ground = center.offset(x, 0, z);
 				Block chosen;
 				if (h == 0) {
 					chosen = Blocks.COARSE_DIRT;
@@ -1753,7 +1775,7 @@ public final class StructurePlacer {
 				} else if (h == 7) {
 					chosen = Blocks.BROWN_MUSHROOM_BLOCK;
 				} else if (h == 8) {
-					chosen = Blocks.DIRT_PATH;
+					chosen = Blocks.COARSE_DIRT; // worn patch, never DIRT_PATH (avoids clobbering asserted routes)
 				} else {
 					continue; // leave the native grass/dirt untouched for breakup
 				}
@@ -1761,15 +1783,32 @@ public final class StructurePlacer {
 				// A few low vertical accents (root wads / small spoil piles) for
 				// terrain relief without raising a readable silhouette of their own.
 				if (h == 3 && Math.floorMod(x + z, 3) == 0) {
-					safeSet(level, ground.above(), Blocks.MANGROVE_ROOTS);
+					if (isNativeGround(level, ground.above()) || level.getBlockState(ground.above()).isAir()) {
+						safeSet(level, ground.above(), Blocks.MANGROVE_ROOTS);
+					}
 				} else if (h == 5 && Math.floorMod(x - z, 4) == 0) {
-					safeSet(level, ground.above(), Blocks.COBBLESTONE);
+					if (isNativeGround(level, ground.above()) || level.getBlockState(ground.above()).isAir()) {
+						safeSet(level, ground.above(), Blocks.COBBLESTONE);
+					}
 				} else if (h == 1 && Math.floorMod(x * 2 + z, 5) == 0) {
-					// sparse leaf-litter tuft (culture-specific undergrowth)
-					safeSet(level, ground.above(), culture == ColonyCulture.LEAFCUTTER ? Blocks.MOSS_CARPET : Blocks.BROWN_MUSHROOM);
+					if (level.getBlockState(ground.above()).isAir()) {
+						// sparse leaf-litter tuft (culture-specific undergrowth)
+						safeSet(level, ground.above(), culture == ColonyCulture.LEAFCUTTER ? Blocks.MOSS_CARPET : Blocks.BROWN_MUSHROOM);
+					}
 				}
 			}
 		}
+	}
+
+	// Native terrain ground that the forest-floor dressing is allowed to replace.
+	// Intentionally NARROW: grass, dirt, mycelium, and coarse-dirt-only-when-it is
+	// the natural superflat surface. Everything else (paths, roots, mud, mushrooms,
+	// stone, structure blocks) is preserved so tests and entrances stay intact.
+	private static boolean isNativeGround(ServerLevel level, BlockPos pos) {
+		Block block = level.getBlockState(pos).getBlock();
+		return block == Blocks.GRASS_BLOCK
+				|| block == Blocks.DIRT
+				|| block == Blocks.MYCELIUM;
 	}
 
 	private static Block campusCrownBlock(BuildingType type, ColonyCulture culture, int x, int y, int z) {
