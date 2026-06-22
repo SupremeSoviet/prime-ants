@@ -1571,55 +1571,86 @@ public final class StructurePlacer {
 	 * y >= 5 using blocks present in canReplace().
 	 */
 	private static void placeCampusCrownAndTunnelMouth(ServerLevel level, BlockPos center, BuildingType type, ColonyCulture culture) {
-		// Tapering crown: widest layer (radius 5) at y=6, narrowing to the spire.
-		// y=6 -> r=5, y=7 -> r=4, y=8 -> r=3, y=9 -> r=3, y=10 -> r=2,
-		// y=11 -> r=2, y=12 -> r=1, y=13 -> r=1, y=14..15 -> spire column.
-		for (int y = 6; y <= 15; y++) {
-			int radius;
-			if (y >= 14) {
-				radius = 15 - y; // 1, 0
-				if (radius < 0) {
-					continue;
+		// TALLER organic chamber crown (base-to-peak ~18 blocks) on a ?5 footprint.
+		//
+		// Reach is capped at +/-5 on BOTH axes:
+		//  - X=+/-6 is the diplomacy tribute/truce cache midpoint column relative to a
+		//    FOOD_STORE (or partner NURSERY) center; anchorToSurface() lifts the cache and
+		//    breaks the column assertion (verified empirically).
+		//  - Z reach must also stay <=5 because (a) placeCompleteOverlay writes accent
+		//    markers at center + (-2,1,-8)/(2,1,-8) which tests assert, and (b) staged /
+		//    repair / construction scene buildings sit only 16 blocks apart, so any larger
+		//    Z footprint would collide with a neighbour's asserted blocks.
+		// With +/-5 on both axes, neighbouring crowns (16 apart) clear by 6 blocks and the
+		// z=-8 accent row is untouched.
+		//
+		// The visual win comes from HEIGHT, not width: layers y=6..18 taper from radius 5
+		// to a spire, so each satellite reads as a real tapered ant-hill cone rather than
+		// a low stepped pad, while staying inside the verified-clear envelope.
+		// Additive only, stage-gated to COMPLETE, writes only y >= 5 via canReplace() blocks.
+		for (int y = 6; y <= 18; y++) {
+			double taper = Math.max(0.0, (18.0 - y) / 12.0); // 1.0 at base -> 0.0 at top
+			int radius = (int) Math.round(5.0 * taper);
+			if (radius < 1) {
+				if (y <= 19) {
+					// very top: narrow spire column
+					safeSet(level, center.offset(0, y, 0), ModBlocks.NEST_MOUND);
 				}
-			} else {
-				radius = Math.max(1, 5 - ((y - 6) / 2)); // 5,5,4,4,3,3,2,2
+				continue;
 			}
 			for (int x = -radius; x <= radius; x++) {
 				for (int z = -radius; z <= radius; z++) {
-					if (Math.abs(x) + Math.abs(z) > radius + 1) {
+					int dist = Math.abs(x) + Math.abs(z);
+					if (dist > radius + 1) {
 						continue;
 					}
-					BlockPos pos = center.offset(x, y, z);
-					safeSet(level, pos, campusCrownBlock(type, culture, x, y, z));
+					safeSet(level, center.offset(x, y, z), campusCrownBlock(type, culture, x, y, z));
 				}
 			}
 		}
-		// Spire cap.
-		safeSet(level, center.above(16), Blocks.ROOTED_DIRT);
-		// Deep dark tunnel mouth on the south face (-z), carved down to y=1,
-		// with a thickened earthen lip so it reads as a deep void from gameplay distance.
-		for (int yy = 1; yy <= 4; yy++) {
-			for (int xx = -1; xx <= 1; xx++) {
-				BlockPos pos = center.offset(xx, yy, -9);
-				safeSet(level, pos, Blocks.AIR);
-				if (xx != 0) {
-					safeSet(level, pos.south(), Blocks.ROOTED_DIRT);
-				}
+		safeSet(level, center.above(19), Blocks.ROOTED_DIRT);
+
+		// Deep dark tunnel mouth carved into the south face, entirely SOUTH of the z=-8
+		// accent row (so it never clobbers placeCompleteOverlay's asserted OCHRE_FROGLIGHT
+		// accents at (?2,1,-8)). 5 wide x 5 tall void at z=-10 with a thick earthen lip,
+		// reading as a deep chamber entrance from gameplay distance.
+		for (int yy = 2; yy <= 6; yy++) {
+			for (int xx = -2; xx <= 2; xx++) {
+				safeSet(level, center.offset(xx, yy, -10), Blocks.AIR);
 			}
 		}
-		// Worn approach path leading into the mouth.
-		for (int step = 10; step <= 14; step++) {
+		// Thick earthen lip framing the mouth (z=-9 rim, y=1..6) ? native earth, not accent.
+		for (int yy = 1; yy <= 6; yy++) {
+			safeSet(level, center.offset(-3, yy, -10), Blocks.ROOTED_DIRT);
+			safeSet(level, center.offset(3, yy, -10), Blocks.ROOTED_DIRT);
+			safeSet(level, center.offset(-2, yy, -9), Blocks.ROOTED_DIRT);
+			safeSet(level, center.offset(2, yy, -9), Blocks.ROOTED_DIRT);
+			safeSet(level, center.offset(0, yy, -9), yy >= 2 && yy <= 6 ? Blocks.AIR : Blocks.ROOTED_DIRT);
+			safeSet(level, center.offset(-1, yy, -9), Blocks.ROOTED_DIRT);
+			safeSet(level, center.offset(1, yy, -9), Blocks.ROOTED_DIRT);
+		}
+		// Brood gleam just inside the mouth (subordinate native accent).
+		safeSet(level, center.offset(0, 4, -10), ModBlocks.FOOD_NODE);
+
+		// Worn approach apron + soil breakup leading into the mouth (z <= -11).
+		for (int step = 11; step <= 15; step++) {
 			safeSet(level, center.offset(0, 0, -step), Blocks.DIRT_PATH);
 			safeSet(level, center.offset(-1, 0, -step), Blocks.COARSE_DIRT);
 			safeSet(level, center.offset(1, 0, -step), Blocks.PODZOL);
+			if (step >= 12) {
+				safeSet(level, center.offset(-2, 0, -step), Blocks.ROOTED_DIRT);
+				safeSet(level, center.offset(2, 0, -step), Blocks.ROOTED_DIRT);
+			}
 		}
-		// Buttress ribs on east/west to break the silhouette into organic mass.
-		for (int yy = 5; yy <= 9; yy++) {
-			safeSet(level, center.offset(7, yy, 0), Blocks.MANGROVE_ROOTS);
-			safeSet(level, center.offset(-7, yy, 0), Blocks.MANGROVE_ROOTS);
+		// Spoil pile at the apron edge (ant-hill groundedness), well clear of accents.
+		safeSet(level, center.offset(0, 1, -14), Blocks.MANGROVE_ROOTS);
+
+		// Buttress ribs on east/west (x=5, diplomacy- and neighbour-safe) to break the
+		// silhouette into organic mass.
+		for (int yy = 5; yy <= 12; yy++) {
+			safeSet(level, center.offset(5, yy, 0), Blocks.MANGROVE_ROOTS);
+			safeSet(level, center.offset(-5, yy, 0), Blocks.MANGROVE_ROOTS);
 		}
-		// Brood/resin gleam just inside the mouth (subordinate native accent).
-		safeSet(level, center.offset(0, 1, -8), ModBlocks.FOOD_NODE);
 	}
 
 	private static Block campusCrownBlock(BuildingType type, ColonyCulture culture, int x, int y, int z) {
