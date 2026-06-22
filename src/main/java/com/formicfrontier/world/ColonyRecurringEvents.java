@@ -637,7 +637,8 @@ public final class ColonyRecurringEvents {
 	}
 
 	private static void placeInvasionWarningMarkers(ServerLevel level, ColonyData colony, ColonyData threat) {
-		BlockPos rally = ColonyService.anchorToSurface(level, invasionRally(colony, threat));
+		BlockPos rallyRaw = invasionRally(colony, threat);
+		BlockPos rally = new BlockPos(rallyRaw.getX(), colony.origin().getY(), rallyRaw.getZ());
 		int dx = Integer.compare(threat.origin().getX(), colony.origin().getX());
 		int dz = Integer.compare(threat.origin().getZ(), colony.origin().getZ());
 		int sideX = dz == 0 ? 0 : 1;
@@ -765,6 +766,10 @@ public final class ColonyRecurringEvents {
 
 	private static void spawnExpansionAnt(ServerLevel level, BlockPos post, ColonyData colony, AntCaste caste, AntWorkState state) {
 		BlockPos pos = ColonyService.anchorToSurface(level, post).above();
+
+
+
+
 		if (!isOpenSpawn(level, pos)) {
 			return;
 		}
@@ -835,7 +840,8 @@ public final class ColonyRecurringEvents {
 	}
 
 	private static void spawnInvasionGuards(ServerLevel level, ColonyData colony, ColonyData threat) {
-		BlockPos rally = ColonyService.anchorToSurface(level, invasionRally(colony, threat));
+		BlockPos rallyRaw = invasionRally(colony, threat);
+		BlockPos rally = new BlockPos(rallyRaw.getX(), colony.origin().getY(), rallyRaw.getZ());
 		int dx = Integer.compare(threat.origin().getX(), rally.getX());
 		int dz = Integer.compare(threat.origin().getZ(), rally.getZ());
 		BlockPos[] posts = {
@@ -844,7 +850,11 @@ public final class ColonyRecurringEvents {
 				rally.offset(1, 1, -1)
 		};
 		for (BlockPos post : posts) {
-			BlockPos pos = ColonyService.anchorToSurface(level, post).above();
+			StructurePlacer.safeSet(level, post, net.minecraft.world.level.block.Blocks.DIRT_PATH);
+			StructurePlacer.safeSet(level, post.above(), net.minecraft.world.level.block.Blocks.AIR);
+			StructurePlacer.safeSet(level, post.above(2), net.minecraft.world.level.block.Blocks.AIR);
+			StructurePlacer.safeSet(level, post.above(3), net.minecraft.world.level.block.Blocks.AIR);
+			BlockPos pos = post.above();
 			if (isOpenSpawn(level, pos)) {
 				AntEntity guard = ColonyService.spawnAnt(level, pos, AntCaste.SOLDIER, colony.id());
 				if (guard != null) {

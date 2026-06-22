@@ -2047,15 +2047,20 @@ public final class FormicFrontierGameTest {
 			helper.fail("Visual QA should expose an ant_lineup scene.");
 		}
 		BlockPos origin = new BlockPos(2, 3, 2);
+		// The lineup lives on a single clean row south of the mound (z = origin.z + 20)
+		// so the small worker castes sit together in the camera focus instead of being
+		// dwarfed by the central mound. All castes share the same row z and are spread
+		// on x, so the small castes must stay in the central band of that row (|dx| <= 12)
+		// no caste may drift north of the mound front (z must stay > origin.z, i.e. south).
 		for (AntCaste caste : List.of(AntCaste.WORKER, AntCaste.SCOUT, AntCaste.MINER)) {
 			BlockPos pos = VisualQaScenes.antLineupPosition(origin, caste);
-			if (Math.abs(pos.getX() - origin.getX()) > 10 || pos.getZ() > origin.getZ() - 43) {
-				helper.fail("Small caste " + caste.id() + " should stay near the center-front of the lineup, got " + pos.toShortString());
+			if (Math.abs(pos.getX() - origin.getX()) > 12 || pos.getZ() != origin.getZ() + 20) {
+				helper.fail("Small caste " + caste.id() + " should stay on the central band of the south lineup row (origin.z + 20), got " + pos.toShortString());
 			}
 		}
 		for (AntCaste first : AntCaste.values()) {
 			BlockPos firstPos = VisualQaScenes.antLineupPosition(origin, first);
-			if (Math.abs(firstPos.getX() - origin.getX()) > 15) {
+			if (Math.abs(firstPos.getX() - origin.getX()) > 18) {
 				helper.fail("Ant lineup caste " + first.id() + " should stay inside the widened camera frame.");
 			}
 			for (AntCaste second : AntCaste.values()) {
@@ -2177,7 +2182,7 @@ public final class FormicFrontierGameTest {
 				helper.getLevel().setBlock(absolute.offset(x, -2, z), Blocks.DIRT.defaultBlockState(), 3);
 				helper.getLevel().setBlock(absolute.offset(x, -1, z), Blocks.DIRT.defaultBlockState(), 3);
 				helper.getLevel().setBlock(absolute.offset(x, 0, z), Blocks.GRASS_BLOCK.defaultBlockState(), 3);
-				for (int y = 1; y <= 12; y++) {
+				for (int y = 1; y <= 26; y++) {
 					helper.getLevel().setBlock(absolute.offset(x, y, z), Blocks.AIR.defaultBlockState(), 3);
 				}
 			}

@@ -53,9 +53,9 @@
   "formic_frontier.ant.guard": "Страж %s #%s",
   "formic_frontier.ant.worker_foreman": "Старший рабочий #%s",
   "formic_frontier.building.queen_hall": "Зал матки",
-  "formic_frontier.building.great_mound": "\u0412\u0435\u043b\u0438\u043a\u0438\u0439 \u043a\u0443\u0440\u0433\u0430\u043d",
-  "formic_frontier.building.queen_vault": "\u0425\u0440\u0430\u043d\u0438\u043b\u0438\u0449\u0435 \u043c\u0430\u0442\u043a\u0438",
-  "formic_frontier.building.trade_hub": "\u0422\u043e\u0440\u0433\u043e\u0432\u044b\u0439 \u0443\u0437\u0435\u043b",
+  "formic_frontier.building.great_mound": "Великий курган",
+  "formic_frontier.building.queen_vault": "Хранилище матки",
+  "formic_frontier.building.trade_hub": "Торговый узел",
   "formic_frontier.building.road": "Дорога",
   "formic_frontier.culture.amber": "Янтарная",
   "formic_frontier.culture.leafcutter": "Листорезы",
@@ -92,7 +92,7 @@
   "formic_frontier.relationship.trusted": "Доверие",
   "formic_frontier.relationship.strained": "Напряжено",
   "formic_frontier.relationship.rival": "Колония-соперник",
-  "formic_frontier.relationship.wild": "\u0414\u0438\u043a\u0430\u044f \u043a\u043e\u043b\u043e\u043d\u0438\u044f",
+  "formic_frontier.relationship.wild": "Дикая колония",
   "formic_frontier.personality.steady": "Ровный",
   "formic_frontier.personality.steady.detail": "Сбалансированный рост",
   "formic_frontier.personality.curious": "Любопытный",
@@ -184,5 +184,10 @@
   "formic_frontier.label.repairing": "Ремонт %s%%",
   "formic_frontier.label.needs": "Нужно: %s",
   "formic_frontier.label.building": "Строится %s%%",
-  "formic_frontier.label.identity_status": "%s | %s"
+  "formic_frontier.label.identity_status": "%s | %s",
+  "formic_frontier.ui.identity_rep": "%s | Реп. %s",
+  "formic_frontier.ui.request.title": "%s для %s",
+  "formic_frontier.ui.request.delivery": "%s даёт %s %s",
+  "formic_frontier.ui.request.help": "Помочь %s",
+  "formic_frontier.ui.request.reward": "+%s токен, +%s реп, П%s"
 }

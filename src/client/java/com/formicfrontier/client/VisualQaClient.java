@@ -49,7 +49,10 @@ public final class VisualQaClient {
 	private static int sceneTicks;
 	private static boolean openWorldRequested;
 	private static boolean sceneCommandSent;
+	private static boolean capturedCurrentScene;
 	private static boolean tutorialDisabled;
+	private static boolean qaOptionsCaptured;
+	private static boolean previousHideGui;
 	private static boolean wroteWaitingReport;
 	private static boolean wroteFinalReport;
 	private static String activeQaLanguage = "";
@@ -71,6 +74,7 @@ public final class VisualQaClient {
 			tutorialDisabled = true;
 			client.getTutorial().setStep(TutorialSteps.NONE);
 		}
+		applyQaOptions(client, sceneIndex >= 0 && sceneIndex < SCENES.length && !SCENES[sceneIndex].startsWith("tablet"));
 		if (client.player == null || client.level == null || client.getConnection() == null) {
 			waitForWorld(client);
 			return;
@@ -89,6 +93,7 @@ public final class VisualQaClient {
 		}
 
 		String scene = SCENES[sceneIndex];
+		applyQaOptions(client, !scene.startsWith("tablet"));
 		if (!sceneCommandSent) {
 			if (client.screen != null) {
 				client.setScreen(null);
@@ -103,23 +108,28 @@ public final class VisualQaClient {
 		}
 
 		sceneTicks++;
-		if (sceneTicks == COMMAND_TO_SCREENSHOT_TICKS) {
-			if (!scene.startsWith("tablet") && client.screen != null) {
-				client.setScreen(null);
-				sceneTicks--;
+		int captureTick = captureDelayTicks(scene);
+		if (!capturedCurrentScene && sceneTicks >= captureTick) {
+			if (!readyForCapture(client, scene)) {
 				return;
 			}
 			capture(client, scene);
+			capturedCurrentScene = true;
 		}
-		if (sceneTicks >= SCENE_TOTAL_TICKS) {
+		if (capturedCurrentScene && sceneTicks >= Math.max(SCENE_TOTAL_TICKS, captureTick + 20)) {
 			sceneIndex++;
 			sceneTicks = 0;
 			sceneCommandSent = false;
+			capturedCurrentScene = false;
 		}
 	}
 
 	private static String languageForScene(String scene) {
-		return "tablet_ru".equals(scene) ? "ru_ru" : DEFAULT_LANGUAGE;
+		// tablet_ru and tablet_requests both exercise Russian-localized tablet UI.
+		// tablet_requests specifically covers the Needs/Requests tab so the GPT
+		// visual assessment can confirm request cards, helper buttons, and the
+		// footer render translated text with no English leakage.
+		return "tablet_ru".equals(scene) || "tablet_requests".equals(scene) ? "ru_ru" : DEFAULT_LANGUAGE;
 	}
 
 	private static boolean ensureLanguage(Minecraft client, String language) {
@@ -148,6 +158,39 @@ public final class VisualQaClient {
 		client.options.save();
 		languageReload = client.reloadResourcePacks();
 		return false;
+	}
+
+	private static void applyQaOptions(Minecraft client, boolean hideWorldGui) {
+		if (!qaOptionsCaptured) {
+			qaOptionsCaptured = true;
+			previousHideGui = client.options.hideGui;
+		}
+		client.options.hideGui = hideWorldGui;
+	}
+
+	private static int captureDelayTicks(String scene) {
+		return switch (scene) {
+			case "colony_overview", "settlement_scale", "diplomacy_scene", "endgame_project" ->
+					Math.max(COMMAND_TO_SCREENSHOT_TICKS, 120);
+			case "colony_ground", "culture_styles", "construction_stage", "repair_scene", "progression_scene" ->
+					Math.max(COMMAND_TO_SCREENSHOT_TICKS, 90);
+			default -> COMMAND_TO_SCREENSHOT_TICKS;
+		};
+	}
+
+	private static boolean readyForCapture(Minecraft client, String scene) {
+		if (scene.startsWith("tablet")) {
+			return true;
+		}
+		if (client.screen != null) {
+			client.setScreen(null);
+			return false;
+		}
+		if (!client.options.hideGui) {
+			client.options.hideGui = true;
+			return false;
+		}
+		return client.player != null && client.player.isSpectator();
 	}
 
 	private static void waitForWorld(Minecraft client) {
@@ -188,6 +231,9 @@ public final class VisualQaClient {
 	private static void writeFinalReport(Minecraft client, String status) {
 		if (wroteFinalReport) {
 			return;
+		}
+		if (qaOptionsCaptured) {
+			client.options.hideGui = previousHideGui;
 		}
 		wroteFinalReport = true;
 		StringBuilder json = new StringBuilder();

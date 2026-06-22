@@ -8,17 +8,49 @@ Every roadmap slice must pass:
 
 - `scripts/test-mod.cmd -AllowMissingGitHub`
 - `scripts/gui-smoke.cmd`
-- `$formic-visual-assessment` on the latest screenshots
+- `scripts/openai-visual-assessment.cmd` on the latest screenshots
 - `scripts/autonomous-gate.cmd -AllowMissingGitHub -NoLaunch`
 
 `P0` and `P1` visual findings block the slice. `PASS` and `PASS WITH NOTES` are
 acceptable only when remaining findings are `P2`/`P3` polish debt.
+
+The active visual north star is `docs/visual-intent/formic-visual-intent.md`.
+The autonomous loop must not switch to mechanics/playability until
+`build/autonomous-loop/visual-feature-matrix.json` has every required row at
+`pass` and `scripts/autonomous-gate.cmd -AllowMissingGitHub -NoLaunch` accepts
+fresh screenshots plus image-capable assessment. Current must-have visual rows
+include multiple large organic chambers, visible tunnel mouths, no
+single-mound-only pass, forest-floor life density, realistic insect-like ants,
+unclipped ant lineup, complete mound camera framing, a native Formic material
+palette, and tablet visual hierarchy.
 
 ## Active Renovation Track: Big Ant Village And Colony Tablet 2.0
 
 This focused track supersedes the generic stage order until it is done. The goal
 is a spacious, readable, Millenaire-like ant village plus a softer, clearer
 colony UI.
+
+Scale ambition for the renovation track:
+
+- The colony should look like a real monumental ant settlement, not an arcade
+  prop village. Workers may make structural changes that are visually large.
+- Major mounds and landmark buildings should usually be 20-30 blocks tall when
+  complete, with broad 24-40 block footprints where the scene needs it.
+  Secondary buildings can be smaller, but should still read as substantial
+  chambers, not 3-5 block huts.
+- Architecture work should add real mass: layered mound shells, tunnel mouths,
+  buttresses/ribs, yards, vertical chambers, role-specific crowns, shafts,
+  fungus/brood/storage terraces, and readable entrances.
+- Architecture should use custom Formic Frontier blocks/textures for colony
+  materials. Do not let honey, apatite-like blue mineral blocks, amethyst-like
+  accents, or unrelated vanilla placeholders become the primary mound/structure
+  palette.
+- Decorative-only passes are not enough for R2 unless the underlying structure
+  already has this scale. If screenshots still read as tiny pads with a few
+  accent blocks, the slice is not accepted.
+- QA camera framing and prepared terrain radius may be increased to capture the
+  larger ant-hill silhouettes, as long as existing scene names and screenshot
+  coverage are preserved.
 
 Slice R1: Settlement scale renovation.
 
@@ -34,14 +66,19 @@ Slice R1: Settlement scale renovation.
 
 Slice R2: Architecture polish.
 
-- Player promise: each building has an organic role-specific silhouette.
-- Implementation notes: add mound ribs, tunnel mouths, yards, material markers,
-  storage props, brood/fungus/market/archive accents, and non-flat edges.
+- Player promise: each building reads as a large, organic ant-hill structure
+  with a role-specific silhouette, not as a small hut or flat pad.
+- Implementation notes: make the main settlement buildings substantially
+  larger. Target complete landmark structures around 20-30 blocks high with
+  wide bases where appropriate; add mound ribs, tunnel mouths, yards, material
+  markers, storage props, brood/fungus/market/archive accents, vertical shafts,
+  terraces, crowns, and non-flat edges.
 - Tests: placement tests for key markers and `gui-smoke`.
 - Visual QA coverage: `settlement_scale`, `culture_styles`,
   `construction_stage`, `repair_scene`.
 - Done criteria: nursery, food, mine, barracks, market, archive, resin, fungus,
-  and defense structures are distinguishable from normal gameplay distance.
+  and defense structures are distinguishable from normal gameplay distance, and
+  the main structures no longer read as 3-5 block arcade props.
 
 Slice R3: Colony Tablet 2.0.
 

@@ -152,13 +152,18 @@ public final class VisualQaScenes {
 
 	public static BlockPos antLineupPosition(BlockPos origin, AntCaste caste) {
 		return switch (caste) {
-			case QUEEN -> origin.offset(-15, 1, -39);
-			case GIANT -> origin.offset(-10, 1, -43);
-			case MAJOR -> origin.offset(-5, 1, -39);
-			case WORKER -> origin.offset(0, 1, -45);
-			case SCOUT -> origin.offset(5, 1, -45);
-			case MINER -> origin.offset(10, 1, -43);
-			case SOLDIER -> origin.offset(15, 1, -39);
+			// R-visual-priority #2 fix: relocate the lineup to the south inner yard at z=+20
+			// (clear corridor between the queen mound front ~z=+12 and the mine at z=+29)
+			// so each caste stands on open grass with the mound as the backdrop. Camera sits
+			// south of the row looking north; ants face south (+z) toward the camera.
+			// Spaced 5 blocks apart on x in [-15, 15] so the full 30-wide row fits inside the
+			case QUEEN -> origin.offset(-15, 1, 20);
+			case GIANT -> origin.offset(-10, 1, 20);
+			case MAJOR -> origin.offset(-5, 1, 20);
+			case WORKER -> origin.offset(0, 1, 20);
+			case SCOUT -> origin.offset(5, 1, 20);
+			case MINER -> origin.offset(10, 1, 20);
+			case SOLDIER -> origin.offset(15, 1, 20);
 		};
 	}
 
@@ -180,6 +185,8 @@ public final class VisualQaScenes {
 		savedState.clearColonies();
 		if (normalized.equals(CULTURE_STYLES)) {
 			seedCultureStyles(level, origin);
+
+			dressForestFloor(level, origin, normalized);
 			ServerPlayer player = source.getPlayer();
 			if (player != null) {
 				positionCamera(player, origin, normalized);
@@ -189,6 +196,8 @@ public final class VisualQaScenes {
 		}
 		if (normalized.equals(DIPLOMACY_SCENE)) {
 			seedDiplomacyScene(level, savedState, origin);
+
+			dressForestFloor(level, origin, normalized);
 			ServerPlayer player = source.getPlayer();
 			if (player != null) {
 				positionCamera(player, origin, normalized);
@@ -198,6 +207,8 @@ public final class VisualQaScenes {
 		}
 		if (normalized.equals(WORLDGEN_ENCOUNTER)) {
 			seedWorldgenEncounter(level, savedState, origin);
+
+			dressForestFloor(level, origin, normalized);
 			ServerPlayer player = source.getPlayer();
 			if (player != null) {
 				positionCamera(player, origin, normalized);
@@ -212,6 +223,14 @@ public final class VisualQaScenes {
 			spawnAntLineup(level, origin, colony.id());
 		} else if (normalized.equals(WORK_CYCLE)) {
 			seedWorkCycle(level, colony);
+		}
+
+		// R2 forest-floor density: dress the flat QA grass plane with dirt variation,
+		// roots, stones, flowers, leaf litter, and terrain breakup so the colony reads
+		// as embedded in a living habitat, not staged on a superflat test map. Skips
+		// tablet-only scenes (those are GUI captures, not world shots).
+		if (!normalized.startsWith("tablet")) {
+			dressForestFloor(level, origin, normalized);
 		}
 
 		ServerPlayer player = source.getPlayer();
@@ -881,29 +900,54 @@ public final class VisualQaScenes {
 		));
 	}
 
+	// ant_lineup framing repair (ant_lineup_all_castes_unclipped): createColony places the
+	// MINE building at origin+(0,0,38), which sits squarely between the camera (z~+58) and
+	// the lineup row (z=+20). The mine mass occluded the row center and made the castes read
+	// as "spread around the mound" rather than a clean single comparison row. Flatten the
+	// foreground corridor back to open grass so the camera has an unobstructed sightline to
+	// the whole row, while keeping the queen mound (|z|<=16) intact as the backdrop.
+	private static void clearAntLineupForeground(ServerLevel level, BlockPos origin) {
+		for (int x = -34; x <= 34; x++) {
+			for (int z = 21; z <= 62; z++) {
+				BlockPos ground = origin.offset(x, 0, z);
+				level.setBlock(ground.below(2), Blocks.DIRT.defaultBlockState(), 3);
+				level.setBlock(ground.below(), Blocks.DIRT.defaultBlockState(), 3);
+				level.setBlock(ground, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+				for (int y = 1; y <= 48; y++) {
+					level.setBlock(ground.above(y), Blocks.AIR.defaultBlockState(), 3);
+				}
+			}
+		}
+	}
+
 	private static void spawnAntLineup(ServerLevel level, BlockPos origin, int colonyId) {
+		// Clear the ENTIRE camera-to-row corridor (x[-45,45], z[-15,60]) so no roaming
+		// colony ant can wander into the foreground between the lineup row and the camera.
 		AABB cleanup = new AABB(
-				origin.getX() - 36, origin.getY() - 2, origin.getZ() - 52,
-				origin.getX() + 36, origin.getY() + 12, origin.getZ() + 8
+				origin.getX() - 45, origin.getY() - 2, origin.getZ() - 15,
+				origin.getX() + 45, origin.getY() + 14, origin.getZ() + 60
 		);
 		level.getEntitiesOfClass(AntEntity.class, cleanup).forEach(AntEntity::discard);
+		clearAntLineupForeground(level, origin);
 		for (AntCaste caste : ANT_LINEUP_CASTES) {
 			BlockPos pos = antLineupPosition(origin, caste);
 			AntEntity ant = ColonyService.spawnAnt(level, pos, caste, colonyId);
 			if (ant != null) {
 				ant.setCustomName(Component.literal(caste.id()));
 				ant.setCustomNameVisible(true);
-				ant.setYRot(180.0F);
-				ant.setYHeadRot(180.0F);
+				ant.setYRot(0.0F);
+				ant.setYHeadRot(0.0F);
+				// Freeze AI so castes stay exactly on their lineup slots instead of strolling toward the camera and occluding the shot.
+				ant.setNoAi(true);
+				ant.setPersistenceRequired();
 			}
 		}
 	}
-
 	private static void positionCamera(ServerPlayer player, BlockPos origin, String sceneName) {
 		player.setGameMode(GameType.SPECTATOR);
 		Vec3 target = switch (sceneName) {
 			case COLONY_OVERVIEW, SETTLEMENT_SCALE -> colonyOverviewTarget(origin);
-			case ANT_LINEUP -> Vec3.atCenterOf(origin.offset(0, 2, -42));
+			case ANT_LINEUP -> Vec3.atCenterOf(origin.offset(0, 2, 20)); // row center, body height
 			case WORK_CYCLE -> Vec3.atCenterOf(origin.offset(0, 1, -23)).add(0.0, 1.35, 0.0);
 			case TABLET_EN, TABLET_RU, TABLET_GUIDE, TABLET_TRADE, TABLET_RESEARCH_MAP, TABLET_MARKET, TABLET_REQUESTS -> Vec3.atCenterOf(origin).add(0.0, 3.0, 0.0);
 			case CONSTRUCTION_STAGE -> Vec3.atCenterOf(origin.offset(0, 0, -25)).add(0.0, 2.8, 0.0);
@@ -918,7 +962,7 @@ public final class VisualQaScenes {
 		Vec3 camera = switch (sceneName) {
 			case COLONY_OVERVIEW, SETTLEMENT_SCALE -> colonyOverviewCamera(origin);
 			case COLONY_GROUND -> new Vec3(origin.getX() + 26.0, origin.getY() + 8.5, origin.getZ() - 46.0);
-			case ANT_LINEUP -> new Vec3(origin.getX() + 0.0, origin.getY() + 3.4, origin.getZ() - 55.0);
+			case ANT_LINEUP -> new Vec3(origin.getX() + 0.0, origin.getY() + 11.0, origin.getZ() + 52.0); // dist ~32 from row at z=+20, y+11 for ~17deg downward; full 30-wide row fits with margin, foreground corridor cleared
 			case WORK_CYCLE -> new Vec3(origin.getX() + 14.0, origin.getY() + 6.6, origin.getZ() - 38.0);
 			case TABLET_EN, TABLET_RU, TABLET_GUIDE, TABLET_TRADE, TABLET_RESEARCH_MAP, TABLET_MARKET, TABLET_REQUESTS -> new Vec3(origin.getX() + 12.0, origin.getY() + 5.0, origin.getZ() - 18.0);
 			case CONSTRUCTION_STAGE -> new Vec3(origin.getX() + 18.0, origin.getY() + 13.0, origin.getZ() - 55.0);
@@ -932,6 +976,294 @@ public final class VisualQaScenes {
 		};
 		player.teleportTo(camera.x, camera.y, camera.z);
 		player.lookAt(EntityAnchorArgument.Anchor.EYES, target);
+	}
+
+	/**
+	 * R2 forest-floor density: scatter dirt variation, roots, stones, flowers, leaf
+	 * litter, small piles, and terrain breakup across the colony footprint so the
+	 * ground reads as a living forest floor (see reference-forest-foraging.png), not
+	 * a superflat grass sheet. Deterministic per (x,z) so screenshots are stable.
+	 * Only writes y==0 ground (and occasional y==1 low tufts) and skips cells already
+	 * claimed by a building footprint so it never hides the subject. The dressing is
+	 * denser near the colony center and thins toward the frame edge for natural fall-off.
+	 */
+	private static void dressForestFloor(ServerLevel level, BlockPos origin, String sceneName) {
+		int radius = 96;
+		for (int x = -radius; x <= radius; x++) {
+			for (int z = -radius; z <= radius; z++) {
+				int dist = Math.abs(x) + Math.abs(z);
+				if (dist > radius) {
+					continue;
+				}
+				// Deterministic per-cell hash so the scatter is stable across runs.
+				int h = forestFloorHash(x, z);
+				BlockPos ground = origin.offset(x, 0, z);
+				// Skip cells already part of a placed structure (non-grass ground or built block).
+				net.minecraft.world.level.block.state.BlockState existing = level.getBlockState(ground);
+				if (!existing.is(net.minecraft.world.level.block.Blocks.GRASS_BLOCK)) {
+					continue;
+				}
+				// R2 forest-floor density (pass 2): denser dressing with gentler fall-off so
+				// the colony reads as embedded in a living forest floor, not a sparse demo.
+				// ~80% dressed near center, ~50% at mid-radius, ~25% at the frame edge.
+				int densityGate = (dist * 18) / radius;
+				int roll = Math.floorMod(h, 100);
+				if (roll < densityGate) {
+					continue;
+				}
+				net.minecraft.world.level.block.Block floor = forestFloorBlock(h, dist, radius);
+				if (floor != null) {
+					level.setBlock(ground, floor.defaultBlockState(), 3);
+				}
+				// Low y==1 tufts: grass, flowers, tiny stones, leaf-litter mushrooms.
+				net.minecraft.world.level.block.Block tuft = forestFloorTuft(h, dist, radius);
+				if (tuft != null) {
+					BlockPos above = ground.above();
+					if (level.getBlockState(above).isAir() && floor != net.minecraft.world.level.block.Blocks.DIRT_PATH) {
+						level.setBlock(above, tuft.defaultBlockState(), 3);
+					}
+				}
+			}
+		}
+		// A few prominent root masses and stone clusters near the mound base for scale.
+		placeForestFloorClusters(level, origin);
+		// R2 forest-floor density (pass 3, retry-03): the colony core still read as a
+		// grass meadow near the hub because dressing skipped the cells closest to the
+		// buildings. Stamp visible worn worker routes and trampled-earth/debris skirts
+		// around the campus so colony_ground reads as a lived-in trail network.
+		dressColonyCore(level, origin);
+	}
+
+	private static int forestFloorHash(int x, int z) {
+		int h = (x * 73856093) ^ (z * 19349663);
+		h ^= (h >>> 13);
+		h *= 1274126177;
+		h ^= (h >>> 16);
+		return h;
+	}
+
+	private static net.minecraft.world.level.block.Block forestFloorBlock(int h, int dist, int radius) {
+		int roll = Math.floorMod(h >>> 3, 100);
+		// R2 denser, more varied forest floor: coarse dirt + podzol dominate, with more
+		// rooted dirt ribs, moss patches, mud, peeping stone, and worn dirt-path threads
+		// near the colony core so the ground reads like reference-forest-foraging.png.
+		if (dist < 28 && roll < 12) return net.minecraft.world.level.block.Blocks.DIRT_PATH;
+		if (roll < 26) return net.minecraft.world.level.block.Blocks.COARSE_DIRT;
+		if (roll < 44) return net.minecraft.world.level.block.Blocks.PODZOL;
+		if (roll < 60) return net.minecraft.world.level.block.Blocks.ROOTED_DIRT;
+		if (roll < 70) return net.minecraft.world.level.block.Blocks.MOSS_BLOCK;
+		if (roll < 78) return net.minecraft.world.level.block.Blocks.DIRT;
+		if (roll < 86) return net.minecraft.world.level.block.Blocks.COBBLESTONE;
+		if (roll < 92) return net.minecraft.world.level.block.Blocks.MUD;
+		if (roll < 96) return net.minecraft.world.level.block.Blocks.PODZOL;
+		return null;
+	}
+
+	private static net.minecraft.world.level.block.Block forestFloorTuft(int h, int dist, int radius) {
+		int roll = Math.floorMod(h >>> 11, 100);
+		// R2 denser forest-floor life: more grass tufts, ferns, flowers, mushroom
+		// litter, and small pebbles so the floor reads as inhabited and overgrown.
+		if (roll < 14) return net.minecraft.world.level.block.Blocks.SHORT_GRASS;
+		if (roll < 22) return net.minecraft.world.level.block.Blocks.TALL_GRASS;
+		if (roll < 28) return net.minecraft.world.level.block.Blocks.FERN;
+		if (roll < 34) return net.minecraft.world.level.block.Blocks.LARGE_FERN;
+		if (roll < 40) return net.minecraft.world.level.block.Blocks.DANDELION;
+		if (roll < 45) return net.minecraft.world.level.block.Blocks.POPPY;
+		if (roll < 50) return net.minecraft.world.level.block.Blocks.CORNFLOWER;
+		if (roll < 55) return net.minecraft.world.level.block.Blocks.AZURE_BLUET;
+		if (roll < 60) return net.minecraft.world.level.block.Blocks.WHITE_TULIP;
+		if (roll < 64) return net.minecraft.world.level.block.Blocks.OXEYE_DAISY;
+		if (roll < 70) return net.minecraft.world.level.block.Blocks.BROWN_MUSHROOM;
+		if (roll < 75) return net.minecraft.world.level.block.Blocks.RED_MUSHROOM;
+		if (roll < 80) return net.minecraft.world.level.block.Blocks.STONE_BUTTON;
+		if (roll < 84) return net.minecraft.world.level.block.Blocks.DEAD_BUSH;
+		return null;
+	}
+
+	private static void placeForestFloorClusters(ServerLevel level, BlockPos origin) {
+		// 8 prominent root/stone/litter clusters in a ring ~28 blocks out for scale anchors.
+		int[][] ring = { {20, 20}, {-20, 20}, {20, -20}, {-20, -20}, {28, 8}, {-28, 8}, {8, 28}, {8, -28} };
+		for (int i = 0; i < ring.length; i++) {
+			int cx = ring[i][0];
+			int cz = ring[i][1];
+			for (int dx = -2; dx <= 2; dx++) {
+				for (int dz = -2; dz <= 2; dz++) {
+					int d = Math.abs(dx) + Math.abs(dz);
+					if (d > 3) continue;
+					BlockPos g = origin.offset(cx + dx, 0, cz + dz);
+					if (i % 3 == 0) {
+						// root mass
+						if (d <= 2) StructurePlacer.safeSet(level, g, net.minecraft.world.level.block.Blocks.ROOTED_DIRT);
+						if (d == 0) StructurePlacer.safeSet(level, g.above(), net.minecraft.world.level.block.Blocks.MANGROVE_ROOTS);
+					} else if (i % 3 == 1) {
+						// stone cluster
+						if (d <= 1) StructurePlacer.safeSet(level, g, net.minecraft.world.level.block.Blocks.COBBLESTONE);
+						if (d == 0) StructurePlacer.safeSet(level, g.above(), net.minecraft.world.level.block.Blocks.MOSSY_COBBLESTONE);
+					} else {
+						// leaf-litter / fungus mound
+						if (d <= 2) StructurePlacer.safeSet(level, g, net.minecraft.world.level.block.Blocks.PODZOL);
+						if (d <= 1) StructurePlacer.safeSet(level, g.above(), net.minecraft.world.level.block.Blocks.BROWN_MUSHROOM_BLOCK);
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * R2 forest-floor density (pass 3, retry-03): stamp a lived-in colony trail network
+	 * so the core no longer reads as a flat grass meadow. Drawn AFTER the building shells
+	 * and the base forest-floor pass, so it only overwrites remaining GRASS_BLOCK cells
+	 * (GameTest assertions target specific non-grass rally/structure blocks, which are
+	 * preserved). Emits visible worn worker routes from the hub toward each starter
+	 * campus building, trampled-earth rings around building skirts, and scattered debris
+	 * piles (twigs, pebbles, leaf litter) so the ground reads like reference-forest-
+	 * foraging.png: a real colony footprint embedded in forest dirt, not a golf green.
+	 */
+	private static void dressColonyCore(ServerLevel level, BlockPos origin) {
+		// Worn worker routes from the queen hub toward each starter campus building.
+		// Use the same siteFor() offsets the nest uses so routes line up with real doors.
+		net.minecraft.world.level.block.state.BlockState path = net.minecraft.world.level.block.Blocks.DIRT_PATH.defaultBlockState();
+		net.minecraft.world.level.block.state.BlockState coarse = net.minecraft.world.level.block.Blocks.COARSE_DIRT.defaultBlockState();
+		net.minecraft.world.level.block.state.BlockState podzol = net.minecraft.world.level.block.Blocks.PODZOL.defaultBlockState();
+		BlockPos[] hubs = {
+				ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0),
+				ColonyBuilder.siteFor(origin, BuildingType.NURSERY, 0),
+				ColonyBuilder.siteFor(origin, BuildingType.MINE, 0),
+				ColonyBuilder.siteFor(origin, BuildingType.BARRACKS, 0),
+				ColonyBuilder.siteFor(origin, BuildingType.MARKET, 0),
+				ColonyBuilder.siteFor(origin, BuildingType.DIPLOMACY_SHRINE, 0),
+				origin.offset(54, 0, 8),   // food node
+				origin.offset(-54, 0, 8)   // chitin node
+		};
+		for (BlockPos hub : hubs) {
+			stampWorkerRoute(level, origin, hub, path, coarse, podzol);
+		}
+		// Trampled-earth rings + debris around every campus building skirt so the ground
+		// around structures reads as worn, not a manicured lawn. startFrom 1 to skip the
+		// central queen chamber (its footprint is the nest mound itself).
+		for (int i = 1; i < hubs.length; i++) {
+			stampColonySkirt(level, hubs[i]);
+		}
+	}
+
+	/**
+	 * Worn worker route: a 3-wide dirt-path lane from the hub toward a destination, with
+	 * frayed coarse-dirt/podzol edges and occasional debris so it reads as a real ant
+	 * trail, not a paved road. Only paints GRASS_BLOCK cells; non-grass (structures,
+	 * existing paths, resource nodes, rally markers) are left untouched.
+	 */
+	private static void stampWorkerRoute(ServerLevel level, BlockPos origin, BlockPos destination,
+			net.minecraft.world.level.block.state.BlockState path, net.minecraft.world.level.block.state.BlockState coarse,
+			net.minecraft.world.level.block.state.BlockState podzol) {
+		if (destination == null || origin.equals(destination)) {
+			return;
+		}
+		BlockPos end = new BlockPos(destination.getX(), origin.getY(), destination.getZ());
+		BlockPos cursor = origin;
+		int step = 0;
+		while (cursor.getX() != end.getX()) {
+			int dx = Integer.compare(end.getX(), cursor.getX());
+			cursor = cursor.offset(dx, 0, 0);
+			paintRouteTile(level, cursor, true, ++step, path, coarse, podzol);
+		}
+		while (cursor.getZ() != end.getZ()) {
+			int dz = Integer.compare(end.getZ(), cursor.getZ());
+			cursor = cursor.offset(0, 0, dz);
+			paintRouteTile(level, cursor, false, ++step, path, coarse, podzol);
+		}
+	}
+
+	private static void paintRouteTile(ServerLevel level, BlockPos center, boolean xAxis, int step,
+			net.minecraft.world.level.block.state.BlockState path, net.minecraft.world.level.block.state.BlockState coarse,
+			net.minecraft.world.level.block.state.BlockState podzol) {
+		// 3-wide worn lane center.
+		setIfGrass(level, center, path);
+		if (xAxis) {
+			setIfGrass(level, center.north(), path);
+			setIfGrass(level, center.south(), path);
+		} else {
+			setIfGrass(level, center.east(), path);
+			setIfGrass(level, center.west(), path);
+		}
+		// Frayed trampled edges every few tiles so the trail looks trodden, not paved.
+		if (step % 3 == 0) {
+			if (xAxis) {
+				setIfGrass(level, center.north(2), coarse);
+				setIfGrass(level, center.south(2), podzol);
+			} else {
+				setIfGrass(level, center.east(2), coarse);
+				setIfGrass(level, center.west(2), podzol);
+			}
+		}
+	}
+
+	/**
+	 * Trampled-earth ring + scattered debris around a campus building skirt so the ground
+	 * surrounding each role building reads as worn colony earth, not untouched grass.
+	 * Concentric ring at radius ~11-14 from the building center; only overwrites grass.
+	 */
+	private static void stampColonySkirt(ServerLevel level, BlockPos center) {
+		for (int radius = 11; radius <= 14; radius++) {
+			int density = radius == 11 ? 70 : 45;  // dense inner worn ring, sparser outer
+			int ringSteps = radius * 8;
+			for (int i = 0; i < ringSteps; i++) {
+				double angle = (i * 2 * Math.PI) / ringSteps;
+				int ox = (int) Math.round(Math.cos(angle) * radius);
+				int oz = (int) Math.round(Math.sin(angle) * radius);
+				BlockPos ground = center.offset(ox, 0, oz);
+				if (!level.getBlockState(ground).is(net.minecraft.world.level.block.Blocks.GRASS_BLOCK)) {
+					continue;
+				}
+				int h = forestFloorHash(ox + center.getX(), oz + center.getZ());
+				int roll = Math.floorMod(h, 100);
+				if (roll >= density) {
+					continue;
+				}
+				// Worn colony earth: coarse dirt, podzol, dirt path, rooted dirt ribs.
+				net.minecraft.world.level.block.Block floor = colonySkirtBlock(h);
+				if (floor != null) {
+					level.setBlock(ground, floor.defaultBlockState(), 3);
+				}
+				// Low debris: twigs (dead bush / fern), pebbles (button), leaf litter.
+				net.minecraft.world.level.block.Block debris = colonySkirtDebris(h);
+				if (debris != null) {
+					BlockPos above = ground.above();
+					if (level.getBlockState(above).isAir()) {
+						level.setBlock(above, debris.defaultBlockState(), 3);
+					}
+				}
+			}
+		}
+	}
+
+	private static net.minecraft.world.level.block.Block colonySkirtBlock(int h) {
+		int roll = Math.floorMod(h >>> 5, 100);
+		if (roll < 30) return net.minecraft.world.level.block.Blocks.COARSE_DIRT;
+		if (roll < 55) return net.minecraft.world.level.block.Blocks.PODZOL;
+		if (roll < 72) return net.minecraft.world.level.block.Blocks.DIRT_PATH;
+		if (roll < 86) return net.minecraft.world.level.block.Blocks.ROOTED_DIRT;
+		if (roll < 94) return net.minecraft.world.level.block.Blocks.MUD;
+		return null;
+	}
+
+	private static net.minecraft.world.level.block.Block colonySkirtDebris(int h) {
+		int roll = Math.floorMod(h >>> 9, 100);
+		if (roll < 24) return net.minecraft.world.level.block.Blocks.DEAD_BUSH;
+		if (roll < 44) return net.minecraft.world.level.block.Blocks.FERN;
+		if (roll < 60) return net.minecraft.world.level.block.Blocks.STONE_BUTTON;
+		if (roll < 74) return net.minecraft.world.level.block.Blocks.BROWN_MUSHROOM;
+		if (roll < 86) return net.minecraft.world.level.block.Blocks.SHORT_GRASS;
+		return null;
+	}
+
+	/**
+	 * Set a block only if the current cell is GRASS_BLOCK, so colony-core dressing never
+	 * overwrites a placed structure, path, resource node, or GameTest rally marker.
+	 */
+	private static void setIfGrass(ServerLevel level, BlockPos pos, net.minecraft.world.level.block.state.BlockState state) {
+		if (level.getBlockState(pos).is(net.minecraft.world.level.block.Blocks.GRASS_BLOCK)) {
+			level.setBlock(pos, state, 3);
+		}
 	}
 
 	private static void prepareFlatQaArea(ServerLevel level, BlockPos origin, int radius) {

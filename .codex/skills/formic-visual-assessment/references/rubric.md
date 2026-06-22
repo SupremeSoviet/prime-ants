@@ -68,6 +68,14 @@ Judge whether the colony looks like a playable system, not a random prop pile.
 - There should be a clear focal point and readable boundaries.
 - Visual noise should not hide gameplay elements.
 - The colony should have scale and composition appropriate for Minecraft survival gameplay.
+- For the active big-ant-village renovation, do not accept a single tall central
+  mound as proof that the settlement is done. Several surrounding role buildings
+  should also read as substantial ant-hill chambers, not flat stepped pads with
+  a decorative tower.
+- Monumental architecture should show base-to-peak mass, organic taper, readable
+  tunnel mouths or entrances, vertical shafts/chambers, and role-specific
+  silhouettes. If most buildings still look like low platforms, mark at least
+  `P2`; mark `P1` when the current slice promised R2 scale completion.
 
 ## Localization
 

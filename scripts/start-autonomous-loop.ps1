@@ -2,7 +2,15 @@ param(
     [switch]$AllowMissingGitHub,
     [int]$MaxIterations = 0,
     [int]$PauseSeconds = 30,
-    [string]$Model = ""
+    [string]$Model = "",
+    [string]$CodexProfile = "",
+    [string]$CodexCommand = "codex",
+    [int]$MaxGuardRetries = 6,
+    [int]$CodexCompletionWatchdogMinutes = 5,
+    [int]$CodexActivityWatchdogMinutes = 45,
+    [int]$RateLimitRetrySeconds = 180,
+    [int]$RateLimitMaxRetrySeconds = 21600,
+    [string]$ProxyCommand = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -30,8 +38,37 @@ if (Test-Path -LiteralPath $StopFile) {
     Remove-Item -LiteralPath $StopFile -Force
 }
 
-if (-not (Get-Command codex -ErrorAction SilentlyContinue)) {
-    throw "codex CLI is not available on PATH"
+function Get-CodexHome {
+    if (-not [string]::IsNullOrWhiteSpace($env:CODEX_HOME)) {
+        return $env:CODEX_HOME
+    }
+    return (Join-Path $env:USERPROFILE ".codex")
+}
+
+function Ensure-ZaiProxyToken {
+    if ($CodexProfile -ne "zai-glm52") {
+        return
+    }
+    if ([string]::IsNullOrWhiteSpace($env:ZAI_CODEX_PROXY_TOKEN)) {
+        $env:ZAI_CODEX_PROXY_TOKEN = [guid]::NewGuid().ToString("N")
+    }
+}
+
+if (-not [string]::IsNullOrWhiteSpace($CodexProfile)) {
+    if ($CodexProfile -notmatch '^[A-Za-z0-9_.-]+$') {
+        throw "CodexProfile must be a simple profile name, not a path or command line."
+    }
+    $profilePath = Join-Path (Get-CodexHome) "$CodexProfile.config.toml"
+    if (-not (Test-Path -LiteralPath $profilePath)) {
+        throw "Codex profile was not found: $profilePath"
+    }
+}
+
+Ensure-ZaiProxyToken
+
+$codex = Get-Command $CodexCommand -ErrorAction SilentlyContinue
+if (-not $codex) {
+    throw "codex CLI is not available: $CodexCommand"
 }
 
 $argsList = @(
@@ -39,13 +76,25 @@ $argsList = @(
     "-ExecutionPolicy", "Bypass",
     "-File", "`"$(Join-Path $PSScriptRoot 'autonomous-loop.ps1')`"",
     "-MaxIterations", "$MaxIterations",
-    "-PauseSeconds", "$PauseSeconds"
+    "-PauseSeconds", "$PauseSeconds",
+    "-MaxGuardRetries", "$MaxGuardRetries",
+    "-CodexCompletionWatchdogMinutes", "$CodexCompletionWatchdogMinutes",
+    "-CodexActivityWatchdogMinutes", "$CodexActivityWatchdogMinutes",
+    "-RateLimitRetrySeconds", "$RateLimitRetrySeconds",
+    "-RateLimitMaxRetrySeconds", "$RateLimitMaxRetrySeconds",
+    "-CodexCommand", "`"$($codex.Source)`""
 )
 if ($AllowMissingGitHub) {
     $argsList += "-AllowMissingGitHub"
 }
 if (-not [string]::IsNullOrWhiteSpace($Model)) {
     $argsList += @("-Model", $Model)
+}
+if (-not [string]::IsNullOrWhiteSpace($CodexProfile)) {
+    $argsList += @("-CodexProfile", $CodexProfile)
+}
+if (-not [string]::IsNullOrWhiteSpace($ProxyCommand)) {
+    $argsList += @("-ProxyCommand", "`"$ProxyCommand`"")
 }
 
 $process = Start-Process `

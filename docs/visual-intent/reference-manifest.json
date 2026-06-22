@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "artDirectionOnly": true,
+  "retrievalNote": "User provided three local reference images from C:/Users/user/Downloads on 2026-06-22. They are copied into this directory as stable art-direction references.",
+  "references": [
+    {
+      "id": "forest_foraging",
+      "file": "reference-forest-foraging.png",
+      "available": true,
+      "role": "Forest-floor density, realistic ant silhouettes, grass, roots, dirt, flowers, and warm natural lighting.",
+      "requiredForAssessment": false
+    },
+    {
+      "id": "mega_nest_wide",
+      "file": "reference-mega-nest-wide.png",
+      "available": true,
+      "role": "Large organic ant-hill mass, many chambers and openings, ant traffic, broad base, and lived-in colony density.",
+      "requiredForAssessment": false
+    },
+    {
+      "id": "mega_nest_front",
+      "file": "reference-mega-nest-front.png",
+      "available": true,
+      "role": "Front-facing read of a tall ant-hill facade with visible tunnel mouths, terraces, chambers, ants, and forest edge.",
+      "requiredForAssessment": false
+    }
+  ]
+}

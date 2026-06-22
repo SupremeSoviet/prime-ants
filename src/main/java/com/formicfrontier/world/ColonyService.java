@@ -859,6 +859,123 @@ public final class ColonyService {
 			}
 		}
 	}
+	/**
+	 * Connect a campus building to the colony hub (origin) with a broad village trail.
+	 * Reuses the same wide-path painter as starter trails so advanced buildings read as
+	 * part of one connected settlement instead of isolated pads. Used by the settlement
+	 * scale visual QA scene and by colony renovation so a maturing village stays legible.
+	 */
+	public static void connectOriginTrail(ServerLevel level, BlockPos origin, BlockPos destination) {
+		// Settlement/world renovation (R2 architecture polish): village lanes read as
+		// role-distinct trails instead of identical dirt spokes. The typed overload
+		// stamps the destination building's material accent at the trail midpoint and
+		// approach so each spoke carries the role of the campus it serves.
+		connectOriginTrail(level, origin, destination, null);
+	}
+
+	public static void connectOriginTrail(ServerLevel level, BlockPos origin, BlockPos destination, BuildingType type) {
+		if (destination == null || origin.equals(destination)) {
+			return;
+		}
+		BlockPos end = new BlockPos(destination.getX(), origin.getY(), destination.getZ());
+		placeWidePath(level, origin, end);
+		if (type == null) {
+			return;
+		}
+		placeTrailRoleAccents(level, origin, end, type);
+	}
+
+	/**
+	 * R2 architecture polish: stamp the destination building's role onto its village
+	 * lane so the settlement_scale aerial reads as a dense, diverse ant village.
+	 * A small rest yard sits at the midpoint (podzol pad + rooted bench), and the
+	 * destination end of the trail gets the building's signature material pair so a
+	 * market lane, archive lane, fungus lane, etc. are visually distinct without UI.
+	 */
+	private static void placeTrailRoleAccents(ServerLevel level, BlockPos origin, BlockPos end, BuildingType type) {
+		// placeWidePath paints a 3-wide lane (center + north/south on the X-leg,
+		// center + east/west on the Z-leg). Keep that lane intact and stamp the
+		// role material BESIDE it (offset 2 = one block clear of the path edge) so
+		// each village lane broadens into a small role-colored yard without looking
+		// like a broken/discontinuous trail. A bench post anchors the rest stop.
+		BlockPos mid = trailMidpoint(origin, end);
+		Block base = trailRoleFloor(type);
+		Block accent = trailRoleAccent(type);
+		boolean xAxisLeg = end.getX() != origin.getX();
+		BlockPos flankA = xAxisLeg ? mid.north(2) : mid.east(2);
+		BlockPos flankB = xAxisLeg ? mid.south(2) : mid.west(2);
+		set(level, flankA, base);
+		set(level, flankB, base);
+		set(level, flankA.above(), accent);
+		set(level, flankB.above(), accent);
+		set(level, flankA.east(), Blocks.PODZOL);
+		set(level, flankA.east().above(), Blocks.MANGROVE_ROOTS);
+		// Approach gate near the campus: role-material posts flanking the lane
+		// entrance so each building's district reads from the hub side.
+		BlockPos gate = approachGate(origin, end);
+		if (gate != null) {
+			BlockPos gateFlankA = xAxisLeg ? gate.north(2) : gate.east(2);
+			BlockPos gateFlankB = xAxisLeg ? gate.south(2) : gate.west(2);
+			set(level, gateFlankA, base);
+			set(level, gateFlankB, base);
+			set(level, gateFlankA.above(), accent);
+			set(level, gateFlankB.above(), accent);
+		}
+	}
+
+	private static BlockPos trailMidpoint(BlockPos origin, BlockPos end) {
+		int mx = origin.getX() + (end.getX() - origin.getX()) / 2;
+		int mz = origin.getZ() + (end.getZ() - origin.getZ()) / 2;
+		return new BlockPos(mx, origin.getY(), mz);
+	}
+
+	private static BlockPos approachGate(BlockPos origin, BlockPos end) {
+		int total = Math.abs(end.getX() - origin.getX()) + Math.abs(end.getZ() - origin.getZ());
+		if (total < 12) {
+			return null;
+		}
+		int keep = 9;
+		int gx;
+		int gz;
+		if (end.getX() != origin.getX()) {
+			gx = end.getX() - Integer.signum(end.getX() - origin.getX()) * keep;
+			gz = origin.getZ();
+		} else {
+			gx = origin.getX();
+			gz = end.getZ() - Integer.signum(end.getZ() - origin.getZ()) * keep;
+		}
+		return new BlockPos(gx, origin.getY(), gz);
+	}
+
+	private static Block trailRoleFloor(BuildingType type) {
+		return switch (type) {
+			case MARKET, TRADE_HUB -> Blocks.PACKED_MUD;
+			case PHEROMONE_ARCHIVE, DIPLOMACY_SHRINE -> Blocks.CHISELED_TUFF;
+			case RESIN_DEPOT -> Blocks.HONEYCOMB_BLOCK;
+			case FUNGUS_GARDEN -> Blocks.MYCELIUM;
+			case ARMORY, BARRACKS, MINE -> Blocks.COBBLED_DEEPSLATE;
+			case VENOM_PRESS -> Blocks.POLISHED_BLACKSTONE;
+			case CHITIN_FARM, NURSERY -> Blocks.BONE_BLOCK;
+			default -> Blocks.PODZOL;
+		};
+	}
+
+	private static Block trailRoleAccent(BuildingType type) {
+		return switch (type) {
+			case MARKET, TRADE_HUB -> Blocks.OCHRE_FROGLIGHT;
+			case PHEROMONE_ARCHIVE -> Blocks.AMETHYST_BLOCK;
+			case RESIN_DEPOT -> Blocks.HONEY_BLOCK;
+			case FUNGUS_GARDEN -> Blocks.RED_MUSHROOM_BLOCK;
+			case ARMORY -> Blocks.POLISHED_DEEPSLATE;
+			case BARRACKS, MINE -> Blocks.IRON_ORE;
+			case VENOM_PRESS -> Blocks.SLIME_BLOCK;
+			case DIPLOMACY_SHRINE -> Blocks.CANDLE;
+			case CHITIN_FARM -> Blocks.HONEYCOMB_BLOCK;
+			case NURSERY -> Blocks.BONE_BLOCK;
+			case WATCH_POST -> Blocks.COBBLED_DEEPSLATE_WALL;
+			default -> Blocks.MANGROVE_ROOTS;
+		};
+	}
 
 	private static void spawnStarterCastes(ServerLevel level, ColonyData colony) {
 		BlockPos origin = colony.origin();

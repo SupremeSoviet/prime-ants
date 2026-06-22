@@ -184,5 +184,10 @@
   "formic_frontier.label.repairing": "Repairing %s%%",
   "formic_frontier.label.needs": "Needs %s",
   "formic_frontier.label.building": "Building %s%%",
-  "formic_frontier.label.identity_status": "%s | %s"
+  "formic_frontier.label.identity_status": "%s | %s",
+  "formic_frontier.ui.identity_rep": "%s | rep %s",
+  "formic_frontier.ui.request.title": "%s for %s",
+  "formic_frontier.ui.request.delivery": "%s gives %s %s",
+  "formic_frontier.ui.request.help": "Help %s",
+  "formic_frontier.ui.request.reward": "+%s token, +%s rep, P%s"
 }

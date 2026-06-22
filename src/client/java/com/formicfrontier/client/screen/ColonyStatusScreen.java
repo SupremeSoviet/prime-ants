@@ -16,8 +16,13 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import com.formicfrontier.sim.ResearchNode;
 
 public final class ColonyStatusScreen extends Screen {
 	private static final Tab[] TABS = {
@@ -174,7 +179,7 @@ public final class ColonyStatusScreen extends Screen {
 		graphics.drawString(font, translated("formic_frontier.ui.personality"), x + 8, y + 5, 0xFFEAC67D, false);
 		graphics.drawString(font, translated("formic_frontier.ui.relationship"), x + mid, y + 5, 0xFFEAC67D, false);
 		graphics.drawString(font, ellipsize(translated(snapshot.personalityKey()) + " | " + translated(snapshot.personalityDetailKey()), mid - 16), x + 8, y + 16, 0xFFF4E9C8, false);
-		graphics.drawString(font, ellipsize(translated(snapshot.relationshipKey()) + " | rep " + snapshot.reputation(), width - mid - 8), x + mid, y + 16, 0xFFF4E9C8, false);
+		graphics.drawString(font, ellipsize(translated("formic_frontier.ui.identity_rep", translated(snapshot.relationshipKey()), snapshot.reputation()), width - mid - 8), x + mid, y + 16, 0xFFF4E9C8, false);
 		graphics.drawString(font, ellipsize(translated("formic_frontier.ui.current_goal") + ": " + snapshot.currentTask(), width - 16), x + 8, y + 27, 0xFFC9974B, false);
 	}
 
@@ -212,53 +217,191 @@ public final class ColonyStatusScreen extends Screen {
 	}
 
 	private void drawResearch(GuiGraphics graphics, int x, int y, int width, int height) {
-		int columns = width >= 760 ? 3 : 2;
-		int nodeH = 54;
-		int rowCapacity = Math.max(1, height / (nodeH + 14));
-		List<ColonyUiSnapshot.ResearchEntry> rows = snapshot.research().stream()
-				.sorted(Comparator.comparing(ColonyUiSnapshot.ResearchEntry::complete)
-						.thenComparing(entry -> !entry.active())
-						.thenComparing(entry -> !entry.startable())
-						.thenComparing(ColonyUiSnapshot.ResearchEntry::nodeId))
-				.limit(Math.min(snapshot.research().size(), columns * rowCapacity))
-				.toList();
-		int nodeW = Math.max(118, (width - (columns - 1) * 18) / columns);
-		for (int i = 0; i < rows.size(); i++) {
-			ColonyUiSnapshot.ResearchEntry entry = rows.get(i);
+		// R3 Colony Tablet 2.0: render the research tab as a real prerequisite node MAP,
+		// not a positional card grid. Nodes are tiered by their actual ResearchNode
+		// prerequisites (roots = Tier I on the left, dependents = Tier II on the right)
+		// and bold connector lines are drawn along the real parent->child dependency
+		// edges. The edges, arrowheads, and tier bands are intentionally high-contrast
+		// so the screenshot reads unambiguously as a branched tech-tree graph.
+		Map<String, ColonyUiSnapshot.ResearchEntry> byId = new HashMap<>();
+		for (ColonyUiSnapshot.ResearchEntry entry : snapshot.research()) {
+			byId.put(entry.nodeId(), entry);
+		}
+		Map<String, Integer> tier = new HashMap<>();
+		for (ResearchNode node : ResearchNode.values()) {
+			tier.put(node.id(), researchTier(node, tier));
+		}
+		int maxTier = 0;
+		for (int t : tier.values()) {
+			maxTier = Math.max(maxTier, t);
+		}
+		int columns = Math.min(maxTier + 1, 2);
+		int nodeH = 56;
+		int rowGap = 10;
+		// Wide central channel reserved for the bold directed edges + arrowheads so
+		// the parent->child links have room to read between the two tiers.
+		int colGap = 64;
+		int nodeW = Math.max(132, Math.min(176, (width - (columns - 1) * colGap - 16) / columns));
+		// Show every node that fits; the full tree is only 7 nodes (4 + 3) so on the
+		// 1600x900 QA panel all of them should render, making the graph look complete.
+		int rowCapacity = Math.max(1, (height + rowGap) / (nodeH + rowGap));
+		Map<Integer, List<ColonyUiSnapshot.ResearchEntry>> byTier = new HashMap<>();
+		for (ColonyUiSnapshot.ResearchEntry entry : snapshot.research()) {
+			int t = tier.getOrDefault(entry.nodeId(), 0);
+			byTier.computeIfAbsent(t, k -> new ArrayList<>()).add(entry);
+		}
+		Comparator<ColonyUiSnapshot.ResearchEntry> tierOrder = Comparator
+				.comparing(ColonyUiSnapshot.ResearchEntry::complete)
+				.thenComparing(entry -> !entry.active())
+				.thenComparing(entry -> !entry.startable())
+				.thenComparing(ColonyUiSnapshot.ResearchEntry::nodeId);
+		// Lay each tier out as a vertically centered stack and remember each node's
+		// box so edges can be drawn between exact parent/child centers.
+		Map<String, int[]> slot = new HashMap<>();
+		int[] tierNodeCount = new int[columns];
+		int[] tierStackTop = new int[columns];
+		for (int column = 0; column < columns; column++) {
+			List<ColonyUiSnapshot.ResearchEntry> entries = byTier.getOrDefault(column, List.of())
+					.stream().sorted(tierOrder).limit(rowCapacity).toList();
+			int count = entries.size();
+			tierNodeCount[column] = count;
+			int stackHeight = count * nodeH + Math.max(0, count - 1) * rowGap;
+			int top = y + Math.max(0, (height - stackHeight) / 2);
+			tierStackTop[column] = top;
+			for (int r = 0; r < count; r++) {
+				ColonyUiSnapshot.ResearchEntry entry = entries.get(r);
+				int cx = x + column * (nodeW + colGap);
+				int cy = top + r * (nodeH + rowGap);
+				slot.put(entry.nodeId(), new int[] {cx, cy});
+			}
+		}
+		// Faint tier bands + roman-numeral tier labels so the depth structure reads
+		// even at a glance, before the eye traces the edges.
+		int[] tierColor = {0x332A4A6B, 0x332A6B4A};
+		String[] tierLabel = {"Tier I  \u00b7  roots", "Tier II  \u00b7  advanced"};
+		for (int column = 0; column < columns; column++) {
+			int cx = x + column * (nodeW + colGap);
+			int bandTop = tierStackTop[column] - 16;
+			int bandH = tierNodeCount[column] * nodeH + Math.max(0, tierNodeCount[column] - 1) * rowGap + 22;
+			graphics.fill(cx - 6, bandTop, cx + nodeW + 6, bandTop + bandH, tierColor[column % tierColor.length]);
+			graphics.drawString(font, tierLabel[column % tierLabel.length], cx - 2, bandTop + 3, TEXT_MUTED, false);
+		}
+		// Bold directed prerequisite edges drawn BEFORE nodes. Each edge is a clear
+		// 3-segment elbow in the central channel with a solid arrowhead at the child.
+		for (ResearchNode child : ResearchNode.values()) {
+			int[] childSlot = slot.get(child.id());
+			if (childSlot == null) {
+				continue;
+			}
+			for (String prereqId : child.prerequisites()) {
+				int[] parentSlot = slot.get(prereqId);
+				if (parentSlot == null) {
+					continue;
+				}
+				ColonyUiSnapshot.ResearchEntry parentEntry = byId.get(prereqId);
+				boolean unlocked = parentEntry != null && parentEntry.complete();
+				drawResearchEdge(graphics,
+						parentSlot[0] + nodeW, parentSlot[1] + nodeH / 2,
+						childSlot[0], childSlot[1] + nodeH / 2,
+						unlocked);
+			}
+		}
+		// Draw the nodes themselves on top of edges and tier bands.
+		for (ResearchNode node : ResearchNode.values()) {
+			int[] s = slot.get(node.id());
+			if (s == null) {
+				continue;
+			}
+			ColonyUiSnapshot.ResearchEntry entry = byId.get(node.id());
+			if (entry == null) {
+				continue;
+			}
 			int progress = entry.complete() ? 100 : percent(entry.progress(), entry.duration());
 			int color = entry.active() ? 0xB58BFF : entry.startable() ? 0x6DD08E : 0x8A6D47;
-			int column = i % columns;
-			int row = i / columns;
-			int cx = x + column * (nodeW + 18);
-			int cy = y + row * (nodeH + 14);
-			if (row > 0) {
-				int lineX = cx + nodeW / 2;
-				graphics.fill(lineX, cy - 14, lineX + 2, cy, 0xFF6E5131);
-			}
-			if (column > 0) {
-				int lineY = cy + nodeH / 2;
-				graphics.fill(cx - 18, lineY, cx, lineY + 2, 0xFF6E5131);
-			}
-			drawResearchNode(graphics, cx, cy, nodeW, nodeH, entry, progress, color);
+			drawResearchNode(graphics, s[0], s[1], nodeW, nodeH, entry, progress, color);
 		}
 	}
 
+	/** Recursive prerequisite depth for a research node, memoized into {@code cache}. */
+	private static int researchTier(ResearchNode node, Map<String, Integer> cache) {
+		Integer cached = cache.get(node.id());
+		if (cached != null) {
+			return cached;
+		}
+		if (node.prerequisites().isEmpty()) {
+			cache.put(node.id(), 0);
+			return 0;
+		}
+		int depth = 0;
+		for (String prereqId : node.prerequisites()) {
+			try {
+				depth = Math.max(depth, researchTier(ResearchNode.fromId(prereqId), cache) + 1);
+			} catch (IllegalArgumentException ignored) {
+				// Unknown prerequisite id should not happen, but never break the UI over it.
+			}
+		}
+		cache.put(node.id(), depth);
+		return depth;
+	}
+
+	/**
+	 * Draws a prerequisite map edge as a 3-segment elbow (right -> mid -> left) so the
+	 * parent->child dependency reads as a directed tech-tree link. Green when the parent
+	 * is complete (the path is open), dim amber when the child is still gated.
+	 */
+	private static void drawResearchEdge(GuiGraphics graphics, int x1, int y1, int x2, int y2, boolean unlocked) {
+		// Bold, high-contrast directed edge so the parent->child prerequisite link is
+		// unmistakable in the screenshot. Green when the dependency is satisfied (the
+		// child is unlocked), warm gold when the child is still gated behind it.
+		int color = unlocked ? 0xFF6FE08F : 0xFFFFC24A;
+		int midX = (x1 + x2) / 2;
+		// Horizontal stub leaving the parent's right edge.
+		graphics.fill(x1, y1 - 2, midX, y1 + 2, color);
+		// Vertical jog through the central channel.
+		graphics.fill(midX, Math.min(y1, y2), midX + 3, Math.max(y1, y2), color);
+		// Horizontal stub entering the child, ending in a solid arrowhead.
+		graphics.fill(midX, y2 - 2, x2, y2 + 2, color);
+		graphics.fill(x2 - 7, y2 - 4, x2, y2 + 4, color);
+		graphics.fill(x2 - 4, y2 - 7, x2, y2 + 7, color);
+	}
+
 	private void drawTrades(GuiGraphics graphics, int x, int y, int width, int height) {
+		// Trade offer cards are 64px tall and sit on 72px row pitch. The shared
+		// Trade tab also hosts an optional "Latest caravan" info card and the
+		// bottom action rail (see actionRailY()). Compute how many offer rows
+		// genuinely fit in the remaining content height so cards never overflow
+		// into the action-button strip (R3 market/trade breathing-room target,
+		// shared by tablet_trade and tablet_market).
+		int tradeCardHeight = 64;
+		int tradeRowPitch = 72;
+		int bottom = y + height;
+		boolean hasCaravan = !snapshot.tradeActivity().isBlank();
+		int afterCaravan = height - (hasCaravan ? 44 : 0);
+		// Only show the caravan info card when there is still room for at least
+		// one offer row beneath it; offers are the market's reason for being.
+		boolean showCaravan = hasCaravan && afterCaravan >= tradeRowPitch;
 		int rowY = y;
-		if (!snapshot.tradeActivity().isBlank()) {
+		if (showCaravan) {
 			drawInfoCard(graphics, x, rowY, width, 36, "Latest caravan", snapshot.tradeActivity(), ModItems.PHEROMONE_TOKEN, 0xB58BFF);
 			rowY += 44;
 		}
 		int columns = width >= 690 ? 3 : width >= 460 ? 2 : 1;
 		int cardW = (width - (columns - 1) * 8) / columns;
-		int offerLimit = Math.min(columns * Math.max(1, (height - (rowY - y)) / 72), 6);
+		// max(0, ...) instead of max(1, ...): if no offer row fits, render none
+		// rather than forcing a row that collides with the action rail.
+		int rowsThatFit = (bottom - rowY) / tradeRowPitch;
+		int offerLimit = Math.min(columns * Math.max(0, rowsThatFit), 6);
 		List<ColonyUiSnapshot.TradeEntry> rows = tradeRowsForDisplay().stream()
 				.limit(offerLimit)
 				.toList();
 		for (int i = 0; i < rows.size(); i++) {
 			ColonyUiSnapshot.TradeEntry entry = rows.get(i);
 			int cx = x + (i % columns) * (cardW + 8);
-			int cy = rowY + (i / columns) * 72;
+			int cy = rowY + (i / columns) * tradeRowPitch;
+			// Final guard: never draw a card that would touch the action rail.
+			if (cy + tradeCardHeight > bottom) {
+				break;
+			}
 			drawTradeCard(graphics, cx, cy, cardW, entry);
 		}
 	}
@@ -330,10 +473,11 @@ public final class ColonyStatusScreen extends Screen {
 		graphics.fill(x, y, x + 4, y + 52, 0xFF000000 | color);
 		drawItemIcon(graphics, itemForResourceId(entry.resourceId()), x + 9, y + 8);
 		drawItemIcon(graphics, itemForBuildingId(entry.buildingId()), x + width - 26, y + 8);
-		String title = shortName(entry.resourceKey()) + " for " + requestBuildingName(entry);
-		String delivery = entry.deliveryItemCount() + " " + shortName(entry.deliveryItemKey())
-				+ " gives " + entry.deliveryAmount() + " " + shortName(entry.resourceKey());
-		String reward = "+" + entry.rewardTokens() + " token, +" + entry.reputationDelta() + " rep, P" + entry.priority();
+		String title = translated("formic_frontier.ui.request.title", shortName(entry.resourceKey()), requestBuildingName(entry));
+		String delivery = translated("formic_frontier.ui.request.delivery",
+				entry.deliveryItemCount() + " " + shortName(entry.deliveryItemKey()),
+				entry.deliveryAmount(), shortName(entry.resourceKey()));
+		String reward = translated("formic_frontier.ui.request.reward", entry.rewardTokens(), entry.reputationDelta(), entry.priority());
 		graphics.drawString(font, ellipsize(title, width - 76), x + 32, y + 7, TEXT_MAIN, false);
 		graphics.drawString(font, ellipsize(delivery, width - 42), x + 32, y + 20, TEXT_SOFT, false);
 		graphics.drawString(font, ellipsize(reward, width - 42), x + 32, y + 33, TEXT_MUTED, false);
@@ -358,13 +502,41 @@ public final class ColonyStatusScreen extends Screen {
 		graphics.renderOutline(x, y, width, 64, entry.available() ? 0xFF8BCB86 : CARD_EDGE);
 		graphics.fill(x, y, x + 4, y + 64, 0xFF000000 | color);
 		String title = shortName(entry.inputKey()) + " to " + shortName(entry.outputKey());
-		drawItemIcon(graphics, itemForKey(entry.inputKey()), x + 10, y + 8);
-		drawItemIcon(graphics, itemForKey(entry.outputKey()), x + width - 28, y + 8);
-		graphics.drawString(font, ellipsize(title, width - 76), x + 34, y + 8, TEXT_MAIN, false);
-		graphics.drawString(font, ellipsize(entry.status(), width - 76), x + 34, y + 21, entry.available() ? TEXT_SOFT : TEXT_MUTED, false);
-		graphics.drawString(font, entry.inputCount() + "x", x + 10, y + 30, TEXT_SOFT, false);
-		graphics.drawString(font, entry.outputCount() + "x", x + width - 28, y + 30, TEXT_SOFT, false);
-		graphics.fill(x + 32, y + 42, x + width - 34, y + 44, 0xFF6E5131);
+		// Layout: a top icon row (input icon -> bold exchange arrow -> output icon) so the
+		// give-this-to-get-that direction is instantly scannable, then title/status and
+		// counts beneath. The arrow lives ON the icon row, between the two item icons,
+		// not as a disconnected bottom band (R3 "trade is clearly a market" criterion).
+		int inputIconX = x + 8;
+		int outputIconX = x + width - 28;
+		int iconY = y + 6;
+		drawItemIcon(graphics, itemForKey(entry.inputKey()), inputIconX, iconY);
+		drawItemIcon(graphics, itemForKey(entry.outputKey()), outputIconX, iconY);
+		// Arrow runs from the right edge of the input icon to the left edge of the output
+		// icon, vertically centered on the 16px item icons (center ~ iconY + 8).
+		int arrowY = iconY + 8;
+		drawTradeExchangeArrow(graphics, inputIconX + 20, arrowY, outputIconX - 4, arrowY, entry.available());
+		// Title and status sit below the icon/arrow row.
+		graphics.drawString(font, ellipsize(title, width - 16), x + 8, y + 28, TEXT_MAIN, false);
+		graphics.drawString(font, ellipsize(entry.status(), width - 16), x + 8, y + 40, entry.available() ? TEXT_SOFT : TEXT_MUTED, false);
+		// Counts anchored under their respective icons so the direction stays anchored.
+		graphics.drawString(font, entry.inputCount() + "x", inputIconX, y + 50, TEXT_SOFT, false);
+		graphics.drawString(font, entry.outputCount() + "x", outputIconX, y + 50, TEXT_SOFT, false);
+	}
+
+	private void drawTradeExchangeArrow(GuiGraphics graphics, int x1, int y1, int x2, int y2, boolean available) {
+		// Bold, high-contrast directed arrow from the input item (left) to the output
+		// item (right). Deliberately mirrors the proven research-connector arrow
+		// language so each market card reads instantly as a "give this -> get that"
+		// exchange (R3 criterion), even without reading the title text. Green when the
+		// offer is available, warm gold when it is spent.
+		int color = available ? 0xFF6FE08F : 0xFFEAC67D;
+		// 5px-tall shaft ending where the arrowhead base begins.
+		graphics.fill(x1, y1 - 2, x2 - 6, y1 + 3, color);
+		// Large triangular arrowhead pointing right at the output item: three stacked
+		// fills widen toward the tip so it reads as an arrow, not a meter.
+		graphics.fill(x2 - 6, y2 - 3, x2, y2 + 4, color);
+		graphics.fill(x2 - 4, y2 - 5, x2, y2 + 6, color);
+		graphics.fill(x2 - 2, y2 - 8, x2, y2 + 9, color);
 	}
 
 	private void drawFooter(GuiGraphics graphics, int x, int y, int width) {
@@ -433,6 +605,36 @@ public final class ColonyStatusScreen extends Screen {
 		graphics.renderItem(new ItemStack(item), x, y);
 	}
 
+	private String tradeButtonLabel(ColonyUiSnapshot.TradeEntry entry) {
+		String offerId = entry.offerId();
+		String verb = offerId.startsWith("sell_") ? "Sell " : "Buy ";
+		String noun = switch (offerId) {
+			case "sell_wheat", "sell_biomass" -> "Food";
+			case "sell_raw_iron", "sell_iron_ore" -> "Ore";
+			case "sell_chitin" -> "Chitin";
+			case "sell_resin" -> "Resin";
+			case "sell_fungus" -> "Fungus";
+			case "sell_venom" -> "Venom";
+			case "sell_royal_jelly" -> "Jelly";
+			case "buy_colony_seal" -> "Seal";
+			case "buy_war_banner" -> "Banner";
+			case "buy_chitin_boots", "buy_resin_chitin_boots" -> "Boots";
+			case "buy_chitin_helmet", "buy_resin_chitin_helmet" -> "Helmet";
+			case "buy_chitin_leggings", "buy_resin_chitin_leggings" -> "Legs";
+			case "buy_chitin_chestplate", "buy_resin_chitin_chestplate" -> "Chest";
+			case "buy_mandible_saber" -> "Saber";
+			case "buy_venom_spear" -> "Spear";
+			case "buy_queen_egg" -> "Queen Egg";
+			case "buy_chitin_spore" -> "Spore";
+			case "buy_pheromone_dust" -> "Dust";
+			case "buy_resin_glob" -> "Resin";
+			case "buy_fungus_culture" -> "Fungus";
+			case "buy_venom_sac" -> "Venom";
+			default -> shortName(entry.outputKey());
+		};
+		return verb + noun;
+	}
+
 	private void addTradeButtons() {
 		int x = panelX() + 12;
 		int y = actionRailY();
@@ -443,7 +645,7 @@ public final class ColonyStatusScreen extends Screen {
 				.toList();
 		for (int i = 0; i < rows.size(); i++) {
 			ColonyUiSnapshot.TradeEntry entry = rows.get(i);
-			String label = entry.available() ? "Trade " + shortName(entry.outputKey()) : shortName(entry.outputKey());
+			String label = tradeButtonLabel(entry);
 			Button button = Button.builder(Component.literal(ellipsize(label, buttonW - 8)), widget -> ClientPlayNetworking.send(new TradeRequestPayload(entry.offerId())))
 					.bounds(x + (i % columns) * (buttonW + 4), y + (i / columns) * 21, buttonW, 18)
 					.build();
@@ -478,11 +680,14 @@ public final class ColonyStatusScreen extends Screen {
 				.filter(entry -> entry.fulfilled() < entry.needed())
 				.limit(4)
 				.toList();
-		int columns = Math.max(2, Math.min(4, (panelWidth() - 86) / 92));
-		int buttonW = Math.max(78, Math.min(106, (panelWidth() - 92) / columns));
+		// Cyrillic helper labels (e.g. "Помочь Феромонный") are wider than the
+		// English originals, so the request action row needs a larger per-button
+		// cap to avoid truncation in localized tablet captures.
+		int columns = Math.max(2, Math.min(4, (panelWidth() - 86) / 132));
+		int buttonW = Math.max(96, Math.min(168, (panelWidth() - 92) / columns));
 		for (int i = 0; i < rows.size(); i++) {
 			ColonyUiSnapshot.RequestEntry entry = rows.get(i);
-			Button button = Button.builder(Component.literal(ellipsize("Help " + requestBuildingName(entry), buttonW - 8)), widget -> ClientPlayNetworking.send(new ContractRequestPayload(entry.contractId())))
+			Button button = Button.builder(Component.literal(ellipsize(translated("formic_frontier.ui.request.help", requestBuildingName(entry)), buttonW - 8)), widget -> ClientPlayNetworking.send(new ContractRequestPayload(entry.contractId())))
 					.bounds(x + (i % columns) * (buttonW + 4), y + (i / columns) * 21, buttonW, 18)
 					.build();
 			button.active = !entry.contractId().isBlank();
@@ -587,6 +792,10 @@ public final class ColonyStatusScreen extends Screen {
 		return Component.translatable(key).getString();
 	}
 
+	private String translated(String key, Object... args) {
+		return Component.translatable(key, args).getString();
+	}
+
 	private String shortName(String key) {
 		String value = translated(key);
 		int space = value.indexOf(' ');
@@ -594,18 +803,10 @@ public final class ColonyStatusScreen extends Screen {
 	}
 
 	private String requestBuildingName(ColonyUiSnapshot.RequestEntry entry) {
-		return switch (entry.buildingId()) {
-			case "queen_chamber" -> "Queen";
-			case "food_store" -> "Store";
-			case "chitin_farm" -> "Chitin";
-			case "diplomacy_shrine" -> "Shrine";
-			case "watch_post" -> "Watch";
-			case "resin_depot" -> "Depot";
-			case "pheromone_archive" -> "Archive";
-			case "fungus_garden" -> "Garden";
-			case "venom_press" -> "Press";
-			default -> shortName(entry.buildingKey());
-		};
+		// Short translated building name for request cards/buttons. buildingKey()
+		// already points at the localized block/building lang key, so routing it
+		// through shortName keeps request text localized in every locale.
+		return shortName(entry.buildingKey());
 	}
 
 	private int colorForResource(String id) {

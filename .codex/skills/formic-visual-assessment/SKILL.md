@@ -11,6 +11,11 @@ Use this skill to act as a strict GUI tester for Formic Frontier. The goal is to
 
 Be harsh, but every criticism must be evidence-based and useful to a dev agent.
 
+For autonomous loop acceptance, the final report must be produced by
+`scripts/openai-visual-assessment.cmd`, which sends the latest PNG screenshots to
+OpenAI `gpt-5.4-mini`. Text-only GLM-5.2 agents may gather context and run the
+command, but must not synthesize the final screenshot verdict themselves.
+
 ## Workflow
 
 1. Locate the latest visual QA artifacts in the current repo:
@@ -21,9 +26,10 @@ Be harsh, but every criticism must be evidence-based and useful to a dev agent.
 2. If artifacts are missing, report that the assessment is blocked and ask for or run the existing `scripts/gui-smoke.cmd` only when the user requested a full local GUI assessment.
 3. Read the report/logs first. Treat missing screenshots, blank screenshots, crashes, resource errors, missing models, missing textures, or incomplete scenes as `P0`.
 4. Inspect every expected screenshot at original resolution. Do not judge from thumbnails only.
-5. Use `references/rubric.md` for the assessment lenses and severity rules.
-6. Use `references/report-template.md` as the output shape unless the user requested another format.
-7. Lead with blockers. Put praise only after blockers, and only if it helps preserve a good direction.
+5. In the autonomous loop, run `scripts/openai-visual-assessment.cmd` to produce `build/visual-qa/formic-visual-assessment.md`; the report must include `Assessor: GPT-5.4 mini`.
+6. Use `references/rubric.md` for the assessment lenses and severity rules.
+7. Use `references/report-template.md` as the output shape unless the user requested another format.
+8. Lead with blockers. Put praise only after blockers, and only if it helps preserve a good direction.
 
 ## Expected Scenes
 

@@ -70,3 +70,19 @@ locations when one is present. Visual QA scenes are available through
 `/formic qa scene <name>` and are described in `docs/autonomous-dev.md`.
 
 The long-term roadmap is tracked in `docs/roadmap.md`.
+
+## GLM Autonomous Loop
+
+GLM 5.2 runs through a local Z.AI-to-Codex compatibility proxy because the
+current Codex CLI expects a Responses-style custom provider.
+
+```powershell
+$env:ZAI_API_KEY = "<secret>"
+scripts\start-autonomous-loop.cmd -AllowMissingGitHub -CodexProfile zai-glm52 -MaxIterations 1
+```
+
+The user-level profile is `C:\Users\user\.codex\zai-glm52.config.toml`. The
+supervisor generates the local `ZAI_CODEX_PROXY_TOKEN` automatically. Proxy logs
+and loop state are under `build/`, and the Z.AI key must remain environment-only.
+Each visual iteration uses a freshness marker so old screenshots or stale
+assessment reports cannot satisfy the autonomous gate.
