@@ -1,0 +1,121 @@
+{
+  "name": "food_chamber_v1",
+  "note": "Organic ant food chamber: rounded earthen dome (not a box), hollow interior with a stored-food core, a dark south tunnel entrance, and a fully closed dome roof. Authored as layered character grids; FormicSchematic compiles it to blocks.",
+  "palette": {
+    "M": "mound",
+    "D": "dirt",
+    "R": "rooted",
+    "#": "dark",
+    "C": "food_core",
+    "o": "food_node",
+    "g": "glow",
+    "P": "path",
+    ".": "air"
+  },
+  "layers": [
+    { "y": 0, "rows": [
+      "....DDD....",
+      "..DDMMMDD..",
+      ".DMMMMMMMD.",
+      "DMMMMMMMMMD",
+      "DMMMoCoMMMD",
+      "DMMMMMMMMMD",
+      ".DMMMMMMMD.",
+      "..DDMMMDD..",
+      "....DMD....",
+      ".....P.....",
+      ".....P....."
+    ] },
+    { "y": 1, "rows": [
+      "....MMM....",
+      "..MM###MM..",
+      ".M#.....#M.",
+      "M#.......#M",
+      "M#...g...#M",
+      "M#.......#M",
+      "M#.......#M",
+      ".M#.....#M.",
+      "..MM#.#MM..",
+      "...#...#...",
+      "..........."
+    ] },
+    { "y": 2, "rows": [
+      "....MMM....",
+      "..MMMMMMM..",
+      ".MM.....MM.",
+      "MM.......MM",
+      "MM.......MM",
+      "MM.......MM",
+      "MM.......MM",
+      ".MM.....MM.",
+      "..MMM.MMM..",
+      "...........",
+      "..........."
+    ] },
+    { "y": 3, "rows": [
+      "....MMM....",
+      "..MMMMMMM..",
+      ".MM.....MM.",
+      "MM.......MM",
+      "MM.......MM",
+      "MM.......MM",
+      "MM.......MM",
+      ".MM.....MM.",
+      "..MMMMMMM..",
+      "....MMM....",
+      "..........."
+    ] },
+    { "y": 4, "rows": [
+      "...........",
+      "...MMMMM...",
+      "..MM...MM..",
+      ".MM.....MM.",
+      ".M.......M.",
+      ".M.......M.",
+      ".M.......M.",
+      ".MM.....MM.",
+      "..MM...MM..",
+      "...MMMMM...",
+      "..........."
+    ] },
+    { "y": 5, "rows": [
+      "...........",
+      "....MMM....",
+      "..MMMMMMM..",
+      ".MM#####MM.",
+      ".M#.....#M.",
+      ".M#..g..#M.",
+      ".M#.....#M.",
+      ".MM#####MM.",
+      "..MMMMMMM..",
+      "....MMM....",
+      "..........."
+    ] },
+    { "y": 6, "rows": [
+      "...........",
+      "...........",
+      "....MMM....",
+      "..MMRMMMM..",
+      "..MM###MM..",
+      "..M#.o.#M..",
+      "..MM###MM..",
+      "..MMMMMMM..",
+      "....MMM....",
+      "...........",
+      "..........."
+    ] },
+    { "y": 7, "rows": [
+      "...........",
+      "...........",
+      "...........",
+      "....MMM....",
+      "...MMRMM...",
+      "...MMMMM...",
+      "...MMDMM...",
+      "....MMM....",
+      "...........",
+      "...........",
+      "..........."
+    ] }
+  ]
+}

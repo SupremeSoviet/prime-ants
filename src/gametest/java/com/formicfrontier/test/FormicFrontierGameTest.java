@@ -398,13 +398,21 @@ public final class FormicFrontierGameTest {
 		// be solid native earth (proving the mass grew instead of staying a low pad)
 		// rather than a single exact block.
 		assertNativeMass(helper, food.offset(4, 1, 0), "food mound broad base");
-		assertNativeMass(helper, food.offset(0, 6, 0), "food mound rising to crown");
+		assertNativeMass(helper, food.offset(0, 12, 0), "food spire closed native cap");
 		assertNativeMass(helper, mine.offset(-4, 4, 4), "mine mound broad base");
 		assertNativeMass(helper, barracks.offset(-4, 4, 4), "barracks mound broad base");
 		assertNativeMass(helper, food.offset(-4, 1, -2), "food mound rooted edge");
 		assertNativeMass(helper, mine.offset(-3, 4, -10), "mine tunnel-mouth earthen lip");
 		assertNativeMass(helper, nursery.offset(-4, 4, -4), "nursery mound rising to crown");
-		assertMegaMoundLayerProfile(helper, food, campusTestProfile(BuildingType.FOOD_STORE), "food mound");
+		// FOOD_STORE is now a declarative schematic spire (placeFoodStoreSchematic),
+		// not the procedural mega-mound: validate its intentional landmarks instead.
+		// A hollow chamber, an open south entrance tunnel and a closed native crown.
+		if (!helper.getLevel().getBlockState(helper.absolutePos(food.offset(0, 2, 4))).isAir()) {
+			helper.fail("Food spire south entrance mouth should be an open tunnel at (0,2,4).");
+		}
+		if (!helper.getLevel().getBlockState(helper.absolutePos(food.offset(-2, 2, 0))).isAir()) {
+			helper.fail("Food spire interior should be a hollow chamber void at (-2,2,0).");
+		}
 		assertMegaMoundLayerProfile(helper, nursery, campusTestProfile(BuildingType.NURSERY), "nursery mound");
 		assertMegaMoundLayerProfile(helper, mine, campusTestProfile(BuildingType.MINE), "mine mound");
 		assertMegaMoundLayerProfile(helper, barracks, campusTestProfile(BuildingType.BARRACKS), "barracks mound");
@@ -431,9 +439,9 @@ public final class FormicFrontierGameTest {
 
 		// Organic breaks stay (carved notches / exposed cuts), so the mass is organic,
 		// not a flat slab.
-		if (!helper.getLevel().getBlockState(helper.absolutePos(food.offset(4, 2, 3))).isAir()) {
-			helper.fail("Starter food mound should keep a broken organic edge, not an unbroken slab.");
-		}
+		// The food spire visibly reads as a FOOD store: stored-food baskets (FOOD_NODE)
+		// flank the entrance at the base.
+		helper.assertBlockPresent(ModBlocks.FOOD_NODE, food.offset(3, 0, 0));
 		if (!helper.getLevel().getBlockState(helper.absolutePos(mine.offset(2, 1, 5))).isAir()) {
 			helper.fail("Starter mine mound should keep an exposed cut face.");
 		}

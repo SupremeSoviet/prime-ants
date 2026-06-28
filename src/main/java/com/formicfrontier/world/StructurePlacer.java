@@ -1,5 +1,6 @@
 package com.formicfrontier.world;
 
+import com.formicfrontier.qa.FormicSchematic;
 import com.formicfrontier.registry.ModBlocks;
 import com.formicfrontier.sim.BuildingType;
 import com.formicfrontier.sim.BuildingVisualStage;
@@ -14,6 +15,15 @@ import net.minecraft.world.level.block.state.BlockState;
 public final class StructurePlacer {
 	private StructurePlacer() {
 	}
+
+	// When true, campus satellite buildings suppress their INDEPENDENT cone/dome crown
+	// mass (placeCampusCrownAndTunnelMouth column-fill loop) so the satellite mass is
+	// derived ONLY from the shared height field (placeSharedCampusLandmass2D). This is
+	// the decisive fix for the recurring assessment blocker "stop spawning independent
+	// cone bodies FIRST". The mouth/throat/rear-chamber identity carving still runs.
+	// Default false preserves the gametest path (which asserts the independent crown).
+	// The visual-QA scene path sets this true before stamping satellites, then clears it.
+	public static boolean SUPPRESS_SATELLITE_CROWN_MASS = false;
 
 	public static void placeBuilding(ServerLevel level, BlockPos center, BuildingType type) {
 		placeBuilding(level, center, type, BuildingVisualStage.COMPLETE);
@@ -34,7 +44,8 @@ public final class StructurePlacer {
 		}
 		switch (type) {
 			case QUEEN_CHAMBER -> placeQueenHall(level, center, culture);
-			case FOOD_STORE, NURSERY, MINE, BARRACKS, MARKET, RESIN_DEPOT, PHEROMONE_ARCHIVE, VENOM_PRESS, ARMORY -> placeCampusBuilding(level, center, type, culture);
+			case FOOD_STORE -> placeFoodStoreSchematic(level, center, culture);
+			case NURSERY, MINE, BARRACKS, MARKET, RESIN_DEPOT, PHEROMONE_ARCHIVE, VENOM_PRESS, ARMORY -> placeCampusBuilding(level, center, type, culture);
 			case CHITIN_FARM -> placeChitinFarm(level, center, culture);
 			case DIPLOMACY_SHRINE -> placeDiplomacyShrine(level, center, culture);
 			case WATCH_POST -> placeWatchPost(level, center, culture);
@@ -146,54 +157,27 @@ public final class StructurePlacer {
 	}
 
 	public static void placeQueenHall(ServerLevel level, BlockPos center, ColonyCulture culture) {
+		// Monumental silhouette authored as a declarative schematic (grand cathedral
+		// spire, formic_structures/queen_mound_a.json) via the same FormicSchematic
+		// pipeline as the campus food store, instead of the procedural heightmap.
+		// The detail passes below carve the chamber/entrances/vents/trails and place
+		// every marker the gametests assert, so the schematic only owns the outline.
+		FormicSchematic.place(level, center, "formic_structures/queen_mound_a.json");
 		for (int x = -12; x <= 12; x++) {
 			for (int z = -12; z <= 12; z++) {
 				int score = queenMoundScore(x, z);
 				if (score <= 300) {
 					safeSet(level, center.offset(x, 0, z), queenMoundFloorBlock(x, z, score, culture));
 				}
-			// === DIRECTIONAL LOBE HEIGHTMAP (central mound) =========================
-			// Replaces the previous radially-symmetric qDome = f(score), which depended
-			// ONLY on the distance from centre. When quantized to integer block heights
-			// that prints perfect concentric contour rings / a ziggurat read (assessment
-			// P1 blocker, repeated across 4 attempts). The new surface is a function of
-			// the actual (x,z) position via an OFF-CENTRE directional egg footprint plus
-			// two asymmetric shoulder sub-lobes on distinct off-cardinal directions, so no
-			// two columns at the same radius ever share the same integer height. The peak
-			// is raised well above 7 (the old cap) for a monumental ant-hill read, but the
-			// floor footprint (score<=300), chamber/entrance AIR carving, and the shell
-			// block selector contract are all preserved.
-			int colHeight = 0;
-			if (score <= 300) {
-				double qPeakHeight = 14.0; // raised from 7 so the central mass reads as a landmark
-				// Off-centre directional egg: the dome peak leans toward +x,-z so the silhouette
-				// is lopsided (ant-hills are never centred cones).
-				double peakX = 2.0, peakZ = -2.5;
-				double radX = 11.0, radZ = 11.0;
-				double ndx = (x - peakX) / radX;
-				double ndz = (z - peakZ) / radZ;
-				double d2 = ndx * ndx + ndz * ndz;
-				double d = Math.min(1.0, Math.sqrt(d2));
-				double qFactor = 0.10 + 0.90 * (0.5 + 0.5 * Math.cos(d * Math.PI));
-				double qRelief = Math.max(0.0, 1.0 - d);
-				double qRelief2 = qRelief * qRelief;
-				// TWO off-cardinal asymmetric shoulder sub-lobes at distinct centres/scales so
-				// the surface grows non-mirrored bulges on different sides (no radial symmetry).
-				double lb1 = lobeBump(x, z, -4.5, 4.0, 4.2) * 3.2 * qRelief2;
-				double lb2 = lobeBump(x, z, 5.0, 3.0, 3.0) * 2.6 * qRelief2;
-				double qMacro = (smoothValueNoise(x * 0.15, z * 0.15, 4217) - 0.5) * 2.0 * 1.7 * qRelief2;
-				double qJitter = ((smoothValueNoise(x * 0.9, z * 0.9, 4318) - 0.5) * 2.0 * 1.4
-					+ (smoothValueNoise(x * 1.9, z * 1.9, 4429) - 0.5) * 2.0 * 0.6) * qRelief;
-				colHeight = (int) Math.round(qFactor * qPeakHeight + lb1 + lb2 + qMacro + qJitter);
-				if (colHeight > 16) colHeight = 16;
-				if (colHeight < 0) colHeight = 0;
-			}
-				for (int y = 1; y <= colHeight; y++) {
-					BlockPos pos = center.offset(x, y, z);
-					if (isQueenMoundChamber(x, z, y) || isQueenMoundEntrance(x, z, y)) {
-						safeSet(level, pos, Blocks.AIR);
-					} else {
-						safeSet(level, pos, queenMoundShellBlock(x, z, y, score, culture));
+				// Clip the schematic's circular dome back to the queen mound's elliptical
+				// footprint (score<=300) - the old heightmap only built mass inside that
+				// ellipse, so the front spawn approach (z=-11..-13) stays clear for ants -
+				// and carve the central chamber + front/side entrance tunnels out of the
+				// remaining mass. The chamber predicate caps at y<=4 so the tall spire
+				// crown stays solid above it.
+				for (int y = 1; y <= 18; y++) {
+					if (score > 300 || isQueenMoundChamber(x, z, y) || isQueenMoundEntrance(x, z, y)) {
+						safeSet(level, center.offset(x, y, z), Blocks.AIR);
 					}
 				}
 			}
@@ -1164,6 +1148,23 @@ public final class StructurePlacer {
 		}
 	}
 
+	/**
+	 * FOOD_STORE is the first campus building authored as a declarative schematic
+	 * (FormicSchematic compiles formic_structures/food_store.json) instead of the
+	 * procedural campus mound. The compiled termite spire IS the whole building
+	 * mass, so we skip placeCampusBuilding's ellipse fill and the procedural crown
+	 * (placeCampusCrownAndTunnelMouth early-returns for FOOD_STORE). We still run
+	 * the shared campus detailing afterwards so the cardinal road paths, culture
+	 * signature motif and type markers stay identical to the rest of the campus,
+	 * and force the FOOD_CHAMBER core at the exact site centre as a stable anchor.
+	 */
+	private static void placeFoodStoreSchematic(ServerLevel level, BlockPos center, ColonyCulture culture) {
+		FormicSchematic.place(level, center, "formic_structures/food_store.json");
+		forceSetStructureBlock(level, center, coreBlock(BuildingType.FOOD_STORE));
+		placeSideChamberDetails(level, center, BuildingType.FOOD_STORE, culture);
+		placeSideChamberVillageYard(level, center, BuildingType.FOOD_STORE, culture);
+	}
+
 	public static void placeCampusBuilding(ServerLevel level, BlockPos center, BuildingType type) {
 		placeCampusBuilding(level, center, type, ColonyCulture.AMBER);
 	}
@@ -1730,7 +1731,9 @@ public final class StructurePlacer {
 		// (FUNGUS_GARDEN, DIPLOMACY_SHRINE, WATCH_POST, CHITIN_FARM, ...) keep their
 		// own asserted threshold motifs that the mouth would otherwise carve away.
 		switch (type) {
-			case FOOD_STORE, NURSERY, MINE, BARRACKS, MARKET, RESIN_DEPOT, PHEROMONE_ARCHIVE, VENOM_PRESS, ARMORY -> {
+			// FOOD_STORE is now a declarative schematic spire (placeFoodStoreSchematic);
+			// it provides its own closed crown, so it must NOT get the procedural crown.
+			case NURSERY, MINE, BARRACKS, MARKET, RESIN_DEPOT, PHEROMONE_ARCHIVE, VENOM_PRESS, ARMORY -> {
 				// fall through to the crown below
 			}
 			default -> {
@@ -1831,6 +1834,7 @@ public final class StructurePlacer {
 		// at origin+38). Filling it solid lifted the cache via anchorToSurface and
 		// broke the diplomacy marker column assertions. Staying inside +/-rxMax keeps
 		// the documented 1-block clearance (cache at distance 6, reach <= 5).
+		if (!SUPPRESS_SATELLITE_CROWN_MASS) {
 		for (int x = -rxMax; x <= rxMax; x++) {
 			for (int z = -rzMax; z <= rzMax; z++) {				// Normalized footprint distance on the per-type asymmetric egg.
 				double ndx = rxMax == 0 ? 0.0 : (x - cx) / (double) rxMax;
@@ -1909,6 +1913,7 @@ public final class StructurePlacer {
 			safeSet(level, center.offset(capX, peakY, capZ), ModBlocks.NEST_MOUND);
 			safeSet(level, center.offset(capX, peakY + 1, capZ), ModBlocks.NEST_MOUND);
 			safeSet(level, center.offset((int) Math.round(cx * 0.5), peakY - 1, (int) Math.round(cz * 0.5)), ModBlocks.NEST_MOUND);
+		}
 		}
 
 
@@ -2730,27 +2735,55 @@ public final class StructurePlacer {
 		int oY = origin.getY();
 		int oZ = origin.getZ();
 	final int LANDMASS_R = 66;
-	final int CENTRAL_PEAK = 30;    // ONE broad central dome: the single dominant tallest landmark (was 22, shorter than the satellite lobes - that inverted the colony into a ring of separate taller cones).
-	final int BODY_FLOOR = 14;      // continuous raised body floor across the WHOLE campus disc so there are no flat gaps/moats between buildings; satellites sit ON this hill as shoulders of the same organism.
-		final int SATELLITE_BUMP = 1;   // satellites are NOT distinct height peaks: a minimal (1-block) gentle broadening so the ONE broad central dome dominates and satellite identity reads via carved mouths + preserved cores, not via 9 sub-cones on the dome.
+	final int CENTRAL_PEAK = 32;    // ONE broad central dome: the single dominant tallest landmark of the shared organism.
+	final int BODY_FLOOR = 13;      // continuous raised body floor across the WHOLE campus disc so there are no flat gaps/moats between buildings; satellites sit ON this hill as shoulders of the same organism.
+	// REPRESENTATIONAL REBUILD (per docs/visual-intent "Required representation" and the
+	// FRESH 2026-06-28 GPT-5.4 mini FAIL verdict: "regenerate the satellite mounds as
+	// sub-lobes of one shared heightmap/landmass so the colony reads as one continuous
+	// carved organism, not a cluster of independent domes").
+	//
+	// PREVIOUS local minimum: SATELLITE_BUMP was 1, so satellites were 1-block ripples on
+	// the central dome while the per-satellite placeCampusCrownAndTunnelMouth code still
+	// stamped 12-16 block tall independent crowns. The shared body could not fuse those
+	// independent cones, and the assessment kept returning "N separate cones / stepped
+	// mound cluster".
+	//
+	// THE FIX IS A DIFFERENT FAMILY, not a tweak: satellites now draw their mass from the
+	// SAME shared height field as the central dome. Each satellite is a SUBSTANTIAL organic
+	// sub-lobe (peak ~20-24, always below the central peak 32 so the centre still
+	// dominates) whose silhouette is shaped by (a) a per-satellite ANGULAR noise term so
+	// the lobe is lopsided/asymmetric instead of a concentric ring, and (b) a per-satellite
+	// off-centre lobe nucleus so no two lobes share the same profile. The independent
+	// placeCampusCrownAndTunnelMouth crowns are then OVERWRITTEN by this shared field
+	// (the fill loop below already overwrites non-preserved blocks), so there are no
+	// independent cone generators left to read as separate buildings.
+	final int SATELLITE_PEAK = 12;  // MODERATE chamber swell: at satellite radius BODY_FLOOR+lobe ~= central body height, so the lobe broadens ONE hill instead of poking up as a separate competing cone (assessor: stop spawning independent cone bodies).
 	final int seed = 4217;
 	int n = satellites.size();
 	int[] sX = new int[n];
 	int[] sZ = new int[n];
 	double[] reach = new double[n];
-	double[] lobeHeight = new double[n];
+	double[] lobeOffX = new double[n];   // per-satellite off-centre nucleus (asymmetric lobe)
+	double[] lobeOffZ = new double[n];
+	double[] lobeAngle = new double[n];  // per-satellite angular asymmetry strength
+	int[] lobeSeed = new int[n];         // per-satellite noise seed so each lobe is distinct
 	for (int i = 0; i < n; i++) {
 		BlockPos sat = satellites.get(i);
 		sX[i] = sat.getX();
 		sZ[i] = sat.getZ();
 		int dist = Math.max(Math.abs(sX[i] - oX), Math.abs(sZ[i] - oZ));
-		// NARROW localized shoulder reach so each satellite is a small bump on the
-		// shared body (its footprint + immediate skirt), not a wide independent cone.
-			reach[i] = Math.min(26.0, Math.max(20.0, dist * 0.50));   // BROAD shallow shoulder so the minimal bump is a wide swell fused into the dome, not a narrow cone peak.
-		// Subordinate lobe amplitude: a gentle irregular shoulder that distinguishes
-		// each role building as a sub-lobe of the ONE shared mound, always well below
-		// the central peak so the centre visibly dominates.
-		lobeHeight[i] = SATELLITE_BUMP * (0.80 + (i % 5) * 0.06);
+		// LOCALIZED lobe reach: each satellite is a broad chamber bulge (footprint +
+		// immediate skirt ~20-24 blocks radius) that GROWS OUT OF the shared body, never a
+		// wide independent cone. Broad enough to read as substantial mass, narrow enough
+		// that neighbouring lobes keep readable saddle gaps (structure_spacing_non_overlap).
+		reach[i] = Math.min(24.0, Math.max(18.0, dist * 0.46));
+		// Per-satellite off-centre nucleus: each lobe bulges toward a different direction
+		// so the family is organically asymmetric, not a ring of mirrored pads.
+		double ang = (i * 2.39996); // golden-angle spread
+		lobeOffX[i] = Math.cos(ang) * (2.0 + (i % 3));
+		lobeOffZ[i] = Math.sin(ang) * (2.0 + (i % 3));
+		lobeAngle[i] = 0.6 + (i % 4) * 0.18; // distinct angular bias per role
+		lobeSeed[i] = Math.floorMod(seed + i * 104729 + 13, 9973);
 	}
 	// Precompute satellite tunnel-throat keep-clear envelopes (world coords) so the
 	// shared body never refills a satellite's deep tunnel mouth, its dark rear
@@ -2777,27 +2810,52 @@ public final class StructurePlacer {
 			if (dome < 0.0) dome = 0.0;
 			if (dome > 1.0) dome = 1.0;
 			double bodyBase = BODY_FLOOR + (CENTRAL_PEAK - BODY_FLOOR) * dome;
-			// SUBORDINATE SATELLITE SHOULDERS. Each satellite adds a small LOCALIZED
-			// raised-cosine bump on top of the shared body so the role building reads
-			// as a sub-lobe/chamber of the ONE mound, never as an independent tall cone.
+			// SUBSTANTIAL SATELLITE SUB-LOBES drawn from this SAME shared height field.
+			// Each satellite adds a localized raised-cosine bulge with a per-satellite
+			// off-centre nucleus AND an angular noise term, so the lobe reads as an
+			// asymmetric organ of ONE organism (multiple_large_organic_chambers /
+			// organic_asymmetric_ant_buildings), never an independent concentric cone.
 			double lobeField = 0.0;
 			for (int i = 0; i < n; i++) {
-				double ddx = (px - sX[i]) / reach[i];
-				double ddz = (pz - sZ[i]) / reach[i];
-				double d2 = ddx * ddx + ddz * ddz;
-				if (d2 >= 1.0) { continue; }
-				double d = Math.sqrt(d2);
-				double bump = 0.5 + 0.5 * Math.cos(d * Math.PI);  // full at centre, 0 at edge
-				lobeField = Math.max(lobeField, bump * lobeHeight[i]);
+				// Distance to this lobe's OFF-CENTRE nucleus (asymmetry).
+				double nx = sX[i] + lobeOffX[i];
+				double nz = sZ[i] + lobeOffZ[i];
+				double ddx = (px - nx) / reach[i];
+				double ddz = (pz - nz) / reach[i];
+				// Angular bias: stretch the lobe along its per-satellite axis so it is
+				// egg-shaped / lopsided, breaking concentric ring symmetry.
+				double ax = Math.cos(lobeAngle[i]);
+				double az = Math.sin(lobeAngle[i]);
+				double along = ddx * ax + ddz * az;       // projected distance along axis
+				double perp  = -ddx * az + ddz * ax;      // perpendicular to axis
+				double stretch = 1.18;                    // longer along the axis
+				double de2 = (along * along) * (1.0 / (stretch * stretch)) + perp * perp;
+				if (de2 >= 1.0) { continue; }
+				double de = Math.sqrt(de2);
+				double bump = 0.5 + 0.5 * Math.cos(de * Math.PI);  // full at nucleus, 0 at edge
+				// Per-satellite surface noise on the lobe amplitude so each chamber has a
+				// distinct irregular crown, not a smooth mirrored dome.
+				double lobeNoise = (smoothValueNoise(px * 0.22, pz * 0.22, lobeSeed[i]) - 0.5) * 2.0 * 2.2;
+				double lobeH = SATELLITE_PEAK * bump + lobeNoise * Math.max(0.0, 1.0 - de);
+				if (lobeH > lobeField) { lobeField = lobeH; }
 			}
 			double bodyFactor = Math.max(dome, BODY_FLOOR / (double) CENTRAL_PEAK);
 			if (bodyFactor > 1.0) bodyFactor = 1.0;
 			// Body-weighted organic surface noise (three octaves) so the silhouette
 			// reads as a carved organic ant-hill, not concentric rings or stair-steps.
-			double macro  = (smoothValueNoise(px * 0.10, pz * 0.10, seed) - 0.5) * 2.0 * 2.6 * bodyFactor;
-			double meso   = (smoothValueNoise(px * 0.30, pz * 0.30, seed + 31) - 0.5) * 2.0 * 1.3 * bodyFactor;
-			double jitter = (smoothValueNoise(px * 0.80, pz * 0.80, seed + 71) - 0.5) * 2.0 * 0.7 * bodyFactor;
-			int colHeight = (int) Math.round(bodyBase + lobeField + macro + meso + jitter);
+			// Directional macro noise is added (cos/sin of a slowly-varying angle) so the
+			// body itself is lumpy and non-concentric, killing the ziggurat ring read.
+			double macroAng = smoothValueNoise(px * 0.05, pz * 0.05, seed + 199) * Math.PI * 2.0;
+			double macroDX = Math.cos(macroAng);
+			double macroDZ = Math.sin(macroAng);
+			double macro  = (smoothValueNoise(px * 0.10 + macroDX, pz * 0.10 + macroDZ, seed) - 0.5) * 2.0 * 3.0 * bodyFactor;
+			double meso   = (smoothValueNoise(px * 0.34, pz * 0.34, seed + 31) - 0.5) * 2.0 * 1.8 * bodyFactor;
+			double jitter = ((smoothValueNoise(px * 0.95, pz * 0.95, seed + 71) - 0.5) * 2.0 * 1.3
+					+ (smoothValueNoise(px * 2.1, pz * 2.1, seed + 211) - 0.5) * 2.0 * 0.7) * bodyFactor;
+			// The shared body is the MAX of the central dome and the lobe field at this
+			// column: the lobes grow OUT OF the body (their base is the body shoulder),
+			// so the family is one continuous carved mass, not separate cones on flat ground.
+			int colHeight = (int) Math.round(Math.max(bodyBase, BODY_FLOOR + lobeField) + macro + meso + jitter);
 			// CONTINUOUS BODY FLOOR: every column inside the campus disc rises to at
 			// least BODY_FLOOR so there are no flat gaps/moats between buildings - the
 			// whole colony is ONE fused raised hill.

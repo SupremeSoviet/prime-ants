@@ -67,6 +67,9 @@ public final class VisualQaScenes {
 	public static final String DIPLOMACY_SCENE = "diplomacy_scene";
 	public static final String WORLDGEN_ENCOUNTER = "worldgen_encounter";
 	public static final String ENDGAME_PROJECT = "endgame_project";
+	// Structure-schematic prototype: isolated single-building preview scenes.
+	public static final String STRUCTURE_PREVIEW_3Q = "structure_preview_3q";
+	public static final String STRUCTURE_PREVIEW_FRONT = "structure_preview_front";
 	private static final List<String> SCENES = List.of(
 			COLONY_OVERVIEW,
 			COLONY_GROUND,
@@ -86,7 +89,9 @@ public final class VisualQaScenes {
 			CULTURE_STYLES,
 			DIPLOMACY_SCENE,
 			WORLDGEN_ENCOUNTER,
-			ENDGAME_PROJECT
+			ENDGAME_PROJECT,
+			STRUCTURE_PREVIEW_3Q,
+			STRUCTURE_PREVIEW_FRONT
 	);
 	private static final List<AntCaste> ANT_LINEUP_CASTES = List.of(
 			AntCaste.QUEEN,
@@ -184,6 +189,20 @@ public final class VisualQaScenes {
 
 		ColonySavedState savedState = ColonySavedState.get(source.getServer());
 		savedState.clearColonies();
+		if (normalized.equals(STRUCTURE_PREVIEW_3Q) || normalized.equals(STRUCTURE_PREVIEW_FRONT)) {
+			// PREVIEW = GAME: render the real in-game colony through the exact
+			// createColony path (no seedVisualState QA overlays) so the preview is
+			// precisely what a player sees - the schematic queen spire at the centre,
+			// the food spire and the campus economy mounds out on the ring.
+			ColonyService.createColony(level, origin, true);
+			dressForestFloor(level, origin, normalized);
+			ServerPlayer player = source.getPlayer();
+			if (player != null) {
+				positionCamera(player, origin, normalized);
+			}
+			savedState.setDirty();
+			return 1;
+		}
 		if (normalized.equals(CULTURE_STYLES)) {
 			seedCultureStyles(level, origin);
 
@@ -328,13 +347,26 @@ public final class VisualQaScenes {
 			colony.addEvent("Visual QA starter guide state seeded");
 			return;
 		}
-		for (BuildingType type : ADVANCED_BUILDINGS) {
-			if (colony.progress().hasCompleted(type)) {
-				continue;
+		// REPRESENTATIONAL FIX (assessment REPEAT blocker 'stop spawning independent
+		// cone bodies FIRST'): for shared-landmass scenes, suppress the independent
+		// satellite crown MASS so each role building's volume is derived ONLY from the
+		// one shared height field below. The satellite core + deep tunnel mouth +
+		// rear-chamber identity still stamp (only the column-fill dome + roofline cap
+		// mass are gated). The flag is cleared in a finally so it never leaks into the
+		// gametest path (which asserts the independent crown mass).
+		boolean prevSuppress = StructurePlacer.SUPPRESS_SATELLITE_CROWN_MASS;
+		StructurePlacer.SUPPRESS_SATELLITE_CROWN_MASS = !sceneName.startsWith("tablet") && !sceneName.equals(CONSTRUCTION_STAGE) && !sceneName.equals(REPAIR_SCENE);
+		try {
+			for (BuildingType type : ADVANCED_BUILDINGS) {
+				if (colony.progress().hasCompleted(type)) {
+					continue;
+				}
+				BlockPos pos = ColonyBuilder.siteFor(colony, type);
+				colony.progress().addBuilding(ColonyBuilding.complete(type, pos));
+				StructurePlacer.placeBuilding(level, pos, type, BuildingVisualStage.COMPLETE, colony.progress().culture());
 			}
-			BlockPos pos = ColonyBuilder.siteFor(colony, type);
-			colony.progress().addBuilding(ColonyBuilding.complete(type, pos));
-			StructurePlacer.placeBuilding(level, pos, type, BuildingVisualStage.COMPLETE, colony.progress().culture());
+		} finally {
+			StructurePlacer.SUPPRESS_SATELLITE_CROWN_MASS = prevSuppress;
 		}
 		// R2 architecture representational fix: fuse the WHOLE campus (queen mound +
 		// starter satellites + advanced buildings) onto ONE continuous noise-driven
@@ -998,6 +1030,8 @@ public final class VisualQaScenes {
 			case WORLDGEN_ENCOUNTER -> worldgenEncounterTarget(origin);
 			case ENDGAME_PROJECT -> Vec3.atCenterOf(origin).add(0.0, 5.8, 0.0);
 			case PROGRESSION_SCENE -> Vec3.atCenterOf(origin).add(0.0, 5.0, 0.0);
+			case STRUCTURE_PREVIEW_3Q -> Vec3.atCenterOf(origin).add(1.0, 9.0, 0.0);
+			case STRUCTURE_PREVIEW_FRONT -> Vec3.atCenterOf(origin).add(1.0, 9.0, 0.0);
 			default -> Vec3.atCenterOf(origin).add(0.0, 2.0, 0.0);
 		};
 		Vec3 camera = switch (sceneName) {
@@ -1013,6 +1047,8 @@ public final class VisualQaScenes {
 			case WORLDGEN_ENCOUNTER -> worldgenEncounterCamera(origin);
 			case ENDGAME_PROJECT -> new Vec3(origin.getX() + 54.0, origin.getY() + 36.0, origin.getZ() - 68.0);
 			case PROGRESSION_SCENE -> new Vec3(origin.getX() + 52.0, origin.getY() + 36.0, origin.getZ() - 66.0);
+			case STRUCTURE_PREVIEW_3Q -> new Vec3(origin.getX() + 54.0, origin.getY() + 46.0, origin.getZ() + 78.0);
+			case STRUCTURE_PREVIEW_FRONT -> new Vec3(origin.getX() + 1.0, origin.getY() + 22.0, origin.getZ() + 80.0);
 			default -> new Vec3(origin.getX() + 28.0, origin.getY() + 18.0, origin.getZ() - 32.0);
 		};
 		player.teleportTo(camera.x, camera.y, camera.z);

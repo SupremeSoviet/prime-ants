@@ -14,6 +14,14 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public final class VisualQaClient {
+	// PROTOTYPE (structure-schematic): capture ONLY the isolated building previews
+	// for fast iteration. This client-side list does not affect gametests (those use
+	// the server VisualQaScenes.scenes()). Restore the full 19-scene list below before
+	// any real visual-baseline run:
+	//   colony_overview, colony_ground, ant_lineup, work_cycle, tablet_en, tablet_ru,
+	//   tablet_guide, tablet_trade, tablet_research_map, tablet_market, tablet_requests,
+	//   progression_scene, settlement_scale, construction_stage, repair_scene,
+	//   culture_styles, diplomacy_scene, worldgen_encounter, endgame_project
 	private static final String[] SCENES = {
 			"colony_overview",
 			"colony_ground",

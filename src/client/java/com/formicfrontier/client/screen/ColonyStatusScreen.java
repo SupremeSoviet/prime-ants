@@ -41,6 +41,26 @@ public final class ColonyStatusScreen extends Screen {
 	private static final int TEXT_MAIN = 0xFFFFE0A6;
 	private static final int TEXT_SOFT = 0xFFF4E9C8;
 	private static final int TEXT_MUTED = 0xFFEAC67D;
+	// Depth / gradient palette (R: "redraw the interface to be beautiful"). The flat
+	// solid fills are upgraded to warm vertical gradients with beveled edges so the
+	// tablet reads as a polished amber-and-chitin surface with real depth, not a set
+	// of flat brown rectangles. Layout coordinates are unchanged - only the fills are.
+	private static final int PANEL_TOP = 0xF5302417;
+	private static final int PANEL_BOTTOM = 0xF514100A;
+	private static final int PANEL_BORDER = 0xFF0C0805;
+	private static final int PANEL_INNER_GLOW = 0x82E0B264;
+	private static final int HEADER_TOP = 0xFF40301E;
+	private static final int HEADER_BOTTOM = 0xFF211810;
+	private static final int ACCENT = 0xFFE0B05A;
+	private static final int CARD_TOP = 0xF0332615;
+	private static final int CARD_BOTTOM = 0xF01D150C;
+	private static final int CHIP_TOP = 0xFF2E2217;
+	private static final int CHIP_BOTTOM = 0xFF1A130C;
+	private static final int ROW_TOP = 0xFF2A2015;
+	private static final int ROW_BOTTOM = 0xFF1B140D;
+	private static final int BEVEL_HI = 0x3EFFE7B2;
+	private static final int BEVEL_LO = 0x52000000;
+	private static final int TRACK_BG = 0xFF120D09;
 	private final ColonyUiSnapshot snapshot;
 	private String selectedTab;
 	private int selectedDiplomacyTargetId;
@@ -89,15 +109,26 @@ public final class ColonyStatusScreen extends Screen {
 
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-		graphics.fill(0, 0, width, height, 0xA8100D0A);
+		// Soft vignette behind the tablet so the panel reads as a focused foreground
+		// surface rather than sitting on a uniform grey wash.
+		graphics.fillGradient(0, 0, width, height, 0x96100D0A, 0xC6070504);
 		int panelX = panelX();
 		int panelY = panelY();
 		int panelW = panelWidth();
 		int panelH = panelHeight();
-		graphics.fill(panelX, panelY, panelX + panelW, panelY + panelH, 0xF21B1510);
-		graphics.renderOutline(panelX, panelY, panelW, panelH, 0xFFB9894D);
-		graphics.fill(panelX, panelY, panelX + panelW, panelY + 28, 0xFF302218);
-		graphics.fill(panelX + 1, panelY + 28, panelX + panelW - 1, panelY + 30, 0xFF6E5131);
+		// Drop shadow (two stacked translucent layers) gives the panel lift off the world.
+		graphics.fill(panelX + 7, panelY + 9, panelX + panelW + 7, panelY + panelH + 9, 0x59000000);
+		graphics.fill(panelX + 3, panelY + 4, panelX + panelW + 4, panelY + panelH + 5, 0x40000000);
+		// Panel body: warm vertical gradient with a dark outer border and an amber inner
+		// glow line, plus a top highlight bevel so the surface catches light.
+		graphics.fillGradient(panelX, panelY, panelX + panelW, panelY + panelH, PANEL_TOP, PANEL_BOTTOM);
+		graphics.fill(panelX + 1, panelY + 1, panelX + panelW - 1, panelY + 2, BEVEL_HI);
+		graphics.renderOutline(panelX, panelY, panelW, panelH, PANEL_BORDER);
+		graphics.renderOutline(panelX + 1, panelY + 1, panelW - 2, panelH - 2, PANEL_INNER_GLOW);
+		// Header band: gradient with a bright accent underline and a thin shadow seam.
+		graphics.fillGradient(panelX + 2, panelY + 2, panelX + panelW - 2, panelY + 28, HEADER_TOP, HEADER_BOTTOM);
+		graphics.fill(panelX + 2, panelY + 28, panelX + panelW - 2, panelY + 30, ACCENT);
+		graphics.fill(panelX + 2, panelY + 30, panelX + panelW - 2, panelY + 31, 0x4D000000);
 		graphics.drawString(font, ellipsize(snapshot.title(), panelW - 260), panelX + 12, panelY + 8, TEXT_MAIN, true);
 		String meta = Component.translatable(snapshot.cultureKey()).getString()
 				+ " | " + Component.translatable(snapshot.relationshipKey()).getString();
@@ -126,10 +157,13 @@ public final class ColonyStatusScreen extends Screen {
 			ColonyUiSnapshot.Metric metric = snapshot.resources().get(i);
 			int cx = x + (i % columns) * (chipW + 6);
 			int cy = y + (i / columns) * 20;
-			graphics.fill(cx, cy, cx + chipW, cy + 17, 0xFF241B13);
-			graphics.renderOutline(cx, cy, chipW, 17, 0xFF473520);
+			graphics.fillGradient(cx, cy, cx + chipW, cy + 17, CHIP_TOP, CHIP_BOTTOM);
+			graphics.fill(cx, cy, cx + chipW, cy + 1, BEVEL_HI);
+			graphics.fill(cx, cy + 16, cx + chipW, cy + 17, BEVEL_LO);
+			graphics.renderOutline(cx, cy, chipW, 17, 0xFF503B23);
 			drawItemIcon(graphics, itemForResourceId(metric.id()), cx + 2, cy + 1);
 			graphics.fill(cx + 20, cy + 3, cx + 23, cy + 14, 0xFF000000 | metric.color());
+			graphics.fill(cx + 20, cy + 3, cx + 21, cy + 14, brighten(metric.color()));
 			graphics.drawString(font, ellipsize(shortName(metric.labelKey()) + " " + metric.value(), chipW - 30), cx + 27, cy + 5, TEXT_SOFT, false);
 		}
 	}
@@ -164,7 +198,8 @@ public final class ColonyStatusScreen extends Screen {
 				ColonyUiSnapshot.Metric metric = snapshot.population().get(i);
 				int cx = x + (i % 4) * (chipW + 6);
 				int cy = popY + 13 + (i / 4) * 16;
-				graphics.fill(cx, cy, cx + chipW, cy + 13, 0xFF241B13);
+				graphics.fillGradient(cx, cy, cx + chipW, cy + 13, CHIP_TOP, CHIP_BOTTOM);
+				graphics.fill(cx, cy, cx + chipW, cy + 1, BEVEL_HI);
 				graphics.fill(cx, cy, cx + 3, cy + 13, 0xFF000000 | metric.color());
 				graphics.drawString(font, ellipsize(shortName(metric.labelKey()) + " " + metric.value(), chipW - 8), cx + 6, cy + 3, 0xFFF4E9C8, false);
 			}
@@ -173,7 +208,10 @@ public final class ColonyStatusScreen extends Screen {
 
 	private void drawIdentityStrip(GuiGraphics graphics, int x, int y, int width) {
 		int relationshipColor = 0xFF000000 | snapshot.relationshipColor();
-		graphics.fill(x, y, x + width, y + 36, 0xFF201711);
+		graphics.fillGradient(x, y, x + width, y + 36, ROW_TOP, ROW_BOTTOM);
+		graphics.fill(x, y, x + width, y + 1, BEVEL_HI);
+		graphics.fill(x, y + 35, x + width, y + 36, BEVEL_LO);
+		graphics.renderOutline(x, y, width, 36, 0xFF3E2E1C);
 		graphics.fill(x, y, x + 3, y + 36, relationshipColor);
 		int mid = Math.max(120, width / 2);
 		graphics.drawString(font, translated("formic_frontier.ui.personality"), x + 8, y + 5, 0xFFEAC67D, false);
@@ -428,8 +466,10 @@ public final class ColonyStatusScreen extends Screen {
 	}
 
 	private void drawGuideRow(GuiGraphics graphics, int x, int y, int width, String title, String detail, String state, int color) {
-		graphics.fill(x, y, x + width, y + 15, 0xFF241B13);
+		graphics.fillGradient(x, y, x + width, y + 15, ROW_TOP, ROW_BOTTOM);
+		graphics.fill(x, y, x + width, y + 1, BEVEL_HI);
 		graphics.fill(x, y, x + 3, y + 15, 0xFF000000 | color);
+		graphics.fill(x, y, x + 3, y + 2, 0x6BFFFFFF);
 		int titleWidth = Math.max(76, Math.min(112, width * 28 / 100));
 		int stateWidth = 58;
 		graphics.drawString(font, ellipsize(title, titleWidth - 14), x + 7, y + 4, 0xFFFFE0A6, false);
@@ -457,9 +497,7 @@ public final class ColonyStatusScreen extends Screen {
 	}
 
 	private void drawInfoCard(GuiGraphics graphics, int x, int y, int width, int height, String title, String detail, Item icon, int color) {
-		graphics.fill(x, y, x + width, y + height, CARD_BG);
-		graphics.renderOutline(x, y, width, height, CARD_EDGE);
-		graphics.fill(x, y, x + 4, y + height, 0xFF000000 | color);
+		drawCardSurface(graphics, x, y, width, height, color, CARD_EDGE);
 		drawItemIcon(graphics, icon, x + 9, y + Math.max(3, (height - 16) / 2));
 		graphics.drawString(font, ellipsize(title, width - 42), x + 32, y + 8, TEXT_MAIN, false);
 		graphics.drawString(font, ellipsize(detail, width - 42), x + 32, y + 21, TEXT_SOFT, false);
@@ -468,9 +506,7 @@ public final class ColonyStatusScreen extends Screen {
 	private void drawRequestCard(GuiGraphics graphics, int x, int y, int width, ColonyUiSnapshot.RequestEntry entry) {
 		int progress = percent(entry.fulfilled(), entry.needed());
 		int color = colorForResource(entry.resourceId());
-		graphics.fill(x, y, x + width, y + 52, CARD_BG);
-		graphics.renderOutline(x, y, width, 52, CARD_EDGE);
-		graphics.fill(x, y, x + 4, y + 52, 0xFF000000 | color);
+		drawCardSurface(graphics, x, y, width, 52, color, CARD_EDGE);
 		drawItemIcon(graphics, itemForResourceId(entry.resourceId()), x + 9, y + 8);
 		drawItemIcon(graphics, itemForBuildingId(entry.buildingId()), x + width - 26, y + 8);
 		String title = translated("formic_frontier.ui.request.title", shortName(entry.resourceKey()), requestBuildingName(entry));
@@ -485,10 +521,15 @@ public final class ColonyStatusScreen extends Screen {
 	}
 
 	private void drawResearchNode(GuiGraphics graphics, int x, int y, int width, int height, ColonyUiSnapshot.ResearchEntry entry, int progress, int color) {
-		int bg = entry.complete() ? 0xE62A241A : entry.active() ? 0xE62A2038 : CARD_BG;
-		graphics.fill(x, y, x + width, y + height, bg);
+		int bgTop = entry.complete() ? 0xF03B2E1A : entry.active() ? 0xF0352749 : CARD_TOP;
+		int bgBottom = entry.complete() ? 0xF01E160C : entry.active() ? 0xF01B1330 : CARD_BOTTOM;
+		graphics.fillGradient(x, y, x + width, y + height, bgTop, bgBottom);
+		graphics.fill(x, y, x + 1, y + height, BEVEL_HI);
+		graphics.fill(x, y + height - 1, x + width, y + height, BEVEL_LO);
+		graphics.fill(x + width - 1, y, x + width, y + height, BEVEL_LO);
 		graphics.renderOutline(x, y, width, height, entry.startable() || entry.active() ? 0xFFB9894D : CARD_EDGE);
 		graphics.fill(x, y, x + width, y + 3, 0xFF000000 | color);
+		graphics.fill(x, y, x + width, y + 1, 0x70FFFFFF);
 		drawItemIcon(graphics, itemForResearch(entry.nodeId()), x + 8, y + 9);
 		String state = entry.complete() ? "Open" : entry.active() ? "Studying" : entry.startable() ? "Ready" : "Locked";
 		graphics.drawString(font, ellipsize(entry.label(), width - 38), x + 30, y + 8, TEXT_MAIN, false);
@@ -498,9 +539,7 @@ public final class ColonyStatusScreen extends Screen {
 
 	private void drawTradeCard(GuiGraphics graphics, int x, int y, int width, ColonyUiSnapshot.TradeEntry entry) {
 		int color = entry.available() ? 0x6DD08E : 0x8A6D47;
-		graphics.fill(x, y, x + width, y + 64, CARD_BG);
-		graphics.renderOutline(x, y, width, 64, entry.available() ? 0xFF8BCB86 : CARD_EDGE);
-		graphics.fill(x, y, x + 4, y + 64, 0xFF000000 | color);
+		drawCardSurface(graphics, x, y, width, 64, color, entry.available() ? 0xFF8BCB86 : CARD_EDGE);
 		String title = shortName(entry.inputKey()) + " to " + shortName(entry.outputKey());
 		// Layout: a top icon row (input icon -> bold exchange arrow -> output icon) so the
 		// give-this-to-get-that direction is instantly scannable, then title/status and
@@ -546,7 +585,8 @@ public final class ColonyStatusScreen extends Screen {
 		String identity = translated(snapshot.personalityKey()) + " | " + translated(snapshot.relationshipKey());
 		graphics.drawString(font, ellipsize(identity, Math.max(40, width - 204)), x + 198, y, 0xFFEAC67D, false);
 		if (!snapshot.feedbackMessage().isBlank()) {
-			graphics.fill(x, y + 12, x + width, y + 28, 0xFF2C2418);
+			graphics.fillGradient(x, y + 12, x + width, y + 28, 0xFF243A22, 0xFF162616);
+			graphics.fill(x, y + 12, x + width, y + 13, 0x55A6F0B0);
 			graphics.renderOutline(x, y + 12, width, 16, 0xFF6DD08E);
 			graphics.drawString(font, ellipsize(snapshot.feedbackMessage(), width - 10), x + 5, y + 16, 0xFFBFF0C7, false);
 		}
@@ -556,13 +596,17 @@ public final class ColonyStatusScreen extends Screen {
 		if (height <= 0) {
 			return;
 		}
-		graphics.fill(x, y, x + width, y + height, 0xF21B1510);
-		graphics.renderOutline(x, y, width, height, 0xFF473520);
+		graphics.fillGradient(x, y, x + width, y + height, 0xF0241A10, 0xF0130D07);
+		graphics.fill(x, y, x + width, y + 1, 0x3EE0B05A);
+		graphics.renderOutline(x, y, width, height, 0xFF503B23);
 	}
 
 	private void drawTableRow(GuiGraphics graphics, int x, int y, int width, String title, String detail, int progress, int color) {
-		graphics.fill(x, y, x + width, y + 19, 0xFF241B13);
+		graphics.fillGradient(x, y, x + width, y + 19, ROW_TOP, ROW_BOTTOM);
+		graphics.fill(x, y, x + width, y + 1, BEVEL_HI);
+		graphics.fill(x, y + 18, x + width, y + 19, BEVEL_LO);
 		graphics.fill(x, y, x + 3, y + 19, 0xFF000000 | color);
+		graphics.fill(x, y, x + 3, y + 2, 0x6BFFFFFF);
 		int titleWidth = Math.max(82, Math.min(150, width * 38 / 100));
 		graphics.drawString(font, ellipsize(title, titleWidth - 14), x + 7, y + 5, 0xFFFFE0A6, false);
 		graphics.drawString(font, ellipsize(detail, Math.max(40, width - titleWidth - 54)), x + titleWidth, y + 5, 0xFFF4E9C8, false);
@@ -570,8 +614,11 @@ public final class ColonyStatusScreen extends Screen {
 	}
 
 	private void drawRequestRow(GuiGraphics graphics, int x, int y, int width, String title, String detail, int progress, int color) {
-		graphics.fill(x, y, x + width, y + 19, 0xFF241B13);
+		graphics.fillGradient(x, y, x + width, y + 19, ROW_TOP, ROW_BOTTOM);
+		graphics.fill(x, y, x + width, y + 1, BEVEL_HI);
+		graphics.fill(x, y + 18, x + width, y + 19, BEVEL_LO);
 		graphics.fill(x, y, x + 3, y + 19, 0xFF000000 | color);
+		graphics.fill(x, y, x + 3, y + 2, 0x6BFFFFFF);
 		int titleWidth = Math.max(76, Math.min(126, width * 30 / 100));
 		graphics.drawString(font, ellipsize(title, titleWidth - 14), x + 7, y + 5, 0xFFFFE0A6, false);
 		graphics.drawString(font, ellipsize(detail, Math.max(40, width - titleWidth - 54)), x + titleWidth, y + 5, 0xFFF4E9C8, false);
@@ -579,8 +626,11 @@ public final class ColonyStatusScreen extends Screen {
 	}
 
 	private void drawTradeRow(GuiGraphics graphics, int x, int y, int width, String title, String detail, int progress, int color) {
-		graphics.fill(x, y, x + width, y + 19, 0xFF241B13);
+		graphics.fillGradient(x, y, x + width, y + 19, ROW_TOP, ROW_BOTTOM);
+		graphics.fill(x, y, x + width, y + 1, BEVEL_HI);
+		graphics.fill(x, y + 18, x + width, y + 19, BEVEL_LO);
 		graphics.fill(x, y, x + 3, y + 19, 0xFF000000 | color);
+		graphics.fill(x, y, x + 3, y + 2, 0x6BFFFFFF);
 		int titleWidth = Math.max(148, Math.min(236, width * 46 / 100));
 		graphics.drawString(font, ellipsize(title, titleWidth - 14), x + 7, y + 5, 0xFFFFE0A6, false);
 		graphics.drawString(font, ellipsize(detail, Math.max(40, width - titleWidth - 54)), x + titleWidth, y + 5, 0xFFF4E9C8, false);
@@ -588,17 +638,50 @@ public final class ColonyStatusScreen extends Screen {
 	}
 
 	private void drawMiniProgress(GuiGraphics graphics, int x, int y, int width, int progress, int color) {
-		if (progress <= 0) {
-			graphics.fill(x, y, x + width, y + 4, 0xFF120D09);
+		graphics.fill(x, y, x + width, y + 4, TRACK_BG);
+		graphics.renderOutline(x, y, width, 4, 0xFF0A0705);
+		int clamped = Math.max(0, Math.min(100, progress));
+		if (clamped <= 0) {
 			return;
 		}
-		graphics.fill(x, y, x + width, y + 4, 0xFF120D09);
-		graphics.fill(x, y, x + width * Math.max(0, Math.min(100, progress)) / 100, y + 4, 0xFF000000 | color);
+		int fill = x + width * clamped / 100;
+		graphics.fillGradient(x, y, fill, y + 4, brighten(color), 0xFF000000 | color);
+		graphics.fill(x, y, fill, y + 1, 0x59FFFFFF);
 	}
 
 	private void drawWideProgress(GuiGraphics graphics, int x, int y, int width, int progress, int color) {
-		graphics.fill(x, y, x + width, y + 4, 0xFF120D09);
-		graphics.fill(x, y, x + width * Math.max(0, Math.min(100, progress)) / 100, y + 4, 0xFF000000 | color);
+		graphics.fill(x, y, x + width, y + 5, TRACK_BG);
+		graphics.renderOutline(x, y, width, 5, 0xFF0A0705);
+		int clamped = Math.max(0, Math.min(100, progress));
+		int fill = x + width * clamped / 100;
+		if (clamped > 0) {
+			graphics.fillGradient(x, y, fill, y + 5, brighten(color), 0xFF000000 | color);
+			graphics.fill(x, y, fill, y + 1, 0x66FFFFFF);
+		}
+	}
+
+	/**
+	 * Shared beveled card surface: a warm vertical gradient with a top/left highlight
+	 * and a bottom/right shadow so each card reads as a raised tile, plus a glossed
+	 * accent spine down the left edge. {@code accent} is an 0xRRGGBB colour.
+	 */
+	private void drawCardSurface(GuiGraphics graphics, int x, int y, int width, int height, int accent, int edge) {
+		graphics.fillGradient(x, y, x + width, y + height, CARD_TOP, CARD_BOTTOM);
+		graphics.fill(x, y, x + width, y + 1, BEVEL_HI);
+		graphics.fill(x, y, x + 1, y + height, BEVEL_HI);
+		graphics.fill(x, y + height - 1, x + width, y + height, BEVEL_LO);
+		graphics.fill(x + width - 1, y, x + width, y + height, BEVEL_LO);
+		graphics.renderOutline(x, y, width, height, edge);
+		graphics.fill(x, y, x + 4, y + height, 0xFF000000 | accent);
+		graphics.fill(x + 1, y, x + 4, y + Math.min(height, 3), 0x73FFFFFF);
+	}
+
+	/** Brightens an 0xRRGGBB colour toward white for gradient tops / highlights. */
+	private static int brighten(int rgb) {
+		int r = Math.min(255, ((rgb >> 16) & 0xFF) + 70);
+		int g = Math.min(255, ((rgb >> 8) & 0xFF) + 70);
+		int b = Math.min(255, (rgb & 0xFF) + 70);
+		return 0xFF000000 | (r << 16) | (g << 8) | b;
 	}
 
 	private void drawItemIcon(GuiGraphics graphics, Item item, int x, int y) {
