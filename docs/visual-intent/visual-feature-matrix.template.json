@@ -13,9 +13,9 @@
       "required": true,
       "evidenceScenes": ["colony_overview", "settlement_scale", "progression_scene", "culture_styles"],
       "intentRefs": ["reference-mega-nest-wide.png", "reference-mega-nest-front.png"],
-      "acceptance": "Screenshots show a broad, tall, organic mound family with several substantial surrounding chamber buildings, not only one central mound.",
+      "acceptance": "Screenshots show a broad, tall, organic mound family with several substantial surrounding chamber buildings, not only one central mound. The chamber buildings are irregular and ant-like, not repeated symmetric pads.",
       "lastVerdict": "",
-      "nextAction": "Build and frame large role-specific chambers around the landmark mound."
+      "nextAction": "Build and frame large role-specific chambers around the landmark mound; prioritize asymmetry, spacing, and no entry arches."
     },
     {
       "id": "visible_tunnel_mouths_and_chambers",
@@ -26,7 +26,7 @@
       "required": true,
       "evidenceScenes": ["colony_ground", "settlement_scale", "construction_stage", "repair_scene"],
       "intentRefs": ["reference-mega-nest-wide.png", "reference-mega-nest-front.png"],
-      "acceptance": "Multiple readable tunnel mouths, chamber openings, terraces, and entrances are visible at gameplay camera distance.",
+      "acceptance": "Multiple readable tunnel mouths, chamber openings, terraces, and entrances are visible at gameplay camera distance. Entrances are irregular excavated cuts, not freestanding arches.",
       "lastVerdict": "",
       "nextAction": "Cut larger dark openings and chamber faces into mound volumes, with grounded paths leading to them."
     },
@@ -44,17 +44,43 @@
       "nextAction": "Block visual completion until surrounding buildings have mass, height, and entrances."
     },
     {
-      "id": "forest_floor_life_density",
+      "id": "organic_asymmetric_ant_buildings",
       "phase": "visual_baseline",
       "priority": "P1",
       "owner": "formic-world-worker",
       "status": "unknown",
       "required": true,
+      "evidenceScenes": ["colony_overview", "settlement_scale", "culture_styles", "construction_stage", "repair_scene"],
+      "intentRefs": ["reference-mega-nest-wide.png", "reference-mega-nest-front.png"],
+      "acceptance": "Role buildings read as organic ant chambers with asymmetrical lobes, irregular silhouettes, non-mirrored entrances, and no temple/pavilion/arcade language.",
+      "lastVerdict": "",
+      "nextAction": "Rework satellite building generation into asymmetrical chamber-lobes; avoid identical circular pads and symmetric cones."
+    },
+    {
+      "id": "structure_spacing_non_overlap",
+      "phase": "visual_baseline",
+      "priority": "P1",
+      "owner": "formic-world-worker",
+      "status": "unknown",
+      "required": true,
+      "evidenceScenes": ["colony_overview", "settlement_scale", "culture_styles"],
+      "intentRefs": ["reference-mega-nest-wide.png", "reference-mega-nest-front.png"],
+      "acceptance": "Separate buildings have readable gaps/passages and do not visually collide or overlap. Shared berms and paths are allowed only when the individual chamber silhouettes remain clear.",
+      "lastVerdict": "",
+      "nextAction": "Adjust placement footprints, berms, and camera staging so role buildings stop overlapping and remain individually readable."
+    },
+    {
+      "id": "forest_floor_life_density",
+      "phase": "visual_baseline",
+      "priority": "P3",
+      "owner": "formic-gatekeeper",
+      "status": "pass",
+      "required": false,
       "evidenceScenes": ["colony_ground", "work_cycle", "worldgen_encounter", "settlement_scale"],
       "intentRefs": ["reference-forest-foraging.png", "reference-mega-nest-wide.png"],
-      "acceptance": "The ground around the colony has varied dirt, grass, roots, stones, flowers, paths, small piles, and worker routes instead of empty superflat grass.",
-      "lastVerdict": "",
-      "nextAction": "Seed forest-floor clutter and natural pathing around visual QA scenes without hiding the subject."
+      "acceptance": "Accepted by user for the current visual baseline; forest-floor cleanup is not an active blocker.",
+      "lastVerdict": "2026-06-23 user directive: forest floor should not be fixed in the active loop.",
+      "nextAction": "Do not select this row unless the user explicitly reopens forest-floor work."
     },
     {
       "id": "ants_read_as_real_insects",
@@ -98,15 +124,41 @@
     {
       "id": "formic_native_material_palette",
       "phase": "visual_baseline",
-      "priority": "P1",
-      "owner": "formic-asset-worker",
-      "status": "unknown",
-      "required": true,
+      "priority": "P3",
+      "owner": "formic-gatekeeper",
+      "status": "pass",
+      "required": false,
       "evidenceScenes": ["colony_overview", "colony_ground", "settlement_scale", "culture_styles", "construction_stage"],
       "intentRefs": ["reference-mega-nest-wide.png", "reference-mega-nest-front.png", "reference-forest-foraging.png"],
       "acceptance": "Colony structures use custom Formic Frontier blocks/textures for mound earth, tunnel walls, roots, resin, brood, fungus, and trails; honey, apatite-like blue minerals, amethyst-like accents, and unrelated vanilla placeholders are not primary structure materials.",
+      "lastVerdict": "2026-06-23 user directive: broad materials are good enough for the current visual baseline.",
+      "nextAction": "Keep broad material palette accepted; only the holey block texture remains as a narrow asset task."
+    },
+    {
+      "id": "holey_block_texture_redraw",
+      "phase": "visual_baseline",
+      "priority": "P2",
+      "owner": "formic-asset-worker",
+      "status": "unknown",
+      "required": true,
+      "evidenceScenes": ["colony_overview", "settlement_scale", "construction_stage", "repair_scene"],
+      "intentRefs": ["reference-mega-nest-wide.png", "reference-mega-nest-front.png"],
+      "acceptance": "The visible block with a hole is redrawn at 32x32 as a Formic-native tunnel/brood/resin/earth material and no longer reads as honeycomb or an unrelated placeholder.",
       "lastVerdict": "",
-      "nextAction": "Create native formic block/material palette and migrate generated structures away from borrowed honey/apatite/vanilla placeholder textures."
+      "nextAction": "After the architecture slice, redraw the holey block texture and rerun visual assessment on scenes where it is visible."
+    },
+    {
+      "id": "formic_textures_32x32",
+      "phase": "visual_baseline",
+      "priority": "P2",
+      "owner": "formic-asset-worker",
+      "status": "unknown",
+      "required": true,
+      "evidenceScenes": ["colony_overview", "settlement_scale", "construction_stage", "repair_scene", "tablet_market", "tablet_requests"],
+      "intentRefs": ["reference-mega-nest-wide.png", "reference-mega-nest-front.png", "reference-forest-foraging.png"],
+      "acceptance": "All custom Formic Frontier block and item PNG textures used by the visual baseline are authored at 32x32 or another 32px-multiple size; 16x16 Formic textures are not accepted for the final visual baseline.",
+      "lastVerdict": "",
+      "nextAction": "After architecture blockers, upgrade generated/custom Formic block and item textures from 16x16 to 32x32 and validate dimensions before visual acceptance."
     },
     {
       "id": "tablet_visual_hierarchy",
@@ -117,9 +169,9 @@
       "required": true,
       "evidenceScenes": ["tablet_en", "tablet_ru", "tablet_research_map", "tablet_market", "tablet_requests"],
       "intentRefs": [],
-      "acceptance": "Tablet screens are readable, visually intentional, localized without truncation, and do not feel like placeholder debug panels.",
+      "acceptance": "Tablet screens are very beautiful, research-tree oriented, readable in English/Russian, and prove that labels, icons, cards, and buttons never overlap or collide.",
       "lastVerdict": "",
-      "nextAction": "Fix visible truncation and hierarchy after world/ant baseline blockers are under control."
+      "nextAction": "After architecture blockers are cleared, redesign the tablet from the current interface into a beautiful research-tree UI, then assess overlap/readability."
     },
     {
       "id": "mechanics_phase_locked_until_visual_pass",

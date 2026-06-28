@@ -166,7 +166,12 @@ public final class ColonyService {
 			return false;
 		}
 		ContractBundle bundle = contractBundle(contract.resource());
-		int delivered = Math.min(contract.missing(), bundle.resourceAmount());
+		// Deliver the whole outstanding contract amount in one tablet action so the
+		// fulfilled request actually closes (the old per-bundle cap left FOOD-24
+		// contracts partially delivered and the request open). If the player lacks
+		// the items for full delivery, removeItems() below fails with a clear
+		// "Need N items" message and nothing is consumed.
+		int delivered = contract.missing();
 		int itemCount = bundle.itemCountFor(delivered);
 		if (!removeItems(player, bundle.item(), itemCount)) {
 			openColonyScreen(player, colony, "Needs", "Need " + itemCount + " " + itemName(bundle.item()) + " for this contract.");
@@ -674,6 +679,12 @@ public final class ColonyService {
 		placeResourceCluster(level, foodNode, ModBlocks.FOOD_NODE, Blocks.MOSS_BLOCK, Blocks.BROWN_MUSHROOM_BLOCK);
 		placeResourceCluster(level, oreNode, ModBlocks.ORE_NODE, Blocks.COBBLED_DEEPSLATE, Blocks.IRON_ORE);
 		placeResourceCluster(level, chitinNode, ModBlocks.CHITIN_NODE, Blocks.BONE_BLOCK, Blocks.HONEYCOMB_BLOCK);
+		// R2 shared organic mound landmass: fuse the starter satellites onto ONE
+		// continuous ant-hill organism via low native-earth saddles, so the colony
+		// stops reading as N separate cones/towers on a flat field (assessment
+		// P1 blocker). Additive, canReplace-safe, native palette, clears the
+		// distance-6 diplomacy caches. See StructurePlacer.placeSharedMoundLandmass.
+		StructurePlacer.placeSharedMoundLandmass(level, origin, java.util.List.of(food, nursery, mine, barracks));
 		registerStarterBuildings(colony, origin, food, nursery, mine, barracks);
 	}
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import threading
 import time
 import uuid
 import urllib.error
@@ -332,26 +333,54 @@ class ZaiProxyHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.close_connection = True
 
+        write_lock = threading.Lock()
+
         def emit(event: str, data: Any) -> None:
-            self.wfile.write(f"event: {event}\n".encode("utf-8"))
-            self.wfile.write(b"data: ")
-            self.wfile.write(json_bytes(data))
-            self.wfile.write(b"\n\n")
-            self.wfile.flush()
+            with write_lock:
+                self.wfile.write(f"event: {event}\n".encode("utf-8"))
+                self.wfile.write(b"data: ")
+                self.wfile.write(json_bytes(data))
+                self.wfile.write(b"\n\n")
+                self.wfile.flush()
+
+        # GLM-5.2 can spend 10-40s on prompt processing + reasoning before the
+        # first forwardable byte (huge agent prompts), and that whole window is
+        # inside the blocking upstream urlopen/read. The proxy would otherwise send
+        # codex nothing during it and codex drops the stream with IncompleteRead. A
+        # background heartbeat writes an SSE comment every few seconds, from before
+        # the upstream call through the whole response, so codex's read timer never
+        # expires. All socket writes are serialized with emit() via write_lock.
+        stop_heartbeat = threading.Event()
+
+        def heartbeat() -> None:
+            while not stop_heartbeat.wait(5.0):
+                try:
+                    with write_lock:
+                        self.wfile.write(b": keep-alive\n\n")
+                        self.wfile.flush()
+                except OSError:
+                    break
 
         base_response = self.empty_response(response_id_value, created, model, "in_progress")
         emit("response.created", {"type": "response.created", "response": base_response})
         emit("response.in_progress", {"type": "response.in_progress", "response": base_response})
+        heartbeat_thread = threading.Thread(target=heartbeat, daemon=True)
+        heartbeat_thread.start()
         try:
             response = self.collect_upstream(payload, response_id_value, created, emit)
         except Exception as exception:  # noqa: BLE001
+            stop_heartbeat.set()
+            heartbeat_thread.join(timeout=1.0)
             failed = self.empty_response(response_id_value, created, model, "failed")
             failed["error"] = {"message": str(exception)}
             emit("response.failed", {"type": "response.failed", "response": failed})
             return
+        stop_heartbeat.set()
+        heartbeat_thread.join(timeout=1.0)
         emit("response.completed", {"type": "response.completed", "response": response})
-        self.wfile.write(b"data: [DONE]\n\n")
-        self.wfile.flush()
+        with write_lock:
+            self.wfile.write(b"data: [DONE]\n\n")
+            self.wfile.flush()
 
     def collect_upstream(
         self,
@@ -415,10 +444,11 @@ class ZaiProxyHandler(BaseHTTPRequestHandler):
 
         try:
             upstream = self.upstream_request(body)
-            upstream_text = upstream.read().decode("utf-8", errors="replace")
-            proxy.write_log(f"upstream bytes={len(upstream_text.encode('utf-8'))} lines={len(upstream_text.splitlines())}")
-            for line in upstream_text.splitlines():
-                line = line.strip()
+            # Stream incrementally (not upstream.read()) so deltas reach codex as
+            # they arrive; the background heartbeat in handle_streaming_response
+            # covers the long reasoning/TTFT gaps where no delta is forwarded.
+            for raw_line in upstream:
+                line = raw_line.decode("utf-8", errors="replace").strip()
                 if not line or line.startswith(":") or not line.startswith("data:"):
                     continue
                 data_text = line[5:].strip()

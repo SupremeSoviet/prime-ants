@@ -1,6 +1,7 @@
 package com.formicfrontier.qa;
 
 import com.formicfrontier.entity.AntEntity;
+import com.formicfrontier.registry.ModBlocks;
 import com.formicfrontier.registry.ModItems;
 import com.formicfrontier.sim.AntCaste;
 import com.formicfrontier.sim.BuildingVisualStage;
@@ -300,7 +301,20 @@ public final class VisualQaScenes {
 		colony.addCaste(AntCaste.MINER, 3);
 		colony.addCaste(AntCaste.SOLDIER, 3);
 
-		if (!sceneName.equals(PROGRESSION_SCENE) && !sceneName.equals(ENDGAME_PROJECT) && !sceneName.equals(SETTLEMENT_SCALE) && !sceneName.startsWith("tablet")) {
+		// COLONY_OVERVIEW now continues to the full-campus build path (advanced
+		// buildings + shared landmass) below: previously it returned early with only the
+		// queen mound + 4 starter satellites, so the wide shot read as separate cones on
+		// open ground instead of one continuous carved mound family (assessment P1
+		// blocker multiple_large_organic_chambers / no_single_mound_pass).
+		// colony_ground keeps the early return: it is a low ground-level closeup whose
+		// camera (y+8.5) would be buried by the tall shared landmass, and its acceptance
+		// is about deep ground-level mouths (blocker 2), not wide topology.
+		// ant_lineup / work_cycle also keep the early return: they PASS and their
+		// CULTURE_STYLES / DIPLOMACY_SCENE / WORLDGEN_ENCOUNTER are WIDE/AERIAL topology scenes
+		// judged for the fused mound family, so they MUST run the shared landmass path too
+		// (assessment: culture_styles read as separated mound islands when it early-returned).
+		// subject is the ants, not the architecture.
+		if (!sceneName.equals(PROGRESSION_SCENE) && !sceneName.equals(ENDGAME_PROJECT) && !sceneName.equals(SETTLEMENT_SCALE) && !sceneName.equals(COLONY_OVERVIEW) && !sceneName.equals(CULTURE_STYLES) && !sceneName.equals(DIPLOMACY_SCENE) && !sceneName.equals(WORLDGEN_ENCOUNTER) && !sceneName.startsWith("tablet")) {
 			if (sceneName.equals(CONSTRUCTION_STAGE)) {
 				seedConstructionStages(level, colony);
 			} else if (sceneName.equals(REPAIR_SCENE)) {
@@ -321,6 +335,29 @@ public final class VisualQaScenes {
 			BlockPos pos = ColonyBuilder.siteFor(colony, type);
 			colony.progress().addBuilding(ColonyBuilding.complete(type, pos));
 			StructurePlacer.placeBuilding(level, pos, type, BuildingVisualStage.COMPLETE, colony.progress().culture());
+		}
+		// R2 architecture representational fix: fuse the WHOLE campus (queen mound +
+		// starter satellites + advanced buildings) onto ONE continuous noise-driven
+		// native-earth landmass so the colony reads as a single broad carved ant-hill
+		// organism with the role buildings as sub-lobes, instead of N separate cones
+		// on flat grass (assessment P1 blocker multiple_large_organic_chambers /
+		// no_single_mound_pass). Only for wide/colony scenes: tablet scenes are GUI
+		// captures where the landmass would be invisible noise behind the panel.
+		if (!sceneName.startsWith("tablet")) {
+			java.util.List<net.minecraft.core.BlockPos> campusSatellites = new java.util.ArrayList<>();
+			campusSatellites.add(ColonyBuilder.siteFor(colony, BuildingType.FOOD_STORE));
+			campusSatellites.add(ColonyBuilder.siteFor(colony, BuildingType.NURSERY));
+			campusSatellites.add(ColonyBuilder.siteFor(colony, BuildingType.MINE));
+			campusSatellites.add(ColonyBuilder.siteFor(colony, BuildingType.BARRACKS));
+			campusSatellites.add(ColonyBuilder.siteFor(colony, BuildingType.MARKET));
+			campusSatellites.add(ColonyBuilder.siteFor(colony, BuildingType.RESIN_DEPOT));
+			campusSatellites.add(ColonyBuilder.siteFor(colony, BuildingType.PHEROMONE_ARCHIVE));
+			campusSatellites.add(ColonyBuilder.siteFor(colony, BuildingType.VENOM_PRESS));
+			campusSatellites.add(ColonyBuilder.siteFor(colony, BuildingType.ARMORY));
+			StructurePlacer.placeSharedCampusLandmass2D(level, colony.origin(), campusSatellites);
+			// Carve dark chamber mouths into the one shared mound so it reads as an
+			// inhabited ant-hill, not a featureless dirt dome.
+			StructurePlacer.carveSharedMoundChamberMouths(level, colony.origin());
 		}
 		if (sceneName.equals(TABLET_EN)) {
 			colony.progress().requests().clear();
@@ -618,8 +655,12 @@ public final class VisualQaScenes {
 		placeBlockMarker(level, builder, Blocks.MANGROVE_ROOTS, 0.55f);
 		placeItemMarker(level, supplier, new ItemStack(ModItems.RESIN_GLOB), 0.55f);
 		placeJobAnchor(level, builder, construction, Blocks.MANGROVE_ROOTS, Blocks.DIRT_PATH);
-		placeJobAnchor(level, supplier, construction, Blocks.HONEY_BLOCK, Blocks.ROOTED_DIRT);
-		StructurePlacer.safeSet(level, construction.offset(5, 1, -5), Blocks.HONEY_BLOCK);
+		// Delivered-material proof uses the native Resin Depot block (honey->native
+		// migration). The construction gametest asserts RESIN_DEPOT both at the
+		// resin supplier's job anchor (construction +4,0,-7) and at the depot stack
+		// (+5,1,-5), so neither may be honey.
+		placeJobAnchor(level, supplier, construction, ModBlocks.RESIN_DEPOT, Blocks.ROOTED_DIRT);
+		StructurePlacer.safeSet(level, construction.offset(5, 1, -5), ModBlocks.RESIN_DEPOT);
 		StructurePlacer.safeSet(level, construction.offset(5, 1, -6), Blocks.BARREL);
 	}
 

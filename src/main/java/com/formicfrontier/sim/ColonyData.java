@@ -22,7 +22,8 @@ public final class ColonyData {
 			Codec.INT.fieldOf("queenHealth").forGetter(ColonyData::queenHealth),
 			Codec.INT.fieldOf("ageTicks").forGetter(ColonyData::ageTicks),
 			Codec.STRING.optionalFieldOf("currentTask").forGetter(data -> Optional.ofNullable(data.currentTask)),
-			ColonyProgress.CODEC.optionalFieldOf("progress").forGetter(data -> Optional.ofNullable(data.progress))
+			ColonyProgress.CODEC.optionalFieldOf("progress").forGetter(data -> Optional.ofNullable(data.progress)),
+			ColonyStage.CODEC.optionalFieldOf("stage", ColonyStage.FOUNDING).forGetter(ColonyData::stage)
 	).apply(instance, ColonyData::fromCodec));
 
 	private final int id;
@@ -35,6 +36,7 @@ public final class ColonyData {
 	private int ageTicks;
 	private String currentTask = "Establishing nest";
 	private ColonyProgress progress;
+	private ColonyStage stage = ColonyStage.FOUNDING;
 
 	public ColonyData(int id, BlockPos origin) {
 		this.id = id;
@@ -53,7 +55,7 @@ public final class ColonyData {
 		progress = ColonyProgress.allied(id);
 	}
 
-	private static ColonyData fromCodec(int id, BlockPos origin, Map<ResourceType, Integer> resources, Map<AntCaste, Integer> castes, List<NestChamber> chambers, List<TaskPriority> priorities, int queenHealth, int ageTicks, Optional<String> currentTask, Optional<ColonyProgress> progress) {
+	private static ColonyData fromCodec(int id, BlockPos origin, Map<ResourceType, Integer> resources, Map<AntCaste, Integer> castes, List<NestChamber> chambers, List<TaskPriority> priorities, int queenHealth, int ageTicks, Optional<String> currentTask, Optional<ColonyProgress> progress, ColonyStage stage) {
 		ColonyData data = new ColonyData(id, origin);
 		data.resources.putAll(resources);
 		data.castes.putAll(castes);
@@ -64,6 +66,7 @@ public final class ColonyData {
 		data.ageTicks = ageTicks;
 		data.currentTask = currentTask.orElse("Idle");
 		data.progress = progress.orElseGet(() -> ColonyProgress.allied(id));
+		data.stage = stage == null ? ColonyStage.FOUNDING : stage;
 		return data;
 	}
 
@@ -151,6 +154,14 @@ public final class ColonyData {
 		this.progress = progress;
 	}
 
+	public ColonyStage stage() {
+		return stage;
+	}
+
+	public void setStage(ColonyStage stage) {
+		this.stage = stage == null ? ColonyStage.FOUNDING : stage;
+	}
+
 	public void addChamber(NestChamber chamber) {
 		chambers.add(chamber);
 	}
@@ -190,6 +201,7 @@ public final class ColonyData {
 		joiner.add("Queen: " + queenHealth + " hp, alive=" + queenAlive());
 		joiner.add("Population: " + population() + " | upkeep/tick=" + upkeepPerEconomyTick());
 		joiner.add("Faction: " + progress.name() + " | rank=" + ColonyRank.current(this).displayName() + " (" + ColonyRank.score(this) + ") | rep=" + progress.reputation() + " | claim=" + progress.claimRadius());
+		joiner.add("Stage: " + stage().id());
 		joiner.add("Castes: " + castesSummary());
 		joiner.add("Buildings: " + buildingsSummary());
 		joiner.add("Build Queue: " + progress.buildQueueView());

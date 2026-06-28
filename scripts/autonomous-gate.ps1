@@ -6,7 +6,8 @@ param(
     [string]$VisionAssessor = "openai",
     [switch]$SkipVisionAssessment,
     [switch]$NoLaunch,
-    [string]$FreshnessMarker = ""
+    [string]$FreshnessMarker = "",
+    [string]$CodexJsonLog = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -130,6 +131,9 @@ try {
     )
     if (-not [string]::IsNullOrWhiteSpace($activeFreshnessMarker)) {
         $gateArgs += @("--freshness-marker", $activeFreshnessMarker)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($CodexJsonLog)) {
+        $gateArgs += @("--codex-json-log", $CodexJsonLog)
     }
     if (-not $SkipVisionAssessment -and -not [string]::IsNullOrWhiteSpace($requiredAssessor)) {
         $gateArgs += @("--require-assessor", $requiredAssessor)

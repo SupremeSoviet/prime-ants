@@ -255,9 +255,12 @@ public final class DiplomacyConsequences {
 				(first.getZ() + second.getZ()) / 2
 		);
 		BlockPos base = ColonyService.anchorToSurface(level, midpoint);
-		StructurePlacer.safeSet(level, base, Blocks.HONEYCOMB_BLOCK);
-		StructurePlacer.safeSet(level, base.above(), Blocks.AMETHYST_BLOCK);
-		StructurePlacer.safeSet(level, base.above(2), Blocks.CANDLE);
+		// Force the visible cache column so it survives even when a colony mound
+		// overlaps the pact midpoint (safeSet would lose to a non-replaceable
+		// NEST_MOUND block and leave the cache invisible).
+		level.setBlockAndUpdate(base, Blocks.HONEYCOMB_BLOCK.defaultBlockState());
+		level.setBlockAndUpdate(base.above(), Blocks.AMETHYST_BLOCK.defaultBlockState());
+		level.setBlockAndUpdate(base.above(2), Blocks.CANDLE.defaultBlockState());
 		StructurePlacer.safeSet(level, base.north(), Blocks.DIRT_PATH);
 		StructurePlacer.safeSet(level, base.south(), Blocks.DIRT_PATH);
 		StructurePlacer.safeSet(level, base.east(), Blocks.ROOTED_DIRT);
@@ -302,9 +305,11 @@ public final class DiplomacyConsequences {
 				(first.getZ() + second.getZ()) / 2
 		);
 		BlockPos base = ColonyService.anchorToSurface(level, midpoint);
-		StructurePlacer.safeSet(level, base, Blocks.MOSS_BLOCK);
-		StructurePlacer.safeSet(level, base.above(), Blocks.CHISELED_TUFF);
-		StructurePlacer.safeSet(level, base.above(2), Blocks.CANDLE);
+		// Force the visible cache column so it survives a colony mound overlapping
+		// the pact midpoint (see placeTributeCache).
+		level.setBlockAndUpdate(base, Blocks.MOSS_BLOCK.defaultBlockState());
+		level.setBlockAndUpdate(base.above(), Blocks.CHISELED_TUFF.defaultBlockState());
+		level.setBlockAndUpdate(base.above(2), Blocks.CANDLE.defaultBlockState());
 		StructurePlacer.safeSet(level, base.north(), Blocks.DIRT_PATH);
 		StructurePlacer.safeSet(level, base.south(), Blocks.DIRT_PATH);
 		StructurePlacer.safeSet(level, base.east(), Blocks.ROOTED_DIRT);

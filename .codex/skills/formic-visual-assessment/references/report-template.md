@@ -11,6 +11,24 @@ Artifacts:
 - Screenshots: build/visual-qa/screenshots
 - Logs: build/visual-qa/latest.log (present/missing)
 
+## Reference Diff
+
+Compare the current wide colony shots (colony_overview, settlement_scale,
+culture_styles, endgame_project) directly against the attached reference images
+(reference-mega-nest-wide, reference-mega-nest-front). One line each:
+
+- Topology: ONE broad continuous chambered mound mass, or N separate
+  buildings/cones? Name which the current shots read as.
+- Silhouette: broad dome (wider than tall) vs steep pointed cone/pyramid/ziggurat.
+- Chambers: irregular noise-scattered mouths with dark depth vs regular
+  grid/pegboard holes vs none readable.
+- Surface: organic/jittered with debris vs clean block stair-steps.
+- Biggest single gap from reference, named concretely.
+
+If the gap is topological (wrong overall form, e.g. a cluster of cones instead
+of one carved mound), say so explicitly: the next fix must be a representational
+change, not a parameter tweak.
+
 ## Blockers
 
 1. [P0/P1] Short issue title
@@ -81,6 +99,20 @@ Artifacts:
 - Verdict: PASS | FAIL | NEEDS WORK
 - Findings:
   - [P?] ...
+
+## Matrix Scorecard
+
+One line per required visual_baseline matrix row:
+
+`<row_id>: pass | partial | fail | unknown - score N/5 - <one concrete next instruction>`
+
+- score 5 = matches the reference intent; 0 = wrong representation / not started.
+- Use `unknown` only when the evidence scenes do not show enough to judge; then
+  say which capture/camera is missing.
+- If a row was already `fail` for the same root cause in its matrix `lastVerdict`
+  on 2+ prior attempts, prefix the line with `REPEAT:` and make the instruction a
+  representational change (different generator/algorithm/shape), not another
+  parameter tweak of the failing approach.
 
 ## Prioritized Fix Backlog
 

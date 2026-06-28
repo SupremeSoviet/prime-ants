@@ -9,7 +9,7 @@ param(
     [int]$CodexCompletionWatchdogMinutes = 5,
     [int]$CodexActivityWatchdogMinutes = 45,
     [int]$RateLimitRetrySeconds = 180,
-    [int]$RateLimitMaxRetrySeconds = 21600,
+    [int]$RateLimitMaxRetrySeconds = 1800,
     [string]$ProxyCommand = ""
 )
 

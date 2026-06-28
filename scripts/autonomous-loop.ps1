@@ -9,7 +9,7 @@ param(
     [int]$CodexCompletionWatchdogMinutes = 5,
     [int]$CodexActivityWatchdogMinutes = 45,
     [int]$RateLimitRetrySeconds = 180,
-    [int]$RateLimitMaxRetrySeconds = 21600,
+    [int]$RateLimitMaxRetrySeconds = 1800,
     [string]$ProxyCommand = ""
 )
 
@@ -31,6 +31,7 @@ $VisualIntentDir = Join-Path $RepoRoot "docs\visual-intent"
 $VisualFeatureMatrixFile = Join-Path $LoopDir "visual-feature-matrix.json"
 $VisualLoopBriefMd = Join-Path $LoopDir "visual-loop-brief.md"
 $VisualProgressLog = Join-Path $LoopDir "visual-progress.jsonl"
+$AttemptCheckpointDir = Join-Path $LoopDir "checkpoints"
 . (Join-Path $PSScriptRoot "java-env.ps1")
 
 function Write-LoopState {
@@ -41,7 +42,13 @@ function Write-LoopState {
         [int]$ChildPid = 0,
         [string]$JsonLog = "",
         [string]$FinalMessage = "",
-        [double]$IdleMinutes = -1
+        [double]$IdleMinutes = -1,
+        [string]$TransportStatus = "",
+        [int]$ProviderBackoffSeconds = -1,
+        [string]$LastFailureKind = "",
+        [hashtable]$UnverifiedChanges = $null,
+        [bool]$MissingFinal = $false,
+        [string]$Checkpoint = ""
     )
     $state = [ordered]@{
         status = $Status
@@ -60,10 +67,32 @@ function Write-LoopState {
         $state["jsonLog"] = $JsonLog
     }
     if (-not [string]::IsNullOrWhiteSpace($FinalMessage)) {
-        $state["finalMessage"] = $FinalMessage
+        if ((Test-Path -LiteralPath $FinalMessage) -and (Get-Item -LiteralPath $FinalMessage).Length -gt 0) {
+            $state["finalMessage"] = $FinalMessage
+            $state["finalMessageExists"] = $true
+        } else {
+            $state["finalMessageTarget"] = $FinalMessage
+            $state["finalMessageExists"] = $false
+        }
     }
     if ($IdleMinutes -ge 0) {
         $state["jsonLogIdleMinutes"] = [math]::Round($IdleMinutes, 2)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($TransportStatus)) {
+        $state["transportStatus"] = $TransportStatus
+    }
+    if ($ProviderBackoffSeconds -ge 0) {
+        $state["providerBackoffSeconds"] = $ProviderBackoffSeconds
+    }
+    if (-not [string]::IsNullOrWhiteSpace($LastFailureKind)) {
+        $state["lastFailureKind"] = $LastFailureKind
+    }
+    if ($null -ne $UnverifiedChanges) {
+        $state["unverifiedChanges"] = $UnverifiedChanges
+    }
+    $state["missingFinal"] = $MissingFinal
+    if (-not [string]::IsNullOrWhiteSpace($Checkpoint)) {
+        $state["checkpoint"] = $Checkpoint
     }
     $state | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $StateFile -Encoding UTF8
 }
@@ -192,6 +221,204 @@ function Get-CodexRateLimitBackoffSeconds {
     return $seconds
 }
 
+function Get-StringSha256 {
+    param([string]$Text)
+    if ($null -eq $Text) {
+        $Text = ""
+    }
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($Text)
+        return ([System.BitConverter]::ToString($sha.ComputeHash($bytes)) -replace "-", "").ToLowerInvariant()
+    }
+    finally {
+        $sha.Dispose()
+    }
+}
+
+function Invoke-GitText {
+    param([string[]]$Arguments)
+    $previousErrorAction = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        $output = & git -C "$RepoRoot" @Arguments 2>&1
+        $exitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $previousErrorAction
+    }
+    if ($exitCode -ne 0) {
+        throw "git $($Arguments -join ' ') failed with exit $exitCode. $($output | Out-String)"
+    }
+    if ($null -eq $output) {
+        return ""
+    }
+    $lines = @($output | ForEach-Object { $_.ToString() } | Where-Object {
+        $_ -notmatch "^warning: in the working copy of '.+'(,)? LF will be replaced by CRLF the next time Git touches it$" -and
+        $_ -notmatch "^warning: in the working copy of '.+'(,)? CRLF will be replaced by LF the next time Git touches it$"
+    })
+    return ($lines -join [Environment]::NewLine).TrimEnd()
+}
+
+function Get-WorktreeSnapshot {
+    $status = Invoke-GitText -Arguments @("status", "--porcelain=v1", "--untracked-files=all")
+    $diff = Invoke-GitText -Arguments @("diff", "--binary")
+    $diffStat = Invoke-GitText -Arguments @("diff", "--stat")
+    return [ordered]@{
+        status = $status
+        statusHash = Get-StringSha256 -Text $status
+        diffHash = Get-StringSha256 -Text $diff
+        diffStat = $diffStat
+        isDirty = -not [string]::IsNullOrWhiteSpace($status)
+        diffText = $diff
+    }
+}
+
+function Write-CheckpointSnapshot {
+    param(
+        [string]$Directory,
+        [string]$Prefix,
+        [object]$Snapshot
+    )
+    Set-Content -LiteralPath (Join-Path $Directory "$Prefix-status.txt") -Value $Snapshot.status -Encoding UTF8
+    Set-Content -LiteralPath (Join-Path $Directory "$Prefix-diff.patch") -Value $Snapshot.diffText -Encoding UTF8
+    Set-Content -LiteralPath (Join-Path $Directory "$Prefix-diffstat.txt") -Value $Snapshot.diffStat -Encoding UTF8
+}
+
+function New-AttemptCheckpoint {
+    param(
+        [int]$Iteration,
+        [int]$Attempt,
+        [string]$PromptPath
+    )
+    New-Item -ItemType Directory -Force -Path $AttemptCheckpointDir | Out-Null
+    $id = "iteration-$('{0:D3}' -f $Iteration)-attempt-$('{0:D2}' -f $Attempt)-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+    $directory = Join-Path $AttemptCheckpointDir $id
+    New-Item -ItemType Directory -Force -Path $directory | Out-Null
+    $before = Get-WorktreeSnapshot
+    Write-CheckpointSnapshot -Directory $directory -Prefix "before" -Snapshot $before
+    $metadata = [ordered]@{
+        id = $id
+        iteration = $Iteration
+        attempt = $Attempt
+        prompt = $PromptPath
+        createdAt = (Get-Date).ToString("o")
+        dirtyBefore = $before.isDirty
+        statusHashBefore = $before.statusHash
+        diffHashBefore = $before.diffHash
+    }
+    $metadata | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $directory "metadata.json") -Encoding UTF8
+    return @{
+        id = $id
+        directory = $directory
+        before = $before
+    }
+}
+
+function Complete-AttemptCheckpoint {
+    param([object]$Checkpoint)
+    $after = Get-WorktreeSnapshot
+    Write-CheckpointSnapshot -Directory $Checkpoint.directory -Prefix "after" -Snapshot $after
+    $afterMeta = [ordered]@{
+        completedAt = (Get-Date).ToString("o")
+        dirtyAfter = $after.isDirty
+        statusHashAfter = $after.statusHash
+        diffHashAfter = $after.diffHash
+        changedDuringAttempt = (($Checkpoint.before.statusHash -ne $after.statusHash) -or ($Checkpoint.before.diffHash -ne $after.diffHash))
+    }
+    $afterMeta | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $Checkpoint.directory "after-metadata.json") -Encoding UTF8
+    return $after
+}
+
+function Test-AttemptChangedWorktree {
+    param(
+        [object]$Checkpoint,
+        [object]$AfterSnapshot
+    )
+    return (($Checkpoint.before.statusHash -ne $AfterSnapshot.statusHash) -or ($Checkpoint.before.diffHash -ne $AfterSnapshot.diffHash))
+}
+
+function New-UnverifiedChangesSummary {
+    param(
+        [object]$Checkpoint,
+        [object]$AfterSnapshot
+    )
+    return @{
+        checkpoint = $Checkpoint.directory
+        changedDuringAttempt = (Test-AttemptChangedWorktree -Checkpoint $Checkpoint -AfterSnapshot $AfterSnapshot)
+        dirtyBefore = $Checkpoint.before.isDirty
+        dirtyAfter = $AfterSnapshot.isDirty
+        statusBefore = $Checkpoint.before.status
+        statusAfter = $AfterSnapshot.status
+        diffStatAfter = $AfterSnapshot.diffStat
+        statusHashBefore = $Checkpoint.before.statusHash
+        statusHashAfter = $AfterSnapshot.statusHash
+        diffHashBefore = $Checkpoint.before.diffHash
+        diffHashAfter = $AfterSnapshot.diffHash
+    }
+}
+
+function Get-DestructiveCommandFinding {
+    param(
+        [string]$JsonLog,
+        [string]$ErrLog
+    )
+    $combined = Get-CodexFailureText -JsonLog $JsonLog -ErrLog $ErrLog
+    if ([string]::IsNullOrWhiteSpace($combined)) {
+        return ""
+    }
+    foreach ($line in $combined -split "`r?`n") {
+        if ([string]::IsNullOrWhiteSpace($line) -or $line -notmatch '"type"\s*:\s*"command_execution"') {
+            continue
+        }
+        try {
+            $entry = $line | ConvertFrom-Json
+            if ($null -eq $entry.item -or $entry.item.type -ne "command_execution") {
+                continue
+            }
+            $command = [string]$entry.item.command
+            if ($command -match '(?i)(git(?:\.exe)?\s+(?:checkout\s+--|reset\b|restore\b|clean\b)|Remove-Item[^;&|\r\n]*(?:src[\\/]|src\\\\))') {
+                if ($command.Length -gt 600) {
+                    return $command.Substring(0, 600)
+                }
+                return $command
+            }
+        }
+        catch {
+            continue
+        }
+    }
+    return ""
+}
+
+function Get-FinalArtifactForState {
+    param([string]$FinalMessage)
+    if (-not [string]::IsNullOrWhiteSpace($FinalMessage) -and (Test-Path -LiteralPath $FinalMessage)) {
+        return $FinalMessage
+    }
+    return ""
+}
+
+function Get-ActiveTrack {
+    # The child iteration declares which parallel backlog it worked on by writing
+    # "activeTrack": "content" | "world-visual" into visual-loop-state.json. The
+    # supervisor reads it to pick the matching gate. Defaults to world-visual.
+    $stateFile = Join-Path $RepoRoot "build\autonomous-loop\visual-loop-state.json"
+    if (-not (Test-Path -LiteralPath $stateFile)) {
+        return "world-visual"
+    }
+    try {
+        $state = Get-Content -Raw -LiteralPath $stateFile | ConvertFrom-Json
+        if ($state.PSObject.Properties["activeTrack"] -and ([string]$state.activeTrack) -match '(?i)content') {
+            return "content"
+        }
+    }
+    catch {
+        return "world-visual"
+    }
+    return "world-visual"
+}
+
 function Get-CodexHome {
     if (-not [string]::IsNullOrWhiteSpace($env:CODEX_HOME)) {
         return $env:CODEX_HOME
@@ -304,13 +531,20 @@ function Write-VisualLoopState {
         [int]$Iteration,
         [string]$Status,
         [string]$ActiveSlice = $null,
+        [string]$ActiveTrack = $null,
         [string]$CurrentOwner = $null,
         [string]$NextVisualTarget = $null,
         [string]$ScreenshotVerdict = $null,
         [hashtable]$BlockingSeverityCount = $null,
         [object[]]$PolishBacklog = $null,
         [hashtable]$LastArtifacts = $null,
-        [string]$FreshnessMarker = $null
+        [string]$FreshnessMarker = $null,
+        [string]$TransportStatus = $null,
+        [int]$ProviderBackoffSeconds = -1,
+        [string]$LastFailureKind = $null,
+        [hashtable]$UnverifiedChanges = $null,
+        [bool]$MissingFinal = $false,
+        [string]$Checkpoint = $null
     )
     $existing = $null
     if (Test-Path -LiteralPath $VisualLoopStateFile) {
@@ -348,6 +582,11 @@ function Write-VisualLoopState {
             $defaultArtifacts[$key] = $LastArtifacts[$key]
         }
     }
+    $autonomousFinalTarget = ""
+    if ($defaultArtifacts["autonomousFinal"] -and -not (Test-Path -LiteralPath $defaultArtifacts["autonomousFinal"])) {
+        $autonomousFinalTarget = $defaultArtifacts["autonomousFinal"]
+        $defaultArtifacts["autonomousFinal"] = ""
+    }
     if (-not [string]::IsNullOrWhiteSpace($FreshnessMarker)) {
         $defaultArtifacts["freshnessMarker"] = $FreshnessMarker
     }
@@ -356,13 +595,21 @@ function Write-VisualLoopState {
         status = $Status
         iteration = $Iteration
         activeSlice = if ($PSBoundParameters.ContainsKey("ActiveSlice") -and -not [string]::IsNullOrWhiteSpace($ActiveSlice)) { $ActiveSlice } else { Get-ExistingVisualValue -Object $existing -Name "activeSlice" -Default "renovation" }
+        activeTrack = if ($PSBoundParameters.ContainsKey("ActiveTrack") -and -not [string]::IsNullOrWhiteSpace($ActiveTrack)) { $ActiveTrack } else { Get-ExistingVisualValue -Object $existing -Name "activeTrack" -Default "world-visual" }
         currentOwner = if ($PSBoundParameters.ContainsKey("CurrentOwner") -and -not [string]::IsNullOrWhiteSpace($CurrentOwner)) { $CurrentOwner } else { Get-ExistingVisualValue -Object $existing -Name "currentOwner" -Default "orchestrator" }
         acceptanceBrief = Get-ExistingVisualValue -Object $existing -Name "acceptanceBrief" -Default ""
         screenshotVerdict = if ($PSBoundParameters.ContainsKey("ScreenshotVerdict")) { $ScreenshotVerdict } else { Get-ExistingVisualValue -Object $existing -Name "screenshotVerdict" -Default "unknown" }
         blockingSeverityCount = if ($null -ne $BlockingSeverityCount) { $BlockingSeverityCount } else { Get-ExistingVisualValue -Object $existing -Name "blockingSeverityCount" -Default @{ P0 = 0; P1 = 0 } }
         polishBacklog = if ($null -ne $PolishBacklog) { $PolishBacklog } else { Get-ExistingVisualValue -Object $existing -Name "polishBacklog" -Default @() }
         lastArtifacts = $defaultArtifacts
+        autonomousFinalTarget = if (-not [string]::IsNullOrWhiteSpace($autonomousFinalTarget)) { $autonomousFinalTarget } else { Get-ExistingVisualValue -Object $existing -Name "autonomousFinalTarget" -Default "" }
         nextVisualTarget = if ($PSBoundParameters.ContainsKey("NextVisualTarget") -and -not [string]::IsNullOrWhiteSpace($NextVisualTarget)) { $NextVisualTarget } else { Get-ExistingVisualValue -Object $existing -Name "nextVisualTarget" -Default "choose next scoped visual track" }
+        transportStatus = if ($PSBoundParameters.ContainsKey("TransportStatus") -and -not [string]::IsNullOrWhiteSpace($TransportStatus)) { $TransportStatus } else { Get-ExistingVisualValue -Object $existing -Name "transportStatus" -Default "" }
+        providerBackoffSeconds = if ($ProviderBackoffSeconds -ge 0) { $ProviderBackoffSeconds } else { Get-ExistingVisualValue -Object $existing -Name "providerBackoffSeconds" -Default 0 }
+        lastFailureKind = if ($PSBoundParameters.ContainsKey("LastFailureKind") -and -not [string]::IsNullOrWhiteSpace($LastFailureKind)) { $LastFailureKind } else { Get-ExistingVisualValue -Object $existing -Name "lastFailureKind" -Default "" }
+        unverifiedChanges = if ($null -ne $UnverifiedChanges) { $UnverifiedChanges } else { Get-ExistingVisualValue -Object $existing -Name "unverifiedChanges" -Default $null }
+        missingFinal = $MissingFinal
+        checkpoint = if ($PSBoundParameters.ContainsKey("Checkpoint") -and -not [string]::IsNullOrWhiteSpace($Checkpoint)) { $Checkpoint } else { Get-ExistingVisualValue -Object $existing -Name "checkpoint" -Default "" }
         freshnessMarker = if (-not [string]::IsNullOrWhiteSpace($FreshnessMarker)) { $FreshnessMarker } else { Get-ExistingVisualValue -Object $existing -Name "freshnessMarker" -Default "" }
         updatedAt = (Get-Date).ToString("o")
     }
@@ -500,18 +747,25 @@ function New-IterationPrompt {
     @"
 You are a local Codex autonomous development agent working in Formic Frontier.
 
-Run exactly one small playable visual loop from the active Renovation Track, then stop and summarize.
+Run exactly one small slice from ONE of the two parallel backlogs (tracks), then stop and summarize.
 
 Start by reading:
 - docs/roadmap.md
 - docs/autonomous-dev.md
 - docs/visual-intent/formic-visual-intent.md
+- docs/content-intent/formic-content-intent.md
 - docs/local-stack/index.md
 - .codex/skills/formic-visual-assessment/SKILL.md
 - build/autonomous-loop/visual-loop-state.json when present
 - build/autonomous-loop/visual-feature-matrix.json when present
+- build/autonomous-loop/content-feature-matrix.json when present
 - build/autonomous-loop/visual-loop-brief.md when present
 - build/autonomous-loop/visual-progress.jsonl tail when present
+
+Two parallel tracks - pick exactly ONE per iteration:
+- world-visual: how the colony LOOKS. Backlog build/autonomous-loop/visual-feature-matrix.json, intent docs/visual-intent/formic-visual-intent.md. Accepted by the visual gate (gui-smoke + GPT-5.4 mini assessment).
+- content: how the colony PLAYS and develops over time - castes, resources, time-based progression, trade, politics, native blocks, weapons. Backlog build/autonomous-loop/content-feature-matrix.json, intent docs/content-intent/formic-content-intent.md. Accepted by the content gate (test-mod gametests).
+Set "activeTrack" to "world-visual" or "content" in build/autonomous-loop/visual-loop-state.json so the supervisor runs the matching gate. The tracks are independent: a content slice is NOT blocked by the world still being visually fail, and a content slice needs neither gui-smoke nor the visual assessment. Make real product progress: when the current world-visual target is blocked or waiting on a representational change, advance a content row instead of re-tuning the same world geometry. Whichever track you pick, do not regress scripts/test-mod.cmd or existing visual QA scenes.
 
 Critical visual handoff for this iteration:
 $visualHandoff
@@ -519,6 +773,7 @@ $visualHandoff
 Current operating constraints:
 - This is local autonomous development. GitHub publishing is not available yet because this repo has no remote and gh is missing.
 - The worktree can contain existing uncommitted baseline changes. Do not revert them.
+- Destructive recovery commands are forbidden in autonomous turns. Do not run tracked-file restore/reset/checkout commands, git clean, or recursive source deletion. If a prior edit is wrong, make a forward patch that preserves unrelated work.
 - Repository root is: $RepoRoot
 - CWD guard is mandatory. Start every shell command that reads or writes repo files with:
   `Set-Location -LiteralPath '$RepoRoot'; if (-not ((Get-Location).Path -ieq '$RepoRoot')) { throw 'Wrong cwd' }`
@@ -536,20 +791,26 @@ Current operating constraints:
 - Do not continue the old generic Stage 1-7 roadmap while renovation work is unfinished.
 - Keep the slice narrow enough to complete with tests and visual QA in this run.
 - The visual feature matrix is the durable acceptance contract. Pick one open required row or one direct prerequisite for it. Do not mark a row pass without screenshot evidence and visual assessment support.
-- Mechanics/playability is locked until every required visual_baseline row in build/autonomous-loop/visual-feature-matrix.json is status=pass.
+- Mechanics/playability are NOT globally locked anymore. Content/mechanics progress on the content track in parallel with the world-visual track. Only world-architecture VISUAL rows gate world-architecture VISUAL changes. Any content slice must keep scripts/test-mod.cmd green and must not visually regress existing QA scenes.
 - Visual QA must include the renovation scenes when available: settlement_scale, tablet_research_map, tablet_market, and tablet_requests.
-- Do not run a testing-only or mechanics-only iteration while P2/P3 visual debt remains. Every iteration must have a visible target and a screenshot acceptance check.
+- On the world-visual track, every iteration must have a visible target and a screenshot acceptance check (no testing-only pass). On the content track, the iteration must have a gameplay target proven by a gametest instead. Either way, never run a no-op iteration.
 - Visual priority order:
-  1. settlement/building scale, monumental ant-hill mass, silhouettes, diversity, composition, camera framing, and roomy village feel;
-  2. textures, assets, ant readability, caste silhouette quality, and visible animation/work cues;
-  3. Colony Tablet/interface beauty, hierarchy, icons/cards, localization fit, and research/market/request presentation;
+  1. settlement/building scale, ant-like asymmetrical role buildings, no overlapping houses, no freestanding entrance arches, monumental ant-hill mass, silhouettes, diversity, composition, camera framing, and roomy village feel;
+  2. textures/assets after architecture blockers: broad materials are accepted by the user for now, but Formic block/item textures must be upgraded to 32x32 instead of 16x16, and the narrow holey-block redraw must also be 32x32. Ant readability, caste silhouette quality, and visible animation/work cues remain secondary unless reopened by assessment;
+  3. Colony Tablet/interface beauty after architecture blockers: redesign from the existing UI into a very beautiful research-tree interface, with explicit assessment that labels/icons/cards/buttons do not overlap and stay readable;
   4. mechanics and playability only after the visual baseline is materially better.
 - R2 architecture scale requirements:
   - Do not be timid. Architecture polish is allowed to make buildings much larger, taller, and wider when screenshots need it.
   - Main mounds and landmark buildings should target roughly 20-30 blocks of vertical silhouette when complete, with broad 24-40 block footprints where appropriate.
   - Secondary buildings can be smaller, but they must still read as substantial chambers rather than 3-5 block huts, pads, or decorative markers.
   - Current user blocker: if colony_overview, colony_ground, or settlement_scale still reads as flat wide pads/pancake terrain with only a thin column, cap, or table-like crown, treat the visual target as failed. The next repair must change actual world structure generation/camera staging enough to show a broad 20-30 block organic ant-hill mass, not just widen low layers or tweak colors.
+  - Break the local minimum: BEFORE editing world geometry, read the ``## Reference Diff`` and ``## Matrix Scorecard`` in build/visual-qa/formic-visual-assessment.md. If the Reference Diff says the form is wrong (a cluster of cones instead of one carved mound) or a scorecard line is prefixed ``REPEAT:``, you MUST change the generation representation, not tune the existing cones. Follow the generation recipe in docs/visual-intent/formic-visual-intent.md "Required representation": one wide noise-driven mound landmass, role buildings as offset sub-lobes on that shared heightmap, surface jitter to kill stair-steps, noise-scattered carved chamber voids with deep dark throats. Do not respond to a topological failure with another center-offset, radius, or taper change.
   - Prefer structural mass over surface decoration: layered mound shells, tunnel mouths, vertical shafts, ribs/buttresses, terraces, yards, crowns, brood/fungus/storage volumes, and role-specific entrances.
+  - Current user blocker: role buildings are too symmetrical and may overlap. Make them organically/asymmetrically ant-like with readable spacing between houses.
+  - Current user blocker: do not add or preserve freestanding arches in front of entrances. Entrances should be irregular excavated tunnel cuts with dark depth and chamber faces.
+  - Current user acceptance: forest floor is not an active target; do not spend the next loop on forest-floor density.
+  - Current user acceptance: broad materials are good enough for now; only the visible block with a hole needs a later redraw.
+  - Current user requirement: custom Formic block/item textures should be 32x32, not 16x16. Do not interrupt the current architecture slice for a mass texture migration, but the later asset slice must upgrade 16x16 texture debt before mechanics/playability can start.
   - A slice that only adds a few accent blocks to tiny buildings is not enough for R2 unless the screenshot already proves the buildings have real scale.
   - You may adjust QA camera height/distance and prepared terrain radius so the larger structures are visible in settlement_scale, culture_styles, construction_stage, and repair_scene.
 - You may change visual QA camera angles/framing in VisualQaScenes or client screenshot setup when the current angle hides the feature or makes beauty/readability impossible to assess. Preserve all scene names and expected screenshots.
@@ -570,6 +831,7 @@ Artifact reporting contract:
 - Append one JSONL event to build/autonomous-loop/visual-progress.jsonl after scout, build, smoke, assessment, and gate phases. Include phase, owner, files changed, screenshots, verdict, matrix row ids, and next action.
 - Update build/autonomous-loop/visual-feature-matrix.json for the active row with status fail/unknown/pass, evidence screenshots, lastVerdict, and nextAction. Do not delete rows.
 - Keep acceptanceBrief, currentOwner, screenshotVerdict, blockingSeverityCount, polishBacklog, lastArtifacts, and nextVisualTarget current.
+- Do not claim a final summary artifact exists unless it was actually written by Codex. If a provider/rate-limit failure interrupts the turn after edits, leave the repo dirty and let the supervisor record the checkpoint instead of inventing a completed final.
 - The state file is a handoff contract for the next GLM iteration; do not leave it generic or stale.
 
 Ownership boundaries:
@@ -581,7 +843,9 @@ Ownership boundaries:
 
 Maintain build/autonomous-loop/visual-loop-state.json with active slice, current owner, screenshot verdict, P0/P1 count, P2/P3 backlog, last artifact paths, and next visual target.
 
-Definition of done for this iteration:
+Definition of done for this iteration depends on activeTrack.
+
+If activeTrack = world-visual:
 1. Implement the slice.
 2. Run scripts/test-mod.cmd -AllowMissingGitHub.
 3. Run scripts/gui-smoke.cmd.
@@ -589,19 +853,24 @@ Definition of done for this iteration:
 5. Run scripts/autonomous-gate.cmd -AllowMissingGitHub -NoLaunch.
 6. If any command or visual assessment fails, fix the issue or clearly leave the iteration blocked with the exact blocker.
 
+If activeTrack = content:
+1. Implement exactly one content row from build/autonomous-loop/content-feature-matrix.json (pick the highest-priority open required row, or a direct prerequisite).
+2. Add or extend a deterministic gametest that proves the feature's state change end to end (resource delta, caste reassignment, stage advance, relation change, combat outcome, unlock).
+3. Run scripts/test-mod.cmd -AllowMissingGitHub - it must pass, including your new gametest.
+4. Update the content row in content-feature-matrix.json: status (mark pass ONLY with a passing evidenceTest), lastVerdict, nextAction. Do not delete rows and do not weaken or delete tests.
+5. Run scripts/content-gate.cmd -AllowMissingGitHub.
+6. If test-mod or the content gate fails, fix it or clearly leave the iteration blocked with the exact blocker. You do not need gui-smoke or the visual assessment for a content slice, but do not break existing visual scenes.
+
 Mandatory command behavior:
 - If screenshots are stale, scripts/gui-smoke.cmd is the next command, not a future recommendation.
 - If scripts/gui-smoke.cmd cannot run because Minecraft/client automation is blocked, stop with BLOCKED: and include the command output path or exact error.
 - Never accept or assess screenshots older than the freshness marker.
 
 Final response must include:
-- implemented slice
-- visual target and screenshots inspected
-- files changed
-- test/gate results
-- visual assessment verdict
-- P0/P1 count and P2/P3 backlog
-- next recommended slice
+- activeTrack (world-visual or content) and the matrix row id you worked
+- implemented slice and files changed
+- test/gate results: for world-visual, the visual target + screenshots inspected + visual assessment verdict + P0/P1 count and P2/P3 backlog; for content, the test-mod result + content gate result + the gametest you added
+- next recommended slice and track
 
 Autonomous loop iteration: $Iteration
 "@
@@ -633,12 +902,16 @@ CWD guard is mandatory. Start every shell command that reads or writes repo file
 
 Do not run repo-relative commands from sibling folders such as `2026-04-28\new-chat`; if a command reports the wrong cwd, fix cwd first and retry once.
 
+Destructive recovery commands are forbidden. Do not run tracked-file restore/reset/checkout commands, git clean, or recursive source deletion. Fix forward from the current worktree.
+
 Do not restart broad investigation. Continue the same scoped visual target from build/autonomous-loop/visual-loop-state.json.
 
 Hard visual contract still applies:
-- Mechanics/playability is locked until every required `visual_baseline` row in build/autonomous-loop/visual-feature-matrix.json is `pass`.
-- Every retry must choose one open visual matrix row or a direct prerequisite; no testing-only or mechanics-only pass.
+- Mechanics/playability are not globally locked; the content track progresses in parallel. Continue the SAME track and slice you started this iteration (see activeTrack in build/autonomous-loop/visual-loop-state.json).
+- If activeTrack is "content": continue the same content slice - fix the failing gametest or content-feature-matrix.json and re-run scripts/test-mod.cmd then scripts/content-gate.cmd -AllowMissingGitHub. You do NOT need gui-smoke or the visual assessment for a content slice.
+- If activeTrack is "world-visual": continue the same visual matrix row or a direct prerequisite; no testing-only pass on this track.
 - R2 scale bar is intentionally high: broad organic mound/chamber masses, readable tunnel mouths, forest-floor density, and native Formic materials. Do not settle for low stepped pads, tiny 3-5 block huts, or decorative accent tweaks.
+- Current retargeting: forest-floor density and broad material palette are accepted by the user for now. Do not retry those rows unless explicitly reopened. The active architecture blockers are asymmetrical ant-like buildings, no overlapping houses, no freestanding entrance arches, and deeper irregular tunnel cuts. A later asset slice must redraw the holey block texture at 32x32 and upgrade Formic block/item textures from 16x16 to 32x32. A later tablet slice must make the interface very beautiful and verify no text/icon overlap.
 - Visual QA reports, every reported screenshot, and formic-visual-assessment.md must be newer than the retry freshness marker.
 - Run fresh scripts/gui-smoke.cmd before visual assessment whenever screenshots are older than this retry marker.
 - Use scripts/openai-visual-assessment.cmd for the independent image-capable verdict; do not synthesize final visual acceptance with text-only GLM.
@@ -829,7 +1102,20 @@ function Invoke-CodexPrompt {
             }
             Start-Sleep -Seconds 10
         }
-        try { $process.WaitForExit() } catch {}
+        $exitedCleanly = $true
+        try {
+            $exitedCleanly = $process.WaitForExit(30000)
+        }
+        catch {
+            $exitedCleanly = $true
+        }
+        try { $process.CancelOutputRead() } catch {}
+        try { $process.CancelErrorRead() } catch {}
+        if (-not $exitedCleanly) {
+            $errorWriter.WriteLine("Codex child PID $($process.Id) exited but stream/event drain did not finish within 30 seconds; treating as retryable harness timeout.")
+            $errorWriter.Flush()
+            return 124
+        }
         if ($killedByWatchdog) {
             return 0
         }
@@ -918,8 +1204,30 @@ try {
 
             Write-LoopState -Status "running" -Iteration $iteration -Detail "Codex iteration attempt $attempt"
             Write-VisualLoopState -Status "running" -Iteration $iteration -CurrentOwner "orchestrator" -FreshnessMarker $freshnessMarker -LastArtifacts @{ autonomousFinal = $finalMessage; freshnessMarker = $freshnessMarker }
+            $checkpoint = New-AttemptCheckpoint -Iteration $iteration -Attempt $attempt -PromptPath $promptPath
+            Write-VisualProgressEvent -Iteration $iteration -Event "attempt.checkpoint" -Detail "Captured pre-attempt worktree checkpoint." -Data @{ attempt = $attempt; checkpoint = $checkpoint.directory; dirtyBefore = $checkpoint.before.isDirty; statusHashBefore = $checkpoint.before.statusHash; diffHashBefore = $checkpoint.before.diffHash }
             $codexExit = Invoke-CodexPrompt -CodexCommandInfo $codex -PromptPath $promptPath -JsonLog $jsonLog -ErrLog $errLog -FinalMessage $finalMessage -Iteration $iteration -Attempt $attempt
-            Write-VisualProgressEvent -Iteration $iteration -Event "codex.completed" -Detail "Codex child completed." -Data @{ attempt = $attempt; exitCode = $codexExit; final = $finalMessage; jsonLog = $jsonLog; errLog = $errLog }
+            $afterSnapshot = Complete-AttemptCheckpoint -Checkpoint $checkpoint
+            $unverifiedChanges = New-UnverifiedChangesSummary -Checkpoint $checkpoint -AfterSnapshot $afterSnapshot
+            $finalArtifact = Get-FinalArtifactForState -FinalMessage $finalMessage
+            $missingFinal = [string]::IsNullOrWhiteSpace($finalArtifact)
+            $destructiveFinding = Get-DestructiveCommandFinding -JsonLog $jsonLog -ErrLog $errLog
+            Write-VisualProgressEvent -Iteration $iteration -Event "codex.completed" -Detail "Codex child completed." -Data @{ attempt = $attempt; exitCode = $codexExit; final = $finalArtifact; missingFinal = $missingFinal; jsonLog = $jsonLog; errLog = $errLog; checkpoint = $checkpoint.directory; unverifiedChanges = $unverifiedChanges; destructiveFinding = $destructiveFinding }
+            if (-not [string]::IsNullOrWhiteSpace($destructiveFinding)) {
+                $retryCount = $attempt - 1
+                $lastFailure = "Destructive command guard blocked attempt $attempt. Finding: $destructiveFinding. Do not run tracked-file restore/reset/checkout, git clean, or recursive src deletion; fix forward with a patch that preserves unrelated work. Also never chain a benign Remove-Item of a build/ scratch file together with a command that references src on the same line - split such commands onto separate lines so the guard can tell them apart. Checkpoint: $($checkpoint.directory)."
+                Write-VisualProgressEvent -Iteration $iteration -Event "guard.destructive_command" -Detail $lastFailure -Data @{ attempt = $attempt; retryCount = $retryCount; checkpoint = $checkpoint.directory; finding = $destructiveFinding; unverifiedChanges = $unverifiedChanges }
+                if ($MaxGuardRetries -gt 0 -and $retryCount -ge $MaxGuardRetries) {
+                    Write-VisualLoopState -Status "blocked_destructive_command" -Iteration $iteration -CurrentOwner "orchestrator" -FreshnessMarker $freshnessMarker -TransportStatus "blocked" -LastFailureKind "destructive_command" -UnverifiedChanges $unverifiedChanges -MissingFinal:$missingFinal -Checkpoint $checkpoint.directory -LastArtifacts @{ autonomousFinal = $finalArtifact; freshnessMarker = $freshnessMarker }
+                    Write-LoopState -Status "blocked_destructive_command" -Iteration $iteration -Detail $lastFailure -JsonLog $jsonLog -FinalMessage $finalArtifact -LastFailureKind "destructive_command" -UnverifiedChanges $unverifiedChanges -MissingFinal:$missingFinal -Checkpoint $checkpoint.directory
+                    exit 1
+                }
+                Write-VisualLoopState -Status "retrying" -Iteration $iteration -CurrentOwner "orchestrator" -FreshnessMarker $freshnessMarker -LastFailureKind "destructive_command_retry" -UnverifiedChanges $unverifiedChanges -MissingFinal:$missingFinal -Checkpoint $checkpoint.directory -LastArtifacts @{ autonomousFinal = $finalArtifact; freshnessMarker = $freshnessMarker }
+                Write-LoopState -Status "retrying" -Iteration $iteration -Detail $lastFailure -JsonLog $jsonLog -FinalMessage $finalArtifact -LastFailureKind "destructive_command_retry" -UnverifiedChanges $unverifiedChanges -MissingFinal:$missingFinal -Checkpoint $checkpoint.directory
+                $attempt++
+                Start-Sleep -Seconds 5
+                continue
+            }
             if ($codexExit -ne 0) {
                 if (Test-CodexTransientFailure -JsonLog $jsonLog -ErrLog $errLog -FinalMessage $finalMessage) {
                     $isRateLimited = Test-CodexRateLimitFailure -JsonLog $jsonLog -ErrLog $errLog
@@ -930,13 +1238,40 @@ try {
                     }
                     $retryCount = $attempt - 1
                     if ($isRateLimited) {
-                        $lastFailure = "Z.AI upstream returned quota/rate-limit/overload on attempt $attempt. This is a provider capacity issue, not a visual implementation failure. Sleeping $backoffSeconds seconds, then continuing from current working tree changes without restarting broad investigation. See $errLog and $jsonLog."
+                        $lastFailure = "Z.AI upstream returned quota/rate-limit/overload on attempt $attempt. This is a provider capacity issue. Backoff recommendation: $backoffSeconds seconds. See $errLog and $jsonLog."
                     } else {
-                        $lastFailure = "Codex/Z.AI stream disconnected before completion on attempt $attempt. Treat this as a transient harness failure: continue from current working tree changes, run the required tests/screenshots/assessment/gate, and do not restart broad investigation. See $errLog and $jsonLog."
+                        $lastFailure = "Codex/Z.AI stream disconnected before completion on attempt $attempt. See $errLog and $jsonLog."
                     }
-                    Write-VisualProgressEvent -Iteration $iteration -Event $(if ($isRateLimited) { "codex.rate_limited" } else { "codex.transient_failure" }) -Detail $lastFailure -Data @{ attempt = $attempt; retryCount = $retryCount; final = $finalMessage; jsonLog = $jsonLog; errLog = $errLog; backoffSeconds = $backoffSeconds }
-                    Write-LoopState -Status $(if ($isRateLimited) { "rate_limited" } else { "retrying" }) -Iteration $iteration -Detail $lastFailure
-                    Write-VisualLoopState -Status "retrying" -Iteration $iteration -CurrentOwner "orchestrator" -NextVisualTarget $lastFailure -FreshnessMarker $freshnessMarker -LastArtifacts @{ autonomousFinal = $finalMessage; freshnessMarker = $freshnessMarker }
+                    Write-VisualProgressEvent -Iteration $iteration -Event $(if ($isRateLimited) { "codex.rate_limited" } else { "codex.transient_failure" }) -Detail $lastFailure -Data @{ attempt = $attempt; retryCount = $retryCount; final = $finalArtifact; missingFinal = $missingFinal; jsonLog = $jsonLog; errLog = $errLog; backoffSeconds = $backoffSeconds; checkpoint = $checkpoint.directory; unverifiedChanges = $unverifiedChanges }
+                    if ($unverifiedChanges.changedDuringAttempt) {
+                        $repairStatus = if ($isRateLimited) { "repairing_after_rate_limited_partial_edit" } else { "repairing_after_transient_partial_edit" }
+                        $repairFailureKind = if ($isRateLimited) { "rate_limited_partial_edit_repair" } else { "transient_partial_edit_repair" }
+                        $testSummarySnippet = Get-TrimmedFileText -Path (Join-Path $RepoRoot "build\qa\test-mod-summary.md") -MaxChars 8000
+                        $dirtyDetail = "$lastFailure The attempt changed the working tree and did not pass the required gate. Continue with a repair-only retry from the current worktree; do not start a new slice or broaden scope. Checkpoint: $($checkpoint.directory)."
+                        if (-not [string]::IsNullOrWhiteSpace($testSummarySnippet)) {
+                            $dirtyDetail += [Environment]::NewLine + [Environment]::NewLine + "Latest test-mod summary:" + [Environment]::NewLine + $testSummarySnippet
+                        }
+                        Write-VisualProgressEvent -Iteration $iteration -Event $repairStatus -Detail $dirtyDetail -Data @{ attempt = $attempt; retryCount = $retryCount; checkpoint = $checkpoint.directory; unverifiedChanges = $unverifiedChanges; backoffSeconds = $backoffSeconds }
+                        # Rate-limits are a transient provider window (Z.AI 5h rolling quota), not
+                        # an agent failure: keep retrying every backoff interval until the window
+                        # resets instead of counting toward the guard-retry limit.
+                        if ((-not $isRateLimited) -and $MaxGuardRetries -gt 0 -and $retryCount -ge $MaxGuardRetries) {
+                            Write-LoopState -Status "blocked_partial_edit" -Iteration $iteration -Detail "Repair retry limit reached after partial edit. Last failure: $dirtyDetail" -JsonLog $jsonLog -FinalMessage $finalArtifact -TransportStatus $(if ($isRateLimited) { "rate_limited" } else { "transient_failure" }) -ProviderBackoffSeconds $backoffSeconds -LastFailureKind $repairFailureKind -UnverifiedChanges $unverifiedChanges -MissingFinal:$missingFinal -Checkpoint $checkpoint.directory
+                            Write-VisualLoopState -Status "blocked_partial_edit" -Iteration $iteration -CurrentOwner "orchestrator" -FreshnessMarker $freshnessMarker -TransportStatus $(if ($isRateLimited) { "rate_limited" } else { "transient_failure" }) -ProviderBackoffSeconds $backoffSeconds -LastFailureKind $repairFailureKind -UnverifiedChanges $unverifiedChanges -MissingFinal:$missingFinal -Checkpoint $checkpoint.directory -LastArtifacts @{ autonomousFinal = $finalArtifact; freshnessMarker = $freshnessMarker }
+                            exit $codexExit
+                        }
+                        $lastFailure = $dirtyDetail
+                        Write-LoopState -Status $repairStatus -Iteration $iteration -Detail $dirtyDetail -JsonLog $jsonLog -FinalMessage $finalArtifact -TransportStatus $(if ($isRateLimited) { "rate_limited" } else { "transient_failure" }) -ProviderBackoffSeconds $backoffSeconds -LastFailureKind $repairFailureKind -UnverifiedChanges $unverifiedChanges -MissingFinal:$missingFinal -Checkpoint $checkpoint.directory
+                        Write-VisualLoopState -Status "retrying" -Iteration $iteration -CurrentOwner "orchestrator" -FreshnessMarker $freshnessMarker -TransportStatus $(if ($isRateLimited) { "rate_limited" } else { "transient_failure" }) -ProviderBackoffSeconds $backoffSeconds -LastFailureKind $repairFailureKind -UnverifiedChanges $unverifiedChanges -MissingFinal:$missingFinal -Checkpoint $checkpoint.directory -LastArtifacts @{ autonomousFinal = $finalArtifact; freshnessMarker = $freshnessMarker }
+                        $attempt++
+                        Start-Sleep -Seconds $(if ($isRateLimited) { $backoffSeconds } else { 5 })
+                        continue
+                    }
+                    if ($unverifiedChanges.dirtyAfter) {
+                        Write-VisualProgressEvent -Iteration $iteration -Event "baseline_dirty_clean_transport_retry" -Detail "Worktree was already dirty before this attempt, but the failed attempt did not change it; sleeping and retrying instead of stopping." -Data @{ attempt = $attempt; checkpoint = $checkpoint.directory; unverifiedChanges = $unverifiedChanges; backoffSeconds = $backoffSeconds }
+                    }
+                    Write-LoopState -Status $(if ($isRateLimited) { "rate_limited" } else { "retrying" }) -Iteration $iteration -Detail $lastFailure -JsonLog $jsonLog -FinalMessage $finalArtifact -TransportStatus $(if ($isRateLimited) { "rate_limited" } else { "transient_failure" }) -ProviderBackoffSeconds $backoffSeconds -LastFailureKind $(if ($isRateLimited) { "rate_limited_clean_retry" } else { "transient_clean_retry" }) -MissingFinal:$missingFinal -Checkpoint $checkpoint.directory
+                    Write-VisualLoopState -Status "retrying" -Iteration $iteration -CurrentOwner "orchestrator" -FreshnessMarker $freshnessMarker -TransportStatus $(if ($isRateLimited) { "rate_limited" } else { "transient_failure" }) -ProviderBackoffSeconds $backoffSeconds -LastFailureKind $(if ($isRateLimited) { "rate_limited_clean_retry" } else { "transient_clean_retry" }) -MissingFinal:$missingFinal -Checkpoint $checkpoint.directory -LastArtifacts @{ autonomousFinal = $finalArtifact; freshnessMarker = $freshnessMarker }
                     if ((-not $isRateLimited) -and $MaxGuardRetries -gt 0 -and $retryCount -ge $MaxGuardRetries) {
                         Write-LoopState -Status "blocked" -Iteration $iteration -Detail "Transient Codex retry limit reached. Last failure: $lastFailure"
                         exit $codexExit
@@ -945,27 +1280,52 @@ try {
                     Start-Sleep -Seconds $backoffSeconds
                     continue
                 }
-                Write-LoopState -Status "blocked" -Iteration $iteration -Detail "Codex iteration exited with $codexExit; see $errLog"
-                exit $codexExit
+                $retryCount = $attempt - 1
+                $testSummarySnippet = Get-TrimmedFileText -Path (Join-Path $RepoRoot "build\qa\test-mod-summary.md") -MaxChars 8000
+                $lastFailure = "Codex iteration exited with $codexExit; see $errLog. Continue with a repair-only retry from the current worktree."
+                if (-not [string]::IsNullOrWhiteSpace($testSummarySnippet)) {
+                    $lastFailure += [Environment]::NewLine + [Environment]::NewLine + "Latest test-mod summary:" + [Environment]::NewLine + $testSummarySnippet
+                }
+                Write-VisualProgressEvent -Iteration $iteration -Event "codex_nonzero_repair" -Detail $lastFailure -Data @{ attempt = $attempt; retryCount = $retryCount; checkpoint = $checkpoint.directory; unverifiedChanges = $unverifiedChanges; final = $finalArtifact; missingFinal = $missingFinal; jsonLog = $jsonLog; errLog = $errLog }
+                if ($MaxGuardRetries -gt 0 -and $retryCount -ge $MaxGuardRetries) {
+                    Write-LoopState -Status "blocked" -Iteration $iteration -Detail "Codex nonzero repair retry limit reached. Last failure: $lastFailure" -JsonLog $jsonLog -FinalMessage $finalArtifact -LastFailureKind "codex_nonzero_retry_limit" -UnverifiedChanges $unverifiedChanges -MissingFinal:$missingFinal -Checkpoint $checkpoint.directory
+                    exit $codexExit
+                }
+                Write-LoopState -Status "repairing" -Iteration $iteration -Detail $lastFailure -JsonLog $jsonLog -FinalMessage $finalArtifact -LastFailureKind "codex_nonzero_repair" -UnverifiedChanges $unverifiedChanges -MissingFinal:$missingFinal -Checkpoint $checkpoint.directory
+                Write-VisualLoopState -Status "retrying" -Iteration $iteration -CurrentOwner "orchestrator" -FreshnessMarker $freshnessMarker -LastFailureKind "codex_nonzero_repair" -UnverifiedChanges $unverifiedChanges -MissingFinal:$missingFinal -Checkpoint $checkpoint.directory -LastArtifacts @{ autonomousFinal = $finalArtifact; freshnessMarker = $freshnessMarker }
+                $attempt++
+                Start-Sleep -Seconds 5
+                continue
             }
 
             $lastFailure = ""
-            Write-LoopState -Status "gating" -Iteration $iteration -Detail "Running autonomous gate after attempt $attempt"
-            Write-VisualLoopState -Status "gating" -Iteration $iteration -CurrentOwner "gatekeeper" -NextVisualTarget "verify artifact freshness and visual assessment" -FreshnessMarker $freshnessMarker -LastArtifacts @{ autonomousFinal = $finalMessage; freshnessMarker = $freshnessMarker }
-            Write-VisualProgressEvent -Iteration $iteration -Event "gate.started" -Detail "Running autonomous-gate after Codex attempt." -Data @{ attempt = $attempt }
-            & (Join-Path $PSScriptRoot "autonomous-gate.ps1") -AllowMissingGitHub:$AllowMissingGitHub -NoLaunch -FreshnessMarker $freshnessMarker
-            if ($LASTEXITCODE -ne 0) {
-                $assessmentSnippet = Get-TrimmedFileText -Path $VisualAssessmentReport -MaxChars 8000
-                $lastFailure = "Autonomous gate failed after iteration $iteration attempt $attempt. Run or fix scripts/autonomous-gate.cmd -AllowMissingGitHub -NoLaunch."
-                if (-not [string]::IsNullOrWhiteSpace($assessmentSnippet)) {
-                    $lastFailure += [Environment]::NewLine + [Environment]::NewLine + "Latest visual assessment excerpt:" + [Environment]::NewLine + $assessmentSnippet
+            $activeTrack = Get-ActiveTrack
+            if ($activeTrack -eq "content") {
+                Write-LoopState -Status "gating" -Iteration $iteration -Detail "Running content gate after attempt $attempt (content track)"
+                Write-VisualLoopState -Status "gating" -Iteration $iteration -CurrentOwner "gatekeeper" -NextVisualTarget "content gate: test-mod green + content matrix valid" -FreshnessMarker $freshnessMarker -LastArtifacts @{ autonomousFinal = $finalMessage; freshnessMarker = $freshnessMarker }
+                Write-VisualProgressEvent -Iteration $iteration -Event "gate.started" -Detail "Running content-gate after Codex attempt." -Data @{ attempt = $attempt; track = "content" }
+                & (Join-Path $PSScriptRoot "content-gate.ps1") -AllowMissingGitHub:$AllowMissingGitHub
+                if ($LASTEXITCODE -ne 0) {
+                    $lastFailure = "Content gate failed after iteration $iteration attempt $attempt (content track). Fix the failing gametest or content-feature-matrix.json, then re-run scripts/content-gate.cmd -AllowMissingGitHub. Do not run the visual gate for a content slice."
                 }
             } else {
-                try {
-                    Assert-FreshVisualArtifacts -MarkerPath $freshnessMarker
-                }
-                catch {
-                    $lastFailure = $_.Exception.Message
+                Write-LoopState -Status "gating" -Iteration $iteration -Detail "Running autonomous gate after attempt $attempt"
+                Write-VisualLoopState -Status "gating" -Iteration $iteration -CurrentOwner "gatekeeper" -NextVisualTarget "verify artifact freshness and visual assessment" -FreshnessMarker $freshnessMarker -LastArtifacts @{ autonomousFinal = $finalMessage; freshnessMarker = $freshnessMarker }
+                Write-VisualProgressEvent -Iteration $iteration -Event "gate.started" -Detail "Running autonomous-gate after Codex attempt." -Data @{ attempt = $attempt; track = "world-visual" }
+                & (Join-Path $PSScriptRoot "autonomous-gate.ps1") -AllowMissingGitHub:$AllowMissingGitHub -NoLaunch -FreshnessMarker $freshnessMarker -CodexJsonLog $jsonLog
+                if ($LASTEXITCODE -ne 0) {
+                    $assessmentSnippet = Get-TrimmedFileText -Path $VisualAssessmentReport -MaxChars 8000
+                    $lastFailure = "Autonomous gate failed after iteration $iteration attempt $attempt. Run or fix scripts/autonomous-gate.cmd -AllowMissingGitHub -NoLaunch."
+                    if (-not [string]::IsNullOrWhiteSpace($assessmentSnippet)) {
+                        $lastFailure += [Environment]::NewLine + [Environment]::NewLine + "Latest visual assessment excerpt:" + [Environment]::NewLine + $assessmentSnippet
+                    }
+                } else {
+                    try {
+                        Assert-FreshVisualArtifacts -MarkerPath $freshnessMarker
+                    }
+                    catch {
+                        $lastFailure = $_.Exception.Message
+                    }
                 }
             }
 
@@ -976,11 +1336,11 @@ try {
             }
 
             $retryCount = $attempt - 1
-            Write-VisualLoopState -Status "retrying" -Iteration $iteration -CurrentOwner "gatekeeper" -NextVisualTarget $lastFailure -FreshnessMarker $freshnessMarker -LastArtifacts @{ autonomousFinal = $finalMessage; freshnessMarker = $freshnessMarker }
+            Write-VisualLoopState -Status "retrying" -Iteration $iteration -CurrentOwner "gatekeeper" -FreshnessMarker $freshnessMarker -LastFailureKind "gate_failed" -LastArtifacts @{ autonomousFinal = (Get-FinalArtifactForState -FinalMessage $finalMessage); freshnessMarker = $freshnessMarker }
             Write-VisualProgressEvent -Iteration $iteration -Event "gate.failed" -Detail $lastFailure -Data @{ attempt = $attempt; retryCount = $retryCount }
             Write-LoopState -Status "retrying" -Iteration $iteration -Detail $lastFailure
             if ($MaxGuardRetries -gt 0 -and $retryCount -ge $MaxGuardRetries) {
-                Write-VisualLoopState -Status "blocked" -Iteration $iteration -CurrentOwner "gatekeeper" -NextVisualTarget $lastFailure -FreshnessMarker $freshnessMarker -LastArtifacts @{ autonomousFinal = $finalMessage; freshnessMarker = $freshnessMarker }
+                Write-VisualLoopState -Status "blocked" -Iteration $iteration -CurrentOwner "gatekeeper" -FreshnessMarker $freshnessMarker -LastFailureKind "guard_retry_limit" -LastArtifacts @{ autonomousFinal = (Get-FinalArtifactForState -FinalMessage $finalMessage); freshnessMarker = $freshnessMarker }
                 Write-LoopState -Status "blocked" -Iteration $iteration -Detail "Guard retry limit reached. Last failure: $lastFailure"
                 exit 1
             }

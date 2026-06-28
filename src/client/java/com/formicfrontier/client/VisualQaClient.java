@@ -170,7 +170,12 @@ public final class VisualQaClient {
 
 	private static int captureDelayTicks(String scene) {
 		return switch (scene) {
-			case "colony_overview", "settlement_scale", "diplomacy_scene", "endgame_project" ->
+			// colony_overview is the FIRST scene after world load: the client is still
+			// receiving/rendering the wide-area chunks for the high vantage camera for
+			// the first time. A 120-tick delay captured a half-rendered snowy canopy
+			// instead of the colony. Give the cold-start wide scene extra settle time.
+			case "colony_overview" -> Math.max(COMMAND_TO_SCREENSHOT_TICKS, 220);
+			case "settlement_scale", "diplomacy_scene", "endgame_project" ->
 					Math.max(COMMAND_TO_SCREENSHOT_TICKS, 120);
 			case "colony_ground", "culture_styles", "construction_stage", "repair_scene", "progression_scene" ->
 					Math.max(COMMAND_TO_SCREENSHOT_TICKS, 90);

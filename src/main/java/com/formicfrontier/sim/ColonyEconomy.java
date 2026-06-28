@@ -98,7 +98,7 @@ public final class ColonyEconomy {
 		if (soldiers < 2 && AntCaste.SOLDIER.canGrowFrom(colony)) {
 			return AntCaste.SOLDIER;
 		}
-		if (colony.resource(ResourceType.FOOD) > 250 && AntCaste.GIANT.canGrowFrom(colony)) {
+		if (colony.resource(ResourceType.FOOD) > 250 && canProduceGiant(colony)) {
 			return AntCaste.GIANT;
 		}
 		if (colony.resource(ResourceType.CHITIN) > 30 && AntCaste.MAJOR.canGrowFrom(colony)) {
@@ -141,7 +141,7 @@ public final class ColonyEconomy {
 				if (colony.casteCount(AntCaste.MAJOR) < 4 && AntCaste.MAJOR.canGrowFrom(colony)) {
 					yield AntCaste.MAJOR;
 				}
-				if (colony.resource(ResourceType.FOOD) > 250 && AntCaste.GIANT.canGrowFrom(colony)) {
+				if (colony.resource(ResourceType.FOOD) > 250 && canProduceGiant(colony)) {
 					yield AntCaste.GIANT;
 				}
 				yield null;
@@ -153,6 +153,18 @@ public final class ColonyEconomy {
 		return (int) colony.progress().buildingsView().stream()
 				.filter(building -> building.type() == type && building.complete())
 				.count();
+	}
+	/**
+	 * Content row research_unlocks_have_effects: the elite GIANT caste is a
+	 * research-gated unlock. A colony cannot grow GIANT ants until it has spent
+	 * knowledge to complete the MANDIBLE_PLATING research node (which itself
+	 * requires the RESIN_MASONRY prerequisite and a completed ARMORY), so spending
+	 * knowledge produces a real, previously-locked mechanical effect: the ability
+	 * to field the colony's elite defender caste.
+	 */
+	private static boolean canProduceGiant(ColonyData colony) {
+		return colony.progress().hasResearch(ResearchNode.MANDIBLE_PLATING.id())
+			&& AntCaste.GIANT.canGrowFrom(colony);
 	}
 
 	public record EconomyResult(int foodIncome, int oreIncome, int chitinIncome, int upkeep, AntCaste grownCaste) {

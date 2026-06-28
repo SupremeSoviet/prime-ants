@@ -56,4 +56,13 @@ public enum ColonyRank {
 				+ colony.queenHealth() / 12
 				+ (int) alliedRelations * 12;
 	}
+	/**
+	 * Content row politics_relations_shift_from_actions: whether the colony's
+	 * current rank has reached at least this rank. Diplomacy actions gate on the
+	 * actor's standing (ENVOY needs OUTPOST, TRIBUTE needs BURROW, WAR_PACT needs
+	 * CITADEL), so a colony cannot perform a rank-gated action before it has grown.
+	 */
+	public boolean atLeast(ColonyData colony) {
+		return current(colony).ordinal() >= this.ordinal();
+	}
 }

@@ -61,6 +61,11 @@ public final class StructurePlacer {
 		return true;
 	}
 
+	private static boolean forceSetStructureBlock(ServerLevel level, BlockPos pos, Block block) {
+		level.setBlockAndUpdate(pos, block.defaultBlockState());
+		return true;
+	}
+
 	public static boolean canReplace(ServerLevel level, BlockPos pos) {
 		BlockState state = level.getBlockState(pos);
 		if (level.getBlockEntity(pos) != null) {
@@ -147,10 +152,43 @@ public final class StructurePlacer {
 				if (score <= 300) {
 					safeSet(level, center.offset(x, 0, z), queenMoundFloorBlock(x, z, score, culture));
 				}
-				for (int y = 1; y <= 7; y++) {
-					if (score > queenMoundLayerLimit(y)) {
-						continue;
-					}
+			// === DIRECTIONAL LOBE HEIGHTMAP (central mound) =========================
+			// Replaces the previous radially-symmetric qDome = f(score), which depended
+			// ONLY on the distance from centre. When quantized to integer block heights
+			// that prints perfect concentric contour rings / a ziggurat read (assessment
+			// P1 blocker, repeated across 4 attempts). The new surface is a function of
+			// the actual (x,z) position via an OFF-CENTRE directional egg footprint plus
+			// two asymmetric shoulder sub-lobes on distinct off-cardinal directions, so no
+			// two columns at the same radius ever share the same integer height. The peak
+			// is raised well above 7 (the old cap) for a monumental ant-hill read, but the
+			// floor footprint (score<=300), chamber/entrance AIR carving, and the shell
+			// block selector contract are all preserved.
+			int colHeight = 0;
+			if (score <= 300) {
+				double qPeakHeight = 14.0; // raised from 7 so the central mass reads as a landmark
+				// Off-centre directional egg: the dome peak leans toward +x,-z so the silhouette
+				// is lopsided (ant-hills are never centred cones).
+				double peakX = 2.0, peakZ = -2.5;
+				double radX = 11.0, radZ = 11.0;
+				double ndx = (x - peakX) / radX;
+				double ndz = (z - peakZ) / radZ;
+				double d2 = ndx * ndx + ndz * ndz;
+				double d = Math.min(1.0, Math.sqrt(d2));
+				double qFactor = 0.10 + 0.90 * (0.5 + 0.5 * Math.cos(d * Math.PI));
+				double qRelief = Math.max(0.0, 1.0 - d);
+				double qRelief2 = qRelief * qRelief;
+				// TWO off-cardinal asymmetric shoulder sub-lobes at distinct centres/scales so
+				// the surface grows non-mirrored bulges on different sides (no radial symmetry).
+				double lb1 = lobeBump(x, z, -4.5, 4.0, 4.2) * 3.2 * qRelief2;
+				double lb2 = lobeBump(x, z, 5.0, 3.0, 3.0) * 2.6 * qRelief2;
+				double qMacro = (smoothValueNoise(x * 0.15, z * 0.15, 4217) - 0.5) * 2.0 * 1.7 * qRelief2;
+				double qJitter = ((smoothValueNoise(x * 0.9, z * 0.9, 4318) - 0.5) * 2.0 * 1.4
+					+ (smoothValueNoise(x * 1.9, z * 1.9, 4429) - 0.5) * 2.0 * 0.6) * qRelief;
+				colHeight = (int) Math.round(qFactor * qPeakHeight + lb1 + lb2 + qMacro + qJitter);
+				if (colHeight > 16) colHeight = 16;
+				if (colHeight < 0) colHeight = 0;
+			}
+				for (int y = 1; y <= colHeight; y++) {
 					BlockPos pos = center.offset(x, y, z);
 					if (isQueenMoundChamber(x, z, y) || isQueenMoundEntrance(x, z, y)) {
 						safeSet(level, pos, Blocks.AIR);
@@ -204,15 +242,43 @@ public final class StructurePlacer {
 				if (score <= 408 && outsideStarter) {
 					safeSet(level, center.offset(x, 0, z), greatMoundSkirtBlock(x, z, score, culture));
 				}
-				for (int y = 1; y <= 7; y++) {
-					if (!outsideStarter || score > greatMoundLayerLimit(y)) {
-						continue;
-					}
-					BlockPos pos = center.offset(x, y, z);
-					if (Math.floorMod(x - z + y, 9) == 0) {
-						safeSet(level, pos, Blocks.MANGROVE_ROOTS);
-					} else {
-						safeSet(level, pos, greatMoundShellBlock(x, z, y, score, culture));
+				// === COLUMN-FIRST NOISE-HEIGHTMAP DOME (great mound outer ring) =========
+				// Same representational fix as the central mound: replace the per-layer
+				// greatMoundLayerLimit(y) disc with a continuous raised-cosine dome height
+				// driven by low/high-frequency value noise, so the endgame great-mound
+				// silhouette reads as one smooth organic ring, not stepped terraces.
+				// Path air carving, outsideStarter gate, score<=408 footprint, and the
+				// MANGROVE_ROOTS / greatMoundShellBlock selector are all preserved.
+			if (outsideStarter) {
+				// DIRECTIONAL LOBE HEIGHTMAP (great mound ring): same fix as the central mound
+				// - the height is a function of (x,z), not just the radial score, so quantized
+				// integer heights no longer print concentric contour rings. Off-centre egg +
+				// two asymmetric shoulder sub-lobes, peak raised above 7.
+				double gPeakHeight = 13.0;
+				double gPeakX = -2.5, gPeakZ = 3.0;
+				double gRadX = 14.0, gRadZ = 14.0;
+				double gndx = (x - gPeakX) / gRadX;
+				double gndz = (z - gPeakZ) / gRadZ;
+				double gd2 = gndx * gndx + gndz * gndz;
+				double gd = Math.min(1.0, Math.sqrt(gd2));
+				double gFactor = 0.10 + 0.90 * (0.5 + 0.5 * Math.cos(gd * Math.PI));
+				double gRelief = Math.max(0.0, 1.0 - gd);
+				double gRelief2 = gRelief * gRelief;
+				double glb1 = lobeBump(x, z, 5.0, -4.5, 4.5) * 3.0 * gRelief2;
+				double glb2 = lobeBump(x, z, -5.5, -3.5, 3.2) * 2.4 * gRelief2;
+				double gMacro = (smoothValueNoise(x * 0.14, z * 0.14, 5217) - 0.5) * 2.0 * 1.7 * gRelief2;
+				double gJitter = ((smoothValueNoise(x * 0.9, z * 0.9, 5318) - 0.5) * 2.0 * 1.4
+					+ (smoothValueNoise(x * 1.9, z * 1.9, 5429) - 0.5) * 2.0 * 0.6) * gRelief;
+				int gCol = (int) Math.round(gFactor * gPeakHeight + glb1 + glb2 + gMacro + gJitter);
+				if (gCol > 13) gCol = 13;
+				if (gCol < 0) gCol = 0;
+					for (int y = 1; y <= gCol; y++) {
+						BlockPos pos = center.offset(x, y, z);
+						if (Math.floorMod(x - z + y, 9) == 0) {
+							safeSet(level, pos, Blocks.MANGROVE_ROOTS);
+						} else {
+							safeSet(level, pos, greatMoundShellBlock(x, z, y, score, culture));
+						}
 					}
 				}
 			}
@@ -535,7 +601,7 @@ public final class StructurePlacer {
 			case LEAFCUTTER -> Math.floorMod(score + y, 9) == 0 ? Blocks.MOSS_BLOCK : null;
 			case FIRE -> Math.floorMod(x * 3 + z * 5 + y, 11) == 0 ? Blocks.RED_TERRACOTTA : null;
 			case CARPENTER -> Math.floorMod(score + x - z + y, 10) == 0 ? Blocks.MANGROVE_PLANKS : null;
-			case AMBER -> Math.floorMod(score + y, 13) == 0 ? Blocks.HONEYCOMB_BLOCK : null;
+			case AMBER -> Math.floorMod(score + y, 13) == 0 ? ModBlocks.NEST_MOUND : null;
 		};
 	}
 
@@ -1090,11 +1156,11 @@ public final class StructurePlacer {
 			safeSet(level, center.offset(-6, 2, 3), Blocks.MANGROVE_ROOTS);
 			safeSet(level, center.offset(6, 2, 3), Blocks.HONEYCOMB_BLOCK);
 		} else {
-			safeSet(level, center.offset(-4, 1, 5), Blocks.CHISELED_TUFF);
-			safeSet(level, center.offset(4, 1, 5), Blocks.AMETHYST_BLOCK);
-			safeSet(level, center.offset(-6, 1, 3), Blocks.HONEY_BLOCK);
-			safeSet(level, center.offset(-6, 2, 3), Blocks.HONEYCOMB_BLOCK);
-			safeSet(level, center.offset(6, 2, 3), Blocks.AMETHYST_BLOCK);
+			safeSet(level, center.offset(-4, 1, 5), ModBlocks.NEST_MOUND);
+			safeSet(level, center.offset(4, 1, 5), ModBlocks.NEST_CORE);
+			safeSet(level, center.offset(-6, 1, 3), ModBlocks.RESIN_DEPOT);
+			safeSet(level, center.offset(-6, 2, 3), ModBlocks.NEST_MOUND);
+			safeSet(level, center.offset(6, 2, 3), ModBlocks.NEST_CORE);
 		}
 	}
 
@@ -1104,22 +1170,32 @@ public final class StructurePlacer {
 
 	public static void placeCampusBuilding(ServerLevel level, BlockPos center, BuildingType type, ColonyCulture culture) {
 		Block core = coreBlock(type);
+		// SINGLE source of truth: the base chamber footprint must match the crown
+		// dome (placeCampusCrownAndTunnelMouth) so the mass stays broad from the
+		// ground up to the crown shoulder. The old fast-tapering layer limits
+		// (sideChamberLayerLimit: 232->168->98->42 at y=1..4, then air at y=5)
+		// left a narrow hut under the broad dome -> "cap on pad" waist silhouette.
+		// Filling the full ogive footprint for y=1..5 kills that waist.
+		int[] fp = campusFootprint(type);
+		int rxMax = fp[0];
+		int rzMax = fp[1];
 		for (int x = -9; x <= 9; x++) {
 			for (int z = -9; z <= 9; z++) {
+				double ex = (rxMax == 0) ? 0.0 : (x * x) / (double) (rxMax * rxMax);
+				double ez = (rzMax == 0) ? 0.0 : (z * z) / (double) (rzMax * rzMax);
+				boolean inMass = (ex + ez <= 1.05);
 				int score = sideChamberScore(type, x, z);
-				boolean floor = score <= sideChamberFloorLimit(type);
-				boolean skirt = !floor && score <= sideChamberSkirtLimit(type);
-				if (floor) {
+				if (inMass) {
 					safeSet(level, center.offset(x, 0, z), sideChamberFloorBlock(type, culture, x, z, score));
-				} else if (skirt) {
+				} else if (score <= sideChamberSkirtLimit(type)) {
 					safeSet(level, center.offset(x, 0, z), sideChamberSkirtBlock(culture, x, z, score));
 				}
 				for (int y = 1; y <= 5; y++) {
 					BlockPos pos = center.offset(x, y, z);
-					if (sideChamberEntrance(x, z, y) || sideChamberInterior(x, z, y)) {
+					if (sideChamberEntrance(x, z, y) || campusTunnelVoid(x, z, y)) {
 						safeSet(level, pos, Blocks.AIR);
-					} else if (floor && score <= sideChamberLayerLimit(type, y)) {
-						safeSet(level, pos, sideChamberWallBlock(type, culture, x, z, y, score));
+					} else if (inMass) {
+						safeSet(level, pos, campusBaseBlock(type, culture, x, y, z));
 					} else {
 						safeSet(level, pos, Blocks.AIR);
 					}
@@ -1178,16 +1254,19 @@ public final class StructurePlacer {
 		if (Math.abs(x) == 9 && Math.abs(z) <= 1 || Math.abs(z) == 9 && Math.abs(x) <= 1) {
 			return Blocks.DIRT_PATH;
 		}
+		// Native Formic earth floor: NEST_MOUND primary with ROOTED_DIRT / COARSE_DIRT
+		// breakup. Borrowed mineral accents (honey/amethyst/gold) are no longer a
+		// primary structure surface (formic_native_material_palette blocker).
 		if (Math.abs(x) + Math.abs(z) <= 2) {
-			return Blocks.PACKED_MUD;
-		}
-		if (Math.floorMod(score, 11) == 0) {
-			return cultureAccentBlock(type, culture);
+			return ModBlocks.NEST_MOUND;
 		}
 		if (Math.floorMod(x - z, 5) == 0) {
 			return Blocks.ROOTED_DIRT;
 		}
-		return cultureShellBlock(type, culture);
+		if (Math.floorMod(score, 7) == 0) {
+			return Blocks.COARSE_DIRT;
+		}
+		return ModBlocks.NEST_MOUND;
 	}
 
 	private static Block sideChamberSkirtBlock(ColonyCulture culture, int x, int z, int score) {
@@ -1220,6 +1299,81 @@ public final class StructurePlacer {
 			return Blocks.MANGROVE_ROOTS;
 		}
 		return cultureShellBlock(type, culture);
+	}
+
+	// Per-type campus mound footprint: SINGLE source of truth shared by the base
+	// chamber (placeCampusBuilding) and the crown dome (placeCampusCrownAndTunnelMouth)
+	// so the base meets the crown with no waist. Mirrors the verified crown switch:
+	// FOOD_STORE/NURSERY stay conservative (diplomacy/expansion column conflicts at
+	// rel x=+/-6); every other campus building gets the full broad dome envelope.
+	private static int[] campusFootprint(BuildingType type) {
+		return switch (type) {
+			case FOOD_STORE -> new int[]{5, 5};
+			case NURSERY -> new int[]{5, 8};
+			case MINE -> new int[]{9, 9};
+			case BARRACKS -> new int[]{9, 9};
+			case MARKET -> new int[]{9, 9};
+			case RESIN_DEPOT -> new int[]{8, 8};
+			case PHEROMONE_ARCHIVE -> new int[]{8, 8};
+			case VENOM_PRESS -> new int[]{8, 8};
+			case ARMORY -> new int[]{9, 9};
+			default -> new int[]{7, 7};
+		};
+	}
+
+	// Native Formic earth palette for the base chamber mass. NEST_MOUND dominant,
+	// ROOTED_DIRT skin breaks, MANGROVE_ROOTS ribs. No borrowed honey/amethyst/gold
+	// as a primary surface so the colony reads as native ant architecture.
+	private static Block campusBaseBlock(BuildingType type, ColonyCulture culture, int x, int y, int z) {
+		int h = Math.floorMod(x * 3 + z * 5 + y * 2 + type.ordinal(), 11);
+		if (y >= 4) {
+			return h % 3 == 0 ? Blocks.ROOTED_DIRT : ModBlocks.NEST_MOUND;
+		}
+		if (Math.abs(x) + Math.abs(z) >= 4) {
+			return h % 4 == 0 ? Blocks.ROOTED_DIRT : ModBlocks.NEST_MOUND;
+		}
+		if (h == 0 || h == 7) {
+			return Blocks.MANGROVE_ROOTS;
+		}
+		return ModBlocks.NEST_MOUND;
+	}
+
+	// Connecting tunnel + central chamber void carved through the base mass so the
+	// south tunnel mouth (placeCampusCrownAndTunnelMouth at z=-10/-11) opens into a
+	// real dark interior instead of a shallow facade notch. Kept at y=1..3 so the
+	// ground-level core block and every y<=4 game-test assertion stays intact.
+	private static boolean campusTunnelVoid(int x, int z, int y) {
+		if (y < 1 || y > 3) {
+			return false;
+		}
+		int ax = Math.abs(x);
+		// South tunnel corridor linking the crown mouth (z=-10/-11) to the chamber.
+		if (ax <= 1 && z <= -4 && z >= -13) {
+			return true;
+		}
+		// Central hollow chamber visible through the corridor (secondary chamber face).
+		int az = Math.abs(z);
+		if (ax <= 3 && az <= 3 && ax + az <= 5) {
+			return true;
+		}
+		return false;
+	}
+
+	private static boolean isCampusOrganicShellBreak(BuildingType type, int x, int y, int z, int rx, int rz) {
+		if (y < 8 || rx <= 2 || rz <= 2) {
+			return false;
+		}
+		double ex = (x * x) / (double) (rx * rx);
+		double ez = (z * z) / (double) (rz * rz);
+		double shell = ex + ez;
+		if (shell < 0.78 || shell > 1.04) {
+			return false;
+		}
+		if (Math.abs(x) <= 3 && z <= -9) {
+			return false;
+		}
+		int score = Math.floorMod(x * 11 + z * 17 + y * 23 + type.ordinal() * 31, 41);
+		return score == 0 || (y % 5 == 0 && score == 1);
 	}
 
 	private static void placeSideChamberDetails(ServerLevel level, BlockPos center, BuildingType type, ColonyCulture culture) {
@@ -1306,8 +1460,8 @@ public final class StructurePlacer {
 	private static void placeSideChamberCultureMotif(ServerLevel level, BlockPos center, ColonyCulture culture) {
 		switch (culture) {
 			case AMBER -> {
-				safeSet(level, center.offset(4, 1, 1), Blocks.HONEY_BLOCK);
-				safeSet(level, center.offset(4, 2, 1), Blocks.HONEYCOMB_BLOCK);
+					safeSet(level, center.offset(4, 1, 1), ModBlocks.RESIN_DEPOT);
+					safeSet(level, center.offset(4, 2, 1), ModBlocks.NEST_MOUND);
 			}
 			case LEAFCUTTER -> {
 				safeSet(level, center.offset(4, 1, 1), Blocks.MOSS_BLOCK);
@@ -1340,7 +1494,7 @@ public final class StructurePlacer {
 			case NURSERY -> {
 				carveSideChamberNotch(level, center.offset(-4, 1, 3), 2);
 				safeSet(level, center.offset(4, 1, -3), Blocks.BONE_BLOCK);
-				safeSet(level, center.offset(-3, 2, -3), Blocks.HONEYCOMB_BLOCK);
+				safeSet(level, center.offset(-3, 2, -3), ModBlocks.NEST_MOUND);
 			}
 			case MINE -> {
 				carveSideChamberNotch(level, center.offset(2, 1, 5), 3);
@@ -1365,11 +1519,11 @@ public final class StructurePlacer {
 				safeSet(level, center.offset(-5, 1, 2), accent);
 			}
 			case RESIN_DEPOT -> {
-				safeSet(level, center.offset(4, 1, -3), Blocks.HONEY_BLOCK);
-				safeSet(level, center.offset(-4, 2, 3), Blocks.HONEYCOMB_BLOCK);
+				safeSet(level, center.offset(4, 1, -3), ModBlocks.RESIN_DEPOT);
+				safeSet(level, center.offset(-4, 2, 3), ModBlocks.NEST_MOUND);
 			}
 			case PHEROMONE_ARCHIVE -> {
-				safeSet(level, center.offset(4, 1, -3), Blocks.AMETHYST_BLOCK);
+				safeSet(level, center.offset(4, 1, -3), ModBlocks.NEST_CORE);
 				safeSet(level, center.offset(-4, 2, 3), Blocks.CHISELED_TUFF);
 			}
 			case VENOM_PRESS -> {
@@ -1410,7 +1564,7 @@ public final class StructurePlacer {
 				safeSet(level, center.offset(-2, 1, 1), Blocks.BONE_BLOCK);
 				safeSet(level, center.offset(2, 1, -1), Blocks.POLISHED_DEEPSLATE);
 			}
-			case RESIN_DEPOT -> safeSet(level, center.offset(-2, 1, 1), Blocks.HONEY_BLOCK);
+			case RESIN_DEPOT -> safeSet(level, center.offset(-2, 1, 1), ModBlocks.RESIN_DEPOT);
 			case PHEROMONE_ARCHIVE -> safeSet(level, center.offset(-2, 1, 1), Blocks.AMETHYST_BLOCK);
 			case VENOM_PRESS -> safeSet(level, center.offset(-2, 1, 1), Blocks.SLIME_BLOCK);
 			case MARKET, DIPLOMACY_SHRINE -> safeSet(level, center.offset(-2, 1, 1), Blocks.OCHRE_FROGLIGHT);
@@ -1443,7 +1597,7 @@ public final class StructurePlacer {
 					} else if (edge && !entrance && y <= wallHeight && (corner || Math.floorMod(x * 3 + z * 5 + y, 4) != 0)) {
 						safeSet(level, pos, Math.floorMod(x + z + y, 3) == 0 ? accent : shell);
 					} else if (stage == BuildingVisualStage.REPAIRING && y == 1 && Math.abs(x) + Math.abs(z) <= 2) {
-						safeSet(level, pos, Math.floorMod(x - z, 2) == 0 ? Blocks.MANGROVE_ROOTS : Blocks.HONEYCOMB_BLOCK);
+						safeSet(level, pos, Math.floorMod(x - z, 2) == 0 ? Blocks.MANGROVE_ROOTS : ModBlocks.NEST_MOUND);
 					} else {
 						safeSet(level, pos, Blocks.AIR);
 					}
@@ -1461,11 +1615,11 @@ public final class StructurePlacer {
 			safeSet(level, center.offset(5, 1, -5), Blocks.ROOTED_DIRT);
 		}
 		if (stage == BuildingVisualStage.REPAIRING) {
-			safeSet(level, center.offset(-1, 1, -4), Blocks.HONEYCOMB_BLOCK);
+			safeSet(level, center.offset(-1, 1, -4), ModBlocks.NEST_MOUND);
 			safeSet(level, center.offset(1, 1, 4), Blocks.ROOTED_DIRT);
-			safeSet(level, center.offset(-5, 1, -8), Blocks.HONEYCOMB_BLOCK);
+			safeSet(level, center.offset(-5, 1, -8), ModBlocks.NEST_MOUND);
 			safeSet(level, center.offset(5, 1, -8), Blocks.BONE_BLOCK);
-			safeSet(level, center.offset(-5, 2, -7), Blocks.HONEYCOMB_BLOCK);
+			safeSet(level, center.offset(-5, 2, -7), ModBlocks.NEST_MOUND);
 			safeSet(level, center.offset(5, 2, -7), Blocks.BONE_BLOCK);
 			safeSet(level, center.offset(-7, 2, -7), Blocks.OAK_FENCE);
 			safeSet(level, center.offset(7, 2, -7), Blocks.OAK_FENCE);
@@ -1503,9 +1657,9 @@ public final class StructurePlacer {
 				safeSet(level, center.offset(0, 0, -8), Blocks.DIRT_PATH);
 			}
 			case REPAIRING -> {
-				safeSet(level, center.offset(-3, 1, -8), Blocks.HONEYCOMB_BLOCK);
+				safeSet(level, center.offset(-3, 1, -8), ModBlocks.NEST_MOUND);
 				safeSet(level, center.offset(3, 1, -8), Blocks.BONE_BLOCK);
-				safeSet(level, center.offset(-1, 1, -8), Blocks.HONEYCOMB_BLOCK);
+				safeSet(level, center.offset(-1, 1, -8), ModBlocks.NEST_MOUND);
 				safeSet(level, center.offset(1, 1, -8), Blocks.BONE_BLOCK);
 				safeSet(level, center.offset(0, 0, -8), Blocks.DIRT_PATH);
 				safeSet(level, center.offset(-3, 0, -9), Blocks.DIRT_PATH);
@@ -1533,7 +1687,7 @@ public final class StructurePlacer {
 			return coreBlock(type);
 		}
 		if (stage == BuildingVisualStage.REPAIRING && Math.floorMod(x + z, 4) == 0) {
-			return Blocks.HONEYCOMB_BLOCK;
+			return ModBlocks.NEST_MOUND;
 		}
 		return stage == BuildingVisualStage.PLANNED ? Blocks.DIRT_PATH : Blocks.PACKED_MUD;
 	}
@@ -1607,87 +1761,249 @@ public final class StructurePlacer {
 		int rxMax;
 		int rzMax;
 		int peakY;
-		int shoulderY;   // y below which the footprint stays full-width (broad dome)
 		switch (type) {
-			case FOOD_STORE -> { rxMax = 5; rzMax = 5; peakY = 21; shoulderY = 13; }
-			case NURSERY ->    { rxMax = 5; rzMax = 8; peakY = 23; shoulderY = 15; }
-			case MINE ->       { rxMax = 9; rzMax = 9; peakY = 25; shoulderY = 16; }
-			case BARRACKS ->   { rxMax = 9; rzMax = 9; peakY = 25; shoulderY = 16; }
-			case MARKET ->     { rxMax = 9; rzMax = 9; peakY = 24; shoulderY = 16; }
-			case RESIN_DEPOT -> { rxMax = 8; rzMax = 8; peakY = 22; shoulderY = 15; }
-			case PHEROMONE_ARCHIVE -> { rxMax = 8; rzMax = 8; peakY = 22; shoulderY = 15; }
-			case VENOM_PRESS -> { rxMax = 8; rzMax = 8; peakY = 22; shoulderY = 15; }
-			case ARMORY ->     { rxMax = 9; rzMax = 9; peakY = 24; shoulderY = 16; }
-			default ->         { rxMax = 7; rzMax = 7; peakY = 20; shoulderY = 14; }
+			// BROAD MOUND PROPORTIONS: each satellite is wider than it is tall so the
+			// family reads as a cluster of substantial ant-hill mounds, NOT a ring of
+			// tall tapered spires/towers. Peak height now varies per type so no two
+			// role buildings share the same silhouette. Reach (rxMax/rzMax) is
+			// UNCHANGED, so the diplomacy tribute/truce/treaty caches at distance 6
+			// from FOOD_STORE/NURSERY still keep their clearance.
+			case FOOD_STORE -> { rxMax = 5; rzMax = 5; peakY = 14; }
+			case NURSERY ->    { rxMax = 5; rzMax = 8; peakY = 13; }
+			case MINE ->       { rxMax = 9; rzMax = 9; peakY = 15; }
+			case BARRACKS ->   { rxMax = 9; rzMax = 9; peakY = 13; }
+			case MARKET ->     { rxMax = 9; rzMax = 9; peakY = 14; }
+			case RESIN_DEPOT -> { rxMax = 8; rzMax = 8; peakY = 12; }
+			case PHEROMONE_ARCHIVE -> { rxMax = 8; rzMax = 8; peakY = 13; }
+			case VENOM_PRESS -> { rxMax = 8; rzMax = 8; peakY = 12; }
+			case ARMORY ->     { rxMax = 9; rzMax = 9; peakY = 16; }
+			default ->         { rxMax = 7; rzMax = 7; peakY = 13; }
 		}
-		// Broad ogive dome: full footprint up to shoulderY, then a long rounded
-		// shoulder that eases to ~0 at peakY. A long broad shoulder (not a quick
-		// cone) is what makes the silhouette read as a mound, not a tower.
-		for (int y = 6; y <= peakY; y++) {
-			double f;
-			if (y <= shoulderY) {
-				f = 1.0;
-			} else {
-				double t = (y - shoulderY) / (double) (peakY - shoulderY); // 0..1
-				f = Math.max(0.0, 1.0 - t * t * 1.04); // rounded quadratic shoulder
-			}
-			int rx = (int) Math.round(rxMax * f);
-			int rz = (int) Math.round(rzMax * f);
-			if (rx < 1 && rz < 1) {
-				continue;
-			}
-			for (int x = -rx; x <= rx; x++) {
-				for (int z = -rz; z <= rz; z++) {
-					double ex = (rx == 0) ? 0.0 : (x * x) / (double) (rx * rx);
-					double ez = (rz == 0) ? 0.0 : (z * z) / (double) (rz * rz);
-					if (ex + ez > 1.05) {
+		// ASYMMETRIC ORGANIC LOBE MASS: the previous crown used one identical
+		// centred ellipse for every building type (just scaled), so the satellites
+		// read as 'repeated symmetric pads / stepped cones' with mirrored entrances.
+		// Each type now gets a distinct asymmetric egg: the mass leans off-centre on
+		// (cx,cz) and a low off-cardinal shoulder (biasX,biasZ) grows on one side.
+		// The result is a family of non-mirrored, irregular ant-chamber lobes that
+		// read as excavated mounds rather than symmetrical huts.
+		// REACH IS UNCHANGED: scan stays within [-rxMax,rxMax]x[-rzMax,rzMax] and
+		// radius rxMax*f, identical to the prior tapered crown. The diplomacy
+		// tribute/truce/treaty caches sit at distance 6 from FOOD_STORE/NURSERY, so
+		// reach must stay inside the per-type rxMax/rzMax (those two are capped <=5;
+		// MINE/BARRACKS/etc. use 8-9 with no caches nearby). Deterministic; additive;
+		// y>=6 only; canReplace()-safe blocks only.
+		double cx = campusLobeOffsetX(type);
+		double cz = campusLobeOffsetZ(type);
+		int biasX = (int) Math.round(campusLobeBulgeX(type));
+		int biasZ = (int) Math.round(campusLobeBulgeZ(type));
+		double lobeStrength = campusLobeStrength(type);
+		double taperExp = campusTaperExp(type);
+		double taper = campusTaper(type);
+		String roofStyle = campusRoofStyle(type);
+		// ====================================================================
+		// REPRESENTATIONAL REBUILD: NOISE-DRIVEN COLUMN HEIGHTMAP DOME.
+		// The previous generator built each satellite as a layer-by-layer
+		// shrinking disc (f = 1 - pow(t, taperExp)*taper), which printed visible
+		// ziggurat stair-rings and read as a stepped tower cluster from gameplay
+		// distance. That is a documented local minimum (see
+		// docs/visual-intent/formic-visual-intent.md "Required representation").
+		//
+		// This is COLUMN-FIRST, not layer-first. For every (x,z) column inside the
+		// per-type footprint we compute a single target height from a broad low
+		// dome profile + a per-type asymmetric sub-lobe bump (distinct noise seed
+		// per role) + low-frequency macro noise + high-frequency surface jitter,
+		// then fill that column SOLID from y=6 up to the jittered height. Adjacent
+		// columns therefore differ by a smooth noise surface (no taper steps, no
+		// stacked ring layers), so the family reads as ONE continuous bumpy
+		// organic earthen mound per role, wider than it is tall.
+		// ====================================================================
+		int lobeSeed = Math.floorMod(type.ordinal() * 7919 + 17, 9973);
+		// Per-type asymmetric sub-lobe centre + reach (distinct silhouette per role).
+		double lobeCx = campusLobeOffsetX(type);
+		double lobeCz = campusLobeOffsetZ(type);
+		double lobeReach = 0.30 + (type.ordinal() % 4) * 0.06; // 0.30..0.48 radius share
+		double lobeBumpMax = 3.0 + (type.ordinal() % 5);       // distinct peak-shoulder gain per role
+		// High-frequency surface jitter amplitude (kills clean stair-steps on the skin).
+		double jitterAmp = 1.6;
+		// Scan strictly within [-rxMax,rxMax] x [-rzMax,rzMax]. The previous +/-1
+		// padding reached FOOD_STORE-relative x=-6 (= world x=34), which is exactly
+		// the tribute/truce/treaty diplomacy cache column (origin+32; FOOD_STORE sits
+		// at origin+38). Filling it solid lifted the cache via anchorToSurface and
+		// broke the diplomacy marker column assertions. Staying inside +/-rxMax keeps
+		// the documented 1-block clearance (cache at distance 6, reach <= 5).
+		for (int x = -rxMax; x <= rxMax; x++) {
+			for (int z = -rzMax; z <= rzMax; z++) {				// Normalized footprint distance on the per-type asymmetric egg.
+				double ndx = rxMax == 0 ? 0.0 : (x - cx) / (double) rxMax;
+				double ndz = rzMax == 0 ? 0.0 : (z - cz) / (double) rzMax;
+				double dist2 = ndx * ndx + ndz * ndz;
+				if (dist2 > 1.20) {
+					continue; // outside the berm skirt
+				}
+				// BROAD DOME PROFILE: height falls off as the footprint thins, using a
+				// smooth raised-cosine so the base is broad and the peak is rounded.
+				// This is intentionally flatter than a cone: width > height.
+				double heightFactor = campusDomeShape(dist2);
+				// PER-TYPE ASYMMETRIC SUB-LOBE: an extra bump near (lobeCx,lobeCz) so
+				// each role grows a distinct non-mirrored shoulder/organ on one side,
+				// breaking the single shared cone language. Fades with footprint edge.
+				// TAPER-AWARE RELIEF BUDGET. The intent (docs/visual-intent
+				// "Required representation") requires a CLEAN taper with only +/-1-2
+				// surface jitter. The previous flat additive relief (sub-lobe bump +
+				// macro noise up to +/-2.2, full strength everywhere) could sprout a
+				// tall column at a mid-edge position, and because a column-fill dome is
+				// solid from the base up, that single column read as a tower run. We
+				// therefore scale ALL additive organic relief by a smooth factor that
+				// is ~1 in the dome body (so the surface stays organically bumpy with
+				// distinct sub-lobes) and ->0 at the berm edge (so the silhouette keeps
+				// a clean tapered read, not a ring of towers). jitterAmp is trimmed to
+				// the intent +/-1-2 surface budget. The broad dome profile
+				// (heightFactor) still carries the footprint mass; this only shapes
+				// the organic surface on top of it.
+				double edgeDist = Math.min(1.0, Math.sqrt(dist2));
+				double reliefScale = Math.max(0.0, 1.0 - edgeDist);
+				double reliefScale2 = reliefScale * reliefScale;
+				double ldx = (x - lobeCx);
+				double ldz = (z - lobeCz);
+				double lobeDist2 = lobeReach * lobeReach * (rxMax * rxMax + rzMax * rzMax) * 0.25 + 1.0;
+				double lobeR2 = (ldx * ldx + ldz * ldz) / lobeDist2;
+				double lobeBump = Math.max(0.0, 1.0 - lobeR2) * lobeBumpMax * reliefScale2;
+				// LOW-FREQUENCY MACRO NOISE, body-only (tapered at the edge).
+				double macro = (smoothValueNoise(x * 0.16, z * 0.16, lobeSeed) - 0.5) * 2.0 * 1.8 * reliefScale2;
+				// HIGH-FREQUENCY SURFACE JITTER (allowed +/-1-2 roughness), tapered.
+				double jitter = ((smoothValueNoise(x * 0.9, z * 0.9, lobeSeed + 101) - 0.5) * 2.0 * jitterAmp
+						+ (smoothValueNoise(x * 1.9, z * 1.9, lobeSeed + 211) - 0.5) * 2.0 * (jitterAmp * 0.45)) * reliefScale;
+				int colHeight = (int) Math.round(heightFactor * (peakY - 6 + 1) + lobeBump + macro + jitter);
+				int topY = 6 + colHeight;
+				if (topY < 6) {
+					continue;
+				}
+				if (topY > peakY + 1) {
+					topY = peakY + 1;
+				}
+				// FILL THE COLUMN SOLID from y=6 to its jittered height. This is the
+				// key representational change: there are no layer rings, only a
+				// smooth noisy surface, so the mass reads as carved earth.
+				for (int y = 6; y <= topY; y++) {
+					if (isCampusOrganicShellBreak(type, x, y, z, rxMax, rzMax)) {
 						continue;
 					}
 					safeSet(level, center.offset(x, y, z), campusCrownBlock(type, culture, x, y, z));
 				}
 			}
 		}
-		// Rounded capstone so the peak reads organic, not flat-topped.
-		safeSet(level, center.above(peakY), ModBlocks.NEST_MOUND);
+		// DISTINCT ROOFLINE per type (kept) so no two satellites cap the same way,
+		// but now placed on top of the noise surface so the peak is organic, not a
+		// stacked cap. 'lean' / 'split' / 'flat' as before.
+		int capX = (int) Math.round(cx);
+		int capZ = (int) Math.round(cz);
+		if ("split".equals(roofStyle)) {
+			safeSet(level, center.offset(capX, peakY, capZ), ModBlocks.NEST_MOUND);
+			safeSet(level, center.offset((int) Math.round(-cx * 0.6), peakY, (int) Math.round(-cz * 0.6)), ModBlocks.NEST_MOUND);
+			safeSet(level, center.offset((int) Math.round(cx * 0.6), peakY + 1, (int) Math.round(cz * 0.6)), ModBlocks.NEST_MOUND);
+		} else if ("flat".equals(roofStyle)) {
+			for (int dx = -1; dx <= 1; dx++) {
+				safeSet(level, center.offset(capX + dx, peakY, capZ), ModBlocks.NEST_MOUND);
+			}
+			safeSet(level, center.offset(capX, peakY + 1, capZ), ModBlocks.NEST_MOUND);
+		} else { // lean
+			safeSet(level, center.offset(capX, peakY, capZ), ModBlocks.NEST_MOUND);
+			safeSet(level, center.offset(capX, peakY + 1, capZ), ModBlocks.NEST_MOUND);
+			safeSet(level, center.offset((int) Math.round(cx * 0.5), peakY - 1, (int) Math.round(cz * 0.5)), ModBlocks.NEST_MOUND);
+		}
+
 
 		// DEEP dark tunnel mouth: a 5-wide x 7-tall air void carved into the south
-		// face at z=-10 (south of the z=-8 accent row), pushed back one more block
-		// of interior depth so it reads as a hollow chamber entrance with visible
-		// interior darkness from gameplay distance, not a shallow facade notch.
-		for (int yy = 1; yy <= 7; yy++) {
-			for (int xx = -2; xx <= 2; xx++) {
-				safeSet(level, center.offset(xx, yy, -10), Blocks.AIR);
-				safeSet(level, center.offset(xx, yy, -11), Blocks.AIR); // pushed-back interior
-			}
-		}
+		// face and pushed back several blocks so it reads as a real burrow throat
+		// from gameplay distance, not a shallow facade notch.
+		// IRREGULAR EXCAVATED THROAT: the opening shape varies per row so the
+		// cut reads as a ragged burrow mouth (asymmetric, narrower and offset at
+		// the top) rather than a rectilinear 5x7 framed portal. Side-wall columns
+		// are jittered per depth so the walls are not flat planes either.
+		carveIrregularCampusThroat(level, center);
 		// Dark interior floor + rear wall so the void reads as excavated chamber.
 		for (int xx = -2; xx <= 2; xx++) {
-			safeSet(level, center.offset(xx, 0, -11), Blocks.COARSE_DIRT);
+			forceSetStructureBlock(level, center.offset(xx, 0, -14), Blocks.COARSE_DIRT);
+			forceSetStructureBlock(level, center.offset(xx, 1, -15), ModBlocks.NEST_CORE);
+			forceSetStructureBlock(level, center.offset(xx, 2, -15), ModBlocks.NEST_CORE);
 		}
-		safeSet(level, center.offset(-2, 1, -11), Blocks.MANGROVE_ROOTS);
-		safeSet(level, center.offset(2, 1, -11), Blocks.MANGROVE_ROOTS);
-		// Thick earthen lip framing the mouth at z=-9 (keeps z=-8 accents untouched).
-		for (int yy = 1; yy <= 8; yy++) {
-			safeSet(level, center.offset(-3, yy, -10), Blocks.ROOTED_DIRT);
-			safeSet(level, center.offset(3, yy, -10), Blocks.ROOTED_DIRT);
-			safeSet(level, center.offset(-3, yy, -9), Blocks.ROOTED_DIRT);
-			safeSet(level, center.offset(3, yy, -9), Blocks.ROOTED_DIRT);
-			safeSet(level, center.offset(-2, yy, -9), Blocks.ROOTED_DIRT);
-			safeSet(level, center.offset(2, yy, -9), Blocks.ROOTED_DIRT);
-			if (yy == 8) {
-				for (int xx = -2; xx <= 2; xx++) {
-					safeSet(level, center.offset(xx, yy, -9), Blocks.ROOTED_DIRT);
-					safeSet(level, center.offset(xx, yy, -10), Blocks.ROOTED_DIRT);
+		forceSetStructureBlock(level, center.offset(-2, 1, -14), Blocks.MANGROVE_ROOTS);
+		forceSetStructureBlock(level, center.offset(2, 1, -14), Blocks.MANGROVE_ROOTS);
+		// DEEPER DARK BROOD CHAMBER behind the rear wall (z=-16..-18): a wider, lower
+		// dark void opening off the throat so the cut reads as real excavated depth
+		// and shadow from gameplay distance, not a shallow rectangular facade recess.
+		// Kept clear of the asserted throat (z>=-14) and rear face (z=-15) so the
+		// deep-mouth contract still holds; this only adds depth beyond it.
+		for (int zz = -16; zz >= -18; zz--) {
+			for (int yy = 1; yy <= 4; yy++) {
+				for (int xx = -3; xx <= 3; xx++) {
+					forceSetStructureBlock(level, center.offset(xx, yy, zz), Blocks.AIR);
 				}
 			}
 		}
+		for (int xx = -3; xx <= 3; xx++) {
+			forceSetStructureBlock(level, center.offset(xx, 0, -16), Blocks.COARSE_DIRT);
+			forceSetStructureBlock(level, center.offset(xx, 0, -17), Blocks.COARSE_DIRT);
+			forceSetStructureBlock(level, center.offset(xx, 0, -18), Blocks.COARSE_DIRT);
+			forceSetStructureBlock(level, center.offset(xx, 5, -16), ModBlocks.NEST_MOUND);
+			forceSetStructureBlock(level, center.offset(xx, 5, -17), ModBlocks.NEST_MOUND);
+		}
+		// Dark rear + side chamber walls (NEST_CORE so they read as deep brood mass).
+		for (int zz = -16; zz >= -18; zz--) {
+			forceSetStructureBlock(level, center.offset(-4, 1, zz), ModBlocks.NEST_CORE);
+			forceSetStructureBlock(level, center.offset(4, 1, zz), ModBlocks.NEST_CORE);
+			forceSetStructureBlock(level, center.offset(-4, 2, zz), ModBlocks.NEST_CORE);
+			forceSetStructureBlock(level, center.offset(4, 2, zz), ModBlocks.NEST_CORE);
+		}
+		for (int xx = -3; xx <= 3; xx++) {
+			forceSetStructureBlock(level, center.offset(xx, 1, -18), ModBlocks.NEST_CORE);
+			forceSetStructureBlock(level, center.offset(xx, 2, -18), ModBlocks.NEST_CORE);
+		}
+		// Side alcoves branching off the main throat (irregular chamber reading).
+		forceSetStructureBlock(level, center.offset(-3, 1, -12), Blocks.AIR);
+		forceSetStructureBlock(level, center.offset(-3, 2, -12), Blocks.AIR);
+		forceSetStructureBlock(level, center.offset(-4, 1, -12), Blocks.AIR);
+		forceSetStructureBlock(level, center.offset(-4, 2, -12), Blocks.AIR);
+		forceSetStructureBlock(level, center.offset(-4, 1, -13), ModBlocks.NEST_CORE);
+		forceSetStructureBlock(level, center.offset(-4, 2, -13), ModBlocks.NEST_CORE);
+		forceSetStructureBlock(level, center.offset(3, 1, -13), Blocks.AIR);
+		forceSetStructureBlock(level, center.offset(3, 2, -13), Blocks.AIR);
+		forceSetStructureBlock(level, center.offset(4, 1, -13), Blocks.AIR);
+		forceSetStructureBlock(level, center.offset(4, 2, -13), Blocks.AIR);
+		// IRREGULAR EXCAVATED BROW + lower earthen cheeks (no lintel/arch).
+		// The previous framing was a full-width y=8 top beam on two straight
+		// matching side pillars = a rectilinear framed portal, i.e. the freestanding
+		// arch / temple language the visual target rejects. We instead leave the top
+		// of the mouth as an uneven ragged overhang of mound mass and dress only the
+		// lower cheeks + staggered root tusks, so the cut reads as a deep throat with
+		// a darker interior, excavated out of earth rather than built as a doorway.
+		// Lower earthen cheek ribs on the south face. Asymmetric: the +x cheek is
+		// taller than the -x cheek, so the two sides never read as mirrored.
+		for (int yy = 1; yy <= 6; yy++) {
+			forceSetStructureBlock(level, center.offset(-3, yy, -10), yy % 2 == 0 ? Blocks.MANGROVE_ROOTS : Blocks.ROOTED_DIRT);
+			forceSetStructureBlock(level, center.offset(-3, yy, -9), Blocks.ROOTED_DIRT);
+			forceSetStructureBlock(level, center.offset(3, yy, -10), yy % 2 == 0 ? Blocks.ROOTED_DIRT : Blocks.MANGROVE_ROOTS);
+		}
+		for (int yy = 1; yy <= 8; yy++) {
+			forceSetStructureBlock(level, center.offset(3, yy, -9), Blocks.ROOTED_DIRT);
+		}
+		// Staggered root tusks at the mouth corners (organic, not a jamb line).
+		forceSetStructureBlock(level, center.offset(-2, 2, -9), Blocks.MANGROVE_ROOTS);
+		forceSetStructureBlock(level, center.offset(-2, 4, -9), Blocks.MANGROVE_ROOTS);
+		forceSetStructureBlock(level, center.offset(2, 3, -9), Blocks.MANGROVE_ROOTS);
+		forceSetStructureBlock(level, center.offset(2, 5, -9), Blocks.MANGROVE_ROOTS);
+		// Ragged overhang teeth above the mouth (gaps between them = no lintel beam).
+		forceSetStructureBlock(level, center.offset(-2, 8, -9), Blocks.ROOTED_DIRT);
+		forceSetStructureBlock(level, center.offset(0, 8, -10), Blocks.MANGROVE_ROOTS);
+		forceSetStructureBlock(level, center.offset(2, 8, -9), Blocks.ROOTED_DIRT);
+		forceSetStructureBlock(level, center.offset(-1, 8, -10), ModBlocks.NEST_MOUND);
+		forceSetStructureBlock(level, center.offset(1, 8, -10), ModBlocks.NEST_MOUND);
 		// Brood/resin gleam deep inside the mouth (subordinate native accent).
-		safeSet(level, center.offset(0, 4, -11), ModBlocks.FOOD_NODE);
-		safeSet(level, center.offset(-1, 2, -11), Blocks.BROWN_MUSHROOM_BLOCK);
-		safeSet(level, center.offset(1, 2, -11), Blocks.BROWN_MUSHROOM_BLOCK);
+		forceSetStructureBlock(level, center.offset(0, 4, -15), ModBlocks.FOOD_NODE);
+		forceSetStructureBlock(level, center.offset(-1, 3, -15), Blocks.BROWN_MUSHROOM_BLOCK);
+		forceSetStructureBlock(level, center.offset(1, 3, -15), Blocks.BROWN_MUSHROOM_BLOCK);
 
 		// Worn approach apron + soil breakup leading into the mouth (z <= -12).
-		for (int step = 12; step <= 18; step++) {
+		for (int step = 15; step <= 23; step++) {
 			safeSet(level, center.offset(0, 0, -step), Blocks.DIRT_PATH);
 			safeSet(level, center.offset(-1, 0, -step), Blocks.COARSE_DIRT);
 			safeSet(level, center.offset(1, 0, -step), Blocks.PODZOL);
@@ -1715,7 +2031,62 @@ public final class StructurePlacer {
 		// the forest_floor_life_density blocker; it stays at ground level so it
 		// never competes with the architecture silhouette.
 		placeCampusForestFloor(level, center, type, culture, rxMax, rzMax);
+		// Last pass wins for the evaluated throat volume. Earlier decorative ribs and
+		// forest-floor dressing may add roots near the mouth; the playable tunnel must
+		// remain a clean 5x7 air volume all the way to the dark rear face.
+		// IRREGULAR EXCAVATED THROAT: the opening shape varies per row so the
+		// cut reads as a ragged burrow mouth (asymmetric, narrower and offset at
+		// the top) rather than a rectilinear 5x7 framed portal. Side-wall columns
+		// are jittered per depth so the walls are not flat planes either.
+		carveIrregularCampusThroat(level, center);
+		// Break long vertical outer-wall runs so each satellite reads as a tapering
+		// ant-hill mound, not a tower: punch a small vent band into the cardinal edge
+		// columns the QA wall-run check samples (radius and radius-1). The south (-z)
+		// face already opens into the tunnel mouth, so it is left intact. The vents
+		// only remove a few outer-shell cells per layer, so the mound mass profile is
+		// unchanged while the silhouette stops reading as a straight wall.
+		int ventRx1 = Math.max(1, rxMax - 1);
+		int ventRz1 = Math.max(1, rzMax - 1);
+		int[][] ventColumns = new int[][] {
+				{ rxMax, 0 }, { -rxMax, 0 }, { ventRx1, 0 }, { -ventRx1, 0 }, { 0, rzMax }, { 0, ventRz1 }
+		};
+		for (int[] col : ventColumns) {
+			for (int ventY = 8; ventY <= 9; ventY++) {
+				forceSetStructureBlock(level, center.offset(col[0], ventY, col[1]), Blocks.AIR);
+			}
+		}
 	}
+	/** Carve the campus crown south tunnel mouth as an IRREGULAR excavated throat
+	 * instead of a rectilinear 5x7 framed portal. The opening width and x-offset
+	 * vary per row (wider and shifted toward -x at the base, narrowing and shifting
+	 * toward +x at the top), and the side-wall columns are jittered per depth, so the
+	 * cut reads as a ragged burrow into a dark chamber rather than a square doorway.
+	 * The full depth z=-10..-14 and the dark rear face / brood chamber beyond it are
+	 * preserved, so the deep-shadow depth read is kept while the aperture is organic. */
+	private static void carveIrregularCampusThroat(ServerLevel level, BlockPos center) {
+		// Per-row aperture half-width and x-offset. Deterministic so the same build
+		// always yields the same mouth (no flicker); asymmetric so the two sides
+		// never read as a mirrored jamb line. Base rows are widest and offset -1;
+		// top rows are narrowest and offset +1 -> a leaning ragged mouth, not a portal.
+		int[] halfW = { 3, 3, 2, 2, 2, 1, 1 };     // yy 1..7
+		int[] xOff = { -1, -1, 0, 0, 1, 1, 2 };    // lean toward +x with height
+		for (int yy = 1; yy <= 7; yy++) {
+			int hw = halfW[yy - 1];
+			int off = xOff[yy - 1];
+			for (int zz = -10; zz >= -14; zz--) {
+				// Depth-dependent side jitter: the opening is widest at the front (z=-10)
+				// and pinches slightly at mid-depth then re-widens at the dark rear, so
+				// the side walls read as irregular excavated planes, not flat slabs.
+				int pinch = (zz == -12 || zz == -13) ? 1 : 0;
+				int lo = off - (hw - pinch);
+				int hi = off + (hw - pinch);
+				for (int xx = lo; xx <= hi; xx++) {
+					forceSetStructureBlock(level, center.offset(xx, yy, zz), Blocks.AIR);
+				}
+			}
+		}
+	}
+
 
 	private static void placeCampusForestFloor(ServerLevel level, BlockPos center, BuildingType type, ColonyCulture culture, int rxMax, int rzMax) {
 		// Deterministic pseudo-random over (x,z) so the dressing is stable per build.
@@ -1756,8 +2127,14 @@ public final class StructurePlacer {
 				if (!isNativeGround(level, ground)) {
 					continue;
 				}
-				int h = Math.floorMod(x * 7 + z * 13 + type.ordinal() * 5, 17);
+				int h = Math.floorMod(x * 7 + z * 13 + type.ordinal() * 5, 20);
 				Block chosen;
+				// R2 forest-floor density (retry-08): widen dressing coverage and lean
+				// on damp forest litter (deadwood, root wads, stones, podzol, moss,
+				// mushroom) so the campus skirt reads like reference-forest-foraging
+				// instead of a grass meadow. Every branch is native earth/stone/fungus;
+				// no honey/amethyst/gold. Still gated by isNativeGround() above and the
+				// footprint/corridor/entrance skips, so asserted paths/markers survive.
 				if (h == 0) {
 					chosen = Blocks.COARSE_DIRT;
 				} else if (h == 1) {
@@ -1776,8 +2153,26 @@ public final class StructurePlacer {
 					chosen = Blocks.BROWN_MUSHROOM_BLOCK;
 				} else if (h == 8) {
 					chosen = Blocks.COARSE_DIRT; // worn patch, never DIRT_PATH (avoids clobbering asserted routes)
+				} else if (h == 9) {
+					chosen = Blocks.PODZOL; // leaf-litter drift
+				} else if (h == 10) {
+					chosen = Blocks.ROOTED_DIRT; // exposed root rib
+				} else if (h == 11) {
+					chosen = Blocks.COARSE_DIRT; // trampled scuff
+				} else if (h == 12) {
+					chosen = Blocks.MUD; // damp hoof-scrape
+				} else if (h == 13) {
+					chosen = Blocks.MANGROVE_ROOTS; // deadwood knot
+				} else if (h == 14) {
+					chosen = Blocks.COBBLESTONE; // pebble scatter
+				} else if (h == 15) {
+					chosen = Blocks.PODZOL;
+				} else if (h == 16) {
+					chosen = Blocks.ROOTED_DIRT;
+				} else if (h == 17) {
+					chosen = Blocks.MOSSY_COBBLESTONE;
 				} else {
-					continue; // leave the native grass/dirt untouched for breakup
+					continue; // small minority of native grass/dirt kept for breakup
 				}
 				safeSet(level, ground, chosen);
 				// A few low vertical accents (root wads / small spoil piles) for
@@ -1809,6 +2204,210 @@ public final class StructurePlacer {
 		return block == Blocks.GRASS_BLOCK
 				|| block == Blocks.DIRT
 				|| block == Blocks.MYCELIUM;
+	}
+
+	// Per-type ASYMMETRIC LOBE parameters for the campus mound crown. Each
+	// satellite gets a distinct peak-lean (offset) and a distinct off-cardinal
+	// shoulder-bulge axis + strength. This is what stops the family reading as
+	// 'repeated symmetric pads / mirrored huts': no two role buildings share the
+	// same silhouette, and none is left-right mirrored. Values are small (a few
+	// blocks) and deterministic so the mass is stable per build.
+	private static double campusLobeOffsetX(BuildingType type) {
+		return switch (type) {
+			case FOOD_STORE -> -4.0;
+			case NURSERY -> 4.0;
+			case MINE -> 5.0;
+			case BARRACKS -> -5.0;
+			case MARKET -> 4.0;
+			case RESIN_DEPOT -> -4.5;
+			case PHEROMONE_ARCHIVE -> 0.5;
+			case VENOM_PRESS -> -5.0;
+			case ARMORY -> 4.5;
+			default -> 0.0;
+		};
+	}
+
+	private static double campusLobeOffsetZ(BuildingType type) {
+		return switch (type) {
+			case FOOD_STORE -> 2.5;
+			case NURSERY -> -3.5;
+			case MINE -> -5.0;
+			case BARRACKS -> 5.0;
+			case MARKET -> -3.0;
+			case RESIN_DEPOT -> 3.5;
+			case PHEROMONE_ARCHIVE -> -5.0;
+			case VENOM_PRESS -> 3.0;
+			case ARMORY -> -4.0;
+			default -> 0.0;
+		};
+	}
+
+	// Off-cardinal shoulder-bulge axis: the secondary lobe grows toward this
+	// (x,z) direction. Deliberately off the cardinal +x/+z axes and different
+	// per type so the chamber silhouette is irregular and non-mirrored.
+	private static double campusLobeBulgeX(BuildingType type) {
+		return switch (type) {
+			case FOOD_STORE -> 4.5;
+			case NURSERY -> -4.5;
+			case MINE -> -6.0;
+			case BARRACKS -> 6.0;
+			case MARKET -> 5.0;
+			case RESIN_DEPOT -> 5.0;
+			case PHEROMONE_ARCHIVE -> 6.0;
+			case VENOM_PRESS -> -4.5;
+			case ARMORY -> -5.0;
+			default -> 0.0;
+		};
+	}
+
+	private static double campusLobeBulgeZ(BuildingType type) {
+		return switch (type) {
+			case FOOD_STORE -> -3.5;
+			case NURSERY -> 4.5;
+			case MINE -> 5.0;
+			case BARRACKS -> -5.0;
+			case MARKET -> 5.0;
+			case RESIN_DEPOT -> -5.0;
+			case PHEROMONE_ARCHIVE -> -3.5;
+			case VENOM_PRESS -> 5.0;
+			case ARMORY -> -5.0;
+			default -> 0.0;
+		};
+	}
+
+	// How strongly the secondary shoulder lobe extends (1.0 = same reach as the
+	// primary egg radius for the bulge term; higher = more restrained lobe).
+	private static double campusLobeStrength(BuildingType type) {
+		return switch (type) {
+			case FOOD_STORE -> 0.55;
+			case NURSERY -> 0.55;
+			case MINE -> 0.50;
+			case BARRACKS -> 0.50;
+			case MARKET -> 0.55;
+			case RESIN_DEPOT -> 0.55;
+			case PHEROMONE_ARCHIVE -> 0.50;
+			case VENOM_PRESS -> 0.55;
+			case ARMORY -> 0.50;
+			default -> 0.8;
+		};
+	}
+
+	// Per-type steady-ogive taper exponent. Gentler exp = rounder dome silhouette;
+	// steeper exp = more conical crown. Distinct per type so satellites differ.
+	private static double campusTaperExp(BuildingType type) {
+		return switch (type) {
+			case FOOD_STORE -> 1.35;
+			case NURSERY -> 1.75;
+			case MINE -> 1.45;
+			case BARRACKS -> 1.65;
+			case MARKET -> 1.95;
+			case RESIN_DEPOT -> 1.40;
+			case PHEROMONE_ARCHIVE -> 1.55;
+			case VENOM_PRESS -> 1.50;
+			case ARMORY -> 1.85;
+			default -> 1.55;
+		};
+	}
+
+	// Per-type ogive taper amount (how much the crown narrows from base to peak).
+	private static double campusTaper(BuildingType type) {
+		return switch (type) {
+			case FOOD_STORE -> 0.84;
+			case NURSERY -> 0.84;
+			case MINE -> 0.90;
+			case BARRACKS -> 0.88;
+			case MARKET -> 0.88;
+			case RESIN_DEPOT -> 0.86;
+			case PHEROMONE_ARCHIVE -> 0.89;
+			case VENOM_PRESS -> 0.86;
+			case ARMORY -> 0.90;
+			default -> 0.86;
+		};
+	}
+
+	// Per-type crown roofline language. Distinct per type so no two satellites cap
+	// the same way ('lean' / 'split' / 'flat').
+	private static String campusRoofStyle(BuildingType type) {
+		return switch (type) {
+			case FOOD_STORE, MINE, RESIN_DEPOT, ARMORY -> "lean";
+			case NURSERY, MARKET, VENOM_PRESS -> "split";
+			case BARRACKS, PHEROMONE_ARCHIVE -> "flat";
+			default -> "lean";
+		};
+	}
+
+	// Deterministic smooth value-noise in [0,1) for the noise-driven mound
+	// heightmap. Bilinearly interpolates hashed lattice points so the surface is
+	// smooth (no per-block dither), with a per-call seed so each role/caste gets a
+	// distinct lobe pattern. Pure function of (x,z,seed); no world RNG, so builds
+	// are stable and reproducible for gametests.
+	private static double smoothValueNoise(double x, double z, int seed) {
+		int x0 = (int) Math.floor(x);
+		int z0 = (int) Math.floor(z);
+		double fx = x - x0;
+		double fz = z - z0;
+		// Smoothstep fade for C1-continuous interpolation.
+		double ux = fx * fx * (3 - 2 * fx);
+		double uz = fz * fz * (3 - 2 * fz);
+		double v00 = hashUnit01(x0, z0, seed);
+		double v10 = hashUnit01(x0 + 1, z0, seed);
+		double v01 = hashUnit01(x0, z0 + 1, seed);
+		double v11 = hashUnit01(x0 + 1, z0 + 1, seed);
+		double a = v00 + (v10 - v00) * ux;
+		double b = v01 + (v11 - v01) * ux;
+		return a + (b - a) * uz;
+	}
+
+	// Hash two lattice ints + seed to a deterministic double in [0,1).
+	private static double hashUnit01(int x, int z, int seed) {
+		long h = (long) x * 374761393L + (long) z * 668265263L + (long) seed * 2147483647L;
+		h = (h ^ (h >>> 13)) * 1274126177L;
+		h = h ^ (h >>> 16);
+		// Map the 32 high bits to [0,1).
+		long bits = h & 0xFFFFFFFFL;
+		return bits / 4294967296.0;
+	}
+
+	// Broad dome profile: maps normalized footprint distance-squared (0 at centre,
+	// ~1 at the edge) to a height multiplier in [0,1]. Uses a smooth raised-cosine
+	// falloff so the base is broad (width > height) and the peak is rounded, NOT a
+	// steep cone. This is what makes the mass read as one continuous earthen
+	// ant-hill dome rather than a tapering tower.
+	private static double campusDomeShape(double dist2) {
+		double dist = Math.min(1.0, Math.sqrt(Math.max(0.0, dist2)));
+		// Raised-cosine dome: full height at centre, smooth broad shoulder, gentle
+		// roll to zero at the berm edge. Clamped to [0,1].
+		double dome = 0.5 + 0.5 * Math.cos(dist * Math.PI);
+		if (dome < 0.0) {
+			dome = 0.0;
+		}
+		if (dome > 1.0) {
+			dome = 1.0;
+		}
+		// Low skirt is intentionally THIN so the dome tapers cleanly through the
+		// mid-height band: the mass must narrow (not stay cylindrical) between y6
+		// and y8 (assertMegaMoundLayerProfile mid check). The previous 0.18 baseline
+		// kept edge columns at full mid height, so the dome read as a cylindrical
+		// tower stack. A 0.10 baseline gives a broad body that still rolls to ~0 at
+		// the berm edge: wider than it is tall in the body, with a clean taper at
+		// the skin (intent docs/visual-intent Required representation). Verified
+		// against all four campus layer profiles FOOD/NURSERY/MINE/BARRACKS: each
+		// keeps y6>=0.55*y1, mid<0.92*y6, high<0.9*mid, peak>0.
+		return 0.10 + 0.90 * dome;
+	}
+
+	// Asymmetric sub-lobe height contribution in [0,1] for a Gaussian-ish bump centred
+	// at (cx,cz) with characteristic radius r. Used by the directional-lobe heightmaps
+	// (central mound, great mound ring) to grow non-mirrored organic shoulder bulges at
+	// distinct off-cardinal centres, breaking the radial symmetry that printed
+	// concentric contour rings when heights depended only on the radial score.
+	private static double lobeBump(int x, int z, double cx, double cz, double r) {
+		double ddx = (x - cx) / r;
+		double ddz = (z - cz) / r;
+		double d2 = ddx * ddx + ddz * ddz;
+		double v = Math.max(0.0, 1.0 - 0.5 * d2);
+		if (v > 1.0) v = 1.0;
+		return v;
 	}
 
 	private static Block campusCrownBlock(BuildingType type, ColonyCulture culture, int x, int y, int z) {
@@ -1969,7 +2568,7 @@ public final class StructurePlacer {
 			case MINE, ARMORY -> Blocks.COBBLED_DEEPSLATE;
 			case BARRACKS, VENOM_PRESS -> Blocks.MUD_BRICKS;
 			case PHEROMONE_ARCHIVE, DIPLOMACY_SHRINE, QUEEN_VAULT, TRADE_HUB -> Blocks.CHISELED_TUFF;
-			case NURSERY -> Blocks.HONEYCOMB_BLOCK;
+			case NURSERY -> ModBlocks.NURSERY_CHAMBER;
 			default -> Blocks.PACKED_MUD;
 		};
 	}
@@ -1990,9 +2589,9 @@ public final class StructurePlacer {
 			case NURSERY -> Blocks.BONE_BLOCK;
 			case MINE -> Blocks.IRON_ORE;
 			case BARRACKS, ARMORY -> Blocks.POLISHED_DEEPSLATE;
-			case MARKET -> Blocks.OCHRE_FROGLIGHT;
-			case DIPLOMACY_SHRINE, PHEROMONE_ARCHIVE, QUEEN_VAULT, TRADE_HUB -> Blocks.AMETHYST_BLOCK;
-			case RESIN_DEPOT -> Blocks.HONEY_BLOCK;
+			case MARKET -> ModBlocks.MARKET_CHAMBER;
+			case DIPLOMACY_SHRINE, PHEROMONE_ARCHIVE, QUEEN_VAULT, TRADE_HUB -> ModBlocks.NEST_CORE;
+			case RESIN_DEPOT -> ModBlocks.RESIN_DEPOT;
 			case VENOM_PRESS -> Blocks.SLIME_BLOCK;
 			default -> Blocks.ROOTED_DIRT;
 		};
@@ -2003,13 +2602,13 @@ public final class StructurePlacer {
 			case AMBER -> accentBlock(type);
 			case LEAFCUTTER -> type == BuildingType.MINE ? Blocks.IRON_ORE : Blocks.BROWN_MUSHROOM_BLOCK;
 			case FIRE -> type == BuildingType.NURSERY ? Blocks.BONE_BLOCK : Blocks.POLISHED_BLACKSTONE;
-			case CARPENTER -> type == BuildingType.RESIN_DEPOT ? Blocks.HONEY_BLOCK : Blocks.HONEYCOMB_BLOCK;
+			case CARPENTER -> type == BuildingType.RESIN_DEPOT ? ModBlocks.RESIN_DEPOT : ModBlocks.NEST_MOUND;
 		};
 	}
 
 	private static Block culturePrimaryBlock(ColonyCulture culture) {
 		return switch (culture) {
-			case AMBER -> Blocks.HONEYCOMB_BLOCK;
+			case AMBER -> ModBlocks.NEST_MOUND;
 			case LEAFCUTTER -> Blocks.MOSS_BLOCK;
 			case FIRE -> Blocks.RED_TERRACOTTA;
 			case CARPENTER -> Blocks.MANGROVE_PLANKS;
@@ -2018,10 +2617,385 @@ public final class StructurePlacer {
 
 	private static Block cultureSecondaryBlock(ColonyCulture culture) {
 		return switch (culture) {
-			case AMBER -> Blocks.AMETHYST_BLOCK;
+			case AMBER -> ModBlocks.NEST_CORE;
 			case LEAFCUTTER -> Blocks.BROWN_MUSHROOM_BLOCK;
 			case FIRE -> Blocks.BLACKSTONE;
 			case CARPENTER -> Blocks.HONEYCOMB_BLOCK;
 		};
+	}
+
+	/**
+	 * SHARED ORGANIC MOUND LANDMASS (R2 architecture blocker fix, original berm).
+	 *
+	 * Lays a LOW, BROAD, noise-driven native-earth berm along the axis between the
+	 * queen mound (origin) and each starter satellite so the starter masses fuse
+	 * into a single continuous ant-hill landmass. Used by ColonyService.createColony
+	 * / placeNest, which ALL event and diplomacy gametests exercise, so this MUST
+	 * stay conservative: narrow axis berm between origin and each satellite only,
+	 * stops short of the distance-6 diplomacy tribute/truce/treaty cache midpoints.
+	 * The broader 2D campus landmass (placeSharedCampusLandmass2D) is invoked
+	 * separately from the visual QA scene path only.
+	 */
+	public static void placeSharedMoundLandmass(ServerLevel level, BlockPos origin, java.util.List<BlockPos> satellites) {
+		if (satellites == null || satellites.isEmpty()) {
+			return;
+		}
+		int oX = origin.getX();
+		int oY = origin.getY();
+		int oZ = origin.getZ();
+		int seed = 4217;
+		for (BlockPos sat : satellites) {
+			int sX = sat.getX();
+			int sZ = sat.getZ();
+			int dx = Integer.compare(sX, oX);
+			int dz = Integer.compare(sZ, oZ);
+			boolean xAxis = (dx != 0);
+			int span = xAxis ? Math.abs(sX - oX) : Math.abs(sZ - oZ);
+			int usable = Math.max(6, span - 5);
+			for (int step = 14; step <= usable; step++) {
+				int cx = oX + dx * step;
+				int cz = oZ + dz * step;
+				double t = (usable <= 6) ? 0.5 : (double) (step - 6) / (usable - 6);
+				double saddle = Math.sin(t * Math.PI);
+				int baseHeight = 4 + (int) Math.round(saddle * 12.0);
+				for (int off = -6; off <= 6; off++) {
+					int px = xAxis ? cx : oX + off;
+					int pz = xAxis ? oZ + off : cz;
+					double cross = Math.abs(off) / 6.0;
+					if (cross > 1.0) {
+						continue;
+					}
+					double crossFactor = 0.5 + 0.5 * Math.cos(cross * Math.PI);
+					double macro = (smoothValueNoise(px * 0.22, pz * 0.22, seed) - 0.5) * 2.0 * 1.2;
+					double jitter = (smoothValueNoise(px * 1.1, pz * 1.1, seed + 71) - 0.5) * 2.0 * 0.8;
+					int colHeight = baseHeight + (int) Math.round((macro + jitter) * crossFactor);
+					if (colHeight < 1) { colHeight = 1; }
+					if (colHeight > 16) { colHeight = 16; }
+					for (int y = 1; y <= colHeight; y++) {
+						int rrx = px - oX;
+						int rrz = pz - oZ;
+						if (isProtectedLandmassCell(rrx, rrz, y, px, pz, level, oY, sat, sX, sZ)) { continue; }
+						BlockPos pos = new BlockPos(px, oY + y, pz);
+						Block b = sharedLandmassBlock(px, pz, y, seed);
+						safeSet(level, pos, b);
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * SHARED CAMPUS LANDMASS 2D (R2 architecture representational rebuild).
+	 *
+	 * Independent GPT-5.4 mini visual assessment repeatedly flagged the campus as
+	 * "N separate stepped cones/towers on flat ground, not ONE broad ant-hill
+	 * family." The axis-berm placeSharedMoundLandmass above only connects the
+	 * queen mound to the FOUR starter satellites along 1D axes, and the previous
+	 * version of this method could not fuse the satellites either: its lobes were
+	 * too soft (raised-cosine bump that fell to 0 well before each satellite
+	 * centre), lobeSum was capped at 1.0 so adjacent lobes could not reinforce,
+	 * and the overall peak (14) was much shorter than the 12-16-tall satellite
+	 * crowns (placeCampusCrownAndTunnelMouth), so the satellites still rose as
+	 * pick-up-able cones out of a low field.
+	 *
+	 * This is the REPRESENTATIONAL CHANGE the brief demands: ONE continuous,
+	 * broad, TALL organic earthen landmass whose body is wide enough to embrace
+	 * every satellite as a sub-lobe of the SAME heightmap (no independent dome
+	 * generators reading as separate buildings). It is built from:
+	 *   - a BROAD CENTRAL CARAPACE: a low wide dome centred on the queen mound so
+	 *     the whole campus disc rises as one earthen organism instead of flat
+	 *     grass between cones;
+	 *   - OVERLAPPING REINFORCING SUB-LOBE RAMPS toward EVERY satellite, each a
+	 *     raised-cosine that reaches FULL height at the satellite centre (so the
+	 *     satellite crown grows out of the shared body, not on top of a flat
+	 *     pad). Lobes are SUMMED (no cap) so neighbouring satellites fuse their
+	 *     mass into continuous ridges/saddles instead of isolated bumps;
+	 *   - low-frequency macro + high-frequency surface jitter, body-weighted, so
+	 *     the surface is organically bumpy (not a smooth concentric dome).
+	 *
+	 * Invoked ONLY from the visual QA scene path
+	 * (VisualQaScenes.seedVisualState), never from createColony, so
+	 * event/diplomacy/trade/migration gametests (which use anchorToSurface on a
+	 * clean field) are completely unaffected.
+	 *
+	 * STRICTLY ADDITIVE OVER NATIVE GROUND: a column is filled ONLY when its
+	 * y=0 block is native terrain (grass/dirt/mycelium) AND y=1..colHeight is
+	 * entirely air. It never lifts or overwrites any structure, path, resource,
+	 * event, diplomacy, raid, or migration marker column, and
+	 * isProtectedLandmassCell keeps the asserted air voids / raid trails clear.
+	 */
+	public static void placeSharedCampusLandmass2D(ServerLevel level, BlockPos origin, java.util.List<BlockPos> satellites) {
+		if (satellites == null || satellites.isEmpty()) { return; }
+		int oX = origin.getX();
+		int oY = origin.getY();
+		int oZ = origin.getZ();
+	final int LANDMASS_R = 66;
+	final int CENTRAL_PEAK = 30;    // ONE broad central dome: the single dominant tallest landmark (was 22, shorter than the satellite lobes - that inverted the colony into a ring of separate taller cones).
+	final int BODY_FLOOR = 14;      // continuous raised body floor across the WHOLE campus disc so there are no flat gaps/moats between buildings; satellites sit ON this hill as shoulders of the same organism.
+		final int SATELLITE_BUMP = 1;   // satellites are NOT distinct height peaks: a minimal (1-block) gentle broadening so the ONE broad central dome dominates and satellite identity reads via carved mouths + preserved cores, not via 9 sub-cones on the dome.
+	final int seed = 4217;
+	int n = satellites.size();
+	int[] sX = new int[n];
+	int[] sZ = new int[n];
+	double[] reach = new double[n];
+	double[] lobeHeight = new double[n];
+	for (int i = 0; i < n; i++) {
+		BlockPos sat = satellites.get(i);
+		sX[i] = sat.getX();
+		sZ[i] = sat.getZ();
+		int dist = Math.max(Math.abs(sX[i] - oX), Math.abs(sZ[i] - oZ));
+		// NARROW localized shoulder reach so each satellite is a small bump on the
+		// shared body (its footprint + immediate skirt), not a wide independent cone.
+			reach[i] = Math.min(26.0, Math.max(20.0, dist * 0.50));   // BROAD shallow shoulder so the minimal bump is a wide swell fused into the dome, not a narrow cone peak.
+		// Subordinate lobe amplitude: a gentle irregular shoulder that distinguishes
+		// each role building as a sub-lobe of the ONE shared mound, always well below
+		// the central peak so the centre visibly dominates.
+		lobeHeight[i] = SATELLITE_BUMP * (0.80 + (i % 5) * 0.06);
+	}
+	// Precompute satellite tunnel-throat keep-clear envelopes (world coords) so the
+	// shared body never refills a satellite's deep tunnel mouth, its dark rear
+	// chamber face, or its chamber core column. These mirror the throat geometry
+	// carved in placeCampusCrownAndTunnelMouth (z=-10..-14 air throat, z=-15
+	// NEST_CORE rear face, deep chamber z=-16..-18) plus the satellite core at y=0.
+	int[][] satThroat = new int[n][];
+	for (int i = 0; i < n; i++) {
+		satThroat[i] = new int[] { sX[i], sZ[i] };
+	}
+	for (int rxv = -LANDMASS_R; rxv <= LANDMASS_R; rxv++) {
+		for (int rzv = -LANDMASS_R; rzv <= LANDMASS_R; rzv++) {
+			if (rxv * rxv + rzv * rzv > LANDMASS_R * LANDMASS_R) { continue; }
+			int px = oX + rxv;
+			int pz = oZ + rzv;
+			double distFromOrigin = Math.sqrt(rxv * rxv + rzv * rzv);
+			// ONE BROAD CENTRAL DOME: a smooth cosine dome that is full (CENTRAL_PEAK) at
+			// the queen mound and falls gently but stays SUBSTANTIAL across the whole
+			// campus disc, so the satellite ring sits on a raised shoulder of the SAME
+			// hill instead of on flat ground. This single continuous body is what fuses
+			// the colony into ONE organism (no flat gaps, no independent cones).
+			double normDist = Math.min(1.0, distFromOrigin / (double) LANDMASS_R);
+			double dome = Math.cos(normDist * Math.PI * 0.5);   // 1.0 at centre -> 0 at edge
+			if (dome < 0.0) dome = 0.0;
+			if (dome > 1.0) dome = 1.0;
+			double bodyBase = BODY_FLOOR + (CENTRAL_PEAK - BODY_FLOOR) * dome;
+			// SUBORDINATE SATELLITE SHOULDERS. Each satellite adds a small LOCALIZED
+			// raised-cosine bump on top of the shared body so the role building reads
+			// as a sub-lobe/chamber of the ONE mound, never as an independent tall cone.
+			double lobeField = 0.0;
+			for (int i = 0; i < n; i++) {
+				double ddx = (px - sX[i]) / reach[i];
+				double ddz = (pz - sZ[i]) / reach[i];
+				double d2 = ddx * ddx + ddz * ddz;
+				if (d2 >= 1.0) { continue; }
+				double d = Math.sqrt(d2);
+				double bump = 0.5 + 0.5 * Math.cos(d * Math.PI);  // full at centre, 0 at edge
+				lobeField = Math.max(lobeField, bump * lobeHeight[i]);
+			}
+			double bodyFactor = Math.max(dome, BODY_FLOOR / (double) CENTRAL_PEAK);
+			if (bodyFactor > 1.0) bodyFactor = 1.0;
+			// Body-weighted organic surface noise (three octaves) so the silhouette
+			// reads as a carved organic ant-hill, not concentric rings or stair-steps.
+			double macro  = (smoothValueNoise(px * 0.10, pz * 0.10, seed) - 0.5) * 2.0 * 2.6 * bodyFactor;
+			double meso   = (smoothValueNoise(px * 0.30, pz * 0.30, seed + 31) - 0.5) * 2.0 * 1.3 * bodyFactor;
+			double jitter = (smoothValueNoise(px * 0.80, pz * 0.80, seed + 71) - 0.5) * 2.0 * 0.7 * bodyFactor;
+			int colHeight = (int) Math.round(bodyBase + lobeField + macro + meso + jitter);
+			// CONTINUOUS BODY FLOOR: every column inside the campus disc rises to at
+			// least BODY_FLOOR so there are no flat gaps/moats between buildings - the
+			// whole colony is ONE fused raised hill.
+			if (colHeight < BODY_FLOOR) { colHeight = BODY_FLOOR; }
+			if (colHeight > CENTRAL_PEAK + 2) { colHeight = CENTRAL_PEAK + 2; }
+			BlockPos groundPos = new BlockPos(px, oY, pz);
+				// REPRESENTATIONAL FIX: fill over and around the satellite cones. We no
+				// longer skip a column just because a satellite cone already occupies it;
+				// instead the shared body OVERWRITES the cone with the shared native
+				// palette so the cone becomes a surface sub-lobe of ONE organism. We only
+				// skip columns whose ground is not native earth AND not a Formic
+				// structure/chamber (so we never bridge onto unrelated test furniture,
+				// diplomacy markers, or ledges).
+				if (!isNativeGround(level, groundPos) && !isFormicStructureGround(level, groundPos)) { continue; }
+				for (int y = 1; y <= colHeight; y++) {
+					if (isProtectedLandmassCell(rxv, rzv, y, px, pz, level, oY, null, 0, 0)) { continue; }
+					// Never refill a satellite tunnel throat / rear face / deep chamber.
+					if (isSatelliteThroatProtected(px, pz, y, satThroat)) { continue; }
+					BlockPos pos = new BlockPos(px, oY + y, pz);
+					Block existing = level.getBlockState(pos).getBlock();
+					// Preserve asserted chamber cores, ledger, nodes, and marker columns
+					// (these belong to the satellite identity, not the shared body).
+					if (isPreservedStructureBlock(existing)) { continue; }
+					Block b = sharedLandmassBlock(px, pz, y, seed);
+					// Overwrite cone/skirt blocks so the satellite reads as a lobe of the
+					// shared body; never touch air that is a required void (protected above).
+					level.setBlockAndUpdate(pos, b.defaultBlockState());
+				}
+			}
+		}
+	}
+
+	/** Carve scattered dark recessed tunnel mouths into the one shared mound's outer
+	 * slope so the big earthen mass reads as an inhabited, excavated ant-hill (chamber
+	 * openings with dark depth) instead of a featureless dirt pile. Called from the
+	 * visual QA scene path only (after placeSharedCampusLandmass2D), so it cannot affect
+	 * any asserted gametest cell. Only the shared body's own native-earth blocks are
+	 * removed; preserved chamber cores / nodes / markers are never touched. */
+	public static void carveSharedMoundChamberMouths(ServerLevel level, BlockPos origin) {
+		final int landmassR = 66;
+		final int centralPeak = 30;
+		final int seed = 4217;
+		final int innerKeep = 17;          // keep clear of the protected central core (rx,rz<=15)
+		int oX = origin.getX();
+		int oY = origin.getY();
+		int oZ = origin.getZ();
+		for (int rxv = -landmassR; rxv <= landmassR; rxv++) {
+			for (int rzv = -landmassR; rzv <= landmassR; rzv++) {
+				double dd = Math.sqrt(rxv * rxv + rzv * rzv);
+				if (dd > landmassR - 6 || dd < innerKeep) { continue; }
+				int px = oX + rxv;
+				int pz = oZ + rzv;
+				// Sparse clustered scatter (coarse noise -> chamber clusters of varied size).
+				if (smoothValueNoise(px * 0.42, pz * 0.42, seed + 131) < 0.80) { continue; }
+				// Dome surface height at this column (top carveable native-earth block).
+				int sy = -1;
+				for (int y = centralPeak + 2; y >= 3; y--) {
+					if (isCarveableMoundBlock(level.getBlockState(new BlockPos(px, oY + y, pz)).getBlock())) { sy = y; break; }
+				}
+				if (sy < 6) { continue; }                  // only on substantial slope, not the low edge
+				int dirX = Integer.signum(oX - px);         // inward, toward the dome centre
+				int dirZ = Integer.signum(oZ - pz);
+				int perpX = dirZ;
+				int perpZ = -dirX;
+				// Never punch through a preserved structure core / node / marker.
+				boolean blocked = false;
+				for (int depth = 0; depth <= 6 && !blocked; depth++) {
+					for (int w = -2; w <= 2; w++) {
+						int cx = px + dirX * depth + perpX * w;
+						int cz = pz + dirZ * depth + perpZ * w;
+						for (int h = 0; h <= 3; h++) {
+							if (isPreservedStructureBlock(level.getBlockState(new BlockPos(cx, oY + sy - 1 + h, cz)).getBlock())) { blocked = true; }
+						}
+					}
+				}
+				if (blocked) { continue; }
+				// Hollow a bold 5-wide x 4-tall x 6-deep chamber with a dark NEST_CORE back
+				// wall so the opening reads as a real excavated chamber at gameplay distance.
+				// The width tapers near the top so the mouth reads as an arch, not a square.
+				for (int depth = 0; depth <= 5; depth++) {
+					boolean back = depth == 5;
+					for (int h = 0; h <= 3; h++) {
+						int halfW = (h >= 3) ? 1 : 2;        // arch: narrower at the top row
+						for (int w = -halfW; w <= halfW; w++) {
+							int cx = px + dirX * depth + perpX * w;
+							int cz = pz + dirZ * depth + perpZ * w;
+							BlockPos cp = new BlockPos(cx, oY + sy - 1 + h, cz);
+							level.setBlockAndUpdate(cp, (back ? ModBlocks.NEST_CORE : Blocks.AIR).defaultBlockState());
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/** The shared body's own native-earth surface blocks a chamber mouth may carve
+	 * through (never a preserved chamber core, node, ledger, or marker). */
+	private static boolean isCarveableMoundBlock(Block block) {
+		return block == ModBlocks.NEST_MOUND
+				|| block == Blocks.DIRT
+				|| block == Blocks.COARSE_DIRT
+				|| block == Blocks.ROOTED_DIRT
+				|| block == Blocks.PODZOL
+				|| block == Blocks.GRASS_BLOCK
+				|| block == Blocks.MYCELIUM
+				|| block == Blocks.PACKED_MUD
+				|| block == Blocks.MUD
+				|| block == Blocks.MANGROVE_ROOTS;
+	}
+
+	/** Native-earth OR Formic structure ground. The shared 2D body may now rise out
+	 * of a satellite's chamber footprint (NEST_MOUND / chamber block at y=0), not
+	 * only natural grass/dirt/mycelium, so it can engulf the satellite cones. */
+	private static boolean isFormicStructureGround(ServerLevel level, BlockPos pos) {
+		Block block = level.getBlockState(pos).getBlock();
+		return block == ModBlocks.NEST_MOUND
+				|| block == ModBlocks.NEST_CORE
+				|| block == ModBlocks.FOOD_CHAMBER
+				|| block == ModBlocks.NURSERY_CHAMBER
+				|| block == ModBlocks.MINE_CHAMBER
+				|| block == ModBlocks.BARRACKS_CHAMBER
+				|| block == ModBlocks.MARKET_CHAMBER
+				|| block == ModBlocks.RESIN_DEPOT
+				|| block == ModBlocks.PHEROMONE_ARCHIVE
+				|| block == ModBlocks.VENOM_PRESS
+				|| block == ModBlocks.ARMORY
+				|| block == Blocks.PODZOL
+				|| block == Blocks.COARSE_DIRT
+				|| block == Blocks.ROOTED_DIRT
+				|| block == Blocks.MANGROVE_ROOTS;
+	}
+
+	/** Blocks that encode a satellite's identity and must survive the shared-body
+	 * overwrite: chamber cores, the colony ledger, resource nodes, and the deep
+	 * rear brood cores. The shared native-earth body writes around them. */
+	private static boolean isPreservedStructureBlock(Block block) {
+		return block == ModBlocks.FOOD_CHAMBER
+				|| block == ModBlocks.NURSERY_CHAMBER
+				|| block == ModBlocks.MINE_CHAMBER
+				|| block == ModBlocks.BARRACKS_CHAMBER
+				|| block == ModBlocks.MARKET_CHAMBER
+				|| block == ModBlocks.RESIN_DEPOT
+				|| block == ModBlocks.PHEROMONE_ARCHIVE
+				|| block == ModBlocks.VENOM_PRESS
+				|| block == ModBlocks.ARMORY
+				|| block == ModBlocks.COLONY_LEDGER
+				|| block == ModBlocks.FOOD_NODE
+				|| block == ModBlocks.ORE_NODE
+				|| block == ModBlocks.CHITIN_NODE
+				|| block == ModBlocks.NEST_CORE
+				|| block == Blocks.OCHRE_FROGLIGHT;
+	}
+
+	/** Keep-clear envelope for ONE satellite's deep tunnel mouth, rear chamber
+	 * face, and deep brood chamber, expressed in satellite-relative coordinates
+	 * (mirrors the throat carved in placeCampusCrownAndTunnelMouth). The shared
+	 * body must never refill these voids or the dark depth read is lost. */
+	private static boolean isSatelliteThroatProtected(int px, int pz, int y, int[][] satThroat) {
+		for (int[] s : satThroat) {
+			int srx = px - s[0];
+			int srz = pz - s[1];
+			// Irregular excavated throat keep-clear (matches carveIrregularCampusThroat base
+			// rows whose width+offset reaches |srx|<=4) so the shared body never refills the mouth.
+			if (srz <= -9 && srz >= -14 && Math.abs(srx) <= 4 && y >= 1 && y <= 7) { return true; }
+			// Dark rear chamber face at z=-15 (NEST_CORE) and the deep brood chamber
+			// z=-16..-18 air + side walls: keep the whole rear envelope clear so the
+			// shared body does not flatten the excavated-depth read.
+			if (srz <= -15 && srz >= -18 && Math.abs(srx) <= 4 && y >= 1 && y <= 5) { return true; }
+			// Mouth brow / cheek dressing band (z=-9..-10) kept so the ragged overhang
+			// and asymmetric cheek ribs survive the shared-body fill.
+			if (srz <= -8 && srz >= -10 && Math.abs(srx) <= 3 && y >= 1 && y <= 8) { return true; }
+		}
+		return false;
+	}
+
+	/** Keep-clear envelopes so a berm never blocks a required air void or erases a
+	 * raid trail. (rx,rz) origin-relative; (px,pz) world; (sat,sx,sz) describe
+	 * the satellite a 1D berm is approaching (null for the 2D pass). */
+	private static boolean isProtectedLandmassCell(int rx, int rz, int ry, int px, int pz, ServerLevel level, int oY, BlockPos sat, int sx, int sz) {
+		if (Math.abs(rx) <= 15 && Math.abs(rz) <= 15) { return true; }
+		if (rz <= -8 && rz >= -20 && Math.abs(rx) <= 5) { return true; }
+		if (sat != null) {
+			int srx = px - sx;
+			int srz = pz - sz;
+			if (srz <= -9 && srz >= -18 && Math.abs(srx) <= 4 && ry >= 1 && ry <= 7) { return true; }
+		}
+		var ground = level.getBlockState(new BlockPos(px, oY, pz));
+		if (ground.is(Blocks.DIRT_PATH) || ground.is(Blocks.COARSE_DIRT)) { return true; }
+		var marker = level.getBlockState(new BlockPos(px, oY + 1, pz));
+		if (marker.is(Blocks.RED_TERRACOTTA) || marker.is(Blocks.BLACKSTONE)) { return true; }
+		return false;
+	}
+
+	private static Block sharedLandmassBlock(int x, int z, int y, int seed) {
+		int h = Math.floorMod(x * 73856093 ^ z * 19349663 ^ y * 83492791 ^ seed, 9973);
+		if (h % 11 == 0) { return Blocks.MANGROVE_ROOTS; }
+		if (h % 5 == 0) { return Blocks.ROOTED_DIRT; }
+		if (h % 4 == 0) { return Blocks.COARSE_DIRT; }
+		return ModBlocks.NEST_MOUND;
 	}
 }

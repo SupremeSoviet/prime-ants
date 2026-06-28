@@ -31,15 +31,21 @@ function Remove-WorkspacePath {
 
 function Stop-WorkspaceRunServer {
     $repoNeedle = [string]$RepoRoot
+    # Collect target PIDs first, then tree-kill (parent + children) so the gradle
+    # wrapper AND the spawned server JVM both terminate and release world file locks.
+    $targetPids = @()
     Get-CimInstance Win32_Process -Filter "name='java.exe'" |
         Where-Object {
             $_.CommandLine -and
             $_.CommandLine.Contains($repoNeedle) -and
             ($_.CommandLine.Contains("runServer") -or $_.CommandLine.Contains("KnotServer"))
         } |
-        ForEach-Object {
-            Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
-        }
+        ForEach-Object { $targetPids += $_.ProcessId }
+    foreach ($pidToKill in $targetPids) {
+        # taskkill /T kills the process tree (children spawned by gradle).
+        & taskkill.exe /PID $pidToKill /T /F 2>$null | Out-Null
+        Stop-Process -Id $pidToKill -Force -ErrorAction SilentlyContinue
+    }
 }
 
 if ($WorldName -match '\s') {
@@ -88,14 +94,35 @@ simulation-distance=6
     }
 
     if (-not $process.HasExited) {
+        # Tree-kill the gradle wrapper so its server JVM child dies too.
+        & taskkill.exe /PID $process.Id /T /F 2>$null | Out-Null
         Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
     }
     Stop-WorkspaceRunServer
-    Start-Sleep -Seconds 2
 
     if (-not $ready -and -not (Test-Path -LiteralPath (Join-Path $ServerWorldDir "level.dat"))) {
         throw "World generation did not complete before timeout. See $ServerLog and $ServerErr."
     }
+
+    # Wait for the server JVM to fully RELEASE the world file lock before copying.
+    # If we copy while handles are still open, the client later fails with
+    # "Failed to read level data ... locked" and loads an unprepared world.
+    $serverLock = Join-Path $ServerWorldDir "session.lock"
+    $lockDeadline = (Get-Date).AddSeconds(30)
+    $lockReleased = -not (Test-Path -LiteralPath $serverLock)
+    while (-not $lockReleased -and (Get-Date) -lt $lockDeadline) {
+        Start-Sleep -Seconds 1
+        try {
+            $fs = [System.IO.File]::Open($serverLock, 'Open', 'ReadWrite', 'None')
+            $fs.Close()
+            $lockReleased = $true
+        } catch {
+            $lockReleased = $false
+        }
+    }
+    # Final clearance sweep + settle so every handle is gone.
+    Stop-WorkspaceRunServer
+    Start-Sleep -Seconds 3
 
     Copy-Item -LiteralPath $ServerWorldDir -Destination $SaveDir -Recurse -Force
     $sessionLock = Join-Path $SaveDir "session.lock"

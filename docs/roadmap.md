@@ -20,9 +20,13 @@ The autonomous loop must not switch to mechanics/playability until
 `pass` and `scripts/autonomous-gate.cmd -AllowMissingGitHub -NoLaunch` accepts
 fresh screenshots plus image-capable assessment. Current must-have visual rows
 include multiple large organic chambers, visible tunnel mouths, no
-single-mound-only pass, forest-floor life density, realistic insect-like ants,
-unclipped ant lineup, complete mound camera framing, a native Formic material
-palette, and tablet visual hierarchy.
+single-mound-only pass, realistic insect-like ants, unclipped ant lineup,
+complete mound camera framing, organic/asymmetrical ant-like buildings,
+non-overlapping structure spacing, the later holey-block redraw, and tablet
+visual hierarchy. Current user retargeting accepts forest-floor density and the
+broad material palette for now; do not reopen those rows unless the user asks.
+Custom Formic block/item textures must be 32x32 rather than 16x16 before the
+visual baseline can unlock mechanics.
 
 ## Active Renovation Track: Big Ant Village And Colony Tablet 2.0
 
@@ -41,10 +45,15 @@ Scale ambition for the renovation track:
 - Architecture work should add real mass: layered mound shells, tunnel mouths,
   buttresses/ribs, yards, vertical chambers, role-specific crowns, shafts,
   fungus/brood/storage terraces, and readable entrances.
-- Architecture should use custom Formic Frontier blocks/textures for colony
-  materials. Do not let honey, apatite-like blue mineral blocks, amethyst-like
-  accents, or unrelated vanilla placeholders become the primary mound/structure
-  palette.
+- The broad material palette is accepted for the current visual baseline. The
+  remaining material task is narrow: redraw the visible block with a hole so it
+  stops reading as honeycomb or a placeholder, and do it at 32x32.
+- Custom Formic block/item textures should be authored at 32x32. Existing 16x16
+  Formic texture debt should be handled in the asset slice after the current
+  architecture blockers.
+- Architecture should be ant-like and irregular: asymmetrical chamber lobes,
+  readable spacing between buildings, no colliding/overlapping houses, and no
+  freestanding arch in front of an entrance.
 - Decorative-only passes are not enough for R2 unless the underlying structure
   already has this scale. If screenshots still read as tiny pads with a few
   accent blocks, the slice is not accepted.
@@ -77,8 +86,9 @@ Slice R2: Architecture polish.
 - Visual QA coverage: `settlement_scale`, `culture_styles`,
   `construction_stage`, `repair_scene`.
 - Done criteria: nursery, food, mine, barracks, market, archive, resin, fungus,
-  and defense structures are distinguishable from normal gameplay distance, and
-  the main structures no longer read as 3-5 block arcade props.
+  and defense structures are distinguishable from normal gameplay distance, the
+  main structures no longer read as 3-5 block arcade props, and role buildings
+  read as asymmetrical ant chambers without visual overlap or entry arches.
 
 Slice R3: Colony Tablet 2.0.
 
@@ -91,7 +101,9 @@ Slice R3: Colony Tablet 2.0.
 - Visual QA coverage: `tablet_en`, `tablet_ru`, `tablet_guide`,
   `tablet_trade`, `tablet_research_map`, `tablet_market`, `tablet_requests`.
 - Done criteria: research is clearly a map, trade is clearly a market, requests
-  are player-facing help cards, and no P0/P1 visual findings remain.
+  are player-facing help cards, the whole interface is very beautiful rather
+  than a pile of buttons, labels/icons/cards/buttons do not overlap, and no
+  P0/P1 visual findings remain.
 
 ## Slice Format For Autonomous Work
 

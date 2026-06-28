@@ -1,0 +1,117 @@
+{
+    "schemaVersion": 1,
+    "track": "content",
+    "phase": "content",
+    "intentDoc": "docs/content-intent/formic-content-intent.md",
+    "criteria": [
+        {
+            "id": "resource_production_consumption_tick",
+            "pillar": "resource",
+            "priority": "P1",
+            "owner": "formic-sim-worker",
+            "status": "unknown",
+            "required": true,
+            "acceptance": "Over a fixed number of colony ticks, at least one resource is produced from a source and another is consumed by a building/caste, and a gametest asserts the stockpile deltas (rise and fall), not just that the numbers are non-zero.",
+            "evidenceTest": "resource economy ticks gametest",
+            "lastVerdict": "open: economy tick depth not yet proven by a delta-asserting gametest",
+            "nextAction": "Implement/verify a deterministic resource tick (produce + consume) and a gametest asserting stockpile deltas over N ticks."
+        },
+        {
+            "id": "caste_job_loops_change_state",
+            "pillar": "caste",
+            "priority": "P1",
+            "owner": "formic-sim-worker",
+            "status": "unknown",
+            "required": true,
+            "acceptance": "Each active caste has a job loop (gather/build/patrol/tend) that measurably changes colony state, proven by a gametest that runs the loop and asserts the resulting resource/construction/defense change.",
+            "evidenceTest": "caste job loop gametest",
+            "lastVerdict": "open: caste behaviors not yet proven to change colony state end to end",
+            "nextAction": "Pick one caste, wire its job loop to a state change, and assert it in a gametest."
+        },
+        {
+            "id": "progression_stage_advance_autonomous",
+            "pillar": "progression",
+            "priority": "P1",
+            "owner": "formic-sim-worker",
+            "status": "unknown",
+            "required": true,
+            "acceptance": "A colony with sufficient resources advances from one development stage to the next over ticks without player input, unlocking at least one new building/caste/recipe, proven by a gametest.",
+            "evidenceTest": "autonomous stage advance gametest",
+            "lastVerdict": "open: time-based autonomous progression not yet proven",
+            "nextAction": "Define stage thresholds and a tick that advances the stage; assert the advance and one unlock in a gametest."
+        },
+        {
+            "id": "research_unlocks_have_effects",
+            "pillar": "progression",
+            "priority": "P1",
+            "owner": "formic-sim-worker",
+            "status": "unknown",
+            "required": true,
+            "acceptance": "Spending knowledge on a research node (with prerequisites) unlocks a caste, block, recipe, or diplomacy option that has a real mechanical effect, proven by a gametest that researches the node and asserts the unlocked effect is now available.",
+            "evidenceTest": "research unlock effect gametest",
+            "lastVerdict": "open: research nodes must produce real unlock effects, not just UI state",
+            "nextAction": "Wire one research node to a concrete unlock effect and assert it in a gametest."
+        },
+        {
+            "id": "trade_caravan_exchanges_resources",
+            "pillar": "trade",
+            "priority": "P2",
+            "owner": "formic-diplomacy-worker",
+            "status": "unknown",
+            "required": true,
+            "acceptance": "A trade caravan/market exchange moves resources between two colonies at a rate that depends on scarcity or relation, proven by a gametest asserting both colonies' resource deltas after the exchange.",
+            "evidenceTest": "trade caravan exchange gametest",
+            "lastVerdict": "open: trade must move resources with scarcity/relation-based rates",
+            "nextAction": "Implement a resource exchange with a scarcity/relation rate and assert both-side deltas in a gametest."
+        },
+        {
+            "id": "politics_relations_shift_from_actions",
+            "pillar": "politics",
+            "priority": "P2",
+            "owner": "formic-diplomacy-worker",
+            "status": "unknown",
+            "required": true,
+            "acceptance": "A diplomatic action (tribute, raid, broken contract, shared enemy) shifts a relation (ally/neutral/rival) and that shift changes a mechanical outcome (trade rate, raid risk, joint defense), proven by a gametest.",
+            "evidenceTest": "relation shift effect gametest",
+            "lastVerdict": "open: relation changes must have mechanical consequences",
+            "nextAction": "Wire one action to a relation change with a mechanical effect and assert both in a gametest."
+        },
+        {
+            "id": "block_native_gameplay_roles",
+            "pillar": "block",
+            "priority": "P2",
+            "owner": "formic-content-worker",
+            "status": "unknown",
+            "required": true,
+            "acceptance": "At least one native Formic block has a gameplay role (brood/fungus/resin/storage/defense), is obtainable and placeable in normal play, and participates in the colony tick, proven by a gametest.",
+            "evidenceTest": "native block gameplay role gametest",
+            "lastVerdict": "open: native blocks need real gameplay roles, not decoration only",
+            "nextAction": "Give one native block a gameplay role wired into the tick and assert its effect in a gametest."
+        },
+        {
+            "id": "weapon_soldier_combat_stats",
+            "pillar": "weapon",
+            "priority": "P2",
+            "owner": "formic-combat-worker",
+            "status": "unknown",
+            "required": true,
+            "acceptance": "A soldier caste uses an ant-themed weapon/armor with real combat stats (damage/defense) in a raid or defense, proven by a gametest asserting the combat outcome differs with vs without the weapon.",
+            "evidenceTest": "soldier weapon combat gametest",
+            "lastVerdict": "open: weapons need real combat stats used by soldier castes",
+            "nextAction": "Add one weapon with combat stats used by soldiers and assert its effect in a combat gametest."
+        },
+        {
+            "id": "defense_raid_outcome_changes_state",
+            "pillar": "weapon",
+            "priority": "P2",
+            "owner": "formic-combat-worker",
+            "status": "unknown",
+            "required": true,
+            "acceptance": "A raid (attack or defense) resolves with casualties and an outcome that changes colony state (resources lost/defended, relation change), proven by a gametest.",
+            "evidenceTest": "raid outcome gametest",
+            "lastVerdict": "open: raids must resolve with state-changing outcomes",
+            "nextAction": "Resolve one raid with casualties and a state change; assert the outcome in a gametest."
+        }
+    ],
+    "contentBaselinePass": false
+}

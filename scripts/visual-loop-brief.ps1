@@ -201,8 +201,18 @@ if ($null -ne $visualReport -and $visualReport.PSObject.Properties["screenshots"
     }
 }
 
+$priorityRank = @{
+    "P0" = 0
+    "P1" = 1
+    "P2" = 2
+    "P3" = 3
+}
+$sortedRequiredOpen = @($requiredOpen | Sort-Object `
+    @{ Expression = { $p = (Get-PropertyValue -Object $_ -Name "priority" -Default "P9").ToString(); if ($priorityRank.ContainsKey($p)) { $priorityRank[$p] } else { 9 } } }, `
+    @{ Expression = { (Get-PropertyValue -Object $_ -Name "id" -Default "").ToString() } })
+
 $nextTargets = @()
-foreach ($row in @($requiredOpen | Select-Object -First 5)) {
+foreach ($row in @($sortedRequiredOpen | Select-Object -First 8)) {
     $nextTargets += [ordered]@{
         id = Get-PropertyValue -Object $row -Name "id" -Default ""
         priority = Get-PropertyValue -Object $row -Name "priority" -Default ""
@@ -261,6 +271,7 @@ $mdLines += "- Active slice: $($brief.activeSlice)"
 $mdLines += "- Next visual target: $($brief.nextVisualTarget)"
 $mdLines += "- Latest assessment verdict: $assessmentVerdict"
 $mdLines += "- Latest P0/P1 count: P0=$p0Count, P1=$p1Count"
+$mdLines += "- Matrix is authoritative when user-retargeted rows differ from the latest assessment text."
 $mdLines += ""
 $mdLines += "## Next Required Targets"
 $mdLines += ""

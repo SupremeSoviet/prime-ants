@@ -47,11 +47,14 @@ Visual baseline remains active until every required matrix row is `pass`.
 Mechanics and playability are locked until the matrix and gate agree that the
 visual baseline is complete. A single tall mound is not enough: required rows
 demand multiple large organic chambers, readable tunnel mouths, realistic ants,
-forest-floor density, a native Formic material palette, and camera framing that
-shows the whole mound. Honey, apatite-like blue minerals, amethyst-like accents,
-and unrelated vanilla placeholder textures should not carry the colony's visual
-identity; workers should add custom blocks and textures for mound earth, tunnel
-walls, roots, resin, brood, fungus, and trails.
+complete camera framing, organic/asymmetrical ant-like buildings, and readable
+spacing between buildings. Current user retargeting accepts forest-floor density
+and the broad material palette for now. Do not select those as the next repair
+target unless the user reopens them. The remaining material task is narrow:
+redraw the visible block with a hole at 32x32 so it no longer reads as
+honeycomb or an unrelated placeholder. The asset baseline also requires custom
+Formic block/item textures to be upgraded from 16x16 to 32x32 before mechanics
+or playability work can start.
 
 The supervisor also has a Codex child watchdog. If a child has written its final
 summary, the JSON log contains `turn.completed`, and the log stops growing for
@@ -220,6 +223,10 @@ target over cosmetic accents: for example, a 20-30 block queen mound, a tall
 fungus tower/chamber, a broad market mound with entrances and terraces, or a
 large staged construction shell. The visual assessor should flag tiny hut-like
 buildings as blocking or high-priority polish when the slice promised scale.
+The active R2 blocker is building character: role buildings should be
+organically asymmetrical and ant-like, not mirrored houses, temple pads, or
+overlapping towers. Entrances should be irregular tunnel cuts with dark depth;
+do not add or preserve a freestanding arch in front of an entrance.
 
 The supervisor creates an iteration freshness marker before handing work to
 Codex. The final gate rejects visual reports, screenshots, or assessments whose

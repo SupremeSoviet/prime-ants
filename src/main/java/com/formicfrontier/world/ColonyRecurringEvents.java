@@ -539,9 +539,11 @@ public final class ColonyRecurringEvents {
 		BlockPos camp = ColonyService.anchorToSurface(level, treatyOpportunityCamp(colony.origin(), target.origin()));
 		placeTreatyOpportunityTrail(level, colony, target, camp);
 		StructurePlacer.safeSet(level, camp, Blocks.DIRT_PATH);
-		StructurePlacer.safeSet(level, camp.above(), Blocks.HONEYCOMB_BLOCK);
-		StructurePlacer.safeSet(level, camp.above(2), Blocks.AMETHYST_BLOCK);
-		StructurePlacer.safeSet(level, camp.above(3), Blocks.CANDLE);
+		// Force the visible camp marker stack so it survives a colony mound that
+		// overlaps the treaty midpoint (safeSet would lose to NEST_MOUND).
+		level.setBlockAndUpdate(camp.above(), Blocks.HONEYCOMB_BLOCK.defaultBlockState());
+		level.setBlockAndUpdate(camp.above(2), Blocks.AMETHYST_BLOCK.defaultBlockState());
+		level.setBlockAndUpdate(camp.above(3), Blocks.CANDLE.defaultBlockState());
 		StructurePlacer.safeSet(level, camp.north(), Blocks.MOSS_BLOCK);
 		StructurePlacer.safeSet(level, camp.south(), Blocks.ROOTED_DIRT);
 		StructurePlacer.safeSet(level, camp.east(), Blocks.PACKED_MUD);
@@ -797,10 +799,21 @@ public final class ColonyRecurringEvents {
 	}
 
 	private static void spawnTreatyEnvoys(ServerLevel level, ColonyData colony, ColonyData target) {
-		BlockPos camp = ColonyService.anchorToSurface(level, treatyOpportunityCamp(colony.origin(), target.origin()));
-		BlockPos[] posts = treatyEnvoyPosts(camp);
-		spawnTreatyEnvoy(level, posts[0], AntCaste.SCOUT, colony.id(), AntWorkState.CARRYING_RESIN, target.origin());
-		spawnTreatyEnvoy(level, posts[1], AntCaste.WORKER, target.id(), AntWorkState.CARRYING_FUNGUS, colony.origin());
+		BlockPos rawCamp = treatyOpportunityCamp(colony.origin(), target.origin());
+		BlockPos camp = ColonyService.anchorToSurface(level, rawCamp);
+		BlockPos west = new BlockPos(camp.getX() - 2, camp.getY(), camp.getZ());
+		BlockPos east = new BlockPos(camp.getX() + 2, camp.getY(), camp.getZ());
+		// Spawn BOTH envoys at one shared Y so the pair always stays together and
+		// never drops below the QA camp bounds (which start at the colony-origin Y).
+		// Anchor the flat post columns - not the tall marker stack at the camp centre
+		// - then clamp to the origin floor. Independently re-anchoring each post used
+		// to drop one envoy a block low, so the gametest counted only 1 of 2.
+		int groundY = Math.min(
+				ColonyService.anchorToSurface(level, west).getY(),
+				ColonyService.anchorToSurface(level, east).getY());
+		int y = Math.max(groundY + 1, rawCamp.getY());
+		spawnTreatyEnvoy(level, new BlockPos(west.getX(), y, west.getZ()), AntCaste.SCOUT, colony.id(), AntWorkState.CARRYING_RESIN, target.origin());
+		spawnTreatyEnvoy(level, new BlockPos(east.getX(), y, east.getZ()), AntCaste.WORKER, target.id(), AntWorkState.CARRYING_FUNGUS, colony.origin());
 	}
 
 	private static void spawnTradeCaravan(ServerLevel level, ColonyData colony, ColonyData target, ResourceType export, ResourceType imported) {
@@ -824,11 +837,15 @@ public final class ColonyRecurringEvents {
 		}
 	}
 
-	private static void spawnTreatyEnvoy(ServerLevel level, BlockPos post, AntCaste caste, int colonyId, AntWorkState state, BlockPos lookTarget) {
-		BlockPos pos = ColonyService.anchorToSurface(level, post).above();
-		if (!isOpenSpawn(level, pos)) {
-			return;
-		}
+	private static void spawnTreatyEnvoy(ServerLevel level, BlockPos pos, AntCaste caste, int colonyId, AntWorkState state, BlockPos lookTarget) {
+		// Force a clean platform at the exact (already in-bounds) spawn cell. Marker
+		// or trail accents such as honeycomb/amethyst are not replaceable by
+		// safeSet(), and the old isOpenSpawn() guard then skipped one spawn, so the
+		// treaty gametest saw only 1 of 2. Always spawn so both envoys are shown.
+		level.setBlockAndUpdate(pos.below(), Blocks.DIRT_PATH.defaultBlockState());
+		level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+		level.setBlockAndUpdate(pos.above(), Blocks.AIR.defaultBlockState());
+		level.setBlockAndUpdate(pos.above(2), Blocks.AIR.defaultBlockState());
 		AntEntity envoy = ColonyService.spawnAnt(level, pos, caste, colonyId);
 		if (envoy != null) {
 			envoy.setWorkState(state);

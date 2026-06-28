@@ -147,7 +147,12 @@ def loop_requests_mechanics(loop_state: dict[str, object] | None) -> bool:
         "nextVisualTarget",
         "currentOwner",
     ]
-    text = " ".join(str(loop_state.get(field, "")) for field in fields).lower()
+    chunks = [str(loop_state.get(field, "")) for field in fields]
+    for nested_key in ("visual", "supervisor", "attempt", "failure"):
+        nested = loop_state.get(nested_key)
+        if isinstance(nested, dict):
+            chunks.extend(str(value) for value in nested.values())
+    text = " ".join(chunks).lower()
     return any(token in text for token in ("mechanic", "mechanics", "playability", "gameplay"))
 
 
@@ -240,10 +245,51 @@ def freshness_marker_from_loop_state(loop_state: dict[str, object] | None) -> st
     marker = str(loop_state.get("freshnessMarker", "")).strip()
     if marker:
         return marker
+    attempt = loop_state.get("attempt")
+    if isinstance(attempt, dict):
+        marker = str(attempt.get("freshnessMarker", "")).strip()
+        if marker:
+            return marker
+    artifacts_root = loop_state.get("artifacts")
+    if isinstance(artifacts_root, dict):
+        for key in ("expected", "last", "actual"):
+            artifacts = artifacts_root.get(key)
+            if isinstance(artifacts, dict):
+                marker = str(artifacts.get("freshnessMarker", "")).strip()
+                if marker:
+                    return marker
     artifacts = loop_state.get("lastArtifacts")
     if isinstance(artifacts, dict):
         return str(artifacts.get("freshnessMarker", "")).strip()
     return ""
+
+
+def destructive_commands_from_jsonl(path: Path) -> list[str]:
+    if not path.exists():
+        return []
+    destructive: list[str] = []
+    # NOTE: the Remove-Item branch deliberately stops at statement separators
+    # (; & |) and newlines so a benign `Remove-Item build/scratch` chained on the
+    # same line as a command that merely references `src/` is not falsely flagged.
+    # Only a Remove-Item whose own arguments target src/ should match.
+    pattern = re.compile(
+        r"(?is)(git(?:\.exe)?\s+(?:checkout\s+--|reset\b|restore\b|clean\b)|Remove-Item[^;&|\r\n]*(?:src[\\/]|src\\\\))"
+    )
+    with path.open("r", encoding="utf-8-sig") as handle:
+        for line in handle:
+            if '"type":"command_execution"' not in line and '"type": "command_execution"' not in line:
+                continue
+            try:
+                entry = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            item = entry.get("item")
+            if not isinstance(item, dict) or item.get("type") != "command_execution":
+                continue
+            command = str(item.get("command", ""))
+            if pattern.search(command):
+                destructive.append(command[:600])
+    return destructive
 
 
 def assert_newer_than_marker(paths: list[Path], marker_path: Path) -> None:
@@ -266,6 +312,8 @@ def main() -> int:
     parser.add_argument("--loop-state", default=str(DEFAULT_LOOP_STATE))
     parser.add_argument("--freshness-marker", default="")
     parser.add_argument("--allow-missing-matrix", action="store_true")
+    parser.add_argument("--allow-open-visual-matrix", action="store_true")
+    parser.add_argument("--codex-json-log", default="")
     args = parser.parse_args()
 
     visual_qa_dir = Path(args.visual_qa_dir)
@@ -274,6 +322,9 @@ def main() -> int:
     assessment = Path(args.assessment_report)
     if not assessment.is_absolute():
         assessment = ROOT / assessment
+    codex_json_log = Path(args.codex_json_log) if args.codex_json_log else None
+    if codex_json_log is not None and not codex_json_log.is_absolute():
+        codex_json_log = ROOT / codex_json_log
     matrix_path = Path(args.matrix)
     if not matrix_path.is_absolute():
         matrix_path = ROOT / matrix_path
@@ -286,6 +337,14 @@ def main() -> int:
             loop_state = load_json(loop_state_path)
         except Exception as exception:  # noqa: BLE001
             print(f"Invalid visual loop state: {exception}")
+            return 1
+
+    if codex_json_log is not None and str(codex_json_log):
+        destructive_commands = destructive_commands_from_jsonl(codex_json_log)
+        if destructive_commands:
+            print(f"Codex command guard blocked destructive command(s) in {codex_json_log}:")
+            for command in destructive_commands[:4]:
+                print(f"- {command}")
             return 1
 
     report_json = visual_qa_dir / "visual-qa-report.json"
@@ -371,12 +430,13 @@ def main() -> int:
             print(f"Invalid visual feature matrix state: {exception}")
             return 1
         if open_rows:
-            if matrix_claims_visual_complete(matrix) or loop_requests_mechanics(loop_state):
-                print("Visual baseline cannot be closed and mechanics/playability cannot start yet.")
+            if args.allow_open_visual_matrix and not matrix_claims_visual_complete(matrix) and not loop_requests_mechanics(loop_state):
+                print(f"Visual intent matrix still has {len(open_rows)} required open rows; advisory mode allows continuing visual_baseline loop.")
+                print_open_matrix_rows(open_rows, max_rows=6)
+            else:
+                print("Visual baseline cannot pass while required visual intent rows remain open.")
                 print_open_matrix_rows(open_rows)
                 return 1
-            print(f"Visual intent matrix still has {len(open_rows)} required open rows; continuing visual_baseline loop.")
-            print_open_matrix_rows(open_rows, max_rows=6)
     else:
         print(f"Visual intent matrix not found yet: {matrix_path}")
         if not args.allow_missing_matrix:
