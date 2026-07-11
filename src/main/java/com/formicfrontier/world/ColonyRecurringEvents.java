@@ -513,7 +513,12 @@ public final class ColonyRecurringEvents {
 
 	private static void placeCompletedExpansionOutpost(ServerLevel level, ColonyData colony, BlockPos outpost) {
 		placeExpansionTrail(level, colony, outpost);
-		StructurePlacer.safeSet(level, outpost.above(3), Blocks.AIR);
+		// The opportunity marker used to leave a three-block watchtower behind.
+		// Completion now clears that temporary stack before placing the one-block
+		// building baseline used by every other structure in the reset branch.
+		for (int y = 1; y <= 3; y++) {
+			StructurePlacer.safeSet(level, outpost.above(y), Blocks.AIR);
+		}
 		StructurePlacer.placeBuilding(level, outpost, BuildingType.WATCH_POST, BuildingVisualStage.COMPLETE, colony.progress().culture());
 		for (BlockPos corner : new BlockPos[] {
 				outpost.offset(-5, 0, -5),

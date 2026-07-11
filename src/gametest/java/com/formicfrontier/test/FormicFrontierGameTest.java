@@ -40,23 +40,23 @@ import java.util.Optional;
 
 public final class FormicFrontierGameTest {
 	@GameTest
+
 	public void createColonyPlacesCoreChambersAndResources(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin);
 		ColonyData colony = ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
 
-		helper.assertBlockPresent(ModBlocks.NEST_MOUND, origin);
+		assertMinimalBuildingMarker(helper, origin, ModBlocks.NEST_MOUND, "queen chamber");
 		helper.assertBlockPresent(ModBlocks.NEST_CORE, origin.below());
-		helper.assertBlockPresent(ModBlocks.COLONY_LEDGER, origin.offset(3, 1, 0));
-		helper.assertBlockPresent(ModBlocks.FOOD_CHAMBER, ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0));
-		helper.assertBlockPresent(ModBlocks.NURSERY_CHAMBER, ColonyBuilder.siteFor(origin, BuildingType.NURSERY, 0));
-		helper.assertBlockPresent(ModBlocks.MINE_CHAMBER, ColonyBuilder.siteFor(origin, BuildingType.MINE, 0));
-		helper.assertBlockPresent(ModBlocks.BARRACKS_CHAMBER, ColonyBuilder.siteFor(origin, BuildingType.BARRACKS, 0));
+		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0), ModBlocks.FOOD_CHAMBER, "food store");
+		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.NURSERY, 0), ModBlocks.NURSERY_CHAMBER, "nursery");
+		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.MINE, 0), ModBlocks.MINE_CHAMBER, "mine");
+		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.BARRACKS, 0), ModBlocks.BARRACKS_CHAMBER, "barracks");
 		helper.assertBlockPresent(ModBlocks.FOOD_NODE, origin.offset(54, 0, 8));
 		helper.assertBlockPresent(ModBlocks.ORE_NODE, origin.offset(8, 0, 54));
 		helper.assertBlockPresent(ModBlocks.CHITIN_NODE, origin.offset(-54, 0, 8));
-		helper.assertBlockPresent(net.minecraft.world.level.block.Blocks.DIRT_PATH, origin.offset(7, 0, 0));
-		helper.assertBlockPresent(net.minecraft.world.level.block.Blocks.DIRT_PATH, origin.offset(7, 0, 1));
+		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(7, 0, 0));
+		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(7, 0, 1));
 		if (colony.casteCount(AntCaste.GIANT) != 0) {
 			helper.fail("Starter colony should not begin with a giant.");
 		}
@@ -95,262 +95,61 @@ public final class FormicFrontierGameTest {
 	}
 
 	@GameTest
-	public void starterQueenChamberUsesOrganicMoundShape(GameTestHelper helper) {
+
+	public void starterQueenChamberUsesTwoBlockBaseline(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin);
 		ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
 
-		helper.assertBlockPresent(ModBlocks.NEST_MOUND, origin);
+		assertMinimalBuildingMarker(helper, origin, ModBlocks.NEST_MOUND, "queen chamber");
 		helper.assertBlockPresent(ModBlocks.NEST_CORE, origin.below());
-		helper.assertBlockPresent(ModBlocks.COLONY_LEDGER, origin.offset(3, 1, 0));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(0, 0, -8));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(-6, 1, -1));
-		helper.assertBlockPresent(Blocks.MUDDY_MANGROVE_ROOTS, origin.offset(-2, 1, -5));
-		helper.assertBlockPresent(Blocks.PACKED_MUD, origin.offset(8, 0, 3));
-		if (!helper.getLevel().getBlockState(helper.absolutePos(origin.offset(2, 1, -8))).isAir()) {
-			helper.fail("Queen mound front approach should keep side entrance air clear.");
-		}
-		helper.assertBlockPresent(Blocks.ROOTED_DIRT, origin.offset(8, 1, 2));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(-9, 1, 5));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(9, 1, -3));
-		helper.assertBlockPresent(Blocks.COARSE_DIRT, origin.offset(3, 1, -3));
-		helper.assertBlockPresent(Blocks.MUD, origin.offset(0, 0, -6));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(0, 3, -7));
-		helper.assertBlockPresent(Blocks.ROOTED_DIRT, origin.offset(-3, 1, -9));
-		helper.assertBlockPresent(Blocks.MUD, origin.offset(5, 0, 2));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(5, 3, 0));
-		helper.assertBlockPresent(Blocks.COARSE_DIRT, origin.offset(-3, 0, -8));
-		helper.assertBlockPresent(Blocks.ROOTED_DIRT, origin.offset(3, 0, -8));
-		helper.assertBlockPresent(Blocks.ROOTED_DIRT, origin.offset(-3, 1, -6));
-		helper.assertBlockPresent(Blocks.MUDDY_MANGROVE_ROOTS, origin.offset(3, 1, -6));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(-4, 1, -7));
-		helper.assertBlockPresent(Blocks.COARSE_DIRT, origin.offset(6, 0, 2));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(6, 1, 3));
-		helper.assertBlockPresent(Blocks.MUD, origin.offset(0, 0, -5));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(0, 3, -5));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(6, 3, 1));
-		helper.assertBlockPresent(Blocks.COARSE_DIRT, origin.offset(-4, 0, -11));
-		helper.assertBlockPresent(Blocks.PODZOL, origin.offset(-3, 0, -12));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(0, 0, -11));
-		helper.assertBlockPresent(Blocks.ROOTED_DIRT, origin.offset(-2, 0, -12));
-		helper.assertBlockPresent(Blocks.COARSE_DIRT, origin.offset(2, 0, -12));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(10, 0, 0));
-		helper.assertBlockPresent(Blocks.MUD, origin.offset(10, 0, 2));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(9, 1, -1));
-		helper.assertBlockPresent(ModBlocks.NEST_MOUND, origin.offset(-2, 0, -10));
-		helper.assertBlockPresent(ModBlocks.NEST_CORE, origin.offset(2, 0, -10));
-		helper.assertBlockPresent(ModBlocks.NEST_MOUND, origin.offset(9, 0, -2));
-		helper.assertBlockPresent(ModBlocks.NEST_CORE, origin.offset(9, 0, 3));
-		helper.assertBlockPresent(ModBlocks.NEST_MOUND, origin.offset(-2, 0, 8));
-		helper.assertBlockPresent(ModBlocks.NEST_CORE, origin.offset(2, 0, 8));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(-2, 1, -10));
-		helper.assertBlockPresent(Blocks.ROOTED_DIRT, origin.offset(2, 1, 8));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(-4, 0, -9));
-		helper.assertBlockPresent(Blocks.MUD, origin.offset(-5, 0, -9));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(6, 0, -8));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(-5, 1, -10));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(6, 2, -8));
-		helper.assertBlockPresent(Blocks.ROOTED_DIRT, origin.offset(-7, 0, -8));
-		helper.assertBlockPresent(Blocks.PODZOL, origin.offset(8, 0, -7));
-		helper.assertBlockPresent(Blocks.COARSE_DIRT, origin.offset(7, 1, -7));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(-9, 0, -5));
-		helper.assertBlockPresent(Blocks.MUD, origin.offset(-10, 0, -4));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(-9, 2, -6));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(9, 0, -5));
-		helper.assertBlockPresent(Blocks.MUD, origin.offset(10, 0, -4));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(9, 2, -6));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(-5, 1, 5));
-		helper.assertBlockPresent(Blocks.ROOTED_DIRT, origin.offset(-5, 1, 7));
-		helper.assertBlockPresent(Blocks.COARSE_DIRT, origin.offset(-5, 0, 6));
-		helper.assertBlockPresent(Blocks.MUDDY_MANGROVE_ROOTS, origin.offset(5, 1, 6));
-		helper.assertBlockPresent(Blocks.MUD, origin.offset(3, 0, 7));
-		helper.assertBlockPresent(Blocks.MUD, origin.offset(-5, 0, -14));
-		helper.assertBlockPresent(Blocks.MUD, origin.offset(5, 0, -14));
-		helper.assertBlockPresent(Blocks.PODZOL, origin.offset(-7, 0, -16));
-		helper.assertBlockPresent(Blocks.PODZOL, origin.offset(7, 0, -16));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(-3, 1, -14));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(3, 1, -14));
-		helper.assertBlockPresent(Blocks.MUDDY_MANGROVE_ROOTS, origin.offset(-5, 1, -13));
-		helper.assertBlockPresent(Blocks.MUDDY_MANGROVE_ROOTS, origin.offset(5, 1, -13));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(-4, 0, -15));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(4, 0, -15));
-		helper.assertBlockPresent(ModBlocks.NEST_MOUND, origin.offset(-5, 1, -16));
-		helper.assertBlockPresent(ModBlocks.NEST_MOUND, origin.offset(5, 1, -16));
-		helper.assertBlockPresent(Blocks.ROOTED_DIRT, origin.offset(-6, 1, -17));
-		helper.assertBlockPresent(Blocks.ROOTED_DIRT, origin.offset(6, 1, -17));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(0, 0, -14));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(0, 0, -16));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(-2, 0, -15));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(2, 0, -15));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(-1, 1, -15));
-		helper.assertBlockPresent(Blocks.MUDDY_MANGROVE_ROOTS, origin.offset(1, 1, -15));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(0, 0, 10));
-		helper.assertBlockPresent(Blocks.MUD, origin.offset(-1, 0, 10));
-		helper.assertBlockPresent(Blocks.PODZOL, origin.offset(1, 0, 10));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(0, 3, 8));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(-2, 1, 9));
-		helper.assertBlockPresent(Blocks.MUDDY_MANGROVE_ROOTS, origin.offset(2, 1, 9));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(-2, 1, -6));
-		helper.assertBlockPresent(Blocks.MUDDY_MANGROVE_ROOTS, origin.offset(2, 1, -6));
-		helper.assertBlockPresent(Blocks.PACKED_MUD, origin.offset(0, 0, -4));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(-5, 0, -5));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(5, 0, -5));
-		helper.assertBlockPresent(Blocks.MUD, origin.offset(-6, 0, -4));
-		helper.assertBlockPresent(Blocks.MUD, origin.offset(6, 0, -4));
-		helper.assertBlockPresent(Blocks.COARSE_DIRT, origin.offset(-7, 0, -3));
-		helper.assertBlockPresent(Blocks.COARSE_DIRT, origin.offset(7, 0, -3));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(-4, 1, -5));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(4, 1, -5));
-		helper.assertBlockPresent(Blocks.MUDDY_MANGROVE_ROOTS, origin.offset(-6, 2, -5));
-		helper.assertBlockPresent(Blocks.MUDDY_MANGROVE_ROOTS, origin.offset(6, 2, -5));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(-10, 0, 0));
-		helper.assertBlockPresent(Blocks.MUD, origin.offset(-10, 0, 1));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(-13, 0, 0));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(-8, 1, -1));
-		helper.assertBlockPresent(ModBlocks.NEST_MOUND, origin.offset(-12, 1, 2));
-		helper.assertBlockPresent(ModBlocks.NEST_CORE, origin.offset(-13, 1, -1));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(8, 1, -1));
-		helper.assertBlockPresent(Blocks.MUDDY_MANGROVE_ROOTS, origin.offset(8, 2, 2));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(-1, 2, 8));
-		helper.assertBlockPresent(Blocks.MUDDY_MANGROVE_ROOTS, origin.offset(1, 2, 8));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(0, 3, 9));
-		helper.assertBlockPresent(Blocks.ROOTED_DIRT, origin.offset(0, 5, 0));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(0, 6, 0));
-		helper.assertBlockPresent(Blocks.MUDDY_MANGROVE_ROOTS, origin.offset(-2, 5, -1));
-		helper.assertBlockPresent(Blocks.ROOTED_DIRT, origin.offset(2, 5, 1));
-		helper.assertBlockPresent(Blocks.COARSE_DIRT, origin.offset(0, 5, 2));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, origin.offset(-3, 4, 1));
-		helper.assertBlockPresent(Blocks.ROOTED_DIRT, origin.offset(3, 4, -1));
-
-		BlockPos mound = helper.absolutePos(origin);
-		if (!helper.getLevel().getBlockState(mound.offset(-2, 0, -16)).is(Blocks.MUD)
-				|| !helper.getLevel().getBlockState(mound.offset(2, 0, -16)).is(Blocks.PODZOL)
-				|| !helper.getLevel().getBlockState(mound.offset(-2, 1, -16)).is(ModBlocks.NEST_MOUND)
-				|| !helper.getLevel().getBlockState(mound.offset(2, 1, -16)).is(ModBlocks.NEST_CORE)
-				|| !helper.getLevel().getBlockState(mound.offset(-3, 1, -16)).is(Blocks.MANGROVE_ROOTS)
-				|| !helper.getLevel().getBlockState(mound.offset(3, 1, -16)).is(Blocks.MUDDY_MANGROVE_ROOTS)) {
-			helper.fail("Queen mound scent trail should show culture markers along the main approach.");
-		}
-		if (!helper.getLevel().getBlockState(helper.absolutePos(origin.offset(0, 1, -6))).isAir()
-				|| !helper.getLevel().getBlockState(helper.absolutePos(origin.offset(0, 2, -6))).isAir()) {
-			helper.fail("Queen mound should have a readable front tunnel entrance.");
-		}
-		if (!helper.getLevel().getBlockState(helper.absolutePos(origin.offset(0, 1, 8))).isAir()
-				|| !helper.getLevel().getBlockState(helper.absolutePos(origin.offset(0, 2, 8))).isAir()
-				|| !helper.getLevel().getBlockState(helper.absolutePos(origin.offset(0, 1, 10))).isAir()
-				|| !helper.getLevel().getBlockState(helper.absolutePos(origin.offset(0, 2, 10))).isAir()) {
-			helper.fail("Queen mound rear vent should stay open and walkable toward the mine path.");
-		}
-		if (!helper.getLevel().getBlockState(helper.absolutePos(origin.offset(-5, 1, 6))).isAir()
-				|| !helper.getLevel().getBlockState(helper.absolutePos(origin.offset(-5, 2, 6))).isAir()
-				|| !helper.getLevel().getBlockState(helper.absolutePos(origin.offset(4, 1, 6))).isAir()) {
-			helper.fail("Queen mound should have open surface vent chimneys.");
-		}
-		if (!helper.getLevel().getBlockState(helper.absolutePos(origin.offset(-5, 1, -9))).isAir()
-				|| !helper.getLevel().getBlockState(helper.absolutePos(origin.offset(5, 1, -9))).isAir()) {
-			helper.fail("Queen mound forage crawl mouths should stay open beside the front tunnel.");
-		}
-		if (!helper.getLevel().getBlockState(helper.absolutePos(origin.offset(-9, 1, -5))).isAir()
-				|| !helper.getLevel().getBlockState(helper.absolutePos(origin.offset(9, 1, -5))).isAir()) {
-			helper.fail("Queen mound scout porches should keep clear crawl headroom.");
-		}
-		if (!helper.getLevel().getBlockState(helper.absolutePos(origin.offset(4, 1, 0))).isAir()) {
-			helper.fail("Queen mound should have a side tunnel cut into the shell.");
-		}
-		if (helper.getLevel().getBlockState(helper.absolutePos(origin.offset(6, 1, 6))).is(Blocks.CHISELED_TUFF)
-				|| helper.getLevel().getBlockState(helper.absolutePos(origin.offset(6, 1, 6))).is(Blocks.MUD_BRICKS)) {
-			helper.fail("Queen mound should not rebuild the old square hall corner supports.");
-		}
-		if (!helper.getLevel().getBlockState(helper.absolutePos(origin.offset(3, 2, -3))).isAir()
-				|| !helper.getLevel().getBlockState(helper.absolutePos(origin.offset(-7, 2, 3))).isAir()) {
-			helper.fail("Queen mound should include asymmetric vents and shoulder breaks.");
-		}
-		if (!helper.getLevel().getBlockState(helper.absolutePos(origin.offset(10, 1, 0))).isAir()
-				|| !helper.getLevel().getBlockState(helper.absolutePos(origin.offset(10, 2, 0))).isAir()) {
-			helper.fail("Queen mound side approach should keep clear headroom outside the side tunnel.");
-		}
-		if (helper.getLevel().getBlockState(helper.absolutePos(origin.offset(5, 1, 5))).is(Blocks.CHISELED_TUFF)
-				|| helper.getLevel().getBlockState(helper.absolutePos(origin.offset(5, 1, 5))).is(Blocks.MUD_BRICKS)) {
-			helper.fail("Queen mound should not use the old rectangular support columns.");
-		}
-		if (!helper.getLevel().getBlockState(helper.absolutePos(origin.offset(4, 1, -13))).isAir()
-				|| !helper.getLevel().getBlockState(helper.absolutePos(origin.offset(-4, 1, -13))).isAir()) {
-			helper.fail("Queen mound erosion runnels should stay low and walkable beside the front entrance.");
-		}
-		if (!helper.getLevel().getBlockState(helper.absolutePos(origin.offset(5, 1, -5))).isAir()
-				|| !helper.getLevel().getBlockState(helper.absolutePos(origin.offset(-5, 1, -5))).isAir()
-				|| !helper.getLevel().getBlockState(helper.absolutePos(origin.offset(6, 2, -4))).isAir()
-				|| !helper.getLevel().getBlockState(helper.absolutePos(origin.offset(-6, 2, -4))).isAir()) {
-			helper.fail("Queen mound diagonal shoulder clefts should stay open from ground view.");
-		}
-		if (!helper.getLevel().getBlockState(helper.absolutePos(origin.offset(-8, 1, 0))).isAir()
-				|| !helper.getLevel().getBlockState(helper.absolutePos(origin.offset(-8, 2, 0))).isAir()
-				|| !helper.getLevel().getBlockState(helper.absolutePos(origin.offset(-12, 1, 0))).isAir()) {
-			helper.fail("Queen mound west brood crawl should keep clear headroom toward the nursery path.");
-		}
-		if (!helper.getLevel().getBlockState(helper.absolutePos(origin.offset(0, 1, -15))).isAir()
-				|| !helper.getLevel().getBlockState(helper.absolutePos(origin.offset(0, 2, -15))).isAir()) {
-			helper.fail("Queen mound front trail fork should stay open and readable from the main entrance.");
-		}
-		if (!helper.getLevel().getBlockState(mound.offset(0, 1, -16)).isAir()
-				|| !helper.getLevel().getBlockState(mound.offset(0, 2, -16)).isAir()) {
-			helper.fail("Queen mound scent trail should mark the main entrance path without blocking player view.");
+		for (BlockPos offset : new BlockPos[] {
+				origin.offset(1, 1, 0),
+				origin.offset(-1, 1, 0),
+				origin.offset(0, 1, 1),
+				origin.offset(0, 1, -1)
+		}) {
+			if (!helper.getLevel().getBlockState(helper.absolutePos(offset)).isAir()) {
+				helper.fail("Reset queen chamber should not retain old mound geometry at " + offset.toShortString());
+			}
 		}
 		helper.succeed();
 	}
 
 	@GameTest
-	public void cultureStarterArchitectureUsesDistinctMaterials(GameTestHelper helper) {
+
+	public void cultureBuildingsShareTheMinimalResetBaseline(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin, 150);
 		BlockPos amber = origin.offset(-84, 0, -10);
 		BlockPos leafcutter = origin.offset(-28, 0, -10);
 		BlockPos fire = origin.offset(28, 0, -10);
 		BlockPos carpenter = origin.offset(84, 0, -10);
-		BlockPos amberFood = amber.offset(0, 0, 28);
-		BlockPos leafcutterFood = leafcutter.offset(0, 0, 28);
-		BlockPos fireFood = fire.offset(0, 0, 28);
-		BlockPos carpenterFood = carpenter.offset(0, 0, 28);
+		List<BlockPos> queens = List.of(amber, leafcutter, fire, carpenter);
+		List<ColonyCulture> cultures = List.of(ColonyCulture.AMBER, ColonyCulture.LEAFCUTTER, ColonyCulture.FIRE, ColonyCulture.CARPENTER);
 
-		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(amber), BuildingType.QUEEN_CHAMBER, BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
-		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(leafcutter), BuildingType.QUEEN_CHAMBER, BuildingVisualStage.COMPLETE, ColonyCulture.LEAFCUTTER);
-		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(fire), BuildingType.QUEEN_CHAMBER, BuildingVisualStage.COMPLETE, ColonyCulture.FIRE);
-		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(carpenter), BuildingType.QUEEN_CHAMBER, BuildingVisualStage.COMPLETE, ColonyCulture.CARPENTER);
-		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(amberFood), BuildingType.FOOD_STORE, BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
-		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(leafcutterFood), BuildingType.FOOD_STORE, BuildingVisualStage.COMPLETE, ColonyCulture.LEAFCUTTER);
-		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(fireFood), BuildingType.FOOD_STORE, BuildingVisualStage.COMPLETE, ColonyCulture.FIRE);
-		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(carpenterFood), BuildingType.FOOD_STORE, BuildingVisualStage.COMPLETE, ColonyCulture.CARPENTER);
-		BlockPos amberSignature = amber.offset(0, 0, 58);
-		BlockPos leafcutterSignature = leafcutter.offset(0, 0, 58);
-		BlockPos fireSignature = fire.offset(0, 0, 58);
-		BlockPos carpenterSignature = carpenter.offset(0, 0, 58);
+		for (int i = 0; i < cultures.size(); i++) {
+			BlockPos queen = queens.get(i);
+			BlockPos food = queen.offset(0, 0, 28);
+			StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(queen), BuildingType.QUEEN_CHAMBER, BuildingVisualStage.COMPLETE, cultures.get(i));
+			StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(food), BuildingType.FOOD_STORE, BuildingVisualStage.COMPLETE, cultures.get(i));
+			assertMinimalBuildingMarker(helper, queen, ModBlocks.NEST_MOUND, cultures.get(i).id() + " queen");
+			helper.assertBlockPresent(ModBlocks.NEST_CORE, queen.below());
+			assertMinimalBuildingMarker(helper, food, ModBlocks.FOOD_CHAMBER, cultures.get(i).id() + " food store");
+		}
+
+		BlockPos amberSignature = amber.offset(0, 0, 56);
+		BlockPos leafcutterSignature = leafcutter.offset(0, 0, 56);
+		BlockPos fireSignature = fire.offset(0, 0, 56);
+		BlockPos carpenterSignature = carpenter.offset(0, 0, 56);
 		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(amberSignature), BuildingType.DIPLOMACY_SHRINE, BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
 		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(leafcutterSignature), BuildingType.FUNGUS_GARDEN, BuildingVisualStage.COMPLETE, ColonyCulture.LEAFCUTTER);
 		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(fireSignature), BuildingType.WATCH_POST, BuildingVisualStage.COMPLETE, ColonyCulture.FIRE);
 		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(carpenterSignature), BuildingType.RESIN_DEPOT, BuildingVisualStage.COMPLETE, ColonyCulture.CARPENTER);
-
-		helper.assertBlockPresent(ModBlocks.NEST_MOUND, amber.offset(-5, 1, 4));
-		helper.assertBlockPresent(Blocks.MOSS_BLOCK, leafcutter.offset(-5, 1, 4));
-		helper.assertBlockPresent(Blocks.RED_TERRACOTTA, fire.offset(-5, 1, 4));
-		helper.assertBlockPresent(Blocks.MANGROVE_PLANKS, carpenter.offset(-5, 1, 4));
-		helper.assertBlockPresent(ModBlocks.RESIN_DEPOT, amber.offset(-6, 1, 3));
-		helper.assertBlockPresent(Blocks.BROWN_MUSHROOM_BLOCK, leafcutter.offset(-6, 2, 3));
-		helper.assertBlockPresent(Blocks.BLACKSTONE, fire.offset(-6, 1, 3));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, carpenter.offset(-6, 2, 3));
-		helper.assertBlockPresent(ModBlocks.RESIN_DEPOT, amberFood.offset(4, 1, 1));
-		helper.assertBlockPresent(Blocks.BROWN_MUSHROOM_BLOCK, leafcutterFood.offset(4, 2, 1));
-		helper.assertBlockPresent(Blocks.BLACKSTONE, fireFood.offset(4, 1, 1));
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, carpenterFood.offset(4, 2, 1));
-		helper.assertBlockPresent(Blocks.MOSS_BLOCK, leafcutterFood.offset(4, 1, 1));
-		helper.assertBlockPresent(Blocks.RED_TERRACOTTA, fireFood.offset(4, 2, 1));
-		helper.assertBlockPresent(Blocks.MANGROVE_PLANKS, carpenterFood.offset(4, 1, 1));
-		helper.assertBlockPresent(ModBlocks.RESIN_DEPOT, amberSignature.offset(4, 1, 1));
-		helper.assertBlockPresent(Blocks.MOSS_BLOCK, leafcutterSignature.offset(-2, 0, -10));
-		helper.assertBlockPresent(Blocks.BROWN_MUSHROOM_BLOCK, leafcutterSignature.offset(-2, 1, -10));
-		helper.assertBlockPresent(Blocks.RED_TERRACOTTA, fireSignature.offset(-2, 0, -4));
-		helper.assertBlockPresent(Blocks.BLACKSTONE, fireSignature.offset(-2, 1, -4));
-		helper.assertBlockPresent(ModBlocks.RESIN_DEPOT, carpenterSignature.offset(4, 1, -3));
-		helper.assertBlockPresent(ModBlocks.NEST_MOUND, carpenterSignature.offset(-4, 2, 3));
+		assertMinimalBuildingMarker(helper, amberSignature, ModBlocks.DIPLOMACY_SHRINE, "amber signature");
+		assertMinimalBuildingMarker(helper, leafcutterSignature, ModBlocks.FUNGUS_GARDEN, "leafcutter signature");
+		assertMinimalBuildingMarker(helper, fireSignature, ModBlocks.WATCH_POST, "fire signature");
+		assertMinimalBuildingMarker(helper, carpenterSignature, ModBlocks.RESIN_DEPOT, "carpenter signature");
 		helper.succeed();
 	}
 
@@ -369,90 +168,22 @@ public final class FormicFrontierGameTest {
 	}
 
 	@GameTest
-	public void starterSideChambersAreBroadOrganicMounds(GameTestHelper helper) {
-		// R2 architecture contract: each satellite campus building reads as a single
-		// tapering native-earth mound (broad base that meets the crown with no waist)
-		// with a deep, dark tunnel mouth and a native Formic surface palette. This
-		// supersedes the old "low organic pads" contract that the visual loop removed.
+
+	public void starterSideChambersUseSingleBlockBaseline(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin);
 		ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
-		BlockPos food = ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0);
-		BlockPos nursery = ColonyBuilder.siteFor(origin, BuildingType.NURSERY, 0);
-		BlockPos mine = ColonyBuilder.siteFor(origin, BuildingType.MINE, 0);
-		BlockPos barracks = ColonyBuilder.siteFor(origin, BuildingType.BARRACKS, 0);
 
-		// Cores and the cardinal tunnel-mouth paths are still anchored at the site.
-		helper.assertBlockPresent(ModBlocks.FOOD_CHAMBER, food);
-		helper.assertBlockPresent(ModBlocks.NURSERY_CHAMBER, nursery);
-		helper.assertBlockPresent(ModBlocks.MINE_CHAMBER, mine);
-		helper.assertBlockPresent(ModBlocks.BARRACKS_CHAMBER, barracks);
-		helper.assertBlockPresent(Blocks.DIRT_PATH, food.offset(9, 0, 0));
-		helper.assertBlockPresent(ModBlocks.ORE_NODE, mine.offset(-2, 1, 1));
-		helper.assertBlockPresent(Blocks.BONE_BLOCK, nursery.offset(4, 1, -3));
-		helper.assertBlockPresent(Blocks.BONE_BLOCK, barracks.offset(-5, 1, -1));
-
-		// BROAD NATIVE MOUND MASS: the base chamber now fills the full per-type
-		// footprint out to the crown (no waist). The surface is a deterministic mix
-		// of native NEST_MOUND / ROOTED_DIRT / MANGROVE_ROOTS, so each position must
-		// be solid native earth (proving the mass grew instead of staying a low pad)
-		// rather than a single exact block.
-		assertNativeMass(helper, food.offset(4, 1, 0), "food mound broad base");
-		assertNativeMass(helper, food.offset(0, 12, 0), "food spire closed native cap");
-		assertNativeMass(helper, mine.offset(-4, 4, 4), "mine mound broad base");
-		assertNativeMass(helper, barracks.offset(-4, 4, 4), "barracks mound broad base");
-		assertNativeMass(helper, food.offset(-4, 1, -2), "food mound rooted edge");
-		assertNativeMass(helper, mine.offset(-3, 4, -10), "mine tunnel-mouth earthen lip");
-		assertNativeMass(helper, nursery.offset(-4, 4, -4), "nursery mound rising to crown");
-		// FOOD_STORE is now a declarative schematic spire (placeFoodStoreSchematic),
-		// not the procedural mega-mound: validate its intentional landmarks instead.
-		// A hollow chamber, an open south entrance tunnel and a closed native crown.
-		if (!helper.getLevel().getBlockState(helper.absolutePos(food.offset(0, 2, 4))).isAir()) {
-			helper.fail("Food spire south entrance mouth should be an open tunnel at (0,2,4).");
-		}
-		if (!helper.getLevel().getBlockState(helper.absolutePos(food.offset(-2, 2, 0))).isAir()) {
-			helper.fail("Food spire interior should be a hollow chamber void at (-2,2,0).");
-		}
-		assertMegaMoundLayerProfile(helper, nursery, campusTestProfile(BuildingType.NURSERY), "nursery mound");
-		assertMegaMoundLayerProfile(helper, mine, campusTestProfile(BuildingType.MINE), "mine mound");
-		assertMegaMoundLayerProfile(helper, barracks, campusTestProfile(BuildingType.BARRACKS), "barracks mound");
-		assertNoLongVerticalWallRuns(helper, mine, campusTestProfile(BuildingType.MINE), "mine mound");
-		assertNoLongVerticalWallRuns(helper, barracks, campusTestProfile(BuildingType.BARRACKS), "barracks mound");
-
-		// DEEP TUNNEL MOUTH: a pushed-back dark interior carved through the mass so
-		// the entrance reads with real depth from gameplay distance.
-		assertDeepCampusTunnelMouth(helper, mine, "mine mound");
-		assertDeepCampusTunnelMouth(helper, barracks, "barracks mound");
-		assertDeepCampusTunnelMouth(helper, nursery, "nursery mound");
-		helper.assertBlockPresent(Blocks.COARSE_DIRT, mine.offset(0, 0, -14));
-		helper.assertBlockPresent(ModBlocks.FOOD_NODE, barracks.offset(0, 4, -15));
-
-		// NATIVE PALETTE: the primary base-chamber surface is native earth, not
-		// borrowed honey/amethyst/gold accents.
-		var mineSurface = helper.getLevel().getBlockState(helper.absolutePos(mine.offset(-4, 1, 4)));
-		if (mineSurface.is(Blocks.HONEYCOMB_BLOCK) || mineSurface.is(Blocks.AMETHYST_BLOCK)
-				|| mineSurface.is(Blocks.GOLD_BLOCK) || mineSurface.is(Blocks.HONEY_BLOCK)) {
-			helper.fail("Starter campus mound surfaces should use native Formic earth, not borrowed mineral accents.");
-		}
-		assertNativePaletteRatio(helper, mine, campusTestProfile(BuildingType.MINE), "mine mound");
-		assertNativePaletteRatio(helper, barracks, campusTestProfile(BuildingType.BARRACKS), "barracks mound");
-
-		// Organic breaks stay (carved notches / exposed cuts), so the mass is organic,
-		// not a flat slab.
-		// The food spire visibly reads as a FOOD store: stored-food baskets (FOOD_NODE)
-		// flank the entrance at the base.
-		helper.assertBlockPresent(ModBlocks.FOOD_NODE, food.offset(3, 0, 0));
-		if (!helper.getLevel().getBlockState(helper.absolutePos(mine.offset(2, 1, 5))).isAir()) {
-			helper.fail("Starter mine mound should keep an exposed cut face.");
-		}
-		if (!helper.getLevel().getBlockState(helper.absolutePos(barracks.offset(3, 1, -4))).isAir()) {
-			helper.fail("Starter barracks mound should keep a split front profile, not a flat wall.");
-		}
+		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0), ModBlocks.FOOD_CHAMBER, "food store");
+		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.NURSERY, 0), ModBlocks.NURSERY_CHAMBER, "nursery");
+		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.MINE, 0), ModBlocks.MINE_CHAMBER, "mine");
+		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.BARRACKS, 0), ModBlocks.BARRACKS_CHAMBER, "barracks");
 		helper.succeed();
 	}
 
 	@GameTest
-	public void buildingVisualStagesPlaceDistinctStructures(GameTestHelper helper) {
+
+	public void buildingVisualStagesUseMinimalMarkers(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin);
 		BlockPos planned = origin.offset(8, 0, 8);
@@ -469,49 +200,15 @@ public final class FormicFrontierGameTest {
 		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(damaged), BuildingType.MARKET, BuildingVisualStage.DAMAGED);
 		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(repairing), BuildingType.MARKET, BuildingVisualStage.REPAIRING);
 
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, planned.offset(-7, 1, -7));
-		helper.assertBlockPresent(Blocks.OAK_FENCE, planned.offset(-3, 1, -7));
-		helper.assertBlockPresent(Blocks.OAK_FENCE, planned.offset(-7, 1, -3));
-		helper.assertBlockPresent(Blocks.OAK_FENCE, planned.offset(3, 1, 7));
-		helper.assertBlockPresent(Blocks.COARSE_DIRT, planned.offset(-5, 0, -8));
-		helper.assertBlockPresent(Blocks.COARSE_DIRT, planned.offset(5, 0, -8));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, planned.offset(-8, 0, 0));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, planned.offset(8, 0, 0));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, planned.offset(0, 0, 8));
-		helper.assertBlockPresent(Blocks.PACKED_MUD, construction.offset(0, 0, 2));
-		helper.assertBlockPresent(Blocks.ROOTED_DIRT, construction.offset(-2, 1, -8));
-		helper.assertBlockPresent(ModBlocks.MARKET_CHAMBER, complete);
-		helper.assertBlockPresent(Blocks.DIRT_PATH, complete.offset(0, 0, -8));
-		helper.assertBlockPresent(ModBlocks.MARKET_CHAMBER, complete.offset(-2, 1, -8));
-		helper.assertBlockPresent(ModBlocks.MARKET_CHAMBER, complete.offset(2, 1, -8));
-		helper.assertBlockPresent(ModBlocks.MARKET_CHAMBER, upgraded.above(6));
-		if (!helper.getLevel().getBlockState(helper.absolutePos(damaged.offset(-7, 4, -7))).isAir()) {
-			helper.fail("Damaged stage should punch a visible hole in the upper shell.");
+		assertMinimalBuildingMarker(helper, planned, Blocks.DIRT_PATH, "planned market");
+		for (BlockPos center : List.of(construction, complete, upgraded, damaged, repairing)) {
+			assertMinimalBuildingMarker(helper, center, ModBlocks.MARKET_CHAMBER, "market stage");
 		}
-		if (!helper.getLevel().getBlockState(helper.absolutePos(damaged.offset(-6, 3, -7))).isAir()) {
-			helper.fail("Damaged stage should widen the breach below the upper shell.");
-		}
-		helper.assertBlockPresent(Blocks.RED_TERRACOTTA, damaged.offset(-5, 1, -8));
-		helper.assertBlockPresent(Blocks.RED_TERRACOTTA, damaged.offset(-3, 1, -8));
-		helper.assertBlockPresent(Blocks.BLACKSTONE, damaged.offset(-1, 1, -8));
-		helper.assertBlockPresent(Blocks.RED_TERRACOTTA, damaged.offset(1, 1, -8));
-		helper.assertBlockPresent(Blocks.BLACKSTONE, damaged.offset(3, 1, -8));
-		helper.assertBlockPresent(Blocks.BLACKSTONE, damaged.offset(5, 1, -8));
-		helper.assertBlockPresent(Blocks.RED_TERRACOTTA, damaged.offset(-1, 2, -8));
-		helper.assertBlockPresent(Blocks.BLACKSTONE, damaged.offset(1, 2, -8));
-		helper.assertBlockPresent(Blocks.GRAVEL, damaged.offset(0, 0, -8));
-		helper.assertBlockPresent(ModBlocks.NEST_MOUND, repairing.offset(-1, 1, -4));
-		helper.assertBlockPresent(ModBlocks.NEST_MOUND, repairing.offset(-5, 1, -8));
-		helper.assertBlockPresent(ModBlocks.NEST_MOUND, repairing.offset(-1, 1, -8));
-		helper.assertBlockPresent(Blocks.BONE_BLOCK, repairing.offset(1, 1, -8));
-		helper.assertBlockPresent(Blocks.BONE_BLOCK, repairing.offset(3, 1, -8));
-		helper.assertBlockPresent(Blocks.BONE_BLOCK, repairing.offset(5, 1, -8));
-		helper.assertBlockPresent(Blocks.OAK_FENCE, repairing.offset(-7, 2, -7));
-		helper.assertBlockPresent(Blocks.OAK_FENCE, repairing.offset(7, 2, -7));
 		helper.succeed();
 	}
 
 	@GameTest
+
 	public void constructionStageSceneShowsMaterialDelivery(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin);
@@ -522,13 +219,14 @@ public final class FormicFrontierGameTest {
 		BlockPos construction = centers.get(1);
 		BlockPos damaged = centers.get(4);
 		BlockPos repairing = centers.get(5);
+		assertMinimalBuildingMarker(helper, centers.get(0), Blocks.DIRT_PATH, "planned QA market");
+		for (int i = 1; i < centers.size(); i++) {
+			assertMinimalBuildingMarker(helper, centers.get(i), ModBlocks.MARKET_CHAMBER, "QA market stage");
+		}
 		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, construction.offset(-2, 0, -6));
 		helper.assertBlockPresent(ModBlocks.RESIN_DEPOT, construction.offset(4, 0, -7));
 		helper.assertBlockPresent(ModBlocks.RESIN_DEPOT, construction.offset(5, 1, -5));
 		helper.assertBlockPresent(Blocks.BARREL, construction.offset(5, 1, -6));
-		helper.assertBlockPresent(Blocks.RED_TERRACOTTA, damaged.offset(-5, 1, -8));
-		helper.assertBlockPresent(Blocks.BLACKSTONE, damaged.offset(5, 1, -8));
-		helper.assertBlockPresent(ModBlocks.NEST_MOUND, repairing.offset(-5, 1, -8));
 		helper.assertBlockPresent(Blocks.BONE_BLOCK, repairing.offset(4, 1, -5));
 		helper.assertBlockPresent(Blocks.BARREL, repairing.offset(4, 1, -6));
 
@@ -1095,6 +793,7 @@ public final class FormicFrontierGameTest {
 	}
 
 	@GameTest
+
 	public void colonyRenovatePreservesEconomyAndPlacesCampus(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin);
@@ -1110,8 +809,9 @@ public final class FormicFrontierGameTest {
 		if (!colony.progress().hasResearch(ResearchNode.CHITIN_CULTIVATION.id())) {
 			helper.fail("Renovation should preserve research.");
 		}
-		helper.assertBlockPresent(ModBlocks.COLONY_LEDGER, new BlockPos(5, 4, 2));
-		helper.assertBlockPresent(ModBlocks.FOOD_CHAMBER, ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0));
+		assertMinimalBuildingMarker(helper, origin, ModBlocks.NEST_MOUND, "renovated queen chamber");
+		helper.assertBlockPresent(ModBlocks.NEST_CORE, origin.below());
+		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0), ModBlocks.FOOD_CHAMBER, "renovated food store");
 		helper.succeed();
 	}
 
@@ -1229,7 +929,8 @@ public final class FormicFrontierGameTest {
 	}
 
 	@GameTest
-	public void damagedBuildingConsumesChitinAndRepairsVisibly(GameTestHelper helper) {
+
+	public void damagedBuildingConsumesChitinAndRepairsWithMinimalMarker(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin);
 		ColonyData colony = ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
@@ -1248,7 +949,7 @@ public final class FormicFrontierGameTest {
 		if (damaged.visualStage() != BuildingVisualStage.REPAIRING) {
 			helper.fail("Chitin supplies should move a damaged market into the repairing stage.");
 		}
-		helper.assertBlockPresent(ModBlocks.NEST_MOUND, market.offset(-1, 1, -4));
+		assertMinimalBuildingMarker(helper, market, ModBlocks.MARKET_CHAMBER, "repairing market");
 		for (int i = 0; i < 4 && damaged.disabledTicks() > 0; i++) {
 			ColonyBuilder.tick(helper.getLevel(), colony);
 		}
@@ -1257,11 +958,12 @@ public final class FormicFrontierGameTest {
 					+ damaged.visualStage().id() + " progress " + damaged.constructionProgress()
 					+ " disabled " + damaged.disabledTicks() + " task " + colony.currentTask());
 		}
-		helper.assertBlockPresent(ModBlocks.MARKET_CHAMBER, market);
+		assertMinimalBuildingMarker(helper, market, ModBlocks.MARKET_CHAMBER, "repaired market");
 		helper.succeed();
 	}
 
 	@GameTest
+
 	public void repairContractDeliveryStartsDamagedBuildingRepair(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin);
@@ -1292,17 +994,18 @@ public final class FormicFrontierGameTest {
 		}
 		ColonyBuilder.tick(helper.getLevel(), colony);
 		if (damaged.visualStage() != BuildingVisualStage.REPAIRING) {
-			helper.fail("Completed repair contract should move the building into visible repair, got " + damaged.visualStage().id());
+			helper.fail("Completed repair contract should move the building into repair, got " + damaged.visualStage().id());
 		}
 		if (colony.resource(ResourceType.CHITIN) != 0 || !colony.progress().requestsView().isEmpty()) {
 			helper.fail("Repair should consume delivered chitin and clear the repair request.");
 		}
-		helper.assertBlockPresent(ModBlocks.NEST_MOUND, market.offset(-1, 1, -4));
+		assertMinimalBuildingMarker(helper, market, ModBlocks.MARKET_CHAMBER, "contract-repair market");
 		helper.succeed();
 	}
 
 	@GameTest
-	public void constructionContractDeliveryStartsVisibleQueuedSite(GameTestHelper helper) {
+
+	public void constructionContractDeliveryStartsMinimalQueuedSite(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin);
 		ColonyData colony = ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
@@ -1322,7 +1025,6 @@ public final class FormicFrontierGameTest {
 		if (contract == null) {
 			helper.fail("Missing queued market ore should open a construction contract.");
 		}
-
 		ColonyLogistics.ContractDeliveryResult result = ColonyLogistics.fulfillContract(colony, contract.id(), contract.missing());
 		if (!result.success() || !result.complete()) {
 			helper.fail("Player ore delivery should complete the construction contract.");
@@ -1333,20 +1035,19 @@ public final class FormicFrontierGameTest {
 		ColonyBuilder.tick(helper.getLevel(), colony);
 		ColonyBuilding active = colony.progress().firstIncomplete().orElse(null);
 		if (active == null || active.type() != BuildingType.MARKET || active.visualStage() != BuildingVisualStage.PLANNED) {
-			helper.fail("Completed construction contract should start a visible planned market site, got "
+			helper.fail("Completed construction contract should start a planned market site, got "
 					+ (active == null ? "none" : active.type().id() + " " + active.visualStage().id()));
 		}
 		if (colony.progress().buildQueueView().contains(BuildingType.MARKET) || !colony.progress().requestsView().isEmpty()) {
 			helper.fail("Started market site should consume the queue entry and clear the fulfilled construction request.");
 		}
-		BlockPos market = ColonyBuilder.siteFor(origin, BuildingType.MARKET, 0);
-		helper.assertBlockPresent(Blocks.OAK_FENCE, market.offset(-3, 1, -7));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, market.offset(0, 0, -8));
+		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.MARKET, 0), Blocks.DIRT_PATH, "planned contract market");
 		helper.succeed();
 	}
 
 	@GameTest
-	public void repairSceneExposesDamagedRepairingAndRestoredBuildings(GameTestHelper helper) {
+
+	public void repairSceneKeepsGameplayCuesAroundMinimalMarkers(GameTestHelper helper) {
 		if (!VisualQaScenes.scenes().contains(VisualQaScenes.REPAIR_SCENE)) {
 			helper.fail("Visual QA should expose a repair_scene.");
 		}
@@ -1359,15 +1060,13 @@ public final class FormicFrontierGameTest {
 		BlockPos damaged = centers.get(0);
 		BlockPos repairing = centers.get(1);
 		BlockPos restored = centers.get(2);
-
-		if (!helper.getLevel().getBlockState(helper.absolutePos(damaged.offset(-7, 4, -7))).isAir()) {
-			helper.fail("Repair scene should show a damaged shell hole.");
+		for (BlockPos center : centers) {
+			assertMinimalBuildingMarker(helper, center, ModBlocks.MARKET_CHAMBER, "repair-scene market");
 		}
-		helper.assertBlockPresent(Blocks.RED_TERRACOTTA, damaged.offset(1, 1, -8));
-		helper.assertBlockPresent(ModBlocks.NEST_MOUND, repairing.offset(-1, 1, -4));
-		helper.assertBlockPresent(Blocks.BONE_BLOCK, repairing.offset(4, 0, -5));
-		helper.assertBlockPresent(ModBlocks.MARKET_CHAMBER, restored);
-		helper.assertBlockPresent(ModBlocks.MARKET_CHAMBER, restored.offset(-2, 1, -8));
+		helper.assertBlockPresent(Blocks.RED_TERRACOTTA, damaged.offset(0, 1, -5));
+		helper.assertBlockPresent(Blocks.HONEYCOMB_BLOCK, repairing.offset(-2, 1, -5));
+		helper.assertBlockPresent(Blocks.BONE_BLOCK, repairing.offset(2, 1, -5));
+		helper.assertBlockPresent(Blocks.OCHRE_FROGLIGHT, restored.offset(0, 1, -5));
 
 		BlockPos absoluteOrigin = helper.absolutePos(origin);
 		AABB sceneBounds = new AABB(
@@ -1383,7 +1082,8 @@ public final class FormicFrontierGameTest {
 	}
 
 	@GameTest
-	public void idleMatureColonyStartsAndCompletesVisibleUpgrade(GameTestHelper helper) {
+
+	public void idleMatureColonyStartsAndCompletesMinimalUpgrade(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin);
 		ColonyData colony = ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
@@ -1398,24 +1098,25 @@ public final class FormicFrontierGameTest {
 
 		ColonyBuilder.tick(helper.getLevel(), colony);
 		if (building.level() != 2 || building.constructionProgress() != 0 || building.visualStage() != BuildingVisualStage.CONSTRUCTION) {
-			helper.fail("Idle mature colony should begin a visible level 2 upgrade, got level "
+			helper.fail("Idle mature colony should begin a level 2 upgrade, got level "
 					+ building.level() + " progress " + building.constructionProgress()
 					+ " stage " + building.visualStage().id() + " task " + colony.currentTask()
 					+ " queue " + colony.progress().buildQueueView());
 		}
-		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, market.offset(-7, 1, -7));
+		assertMinimalBuildingMarker(helper, market, ModBlocks.MARKET_CHAMBER, "upgrading market");
 		for (int i = 0; i < 5; i++) {
 			ColonyBuilder.tick(helper.getLevel(), colony);
 		}
 		if (building.visualStage() != BuildingVisualStage.UPGRADED) {
 			helper.fail("Upgrade construction should complete into the upgraded visual stage.");
 		}
-		helper.assertBlockPresent(ModBlocks.MARKET_CHAMBER, market.above(6));
+		assertMinimalBuildingMarker(helper, market, ModBlocks.MARKET_CHAMBER, "upgraded market");
 		helper.succeed();
 	}
 
 	@GameTest
-	public void queenBroodRecurringEventLeavesVisibleNurseryProof(GameTestHelper helper) {
+
+	public void queenBroodRecurringEventLeavesNurseryProof(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin);
 		ColonyData colony = ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
@@ -1443,12 +1144,10 @@ public final class FormicFrontierGameTest {
 			helper.fail("Queen brood bloom should consume food and chitin stores.");
 		}
 		BlockPos nursery = ColonyBuilder.siteFor(origin, BuildingType.NURSERY, 0);
+		assertMinimalBuildingMarker(helper, nursery, ModBlocks.NURSERY_CHAMBER, "event nursery");
 		helper.assertBlockPresent(ModBlocks.CHITIN_NODE, nursery.offset(0, 1, -2));
 		helper.assertBlockPresent(Blocks.HONEYCOMB_BLOCK, nursery.offset(-1, 1, -1));
 		helper.assertBlockPresent(Blocks.OCHRE_FROGLIGHT, nursery.offset(0, 2, -1));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, nursery.offset(0, 0, -9));
-		helper.assertBlockPresent(ModBlocks.CHITIN_NODE, nursery.offset(-2, 1, 1));
-		helper.assertBlockPresent(Blocks.BONE_BLOCK, nursery.offset(-7, 1, 6));
 		if (ColonyRecurringEvents.tick(helper.getLevel(), colony)) {
 			helper.fail("Recurring event should not fire again until another interval passes.");
 		}
@@ -1456,6 +1155,7 @@ public final class FormicFrontierGameTest {
 	}
 
 	@GameTest
+
 	public void famineRecurringEventMarksFoodStoreAndOpensContract(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin);
@@ -1483,15 +1183,12 @@ public final class FormicFrontierGameTest {
 		if (colony.resource(ResourceType.FOOD) != foodBefore) {
 			helper.fail("Famine warning should not consume the colony's last food.");
 		}
-
 		BlockPos food = ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0);
+		assertMinimalBuildingMarker(helper, food, ModBlocks.FOOD_CHAMBER, "famine food store");
 		helper.assertBlockPresent(ModBlocks.FOOD_NODE, food.offset(0, 1, -2));
 		helper.assertBlockPresent(Blocks.HAY_BLOCK, food.offset(1, 1, -1));
 		helper.assertBlockPresent(Blocks.RED_MUSHROOM_BLOCK, food.offset(-2, 1, 0));
 		helper.assertBlockPresent(Blocks.RED_TERRACOTTA, food.offset(0, 2, -1));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, food.offset(0, 0, -9));
-		helper.assertBlockPresent(ModBlocks.FOOD_NODE, food.offset(-2, 1, 1));
-		helper.assertBlockPresent(ModBlocks.FOOD_NODE, food.offset(-7, 1, 7));
 		if (ColonyRecurringEvents.tick(helper.getLevel(), colony)) {
 			helper.fail("Open famine request should prevent duplicate famine warnings.");
 		}
@@ -1749,6 +1446,7 @@ public final class FormicFrontierGameTest {
 	}
 
 	@GameTest
+
 	public void completedExpansionOutpostContractSecuresClaimEdgeWatchPost(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin, 96);
@@ -1787,9 +1485,7 @@ public final class FormicFrontierGameTest {
 		}
 
 		BlockPos outpost = ColonyRecurringEvents.expansionOutpost(origin, ColonyRank.HIVE.claimRadius());
-		helper.assertBlockPresent(ModBlocks.WATCH_POST, outpost);
-		helper.assertBlockPresent(Blocks.COBBLED_DEEPSLATE_WALL, outpost.above());
-		helper.assertBlockPresent(Blocks.OCHRE_FROGLIGHT, outpost.above(2));
+		assertMinimalBuildingMarker(helper, outpost, ModBlocks.WATCH_POST, "completed expansion outpost");
 		helper.assertBlockPresent(Blocks.HONEYCOMB_BLOCK, outpost.offset(6, 1, 0));
 		helper.assertBlockPresent(Blocks.OCHRE_FROGLIGHT, outpost.offset(5, 1, 5));
 
@@ -1812,7 +1508,6 @@ public final class FormicFrontierGameTest {
 		if (!colony.progress().requestsView().isEmpty()) {
 			helper.fail("Completed expansion outpost contract should clear the open request.");
 		}
-
 		colony.addAgeTicks(ColonyRecurringEvents.EVENT_INTERVAL_TICKS);
 		if (ColonyRecurringEvents.tick(helper.getLevel(), colony)) {
 			helper.fail("Secured expansion outpost should prevent reopening the same expansion opportunity.");
@@ -1821,7 +1516,8 @@ public final class FormicFrontierGameTest {
 	}
 
 	@GameTest
-	public void citadelColonyCompletesVisibleGreatMoundProject(GameTestHelper helper) {
+
+	public void citadelColonyCompletesMinimalGreatMoundProject(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin, 72);
 		ColonyData colony = ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
@@ -1839,7 +1535,6 @@ public final class FormicFrontierGameTest {
 				StructurePlacer.placeBuilding(helper.getLevel(), pos, type, BuildingVisualStage.COMPLETE, colony.progress().culture());
 			}
 		}
-
 		ColonyBuilder.tick(helper.getLevel(), colony);
 		ColonyBuilding greatMound = colony.progress().buildings().stream()
 				.filter(building -> building.type() == BuildingType.GREAT_MOUND)
@@ -1851,18 +1546,14 @@ public final class FormicFrontierGameTest {
 		if (!VisualQaScenes.scenes().contains(VisualQaScenes.ENDGAME_PROJECT)) {
 			helper.fail("Visual QA should expose an endgame_project scene.");
 		}
-
 		for (int i = 0; i < 4 && !greatMound.complete(); i++) {
 			ColonyBuilder.tick(helper.getLevel(), colony);
 		}
 		if (!greatMound.complete()) {
 			helper.fail("Great mound should complete from the prepared endgame resources, got " + greatMound.constructionProgress() + "%.");
 		}
-		helper.assertBlockPresent(Blocks.AMETHYST_BLOCK, origin.above(7));
-		helper.assertBlockPresent(Blocks.OCHRE_FROGLIGHT, origin.above(8));
-		helper.assertBlockPresent(ModBlocks.PHEROMONE_ARCHIVE, origin.offset(0, 1, -16));
-		helper.assertBlockPresent(Blocks.CHISELED_TUFF, origin.offset(16, 0, 0));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(-12, 0, 0));
+		assertMinimalBuildingMarker(helper, origin, ModBlocks.NEST_MOUND, "great mound");
+		helper.assertBlockPresent(ModBlocks.NEST_CORE, origin.below());
 		if (colony.progress().eventsView().stream().noneMatch(event -> event.message().contains("great_mound"))) {
 			helper.fail("Great mound project should leave a colony event for the player.");
 		}
@@ -1870,7 +1561,8 @@ public final class FormicFrontierGameTest {
 	}
 
 	@GameTest
-	public void citadelColonyCompletesVisibleQueenVaultAfterGreatMound(GameTestHelper helper) {
+
+	public void citadelColonyCompletesMinimalQueenVaultAfterGreatMound(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin, 76);
 		ColonyData colony = ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
@@ -1888,7 +1580,6 @@ public final class FormicFrontierGameTest {
 				StructurePlacer.placeBuilding(helper.getLevel(), pos, type, BuildingVisualStage.COMPLETE, colony.progress().culture());
 			}
 		}
-
 		ColonyBuilder.tick(helper.getLevel(), colony);
 		ColonyBuilding vault = colony.progress().buildings().stream()
 				.filter(building -> building.type() == BuildingType.QUEEN_VAULT)
@@ -1897,24 +1588,14 @@ public final class FormicFrontierGameTest {
 		if (vault == null) {
 			helper.fail("Citadel colony should start the queen vault after the Great Mound.");
 		}
-
 		for (int i = 0; i < 4 && !vault.complete(); i++) {
 			ColonyBuilder.tick(helper.getLevel(), colony);
 		}
 		if (!vault.complete()) {
 			helper.fail("Queen vault should complete from prepared endgame resources, got " + vault.constructionProgress() + "%.");
 		}
-		helper.assertBlockPresent(ModBlocks.NEST_CORE, origin.below(2));
-		helper.assertBlockPresent(Blocks.AMETHYST_BLOCK, origin.below());
-		helper.assertBlockPresent(Blocks.CHISELED_TUFF, origin.offset(0, 0, -12));
-		helper.assertBlockPresent(Blocks.CANDLE, origin.offset(0, 1, -11));
-		helper.assertBlockPresent(Blocks.HONEYCOMB_BLOCK, origin.offset(1, 0, -12));
-		helper.assertBlockPresent(Blocks.CHISELED_TUFF, origin.offset(12, 0, 0));
-		helper.assertBlockPresent(Blocks.AMETHYST_BLOCK, origin.offset(1, 2, -12));
-		helper.assertBlockPresent(Blocks.AMETHYST_BLOCK, origin.offset(-1, 2, -12));
-		helper.assertBlockPresent(Blocks.OCHRE_FROGLIGHT, origin.offset(1, 1, -13));
-		helper.assertBlockPresent(Blocks.AMETHYST_BLOCK, origin.offset(12, 2, 1));
-		helper.assertBlockPresent(Blocks.AMETHYST_BLOCK, origin.offset(-1, 2, 12));
+		assertMinimalBuildingMarker(helper, origin, ModBlocks.NEST_CORE, "queen vault");
+		helper.assertBlockPresent(ModBlocks.NEST_CORE, origin.below());
 		if (colony.progress().eventsView().stream().noneMatch(event -> event.message().contains("queen_vault"))) {
 			helper.fail("Queen vault project should leave a colony event for the player.");
 		}
@@ -1922,7 +1603,8 @@ public final class FormicFrontierGameTest {
 	}
 
 	@GameTest
-	public void citadelColonyCompletesVisibleTradeHubAfterQueenVault(GameTestHelper helper) {
+
+	public void citadelColonyCompletesMinimalTradeHubAfterQueenVault(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin, 90);
 		ColonyData colony = ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
@@ -1940,7 +1622,6 @@ public final class FormicFrontierGameTest {
 				StructurePlacer.placeBuilding(helper.getLevel(), pos, type, BuildingVisualStage.COMPLETE, colony.progress().culture());
 			}
 		}
-
 		ColonyBuilder.tick(helper.getLevel(), colony);
 		ColonyBuilding tradeHub = colony.progress().buildings().stream()
 				.filter(building -> building.type() == BuildingType.TRADE_HUB)
@@ -1949,26 +1630,14 @@ public final class FormicFrontierGameTest {
 		if (tradeHub == null) {
 			helper.fail("Citadel colony should start the trade hub after the Queen Vault.");
 		}
-
 		for (int i = 0; i < 4 && !tradeHub.complete(); i++) {
 			ColonyBuilder.tick(helper.getLevel(), colony);
 		}
 		if (!tradeHub.complete()) {
 			helper.fail("Trade hub should complete from prepared endgame resources, got " + tradeHub.constructionProgress() + "%.");
 		}
-
 		BlockPos hub = ColonyBuilder.siteFor(origin, BuildingType.TRADE_HUB, 0);
-		helper.assertBlockPresent(ModBlocks.MARKET_CHAMBER, hub);
-		helper.assertBlockPresent(ModBlocks.COLONY_LEDGER, hub.offset(0, 1, 1));
-		helper.assertBlockPresent(Blocks.BELL, hub.offset(0, 1, -1));
-		helper.assertBlockPresent(Blocks.GOLD_BLOCK, hub.offset(-1, 1, 0));
-		helper.assertBlockPresent(Blocks.BARREL, hub.offset(1, 1, 0));
-		helper.assertBlockPresent(ModBlocks.FOOD_NODE, hub.offset(-8, 0, -5));
-		helper.assertBlockPresent(ModBlocks.ORE_NODE, hub.offset(8, 0, -5));
-		helper.assertBlockPresent(ModBlocks.CHITIN_NODE, hub.offset(-8, 0, 5));
-		helper.assertBlockPresent(ModBlocks.RESIN_DEPOT, hub.offset(8, 0, 5));
-		helper.assertBlockPresent(Blocks.OCHRE_FROGLIGHT, hub.above(4));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, hub.offset(-22, 0, 14));
+		assertMinimalBuildingMarker(helper, hub, ModBlocks.MARKET_CHAMBER, "trade hub");
 		if (colony.progress().eventsView().stream().noneMatch(event -> event.message().contains("trade_hub"))) {
 			helper.fail("Trade hub project should leave a colony event for the player.");
 		}
@@ -2276,199 +1945,14 @@ public final class FormicFrontierGameTest {
 		};
 	}
 
-	private static void assertNativeMass(GameTestHelper helper, BlockPos pos, String label) {
-		var state = helper.getLevel().getBlockState(helper.absolutePos(pos));
-		if (state.isAir() || !(state.is(ModBlocks.NEST_MOUND) || state.is(ModBlocks.NEST_CORE)
-				|| state.is(Blocks.ROOTED_DIRT) || state.is(Blocks.MANGROVE_ROOTS))) {
-			helper.fail("Expected " + label + " at " + pos.toShortString() + " to be solid native earth mass, got " + state.getBlock().getName().getString());
+	private static void assertMinimalBuildingMarker(GameTestHelper helper, BlockPos center,
+			net.minecraft.world.level.block.Block expected, String label) {
+		helper.assertBlockPresent(expected, center);
+		BlockPos absolute = helper.absolutePos(center);
+		if (!helper.getLevel().getBlockState(absolute.above()).isAir()
+				|| !helper.getLevel().getBlockState(absolute.above(2)).isAir()) {
+			helper.fail(label + " should remain a one-block surface marker with no old mound mass above it.");
 		}
-	}
-
-	private record CampusMoundTestProfile(int radiusX, int radiusZ, int peakY) {
-	}
-
-	private static CampusMoundTestProfile campusTestProfile(BuildingType type) {
-		return switch (type) {
-			case FOOD_STORE -> new CampusMoundTestProfile(5, 5, 14);
-			case NURSERY -> new CampusMoundTestProfile(5, 8, 13);
-			case MINE -> new CampusMoundTestProfile(9, 9, 15);
-			case BARRACKS -> new CampusMoundTestProfile(9, 9, 13);
-			case MARKET -> new CampusMoundTestProfile(9, 9, 14);
-			case ARMORY -> new CampusMoundTestProfile(9, 9, 16);
-			case RESIN_DEPOT, VENOM_PRESS -> new CampusMoundTestProfile(8, 8, 12);
-			case PHEROMONE_ARCHIVE -> new CampusMoundTestProfile(8, 8, 13);
-			default -> new CampusMoundTestProfile(7, 7, 13);
-		};
-	}
-
-	private static void assertMegaMoundLayerProfile(GameTestHelper helper, BlockPos center, CampusMoundTestProfile profile, String label) {
-		int expectedBase = ellipseCellCount(profile.radiusX(), profile.radiusZ());
-		int y1 = countMoundMassLayer(helper, center, profile, 1);
-		int y6 = countMoundMassLayer(helper, center, profile, 6);
-		int midY = Math.max(8, profile.peakY() / 2);
-		int mid = countMoundMassLayer(helper, center, profile, midY);
-		int highY = Math.max(midY + 2, profile.peakY() - 3);
-		int high = countMoundMassLayer(helper, center, profile, highY);
-		int peak = countMoundMassLayer(helper, center, profile, profile.peakY());
-		if (y1 < expectedBase * 40 / 100) {
-			helper.fail(label + " base is too hollow or narrow: y1 mass=" + y1 + " expected at least " + (expectedBase * 40 / 100));
-		}
-		if (y6 < y1 * 55 / 100) {
-			helper.fail(label + " collapses at the crown seam: y1=" + y1 + " y6=" + y6);
-		}
-		if (mid >= y6 * 92 / 100) {
-			helper.fail(label + " stays too cylindrical through mid-height: y6=" + y6 + " y" + midY + "=" + mid);
-		}
-		if (high >= mid * 90 / 100) {
-			helper.fail(label + " does not taper toward the peak: y" + midY + "=" + mid + " y" + highY + "=" + high);
-		}
-		if (peak <= 0) {
-			helper.fail(label + " is missing its high mound peak at y=" + profile.peakY());
-		}
-	}
-
-	private static void assertNoLongVerticalWallRuns(GameTestHelper helper, BlockPos center, CampusMoundTestProfile profile, String label) {
-		int maxRun = 0;
-		for (int[] sample : new int[][] {
-				{profile.radiusX(), 0}, {-profile.radiusX(), 0}, {0, profile.radiusZ()}, {0, -profile.radiusZ()},
-				{Math.max(1, profile.radiusX() - 1), 0}, {-Math.max(1, profile.radiusX() - 1), 0},
-				{0, Math.max(1, profile.radiusZ() - 1)}, {0, -Math.max(1, profile.radiusZ() - 1)}
-		}) {
-			maxRun = Math.max(maxRun, longestVerticalMoundRun(helper, center, sample[0], sample[1], profile.peakY()));
-		}
-		int allowed = Math.max(10, profile.peakY() / 2);
-		if (maxRun > allowed) {
-			helper.fail(label + " has a long vertical outer wall run (" + maxRun + " blocks), which reads as a tower instead of an ant-hill taper.");
-		}
-	}
-
-	private static void assertDeepCampusTunnelMouth(GameTestHelper helper, BlockPos center, String label) {
-		for (int z = -10; z >= -14; z--) {
-			for (int y = 1; y <= 7; y++) {
-				for (int x = -2; x <= 2; x++) {
-					var state = helper.getLevel().getBlockState(helper.absolutePos(center.offset(x, y, z)));
-					if (!state.isAir()) {
-						helper.fail(label + " tunnel mouth is blocked at " + center.offset(x, y, z).toShortString()
-								+ " by " + state.getBlock().getName().getString() + "; expected a deep 5x7 throat through z=-10..-14.");
-					}
-				}
-			}
-		}
-		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 1, -15))).is(ModBlocks.NEST_CORE)) {
-			helper.fail(label + " should have a dark rear chamber face behind the mouth at z=-15.");
-		}
-	}
-
-	private static void assertNativePaletteRatio(GameTestHelper helper, BlockPos center, CampusMoundTestProfile profile, String label) {
-		int nonAir = 0;
-		int nativeBlocks = 0;
-		int borrowedBlocks = 0;
-		for (int x = -profile.radiusX(); x <= profile.radiusX(); x++) {
-			for (int z = -profile.radiusZ() - 6; z <= profile.radiusZ(); z++) {
-				for (int y = 0; y <= profile.peakY(); y++) {
-					var state = helper.getLevel().getBlockState(helper.absolutePos(center.offset(x, y, z)));
-					if (state.isAir()) {
-						continue;
-					}
-					nonAir++;
-					if (isNativeFormicPalette(state)) {
-						nativeBlocks++;
-					}
-					if (isBorrowedPlaceholderPalette(state)) {
-						borrowedBlocks++;
-					}
-				}
-			}
-		}
-		if (nonAir == 0) {
-			helper.fail(label + " has no measurable structure mass.");
-		}
-		if (nativeBlocks * 100 < nonAir * 70) {
-			helper.fail(label + " native palette ratio is too low: native=" + nativeBlocks + " nonAir=" + nonAir);
-		}
-		if (borrowedBlocks * 100 > nonAir * 8) {
-			helper.fail(label + " uses too many borrowed placeholder blocks: borrowed=" + borrowedBlocks + " nonAir=" + nonAir);
-		}
-	}
-
-	private static int countMoundMassLayer(GameTestHelper helper, BlockPos center, CampusMoundTestProfile profile, int y) {
-		int count = 0;
-		for (int x = -profile.radiusX(); x <= profile.radiusX(); x++) {
-			for (int z = -profile.radiusZ(); z <= profile.radiusZ(); z++) {
-				var state = helper.getLevel().getBlockState(helper.absolutePos(center.offset(x, y, z)));
-				if (isMoundMassState(state)) {
-					count++;
-				}
-			}
-		}
-		return count;
-	}
-
-	private static int longestVerticalMoundRun(GameTestHelper helper, BlockPos center, int x, int z, int peakY) {
-		int current = 0;
-		int longest = 0;
-		for (int y = 1; y <= peakY; y++) {
-			var state = helper.getLevel().getBlockState(helper.absolutePos(center.offset(x, y, z)));
-			if (isMoundMassState(state)) {
-				current++;
-				longest = Math.max(longest, current);
-			} else {
-				current = 0;
-			}
-		}
-		return longest;
-	}
-
-	private static int ellipseCellCount(int radiusX, int radiusZ) {
-		int count = 0;
-		for (int x = -radiusX; x <= radiusX; x++) {
-			for (int z = -radiusZ; z <= radiusZ; z++) {
-				double ex = (x * x) / (double) (radiusX * radiusX);
-				double ez = (z * z) / (double) (radiusZ * radiusZ);
-				if (ex + ez <= 1.05) {
-					count++;
-				}
-			}
-		}
-		return count;
-	}
-
-	private static boolean isMoundMassState(net.minecraft.world.level.block.state.BlockState state) {
-		return isNativeFormicPalette(state)
-				|| state.is(Blocks.BONE_BLOCK)
-				|| state.is(Blocks.BROWN_MUSHROOM_BLOCK)
-				|| state.is(Blocks.COARSE_DIRT)
-				|| state.is(Blocks.DIRT)
-				|| state.is(Blocks.DIRT_PATH)
-				|| state.is(Blocks.PACKED_MUD)
-				|| state.is(Blocks.PODZOL);
-	}
-
-	private static boolean isNativeFormicPalette(net.minecraft.world.level.block.state.BlockState state) {
-		return state.is(ModBlocks.NEST_MOUND)
-				|| state.is(ModBlocks.NEST_CORE)
-				|| state.is(ModBlocks.FOOD_CHAMBER)
-				|| state.is(ModBlocks.NURSERY_CHAMBER)
-				|| state.is(ModBlocks.MINE_CHAMBER)
-				|| state.is(ModBlocks.BARRACKS_CHAMBER)
-				|| state.is(ModBlocks.MARKET_CHAMBER)
-				|| state.is(ModBlocks.RESIN_DEPOT)
-				|| state.is(ModBlocks.FOOD_NODE)
-				|| state.is(ModBlocks.ORE_NODE)
-				|| state.is(Blocks.ROOTED_DIRT)
-				|| state.is(Blocks.MANGROVE_ROOTS)
-				|| state.is(Blocks.COARSE_DIRT)
-				|| state.is(Blocks.PODZOL)
-				|| state.is(Blocks.PACKED_MUD)
-				|| state.is(Blocks.MUD);
-	}
-
-	private static boolean isBorrowedPlaceholderPalette(net.minecraft.world.level.block.state.BlockState state) {
-		return state.is(Blocks.HONEYCOMB_BLOCK)
-				|| state.is(Blocks.HONEY_BLOCK)
-				|| state.is(Blocks.AMETHYST_BLOCK)
-				|| state.is(Blocks.GOLD_BLOCK)
-				|| state.is(Blocks.OCHRE_FROGLIGHT);
 	}
 
 	private static void assertBlockInColumn(GameTestHelper helper, BlockPos base, net.minecraft.world.level.block.Block block, int minOffset, int maxOffset, String label) {

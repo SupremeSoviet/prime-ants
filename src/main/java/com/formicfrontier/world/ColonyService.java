@@ -679,12 +679,6 @@ public final class ColonyService {
 		placeResourceCluster(level, foodNode, ModBlocks.FOOD_NODE, Blocks.MOSS_BLOCK, Blocks.BROWN_MUSHROOM_BLOCK);
 		placeResourceCluster(level, oreNode, ModBlocks.ORE_NODE, Blocks.COBBLED_DEEPSLATE, Blocks.IRON_ORE);
 		placeResourceCluster(level, chitinNode, ModBlocks.CHITIN_NODE, Blocks.BONE_BLOCK, Blocks.HONEYCOMB_BLOCK);
-		// R2 shared organic mound landmass: fuse the starter satellites onto ONE
-		// continuous ant-hill organism via low native-earth saddles, so the colony
-		// stops reading as N separate cones/towers on a flat field (assessment
-		// P1 blocker). Additive, canReplace-safe, native palette, clears the
-		// distance-6 diplomacy caches. See StructurePlacer.placeSharedMoundLandmass.
-		StructurePlacer.placeSharedMoundLandmass(level, origin, java.util.List.of(food, nursery, mine, barracks));
 		registerStarterBuildings(colony, origin, food, nursery, mine, barracks);
 	}
 
@@ -710,11 +704,6 @@ public final class ColonyService {
 		colony.addChamber(new NestChamber(building.type().id(), building.pos(), building.level()));
 	}
 
-	private static void addChamber(ServerLevel level, ColonyData colony, String type, BlockPos pos, Block block) {
-		set(level, pos, block);
-		colony.addChamber(new NestChamber(type, pos, 1));
-	}
-
 	private static void set(ServerLevel level, BlockPos pos, Block block) {
 		StructurePlacer.safeSet(level, pos, block);
 	}
@@ -730,81 +719,6 @@ public final class ColonyService {
 				}
 			}
 		}
-	}
-
-	private static void placeCoreMound(ServerLevel level, ColonyData colony, BlockPos origin) {
-		for (int x = -3; x <= 3; x++) {
-			for (int z = -3; z <= 3; z++) {
-				int distance = Math.abs(x) + Math.abs(z);
-				if (distance <= 5) {
-					set(level, origin.offset(x, 0, z), distance <= 2 ? ModBlocks.NEST_MOUND : Blocks.ROOTED_DIRT);
-				}
-				if (distance <= 3 && !(x == 0 && z == -1)) {
-					set(level, origin.offset(x, 1, z), ModBlocks.NEST_MOUND);
-				}
-				if (distance <= 1) {
-					set(level, origin.offset(x, 2, z), ModBlocks.NEST_MOUND);
-				}
-			}
-		}
-		set(level, origin, ModBlocks.NEST_MOUND);
-		addChamber(level, colony, "nest_core", origin.below(), ModBlocks.NEST_CORE);
-		set(level, origin.offset(0, 1, -1), Blocks.AIR);
-		set(level, origin.offset(0, 0, -1), Blocks.DIRT_PATH);
-		set(level, origin.offset(0, 2, 0), Blocks.OCHRE_FROGLIGHT);
-	}
-
-	private static void placeFoodChamber(ServerLevel level, ColonyData colony, BlockPos center) {
-		placePod(level, center, ModBlocks.FOOD_CHAMBER, Blocks.PACKED_MUD, Blocks.BROWN_MUSHROOM_BLOCK);
-		set(level, center.offset(-1, 1, 0), ModBlocks.FOOD_NODE);
-		set(level, center.offset(1, 1, 0), Blocks.RED_MUSHROOM_BLOCK);
-		set(level, center.offset(0, 1, 1), Blocks.MOSS_BLOCK);
-		colony.addChamber(new NestChamber("food_chamber", center, 1));
-	}
-
-	private static void placeNursery(ServerLevel level, ColonyData colony, BlockPos center) {
-		placePod(level, center, ModBlocks.NURSERY_CHAMBER, Blocks.HONEYCOMB_BLOCK, Blocks.BONE_BLOCK);
-		set(level, center.offset(-1, 1, 0), ModBlocks.CHITIN_NODE);
-		set(level, center.offset(1, 1, 0), Blocks.OCHRE_FROGLIGHT);
-		set(level, center.offset(0, 1, 1), Blocks.BONE_BLOCK);
-		colony.addChamber(new NestChamber("nursery", center, 1));
-	}
-
-	private static void placeMineChamber(ServerLevel level, ColonyData colony, BlockPos center) {
-		placePod(level, center, ModBlocks.MINE_CHAMBER, Blocks.COBBLED_DEEPSLATE, Blocks.IRON_ORE);
-		set(level, center.offset(-1, 1, 0), ModBlocks.ORE_NODE);
-		set(level, center.offset(1, 1, 0), Blocks.DEEPSLATE_IRON_ORE);
-		set(level, center.offset(0, 1, 1), Blocks.COBBLED_DEEPSLATE_WALL);
-		colony.addChamber(new NestChamber("mine_chamber", center, 1));
-	}
-
-	private static void placeBarracks(ServerLevel level, ColonyData colony, BlockPos center) {
-		placePod(level, center, ModBlocks.BARRACKS_CHAMBER, Blocks.MUD_BRICKS, Blocks.POLISHED_DEEPSLATE);
-		set(level, center.offset(-1, 1, 0), Blocks.BONE_BLOCK);
-		set(level, center.offset(1, 1, 0), Blocks.BONE_BLOCK);
-		set(level, center.offset(0, 1, -1), Blocks.COBBLED_DEEPSLATE_WALL);
-		colony.addChamber(new NestChamber("barracks", center, 1));
-	}
-
-	private static void placePod(ServerLevel level, BlockPos center, Block core, Block shell, Block accent) {
-		for (int x = -2; x <= 2; x++) {
-			for (int z = -2; z <= 2; z++) {
-				int distance = Math.abs(x) + Math.abs(z);
-				BlockPos pos = center.offset(x, 0, z);
-				if (x == 0 && z == 0) {
-					set(level, pos, core);
-				} else if (distance <= 3) {
-					set(level, pos, shell);
-				} else {
-					set(level, pos, Blocks.ROOTED_DIRT);
-				}
-				if (distance == 4) {
-					set(level, center.offset(x, 1, z), accent);
-				}
-			}
-		}
-		set(level, center.offset(0, 1, 0), Blocks.AIR);
-		set(level, center.offset(0, 2, 0), Blocks.AIR);
 	}
 
 	private static void placeResourceCluster(ServerLevel level, BlockPos center, Block node, Block base, Block accent) {

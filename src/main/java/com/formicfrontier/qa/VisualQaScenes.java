@@ -347,49 +347,13 @@ public final class VisualQaScenes {
 			colony.addEvent("Visual QA starter guide state seeded");
 			return;
 		}
-		// REPRESENTATIONAL FIX (assessment REPEAT blocker 'stop spawning independent
-		// cone bodies FIRST'): for shared-landmass scenes, suppress the independent
-		// satellite crown MASS so each role building's volume is derived ONLY from the
-		// one shared height field below. The satellite core + deep tunnel mouth +
-		// rear-chamber identity still stamp (only the column-fill dome + roofline cap
-		// mass are gated). The flag is cleared in a finally so it never leaks into the
-		// gametest path (which asserts the independent crown mass).
-		boolean prevSuppress = StructurePlacer.SUPPRESS_SATELLITE_CROWN_MASS;
-		StructurePlacer.SUPPRESS_SATELLITE_CROWN_MASS = !sceneName.startsWith("tablet") && !sceneName.equals(CONSTRUCTION_STAGE) && !sceneName.equals(REPAIR_SCENE);
-		try {
-			for (BuildingType type : ADVANCED_BUILDINGS) {
-				if (colony.progress().hasCompleted(type)) {
-					continue;
-				}
-				BlockPos pos = ColonyBuilder.siteFor(colony, type);
-				colony.progress().addBuilding(ColonyBuilding.complete(type, pos));
-				StructurePlacer.placeBuilding(level, pos, type, BuildingVisualStage.COMPLETE, colony.progress().culture());
+		for (BuildingType type : ADVANCED_BUILDINGS) {
+			if (colony.progress().hasCompleted(type)) {
+				continue;
 			}
-		} finally {
-			StructurePlacer.SUPPRESS_SATELLITE_CROWN_MASS = prevSuppress;
-		}
-		// R2 architecture representational fix: fuse the WHOLE campus (queen mound +
-		// starter satellites + advanced buildings) onto ONE continuous noise-driven
-		// native-earth landmass so the colony reads as a single broad carved ant-hill
-		// organism with the role buildings as sub-lobes, instead of N separate cones
-		// on flat grass (assessment P1 blocker multiple_large_organic_chambers /
-		// no_single_mound_pass). Only for wide/colony scenes: tablet scenes are GUI
-		// captures where the landmass would be invisible noise behind the panel.
-		if (!sceneName.startsWith("tablet")) {
-			java.util.List<net.minecraft.core.BlockPos> campusSatellites = new java.util.ArrayList<>();
-			campusSatellites.add(ColonyBuilder.siteFor(colony, BuildingType.FOOD_STORE));
-			campusSatellites.add(ColonyBuilder.siteFor(colony, BuildingType.NURSERY));
-			campusSatellites.add(ColonyBuilder.siteFor(colony, BuildingType.MINE));
-			campusSatellites.add(ColonyBuilder.siteFor(colony, BuildingType.BARRACKS));
-			campusSatellites.add(ColonyBuilder.siteFor(colony, BuildingType.MARKET));
-			campusSatellites.add(ColonyBuilder.siteFor(colony, BuildingType.RESIN_DEPOT));
-			campusSatellites.add(ColonyBuilder.siteFor(colony, BuildingType.PHEROMONE_ARCHIVE));
-			campusSatellites.add(ColonyBuilder.siteFor(colony, BuildingType.VENOM_PRESS));
-			campusSatellites.add(ColonyBuilder.siteFor(colony, BuildingType.ARMORY));
-			StructurePlacer.placeSharedCampusLandmass2D(level, colony.origin(), campusSatellites);
-			// Carve dark chamber mouths into the one shared mound so it reads as an
-			// inhabited ant-hill, not a featureless dirt dome.
-			StructurePlacer.carveSharedMoundChamberMouths(level, colony.origin());
+			BlockPos pos = ColonyBuilder.siteFor(colony, type);
+			colony.progress().addBuilding(ColonyBuilding.complete(type, pos));
+			StructurePlacer.placeBuilding(level, pos, type, BuildingVisualStage.COMPLETE, colony.progress().culture());
 		}
 		if (sceneName.equals(TABLET_EN)) {
 			colony.progress().requests().clear();
