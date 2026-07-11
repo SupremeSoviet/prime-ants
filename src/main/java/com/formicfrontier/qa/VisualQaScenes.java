@@ -75,6 +75,8 @@ public final class VisualQaScenes {
 	public static final String MOUND_INTERIOR = "mound_interior";
 	public static final String MOUND_STORAGE_INTERIOR = "mound_storage_interior";
 	public static final String MOUND_LOOKOUT_INTERIOR = "mound_lookout_interior";
+	public static final String FOOD_STORE_VARIANTS = "food_store_variants";
+	public static final String FOOD_STORE_INTERIOR = "food_store_interior";
 	private static final List<String> SCENES = List.of(
 			COLONY_OVERVIEW,
 			COLONY_GROUND,
@@ -99,7 +101,9 @@ public final class VisualQaScenes {
 			STRUCTURE_PREVIEW_FRONT,
 			MOUND_INTERIOR,
 			MOUND_STORAGE_INTERIOR,
-			MOUND_LOOKOUT_INTERIOR
+			MOUND_LOOKOUT_INTERIOR,
+			FOOD_STORE_VARIANTS,
+			FOOD_STORE_INTERIOR
 	);
 	private static final List<AntCaste> ANT_LINEUP_CASTES = List.of(
 			AntCaste.QUEEN,
@@ -190,10 +194,12 @@ public final class VisualQaScenes {
 
 		ServerLevel level = source.getLevel();
 		BlockPos requested = BlockPos.containing(source.getPosition());
-		boolean interiorFocused = normalized.equals(MOUND_INTERIOR)
+		boolean moundInteriorFocused = normalized.equals(MOUND_INTERIOR)
 				|| normalized.equals(MOUND_STORAGE_INTERIOR) || normalized.equals(MOUND_LOOKOUT_INTERIOR);
+		boolean foodFocused = normalized.equals(FOOD_STORE_VARIANTS) || normalized.equals(FOOD_STORE_INTERIOR);
+		boolean interiorFocused = moundInteriorFocused || normalized.equals(FOOD_STORE_INTERIOR);
 		boolean structureFocused = normalized.equals(STRUCTURE_PREVIEW_3Q)
-				|| normalized.equals(STRUCTURE_PREVIEW_FRONT) || interiorFocused;
+				|| normalized.equals(STRUCTURE_PREVIEW_FRONT) || interiorFocused || foodFocused;
 		if (structureFocused && structureQaOrigin == null) {
 			// Start each focused run on fresh terrain, then reuse exactly the same
 			// origin so the next angle clears the preceding build instead of leaving
@@ -208,12 +214,21 @@ public final class VisualQaScenes {
 		ColonySavedState savedState = ColonySavedState.get(source.getServer());
 		savedState.clearColonies();
 		if (structureFocused) {
-			// PREVIEW = GAME: render the real in-game colony through the exact
-			// createColony path (no seedVisualState QA overlays) so the preview is
-			// precisely what a player sees: the stage-one tiered queen mound at the
-			// centre and the intentionally minimal role-building markers around it.
-			ColonyService.createColony(level, origin, true);
-			if (!interiorFocused) {
+			// PREVIEW = GAME: focused scenes call the same public placement paths as
+			// live colonies. Food scenes omit the queen mound only to keep the new
+			// single-storey family large and legible in the frame.
+			if (normalized.equals(FOOD_STORE_VARIANTS)) {
+				StructurePlacer.placeBuilding(level, origin.offset(-16, 0, 0), BuildingType.FOOD_STORE,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+				StructurePlacer.placeBuilding(level, origin.offset(16, 0, 1), BuildingType.FOOD_STORE,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+			} else if (normalized.equals(FOOD_STORE_INTERIOR)) {
+				StructurePlacer.placeBuilding(level, origin, BuildingType.FOOD_STORE,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+			} else {
+				ColonyService.createColony(level, origin, true);
+			}
+			if (!interiorFocused && !foodFocused) {
 				dressForestFloor(level, origin, normalized);
 			}
 			clearQaItemDrops(level, origin, qaRadius(normalized));
@@ -1026,6 +1041,8 @@ public final class VisualQaScenes {
 			case MOUND_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 1.7, 3.5);
 			case MOUND_STORAGE_INTERIOR -> new Vec3(origin.getX() - 1.5, origin.getY() + 9.2, origin.getZ() + 3.0);
 			case MOUND_LOOKOUT_INTERIOR -> new Vec3(origin.getX() + 2.5, origin.getY() + 14.8, origin.getZ() + 2.5);
+			case FOOD_STORE_VARIANTS -> Vec3.atCenterOf(origin).add(0.0, 3.0, 1.0);
+			case FOOD_STORE_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 1.5, 3.4);
 			default -> Vec3.atCenterOf(origin).add(0.0, 2.0, 0.0);
 		};
 		Vec3 camera = switch (sceneName) {
@@ -1046,6 +1063,8 @@ public final class VisualQaScenes {
 			case MOUND_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 3.4, origin.getZ() - 1.2);
 			case MOUND_STORAGE_INTERIOR -> new Vec3(origin.getX() - 1.5, origin.getY() + 10.3, origin.getZ() - 1.2);
 			case MOUND_LOOKOUT_INTERIOR -> new Vec3(origin.getX() + 2.5, origin.getY() + 14.7, origin.getZ() - 0.8);
+			case FOOD_STORE_VARIANTS -> new Vec3(origin.getX() + 0.5, origin.getY() + 11.0, origin.getZ() - 38.0);
+			case FOOD_STORE_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.1, origin.getZ() - 1.8);
 			default -> new Vec3(origin.getX() + 28.0, origin.getY() + 18.0, origin.getZ() - 32.0);
 		};
 		player.teleportTo(camera.x, camera.y, camera.z);

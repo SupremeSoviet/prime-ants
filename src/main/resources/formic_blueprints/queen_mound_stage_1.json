@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "name": "queen_mound_stage_1",
   "seed": 4217,
+  "palette": "earth",
   "tiers": [
     {
       "baseY": 0,

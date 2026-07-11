@@ -34,7 +34,11 @@ The LLM edits JSON blueprints. Java owns parsing, validation, material selection
 block placement and carving. A blueprint uses a few semantic primitives:
 
 - `tiers`: overlapping tapered ellipses with height, bottom/top radii and an
-  offset. Adding a higher tier is the primary vertical growth operation.
+  offset. Adding a higher tier is the primary vertical growth operation;
+  overlapping several tiers at the same base height produces asymmetrical
+  single-storey lobes without introducing block-coordinate dumps.
+- `palette`: a compiler-owned semantic material family. JSON selects a bounded
+  name such as `earth` or `food_store`; it cannot inject arbitrary block ids.
 - `terraces`: shallow earth shelves anchored into the stable tier core. They
   make individual inhabited floors visible without turning them into separate
   buildings.
@@ -45,8 +49,10 @@ block placement and carving. A blueprint uses a few semantic primitives:
   derives the rise from the two floor heights, carves two blocks of headroom and
   orients every stair in the declared cardinal direction.
 - `mouths`: bounded south-facing carved volumes with a dark rear wall.
-- Later schemas can add `lobes` as attached hill volumes without changing the
-  tier compiler.
+- A role-building family registers one or more validated blueprint resources
+  plus its functional interaction block. A simple stable position hash selects
+  a variant, so repeated buildings keep their shape across reloads without
+  becoming exact clones.
 
 The first blueprint is
 `src/main/resources/formic_blueprints/queen_mound_stage_1.json`. Its contract is
@@ -54,20 +60,28 @@ a 24-block-tall, at-most-21-block-wide landmark with four offset tiers, two
 attached floor terraces, three facade mouths, three purpose-specific interior
 rooms and two internal stair passages. It intentionally has no side lobes yet.
 
+The first reusable single-storey family is the food store:
+`food_store_a.json` and `food_store_b.json`. Both are seven blocks tall, use
+three overlapping low lobes, contain one carved granary with a clear central
+aisle, and furnish the walls with storage, food processing and warm light. The
+two footprints are structurally distinct and the second colony site is placed
+far enough away to preserve open ground between them.
+
 ## Iteration order
 
-1. Main mass and vertical tier rhythm.
-2. Entrance readability, furnished interior rooms and playable stairs between
-   every floor.
-3. Stage-two height growth.
-4. One attached side hill with a tested connection.
-5. Additional role-specific attachments, one at a time.
+1. Establish the shared blueprint vocabulary with the main mound.
+2. Add one single-storey role-building family at a time, including its palette,
+   chamber purpose, furnishings, repeated-site variation and spacing contract.
+3. Finish the starter economy in order: food store, nursery, mine, chitin farm.
+4. Continue through infrastructure, research and defense families.
+5. Return to the central mound for `GREAT_MOUND` height/lobes and the underground
+   `QUEEN_VAULT`, then author the separate late-game trade hub.
 
 Each step must pass unit/GameTests before screenshot QA. Visual acceptance is
 based on the rendered silhouette and entrances, not on how plausible the source
 code looks.
 
 During structure iteration, run `scripts/gui-smoke.cmd -Scope Structure`. It
-captures only the front, three-quarter and three floor-interior scenes; no UI
-screens are opened. The legacy full baseline remains available with
+captures only focused building exteriors/interiors (currently the queen mound
+and food-store family); no UI screens are opened. The legacy full baseline remains available with
 `-Scope Full` when a whole-mod release review is explicitly needed.

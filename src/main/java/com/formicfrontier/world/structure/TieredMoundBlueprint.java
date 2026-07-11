@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Small, validated intermediate representation for an LLM-authored mound.
@@ -22,6 +23,7 @@ public record TieredMoundBlueprint(
 		int schemaVersion,
 		String name,
 		int seed,
+		String palette,
 		List<Tier> tiers,
 		List<Terrace> terraces,
 		List<Chamber> chambers,
@@ -31,6 +33,10 @@ public record TieredMoundBlueprint(
 	public static final int SUPPORTED_SCHEMA_VERSION = 1;
 	private static final int MAX_RADIUS = 24;
 	private static final int MAX_HEIGHT = 48;
+	private static final Set<String> SUPPORTED_PALETTES = Set.of("earth", "food_store");
+	private static final Set<String> SUPPORTED_CHAMBER_PURPOSES = Set.of(
+			"queen_hall", "storage", "lookout", "food_store"
+	);
 
 	public TieredMoundBlueprint {
 		tiers = List.copyOf(tiers);
@@ -38,7 +44,7 @@ public record TieredMoundBlueprint(
 		chambers = List.copyOf(chambers);
 		connections = List.copyOf(connections);
 		mouths = List.copyOf(mouths);
-		validate(schemaVersion, name, tiers, terraces, chambers, connections, mouths);
+		validate(schemaVersion, name, palette, tiers, terraces, chambers, connections, mouths);
 	}
 
 	public static TieredMoundBlueprint load(String resourcePath) {
@@ -116,6 +122,7 @@ public record TieredMoundBlueprint(
 					requiredInt(root, "schemaVersion"),
 					requiredString(root, "name"),
 					requiredInt(root, "seed"),
+					requiredString(root, "palette"),
 					tiers,
 					terraces,
 					chambers,
@@ -189,13 +196,16 @@ public record TieredMoundBlueprint(
 				&& connections.stream().noneMatch(connection -> connection.carves(x, y, z, chambers));
 	}
 
-	private static void validate(int schemaVersion, String name, List<Tier> tiers, List<Terrace> terraces,
+	private static void validate(int schemaVersion, String name, String palette, List<Tier> tiers, List<Terrace> terraces,
 			List<Chamber> chambers, List<Connection> connections, List<Mouth> mouths) {
 		if (schemaVersion != SUPPORTED_SCHEMA_VERSION) {
 			throw new IllegalArgumentException("Unsupported schemaVersion " + schemaVersion);
 		}
 		if (name == null || name.isBlank()) {
 			throw new IllegalArgumentException("Blueprint name must not be blank");
+		}
+		if (!SUPPORTED_PALETTES.contains(palette)) {
+			throw new IllegalArgumentException("Unsupported material palette " + palette);
 		}
 		if (tiers.isEmpty()) {
 			throw new IllegalArgumentException("At least one tier is required");
@@ -253,7 +263,7 @@ public record TieredMoundBlueprint(
 			if (chamber.id() == null || chamber.id().isBlank()) {
 				throw new IllegalArgumentException("Chamber " + index + " id must not be blank");
 			}
-			if (!List.of("queen_hall", "storage", "lookout").contains(chamber.purpose())) {
+			if (!SUPPORTED_CHAMBER_PURPOSES.contains(chamber.purpose())) {
 				throw new IllegalArgumentException("Chamber " + index + " has unsupported purpose " + chamber.purpose());
 			}
 			if (chamber.floorY() < 0 || chamber.height() < 3 || chamber.height() > 7 || chamber.topY() > connectedTop) {

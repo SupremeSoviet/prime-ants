@@ -90,6 +90,21 @@ Slice R2: Architecture polish.
   main structures no longer read as 3-5 block arcade props, and role buildings
   read as asymmetrical ant chambers without visual overlap or entry arches.
 
+Current R2 implementation order:
+
+1. Food store: two low one-storey blueprint variants, carved and furnished
+   granary interior, stable position-based selection, and spaced repeat site.
+2. Nursery, mine and chitin farm using the same data-first catalog. The mine is
+   a low rounded mound with a shallow internal pit; the farm stays rounded but
+   has no pit.
+3. Barracks as a wider elongated mound and market as an open roofless yard.
+4. Archive, armory, shrine, research buildings and watch posts with distinct
+   organic silhouettes.
+5. `GREAT_MOUND`, `QUEEN_VAULT`, then `TRADE_HUB`.
+
+The food-store slice is implemented; it remains subject to focused screenshot
+acceptance before the nursery slice begins.
+
 Slice R3: Colony Tablet 2.0.
 
 - Player promise: the tablet feels like a living colony journal, not a 2000s RTS

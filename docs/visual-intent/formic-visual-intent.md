@@ -73,9 +73,12 @@ ant-hills, but there is still obvious breakage. These are first-class blockers:
 
 ## Current Architecture Target
 
-The active slice is the main colony building. It is rebuilt independently
-before the surrounding role buildings: first establish a compact vertical core,
-then add growth stages and attached mound-lobes in later slices.
+The compact vertical main mound is now the accepted architectural baseline. The
+active sequence applies the same validated blueprint vocabulary to surrounding
+role buildings as lower, mostly single-storey arrangements of overlapping
+lobes. Each family must gain its own silhouette, palette accents, carved room,
+furnishings and repeated-site variation before the next family starts. Central
+growth stages and attached mound-lobes follow after the role-building pass.
 
 ### Why the last several attempts failed (read this first)
 

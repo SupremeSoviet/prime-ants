@@ -25,6 +25,8 @@ public final class TieredMoundPlacer {
 
 	public static void placeQueenStageOne(ServerLevel level, BlockPos center) {
 		place(level, center, QUEEN_STAGE_ONE);
+		StructurePlacer.safeSet(level, center.below(), ModBlocks.NEST_CORE);
+		StructurePlacer.safeSet(level, center, ModBlocks.NEST_MOUND);
 	}
 
 	public static void place(ServerLevel level, BlockPos center, TieredMoundBlueprint blueprint) {
@@ -52,8 +54,6 @@ public final class TieredMoundPlacer {
 			decorateChamber(level, center, chamber);
 		}
 
-		StructurePlacer.safeSet(level, center.below(), ModBlocks.NEST_CORE);
-		StructurePlacer.safeSet(level, center, ModBlocks.NEST_MOUND);
 	}
 
 	private static void carveMouth(ServerLevel level, BlockPos center, TieredMoundBlueprint blueprint,
@@ -169,6 +169,17 @@ public final class TieredMoundPlacer {
 				placeDecoration(level, center, chamber, -2, 2, 1, Blocks.LANTERN);
 				placeDecoration(level, center, chamber, 2, 1, 1, Blocks.BELL);
 			}
+			case "food_store" -> {
+				// Keep a clear central aisle from the south-facing mouth while both
+				// walls read as a busy, inhabited granary rather than a marker room.
+				placeDecoration(level, center, chamber, -4, 1, 0, Blocks.CHEST);
+				placeDecoration(level, center, chamber, 4, 1, 0, Blocks.BARREL);
+				placeDecoration(level, center, chamber, -3, 1, 3, Blocks.HAY_BLOCK);
+				placeDecoration(level, center, chamber, 3, 1, 3, Blocks.COMPOSTER);
+				placeDecoration(level, center, chamber, 0, 1, 3, ModBlocks.FOOD_NODE);
+				placeDecoration(level, center, chamber, -4, 2, 0, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, 4, 2, 0, Blocks.LANTERN);
+			}
 			default -> throw new IllegalArgumentException("Unsupported chamber purpose " + chamber.purpose());
 		}
 	}
@@ -189,16 +200,22 @@ public final class TieredMoundPlacer {
 			return ModBlocks.NEST_MOUND;
 		}
 		int roll = Math.floorMod(x * 73428767 ^ y * 912931 ^ z * 43828933 ^ blueprint.seed() * 199999, 100);
-		if (roll < 72) {
-			return ModBlocks.NEST_MOUND;
-		}
-		if (roll < 88) {
-			return Blocks.ROOTED_DIRT;
-		}
-		if (roll < 97) {
-			return Blocks.COARSE_DIRT;
-		}
-		return Blocks.MANGROVE_ROOTS;
+		return switch (blueprint.palette()) {
+			case "earth" -> {
+				if (roll < 72) yield ModBlocks.NEST_MOUND;
+				if (roll < 88) yield Blocks.ROOTED_DIRT;
+				if (roll < 97) yield Blocks.COARSE_DIRT;
+				yield Blocks.MANGROVE_ROOTS;
+			}
+			case "food_store" -> {
+				if (roll < 62) yield ModBlocks.NEST_MOUND;
+				if (roll < 78) yield Blocks.ROOTED_DIRT;
+				if (roll < 88) yield Blocks.COARSE_DIRT;
+				if (roll < 95) yield Blocks.MOSS_BLOCK;
+				yield Blocks.MANGROVE_ROOTS;
+			}
+			default -> throw new IllegalArgumentException("Unsupported material palette " + blueprint.palette());
+		};
 	}
 
 	private static boolean isSurface(TieredMoundBlueprint blueprint, int x, int y, int z) {

@@ -47,7 +47,7 @@ public final class FormicFrontierGameTest {
 		ColonyData colony = ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
 
 		assertTieredMoundProfile(helper, origin, ModBlocks.NEST_MOUND, "queen chamber");
-		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0), ModBlocks.FOOD_CHAMBER, "food store");
+		assertFoodStoreProfile(helper, ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0), "food store");
 		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.NURSERY, 0), ModBlocks.NURSERY_CHAMBER, "nursery");
 		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.MINE, 0), ModBlocks.MINE_CHAMBER, "mine");
 		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.BARRACKS, 0), ModBlocks.BARRACKS_CHAMBER, "barracks");
@@ -111,7 +111,7 @@ public final class FormicFrontierGameTest {
 
 	@GameTest
 
-	public void cultureBuildingsShareTheMinimalResetBaseline(GameTestHelper helper) {
+	public void culturesShareTheOrganicQueenAndFoodBuildingLanguage(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin, 150);
 		BlockPos amber = origin.offset(-84, 0, -10);
@@ -127,7 +127,7 @@ public final class FormicFrontierGameTest {
 			StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(queen), BuildingType.QUEEN_CHAMBER, BuildingVisualStage.COMPLETE, cultures.get(i));
 			StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(food), BuildingType.FOOD_STORE, BuildingVisualStage.COMPLETE, cultures.get(i));
 			assertTieredMoundProfile(helper, queen, ModBlocks.NEST_MOUND, cultures.get(i).id() + " queen");
-			assertMinimalBuildingMarker(helper, food, ModBlocks.FOOD_CHAMBER, cultures.get(i).id() + " food store");
+			assertFoodStoreProfile(helper, food, cultures.get(i).id() + " food store");
 		}
 
 		BlockPos amberSignature = amber.offset(0, 0, 56);
@@ -161,15 +161,19 @@ public final class FormicFrontierGameTest {
 
 	@GameTest
 
-	public void starterSideChambersUseSingleBlockBaseline(GameTestHelper helper) {
+	public void starterFoodStoreIsOrganicWhilePendingFamiliesRemainMarkers(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin);
 		ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
 
-		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0), ModBlocks.FOOD_CHAMBER, "food store");
+		assertFoodStoreProfile(helper, ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0), "food store");
 		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.NURSERY, 0), ModBlocks.NURSERY_CHAMBER, "nursery");
 		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.MINE, 0), ModBlocks.MINE_CHAMBER, "mine");
 		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.BARRACKS, 0), ModBlocks.BARRACKS_CHAMBER, "barracks");
+		if (!VisualQaScenes.scenes().contains(VisualQaScenes.FOOD_STORE_VARIANTS)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.FOOD_STORE_INTERIOR)) {
+			helper.fail("Visual QA should expose the food-store family and its inhabited interior.");
+		}
 		helper.succeed();
 	}
 
@@ -744,11 +748,15 @@ public final class FormicFrontierGameTest {
 		}
 		BlockPos origin = new BlockPos(2, 3, 2);
 		BlockPos food = ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0);
+		BlockPos secondFood = ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 1);
 		BlockPos nursery = ColonyBuilder.siteFor(origin, BuildingType.NURSERY, 0);
 		BlockPos market = ColonyBuilder.siteFor(origin, BuildingType.MARKET, 0);
 		BlockPos watch = ColonyBuilder.siteFor(origin, BuildingType.WATCH_POST, 0);
 		if (Math.abs(food.getX() - origin.getX()) < 36 || Math.abs(nursery.getX() - origin.getX()) < 36) {
 			helper.fail("Starter side chambers should move out to the large village ring.");
+		}
+		if (horizontalDistanceSquared(food, secondFood) < 28 * 28) {
+			helper.fail("Repeated food stores need enough open ground for distinct mound silhouettes.");
 		}
 		if (Math.max(Math.abs(market.getX() - origin.getX()), Math.abs(market.getZ() - origin.getZ())) < 34) {
 			helper.fail("Market should live in the larger diagonal village district.");
@@ -802,7 +810,7 @@ public final class FormicFrontierGameTest {
 			helper.fail("Renovation should preserve research.");
 		}
 		assertTieredMoundProfile(helper, origin, ModBlocks.NEST_MOUND, "renovated queen chamber");
-		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0), ModBlocks.FOOD_CHAMBER, "renovated food store");
+		assertFoodStoreProfile(helper, ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0), "renovated food store");
 		helper.succeed();
 	}
 
@@ -1175,7 +1183,7 @@ public final class FormicFrontierGameTest {
 			helper.fail("Famine warning should not consume the colony's last food.");
 		}
 		BlockPos food = ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0);
-		assertMinimalBuildingMarker(helper, food, ModBlocks.FOOD_CHAMBER, "famine food store");
+		assertFoodStoreProfile(helper, food, "famine food store");
 		helper.assertBlockPresent(ModBlocks.FOOD_NODE, food.offset(0, 1, -2));
 		helper.assertBlockPresent(Blocks.HAY_BLOCK, food.offset(1, 1, -1));
 		helper.assertBlockPresent(Blocks.RED_MUSHROOM_BLOCK, food.offset(-2, 1, 0));
@@ -1944,6 +1952,45 @@ public final class FormicFrontierGameTest {
 		}
 	}
 
+	private static void assertFoodStoreProfile(GameTestHelper helper, BlockPos center, String label) {
+		helper.assertBlockPresent(ModBlocks.FOOD_CHAMBER, center);
+		if (helper.getLevel().getBlockState(helper.absolutePos(center.below())).is(ModBlocks.NEST_CORE)) {
+			helper.fail(label + " should be a separate surface chamber, not another queen core.");
+		}
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 2, -5))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 2, 1))).isAir()) {
+			helper.fail(label + " should expose a south-facing mouth connected to its granary interior.");
+		}
+		helper.assertBlockPresent(Blocks.CHEST, center.offset(-4, 1, 1));
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(4, 1, 1));
+		helper.assertBlockPresent(Blocks.HAY_BLOCK, center.offset(-3, 1, 4));
+		helper.assertBlockPresent(Blocks.COMPOSTER, center.offset(3, 1, 4));
+		helper.assertBlockPresent(ModBlocks.FOOD_NODE, center.offset(0, 1, 4));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(-4, 2, 1));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(4, 2, 1));
+		if (!isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 6, 1))).getBlock())) {
+			helper.fail(label + " should have a low rounded crown at y=6.");
+		}
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 7, 1))).isAir()) {
+			helper.fail(label + " should end after one seven-block storey.");
+		}
+		int base = countMoundLayer(helper, center, 0, 12);
+		int shoulder = countMoundLayer(helper, center, 4, 12);
+		// Colony worker routes intentionally replace part of the ground footprint
+		// after buildings are placed; blueprint unit tests own the exact base mass.
+		if (base < 90 || shoulder < 20 || base <= shoulder) {
+			helper.fail(label + " should be a substantial low taper, got layer masses " + base + "/" + shoulder);
+		}
+	}
+
+	private static boolean isOrganicMoundShell(net.minecraft.world.level.block.Block block) {
+		return block == ModBlocks.NEST_MOUND
+				|| block == Blocks.ROOTED_DIRT
+				|| block == Blocks.COARSE_DIRT
+				|| block == Blocks.MOSS_BLOCK
+				|| block == Blocks.MANGROVE_ROOTS;
+	}
+
 	private static void assertTieredMoundProfile(GameTestHelper helper, BlockPos center,
 			net.minecraft.world.level.block.Block expectedCenter, String label) {
 		helper.assertBlockPresent(expectedCenter, center);
@@ -1991,7 +2038,7 @@ public final class FormicFrontierGameTest {
 				var state = helper.getLevel().getBlockState(helper.absolutePos(center.offset(x, y, z)));
 				if (state.is(ModBlocks.NEST_MOUND) || state.is(ModBlocks.NEST_CORE)
 						|| state.is(Blocks.ROOTED_DIRT) || state.is(Blocks.COARSE_DIRT)
-						|| state.is(Blocks.MANGROVE_ROOTS)) {
+						|| state.is(Blocks.MOSS_BLOCK) || state.is(Blocks.MANGROVE_ROOTS)) {
 					count++;
 				}
 			}

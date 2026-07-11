@@ -39,6 +39,8 @@ STRUCTURE_EXPECTED = [
     "mound_interior.png",
     "mound_storage_interior.png",
     "mound_lookout_interior.png",
+    "food_store_variants.png",
+    "food_store_interior.png",
 ]
 EXPECTED_BY_SCOPE = {
     "full": FULL_EXPECTED,

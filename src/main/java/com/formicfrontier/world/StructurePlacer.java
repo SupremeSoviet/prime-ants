@@ -4,6 +4,7 @@ import com.formicfrontier.registry.ModBlocks;
 import com.formicfrontier.sim.BuildingType;
 import com.formicfrontier.sim.BuildingVisualStage;
 import com.formicfrontier.sim.ColonyCulture;
+import com.formicfrontier.world.structure.OrganicBuildingPlacer;
 import com.formicfrontier.world.structure.TieredMoundPlacer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
@@ -49,6 +50,10 @@ public final class StructurePlacer {
 		}
 		if (type == BuildingType.GREAT_MOUND) {
 			placeGreatMoundProject(level, center, culture);
+			return;
+		}
+		if (OrganicBuildingPlacer.supports(type)) {
+			OrganicBuildingPlacer.place(level, center, type);
 			return;
 		}
 		safeSet(level, center, markerBlock(type));
