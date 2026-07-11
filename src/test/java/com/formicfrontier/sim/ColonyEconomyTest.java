@@ -1202,7 +1202,99 @@ final class ColonyEconomyTest {
 				"a successful defense must not escalate the relation to WAR; shifted=" + held.relationShifted()
 						+ " (attack=" + held.attackStrength() + " defense=" + held.defenseRating() + ")");
 	}
+	@Test
+	void castePopulationAutoBalancesTowardColonyNeeds() {
+		// Content row caste_population_auto_balances: castes auto-rebalance toward
+		// the colony's current need over time. The growth loop only ever ADDS
+		// castes, so without this pass a colony that over-produced one caste while
+		// starving for another would never recover its composition. This test proves
+		// the balancer measurably SHIFTS population from a surplus caste to the
+		// caste the colony is starving for, in both directions, and is a no-op when
+		// the colony is healthy.
+		//
+		// baseColony(): queen=1 worker=3 miner=2 soldier=2; FOOD=120 ORE=20 CHITIN=24;
+		// priorities = [FOOD, ORE, CHITIN, DEFENSE]; upkeepPerEconomyTick = 25.
 
+		// (1) DEFENSE STARVATION: strip the soldiers so defense is starving, and give
+		// the colony surplus workers to convert. The balancer must pull WORKERs into
+		// SOLDIERs so the garrison rises while workers fall by the same amount.
+		ColonyData undefended = baseColony();
+		undefended.addCaste(AntCaste.SOLDIER, -2); // 2 -> 0 (defense starving: < 2)
+		undefended.addCaste(AntCaste.WORKER, 5);   // 3 -> 8 (surplus above SURPLUS_HEADROOM=2)
+		int workersBefore = undefended.casteCount(AntCaste.WORKER);
+		int soldiersBefore = undefended.casteCount(AntCaste.SOLDIER);
+		int populationBefore = undefended.population();
+		Assertions.assertTrue(undefended.casteCount(AntCaste.SOLDIER) + undefended.casteCount(AntCaste.MAJOR)
+						< CasteBalancer.DEFENSE_STARVATION_THRESHOLD, "fixture: defenders below starvation threshold");
+
+		CasteBalancer.BalanceResult defenseResult = CasteBalancer.tick(undefended);
+
+		Assertions.assertTrue(defenseResult.reassigned() > 0, "defense starvation must reassign workers into soldiers");
+		Assertions.assertEquals(AntCaste.WORKER, defenseResult.source(), "surplus workers are the source for defense reassignment");
+		Assertions.assertEquals(AntCaste.SOLDIER, defenseResult.target(), "soldier is the target role for a defense shortage");
+		Assertions.assertEquals(workersBefore - defenseResult.reassigned(), undefended.casteCount(AntCaste.WORKER),
+				"workers must fall by exactly the reassigned count");
+		Assertions.assertEquals(soldiersBefore + defenseResult.reassigned(), undefended.casteCount(AntCaste.SOLDIER),
+				"soldiers must rise by exactly the reassigned count");
+		Assertions.assertEquals(populationBefore, undefended.population(),
+				"reassignment is role conversion, not births or deaths: total population must be conserved");
+		Assertions.assertTrue(undefended.casteCount(AntCaste.SOLDIER) > soldiersBefore,
+				"the defense need actually improved the garrison");
+		Assertions.assertTrue(undefended.currentTask().toLowerCase(java.util.Locale.ROOT).contains("reassigned"),
+				"the rebalance is reflected in the colony task: " + undefended.currentTask());
+
+		// (2) FOOD STARVATION: drain food below the starvation threshold and give
+		// the colony surplus miners. Food shortages pull miners BACK into general
+		// workers (the flexible foraging reserve), so the balancer must convert
+		// MINER -> WORKER, raising workers while lowering miners.
+		ColonyData starving = baseColony();
+		starving.addCaste(AntCaste.MINER, 6); // 2 -> 8 (surplus miners available to pull back)
+		starving.setResource(ResourceType.FOOD, 0); // below upkeep*2 = 50 -> food starving
+		Assertions.assertTrue(starving.resource(ResourceType.FOOD)
+						< starving.upkeepPerEconomyTick() * CasteBalancer.FOOD_STARVATION_UPKEEP_MULTIPLE,
+				"fixture: food below starvation threshold");
+		int minersBefore = starving.casteCount(AntCaste.MINER);
+		int workersBeforeStarve = starving.casteCount(AntCaste.WORKER);
+
+		CasteBalancer.BalanceResult foodResult = CasteBalancer.tick(starving);
+
+		Assertions.assertTrue(foodResult.reassigned() > 0, "food starvation must pull surplus miners back into workers");
+		Assertions.assertEquals(AntCaste.MINER, foodResult.source(), "miners are the surplus source for a food shortage");
+		Assertions.assertEquals(AntCaste.WORKER, foodResult.target(), "worker is the foraging role pulled in for food");
+		Assertions.assertEquals(minersBefore - foodResult.reassigned(), starving.casteCount(AntCaste.MINER),
+				"miners must fall by exactly the reassigned count");
+		Assertions.assertEquals(workersBeforeStarve + foodResult.reassigned(), starving.casteCount(AntCaste.WORKER),
+				"workers must rise by exactly the reassigned count");
+
+		// (3) HEALTHY NO-OP: a colony whose needs are all satisfied must NOT shift
+		// any castes, so the balancer never destabilises a stable colony and never
+		// interferes with the existing growth/economy deltas. baseColony() is
+		// healthy (FOOD=120 well above upkeep*2, ORE=20 at threshold not below,
+		// CHITIN=24 above threshold, 2 soldiers at threshold not below).
+		ColonyData healthy = baseColony();
+		int[] before = healthy.castesView().values().stream().mapToInt(Integer::intValue).toArray();
+
+		CasteBalancer.BalanceResult noop = CasteBalancer.tick(healthy);
+
+		Assertions.assertFalse(noop.anyChange(), "a healthy colony must not be rebalanced");
+		Assertions.assertArrayEquals(before, healthy.castesView().values().stream().mapToInt(Integer::intValue).toArray(),
+				"a healthy colony's caste counts must be unchanged");
+
+		// (4) QUEEN-LOSS FREEZE: a queenless colony cannot reorganise, matching the
+		// growth and progression passes. The balancer must be a no-op so a dying
+		// colony is not silently reshuffled.
+		ColonyData queenless = baseColony();
+		queenless.addCaste(AntCaste.SOLDIER, -2); // defense would otherwise be starving
+		queenless.addCaste(AntCaste.WORKER, 5);   // surplus would otherwise be available
+		queenless.setQueenHealth(0);
+		int[] queenlessBefore = queenless.castesView().values().stream().mapToInt(Integer::intValue).toArray();
+
+		CasteBalancer.BalanceResult frozen = CasteBalancer.tick(queenless);
+
+		Assertions.assertFalse(frozen.anyChange(), "a queenless colony must not rebalance castes");
+		Assertions.assertArrayEquals(queenlessBefore, queenless.castesView().values().stream().mapToInt(Integer::intValue).toArray(),
+				"a queenless colony's caste counts must be unchanged");
+	}
 	private static ColonyData baseColony() {
 		ColonyData colony = new ColonyData(1, new BlockPos(0, 64, 0));
 		colony.setResource(ResourceType.FOOD, 120);

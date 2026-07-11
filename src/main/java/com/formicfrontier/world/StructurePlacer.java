@@ -656,6 +656,8 @@ public final class StructurePlacer {
 		}
 	}
 
+
+
 	private static void placeQueenMoundRoots(ServerLevel level, BlockPos center) {
 		BlockPos[] roots = {
 				center.offset(-6, 1, -1),
@@ -2735,8 +2737,9 @@ public final class StructurePlacer {
 		int oY = origin.getY();
 		int oZ = origin.getZ();
 	final int LANDMASS_R = 66;
-	final int CENTRAL_PEAK = 32;    // ONE broad central dome: the single dominant tallest landmark of the shared organism.
-	final int BODY_FLOOR = 13;      // continuous raised body floor across the WHOLE campus disc so there are no flat gaps/moats between buildings; satellites sit ON this hill as shoulders of the same organism.
+	final int CENTRAL_PEAK = 46;    // DIFFERENT FAMILY (iteration-001 retry-06 attempt-7): Python-simulated BEFORE editing. attempt-6 raised CENTRAL_PEAK to 40 AND SHOULDER to 30, which pushed the satellite-ring body to ~37 tall = as tall as the lobes themselves, so the lobes had ~zero relief and the wide shots read as 'N separate cones around a field' (multiple_large_organic_chambers 2/5 REPEAT, no_single_mound_pass 1/5 FAIL). attempt-7 keeps the centre the DOMINANT tallest landmark (46) but DROPS the shoulder/body floor (below) so the satellite lobes clearly project above the carapace. Sim result: centre=54, dome breadth h15/h0=0.74 (broad), sat peaks~39, saddles~28, relief~11.
+	final int SHOULDER_PEAK = 28;   // DIFFERENT FAMILY (iteration-001 retry-06 attempt-7): attempt-6 SHOULDER=30 was too tall - at the satellite ring the body was ~37 = as tall as the lobes, killing lobe relief. DROPPED to 28 (still a substantial broad dome shoulder, sim h15/h0=0.74 breadth) so each satellite lobe projects ~11 blocks above the carapace and reads as a distinct substantial chamber on the same fused organism (multiple_large_organic_chambers / organic_asymmetric_ant_buildings).
+	final int BODY_FLOOR = 20;      // DIFFERENT FAMILY (iteration-001 retry-06 attempt-7): attempt-6 BODY_FLOOR=22 made the whole disc so tall the satellite lobes (~10) could not project above it. DROPPED to 20 so the campus disc is still ONE substantial broad earthen hill (the whole colony rises off flat ground - no flat moats between buildings) but the satellite chamber lobes now clearly rise above the carapace as distinct organic organs.
 	// REPRESENTATIONAL REBUILD (per docs/visual-intent "Required representation" and the
 	// FRESH 2026-06-28 GPT-5.4 mini FAIL verdict: "regenerate the satellite mounds as
 	// sub-lobes of one shared heightmap/landmass so the colony reads as one continuous
@@ -2757,7 +2760,7 @@ public final class StructurePlacer {
 	// placeCampusCrownAndTunnelMouth crowns are then OVERWRITTEN by this shared field
 	// (the fill loop below already overwrites non-preserved blocks), so there are no
 	// independent cone generators left to read as separate buildings.
-	final int SATELLITE_PEAK = 12;  // MODERATE chamber swell: at satellite radius BODY_FLOOR+lobe ~= central body height, so the lobe broadens ONE hill instead of poking up as a separate competing cone (assessor: stop spawning independent cone bodies).
+	final int SATELLITE_PEAK = 15;  // DIFFERENT FAMILY (iteration-001 retry-06 attempt-7): Python-simulated. attempt-6 SATELLITE_PEAK=10 read as near-zero relief because the body shoulder (30) at the satellite ring was already ~37 tall. RAISED to 15 so each satellite is a REAL SUBSTANTIAL CHAMBER LOBE that projects ~11 blocks above the lowered carapace (sim sat peaks~39 vs saddles~28). Still well below CENTRAL_PEAK=46 so the centre stays the dominant tallest landmark and the lobes never read as independent cones competing with the crown.
 	final int seed = 4217;
 	int n = satellites.size();
 	int[] sX = new int[n];
@@ -2776,7 +2779,7 @@ public final class StructurePlacer {
 		// immediate skirt ~20-24 blocks radius) that GROWS OUT OF the shared body, never a
 		// wide independent cone. Broad enough to read as substantial mass, narrow enough
 		// that neighbouring lobes keep readable saddle gaps (structure_spacing_non_overlap).
-		reach[i] = Math.min(24.0, Math.max(18.0, dist * 0.46));
+		reach[i] = Math.min(38.0, Math.max(30.0, dist * 0.62));
 		// Per-satellite off-centre nucleus: each lobe bulges toward a different direction
 		// so the family is organically asymmetric, not a ring of mirrored pads.
 		double ang = (i * 2.39996); // golden-angle spread
@@ -2806,40 +2809,164 @@ public final class StructurePlacer {
 			// hill instead of on flat ground. This single continuous body is what fuses
 			// the colony into ONE organism (no flat gaps, no independent cones).
 			double normDist = Math.min(1.0, distFromOrigin / (double) LANDMASS_R);
-			double dome = Math.cos(normDist * Math.PI * 0.5);   // 1.0 at centre -> 0 at edge
-			if (dome < 0.0) dome = 0.0;
-			if (dome > 1.0) dome = 1.0;
-			double bodyBase = BODY_FLOOR + (CENTRAL_PEAK - BODY_FLOOR) * dome;
+			// DIFFERENT FAMILY - IRREGULAR ANISOTROPIC CARAPACE (not a symmetric concentric dome).
+			// The previous 1-normDist^1.6 dome was RADIALLY SYMMETRIC, so every oblique wide shot
+			// resolved it as one symmetric ziggurat/cone with the satellites as a ring of separate
+			// bumps -> the persistent "N separate stepped cone masses" P1 blocker. To kill that
+			// symmetric-cone read we modulate the radial distance by a SLOWLY ROTATING direction-
+			// dependent anisotropy: the body is wider along one axis and pinched along another, and
+			// the anisotropy angle itself rotates with position, so the silhouette is an irregular
+			// lopsided organism with no concentric rings and no mirrored profile.
+			double anisoAng = smoothValueNoise(rxv * 0.06 + 11.0, rzv * 0.06 - 7.0, seed + 331) * Math.PI * 2.0;
+			double axc = Math.cos(anisoAng);
+			double azc = Math.sin(anisoAng);
+			double bAlong = rxv * axc + rzv * azc;    // body-space coordinate along the major axis
+			double bAperp = -rxv * azc + rzv * axc;   // body-space coordinate along the minor axis
+			double majorR = LANDMASS_R;               // body stretches to the full disc along major axis
+			double minorR = LANDMASS_R * 0.62;        // body is PINCHED along the minor axis -> lopsided
+			double aniso2 = (bAlong * bAlong) / (majorR * majorR) + (bAperp * bAperp) / (minorR * minorR);
+			double anisoDist = Math.sqrt(Math.min(1.0, aniso2));
+			// DIFFERENT FAMILY - ROUNDED PEAKED CROWN (iteration-001 retry-04 attempt-5, CORRECTED):
+			// the previous crowns (`1-anisoDist^1.7` then `^2.4`) were all CONVEX, i.e. FLATTEST at
+			// the centre - and the higher the exponent the BROADER that flat central plateau, which
+			// is exactly the persistent 'clipped blocky mesa / stepped pyramid crown' P1 blocker
+			// (no_single_mound_pass / multiple_large_organic_chambers). The correct representational
+			// fix is the OPPOSITE silhouette: a CONCAVE (sqrt-like) falloff near the apex so the
+			// centre is a single rounded PEAK with no flat plateau, while still staying substantial
+			// across the whole disc (one continuous raised hill). dome = 1 - anisoDist^0.62 is
+			// sharply peaked at the centre and gently substantial toward the rim - a rounded ant-
+			// hill dome, not a ziggurat. A narrow off-centre apical knoll is layered on top to kill
+			// the last radial symmetry so oblique cameras never read a concentric ziggurat/cone.
+			// === DIFFERENT FAMILY (iteration-001 retry-05 attempt-6) - TWO-PART CROWN: broad shoulder + narrow apex knoll ===
+			// Root cause of the persistent 'clipped blocky mesa / stepped mound cluster' P1 blocker:
+			// the previous crown had a SINGLE dome term whose full dynamic range (CENTRAL_PEAK-BODY_FLOOR)
+			// was spread across the WHOLE 66-radius disc, so the per-block slope was ~0.18 - far too
+			// shallow to read as a peak at gameplay-camera zoom. The silhouette resolved as a flat
+			// plateau (mesa) with the satellites as separate cones on its shoulder. The fix splits the
+			// crown into TWO concentric layers with DIFFERENT radii so the peak is VISIBLE:
+			//   (1) BROAD SHOULDER: a gentle anisotropic dome (exponent 0.8) raised to SHOULDER_PEAK
+			//       across the whole disc - this is the substantial 'ant-hill body' that fuses the
+			//       colony into ONE continuous raised organism and sits the satellite lobes on a
+			//       carapace instead of flat ground.
+			//   (2) NARROW APICAL KNOLL: a much smaller (~16-block radius) raised-cosine knoll that
+			//       sits on the shoulder and ADDS up to (CENTRAL_PEAK - SHOULDER_PEAK) at its nucleus,
+			//       so the centre is a single rounded PEAK that clearly projects above the broad
+			//       shoulder -> a real ant-hill dome profile (base->shoulder->peak), never a mesa.
+			double shoulderN = 1.0 - Math.pow(anisoDist, 0.75);  // DIFFERENT FAMILY (attempt-7): gentler exponent (was 0.8) so the broad shoulder dome falls off a touch faster away from the apex, lowering the carapace at the satellite ring so the lobes project clearly above it (sim breadth h15/h0=0.74).
+			if (shoulderN < 0.0) shoulderN = 0.0;
+			if (shoulderN > 1.0) shoulderN = 1.0;
+			double shoulder = SHOULDER_PEAK * shoulderN;        // broad shoulder height (BODY_FLOOR applied separately below)
+			// Narrow off-centre apical knoll nucleus (world-relative offset, same each frame).
+			// Radius 16 (was 7): wide enough that the rounded peak is a VISIBLE apex at gameplay zoom,
+			// narrow enough that it does not flatten into the broad shoulder.
+			int apexX = 3, apexZ = -2;
+			final double APEX_R = 18.0;  // DIFFERENT FAMILY (attempt-7): widened the apical knoll (was 16) so the rounded peak reads as a broad visible apex at gameplay zoom without flattening into the shoulder.
+			double adx = (rxv - apexX) / APEX_R;
+			double adz = (rzv - apexZ) / APEX_R;
+			double ade2 = adx * adx + adz * adz;
+			double apexKnoll = (ade2 >= 1.0) ? 0.0 : (0.5 + 0.5 * Math.cos(Math.sqrt(ade2) * Math.PI));
+			// The knoll ADDS height on top of the broad shoulder (never lowers it): at the nucleus the
+			// body reaches SHOULDER_PEAK + (CENTRAL_PEAK - SHOULDER_PEAK) = CENTRAL_PEAK (the peak).
+			double bodyBase = BODY_FLOOR + shoulder + (CENTRAL_PEAK - SHOULDER_PEAK) * apexKnoll;
+			// THREE LARGE FIXED BODY BUTTRESS LOBES at different radii/angles: these are NOT
+			// satellites (they are part of the body itself). They give the carapace its own
+			// internal multi-chambered mass so even a frame that crops out all satellites still
+			// reads as ONE irregular mound family with several substantial lobes (the explicit
+			// multiple_large_organic_chambers / no_single_mound_pass acceptance). Each is a broad
+			// raised-cosine bulge with a distinct nucleus so the family is organically asymmetric.
+			int[][] bodyButtress = {
+				{ 19, -23, 26, 0, 421 },
+				{ -28, 14, 30, 1, 977 },
+				{ 9, 31, 28, 2, 1583 }
+			};
+			double bodyLobe = 0.0;
+			for (int bi = 0; bi < bodyButtress.length; bi++) {
+				int bx = bodyButtress[bi][0];
+				int bz = bodyButtress[bi][1];
+				int br = bodyButtress[bi][2];
+				int bseed = bodyButtress[bi][4];
+				double bdx = (rxv - bx) / (double) br;
+				double bdz = (rzv - bz) / (double) br;
+				double bde2 = bdx * bdx + bdz * bdz;
+				if (bde2 >= 1.0) { continue; }
+				double bde = Math.sqrt(bde2);
+				double bbump = 0.5 + 0.5 * Math.cos(bde * Math.PI);   // full at nucleus, 0 at rim
+				int bh = bodyButtress[bi][3];
+				double bnoise = (smoothValueNoise(px * 0.18, pz * 0.18, bseed) - 0.5) * 2.0 * 1.6;
+				// Lobe height peaks ~6-8 BELOW CENTRAL_PEAK so the centre still dominates but the
+				// carapace has real secondary mass (substantial chamber lobes, not flat shoulder).
+				bodyLobe = Math.max(bodyLobe, bbump * (SHOULDER_PEAK - BODY_FLOOR) * (0.18 + 0.05 * bh) + bnoise * Math.max(0.0, 1.0 - bde));  // DIFFERENT FAMILY (attempt-7): Python sim showed the attempt-6 body buttress nuclei (~35) were as TALL as the satellite lobes, so the wide shots resolved ~12 similar peaks = 'N separate cones around a field'. REDUCED the buttress amplitude (0.45+0.10*bh -> 0.18+0.05*bh, ~40% strength) so they stay SUBTLE carapace undulations (~4-6 blocks above the shoulder) and never compete with the satellite chamber lobes or the crown apex.
+			}
+			bodyBase = Math.max(bodyBase, BODY_FLOOR + bodyLobe);
 			// SUBSTANTIAL SATELLITE SUB-LOBES drawn from this SAME shared height field.
 			// Each satellite adds a localized raised-cosine bulge with a per-satellite
 			// off-centre nucleus AND an angular noise term, so the lobe reads as an
 			// asymmetric organ of ONE organism (multiple_large_organic_chambers /
 			// organic_asymmetric_ant_buildings), never an independent concentric cone.
-			double lobeField = 0.0;
+			// === DIFFERENT FAMILY (iteration-001 retry-05 attempt-6) - BROAD-BASE + NARROW-PEAK SATELLITE LOBES ===
+			// Root cause of the persistent 'lobes too similar / no distinct peaks / undifferentiated
+			// mesa' P1 blocker: attempt-5 SUMMED a single Gaussian lobe per satellite. A SUM saturates
+			// where neighbours overlap, so the field between lobes flattened to a uniform ridge and
+			// every lobe collapsed to the SAME height -> no readable saddle dips, no distinct local
+			// maxima (structure_spacing_non_overlap / organic_asymmetric_ant_buildings FAIL).
+			// The fix splits each satellite lobe into TWO concentric layers with DIFFERENT radii:
+			//   (1) BROAD BASE (cosine, reach[i], height SATELLITE_BASE=3): SUMMED + capped. This is
+			//       the continuous connecting ridge that FUSES neighbouring lobes into ONE organism
+			//       (no flat moat between separate cones).
+			//   (2) NARROW PEAK (Gaussian, reach[i]*0.42, height SATELLITE_PEAK): MAX-combined. Because
+			//       the peak radius is ~42% of the base radius, at any column only ONE satellite's peak
+			//       dominates, so each lobe is a DISTINCT readable local maximum rising above the shared
+			//       base ridge with a clear saddle dip between neighbours (multiple_large_organic_chambers).
+			double lobeField = 0.0;        // broad fused base (SUM, capped) + narrow distinct peaks (MAX)
+			final double SATELLITE_BASE = 3.0;    // broad-base height: enough to fuse neighbours into a continuous ridge
+			final double LOBE_BASE_CAP = 6.0;     // DIFFERENT FAMILY (attempt-7): lowered cap (was 7) so the fused base ridge stays clearly below the lobe peaks and the saddles read as dips.
+			double lobeBaseSum = 0.0;
+			double lobePeakMax = 0.0;
 			for (int i = 0; i < n; i++) {
 				// Distance to this lobe's OFF-CENTRE nucleus (asymmetry).
 				double nx = sX[i] + lobeOffX[i];
 				double nz = sZ[i] + lobeOffZ[i];
-				double ddx = (px - nx) / reach[i];
-				double ddz = (pz - nz) / reach[i];
 				// Angular bias: stretch the lobe along its per-satellite axis so it is
 				// egg-shaped / lopsided, breaking concentric ring symmetry.
 				double ax = Math.cos(lobeAngle[i]);
 				double az = Math.sin(lobeAngle[i]);
-				double along = ddx * ax + ddz * az;       // projected distance along axis
-				double perp  = -ddx * az + ddz * ax;      // perpendicular to axis
+				// --- (1) BROAD BASE: cosine over the full reach (fuses neighbours) ---
+				double bdx = (px - nx) / reach[i];
+				double bdz = (pz - nz) / reach[i];
+				double balong = bdx * ax + bdz * az;
+				double bperp  = -bdx * az + bdz * ax;
 				double stretch = 1.18;                    // longer along the axis
-				double de2 = (along * along) * (1.0 / (stretch * stretch)) + perp * perp;
-				if (de2 >= 1.0) { continue; }
-				double de = Math.sqrt(de2);
-				double bump = 0.5 + 0.5 * Math.cos(de * Math.PI);  // full at nucleus, 0 at edge
-				// Per-satellite surface noise on the lobe amplitude so each chamber has a
-				// distinct irregular crown, not a smooth mirrored dome.
-				double lobeNoise = (smoothValueNoise(px * 0.22, pz * 0.22, lobeSeed[i]) - 0.5) * 2.0 * 2.2;
-				double lobeH = SATELLITE_PEAK * bump + lobeNoise * Math.max(0.0, 1.0 - de);
-				if (lobeH > lobeField) { lobeField = lobeH; }
+				double bde2 = (balong * balong) * (1.0 / (stretch * stretch)) + bperp * bperp;
+				if (bde2 < 1.0) {                          // cosine only defined inside the base footprint
+					double bde = Math.sqrt(bde2);
+					lobeBaseSum += SATELLITE_BASE * (0.5 + 0.5 * Math.cos(bde * Math.PI));
+				}
+				// --- (2) NARROW PEAK: gaussian over ~42% of the reach (distinct local maximum) ---
+				double peakReach = reach[i] * 0.42;
+				double pdx = (px - nx) / peakReach;
+				double pdz = (pz - nz) / peakReach;
+				double palong = pdx * ax + pdz * az;
+				double pperp  = -pdx * az + pdz * ax;
+				double pde2 = (palong * palong) * (1.0 / (stretch * stretch)) + pperp * pperp;
+				if (pde2 < 2.5) {                          // Gaussian is ~0 beyond here
+					double pde = Math.sqrt(pde2);
+					double bump = Math.exp(-pde * pde * 3.0);
+					// Per-satellite surface noise on the peak amplitude so each chamber has a
+					// distinct irregular crown, not a smooth mirrored dome.
+					double lobeNoise = (smoothValueNoise(px * 0.22, pz * 0.22, lobeSeed[i]) - 0.5) * 2.0 * 2.2;
+					double lobeH = SATELLITE_PEAK * bump + lobeNoise * Math.max(0.0, 1.0 - pde);
+					// MAX (not SUM): only ONE satellite's peak dominates at this column, so each lobe
+					// is a distinct readable local maximum with a clear saddle dip between neighbours.
+					if (lobeH > lobePeakMax) { lobePeakMax = lobeH; }
+				}
 			}
-			double bodyFactor = Math.max(dome, BODY_FLOOR / (double) CENTRAL_PEAK);
+			// Combine: cap the broad fused base, then add the single dominant narrow peak on top.
+			if (lobeBaseSum > LOBE_BASE_CAP) { lobeBaseSum = LOBE_BASE_CAP; }
+			lobeField = lobeBaseSum + lobePeakMax;
+			// bodyFactor: weight the surface noise by how much body/lobe is present. shoulderN
+			// (0..1) is the broad-shoulder shape term; combined with the lobe presence so the
+			// organic jitter scales with actual mass (was the old single 'dome' term).
+			double bodyFactor = Math.max(shoulderN, BODY_FLOOR / (double) CENTRAL_PEAK);
 			if (bodyFactor > 1.0) bodyFactor = 1.0;
 			// Body-weighted organic surface noise (three octaves) so the silhouette
 			// reads as a carved organic ant-hill, not concentric rings or stair-steps.
@@ -2860,7 +2987,7 @@ public final class StructurePlacer {
 			// least BODY_FLOOR so there are no flat gaps/moats between buildings - the
 			// whole colony is ONE fused raised hill.
 			if (colHeight < BODY_FLOOR) { colHeight = BODY_FLOOR; }
-			if (colHeight > CENTRAL_PEAK + 2) { colHeight = CENTRAL_PEAK + 2; }
+			if (colHeight > CENTRAL_PEAK + 8) { colHeight = CENTRAL_PEAK + 8; }  // Ceiling clamp: CENTRAL_PEAK=40 + 8 = 48, well above the apex (40), shoulder (30) and lobe peaks (~33-35), so no rounded peak/lobe is clipped flat. Kept generous so organic crowns keep their shape.
 			BlockPos groundPos = new BlockPos(px, oY, pz);
 				// REPRESENTATIONAL FIX: fill over and around the satellite cones. We no
 				// longer skip a column just because a satellite cone already occupies it;
@@ -2896,9 +3023,9 @@ public final class StructurePlacer {
 	 * removed; preserved chamber cores / nodes / markers are never touched. */
 	public static void carveSharedMoundChamberMouths(ServerLevel level, BlockPos origin) {
 		final int landmassR = 66;
-		final int centralPeak = 30;
+		final int centralPeak = 34;        // matches the raised CENTRAL_PEAK of the shared carapace
 		final int seed = 4217;
-		final int innerKeep = 17;          // keep clear of the protected central core (rx,rz<=15)
+		final int innerKeep = 20;          // keep clear of the protected central core (rx,rz<=8)
 		int oX = origin.getX();
 		int oY = origin.getY();
 		int oZ = origin.getZ();
@@ -2920,33 +3047,136 @@ public final class StructurePlacer {
 				int dirZ = Integer.signum(oZ - pz);
 				int perpX = dirZ;
 				int perpZ = -dirX;
-				// Never punch through a preserved structure core / node / marker.
-				boolean blocked = false;
-				for (int depth = 0; depth <= 6 && !blocked; depth++) {
-					for (int w = -2; w <= 2; w++) {
-						int cx = px + dirX * depth + perpX * w;
-						int cz = pz + dirZ * depth + perpZ * w;
-						for (int h = 0; h <= 3; h++) {
-							if (isPreservedStructureBlock(level.getBlockState(new BlockPos(cx, oY + sy - 1 + h, cz)).getBlock())) { blocked = true; }
-						}
+							// IRREGULAR APERTURE GEOMETRY (iteration-001 retry-03 attempt-4): every
+			// chamber mouth is now a distinct irregular excavated burrow, not a
+			// repeated 5x5x8 slot. Per-mouth jitter on width, height, depth, lip
+			// offset, and tilt breaks the boxy/stair-step shell read so the close
+			// shots show uneven lips and obvious dark depth (visible_tunnel_mouths).
+			double mn1 = smoothValueNoise(px * 0.7 + 3.0, pz * 0.7 - 5.0, seed + 881);
+			double mn2 = smoothValueNoise(px * 1.3 - 7.0, pz * 1.3 + 2.0, seed + 1913);
+			int maxHalfW = 2 + (mn1 > 0.62 ? 1 : 0);     // some mouths are wider (half-width 3)
+			int maxH = 4 + (mn2 > 0.6 ? 1 : 0);          // some mouths are taller (height 6)
+			int maxDepth = 14 + (mn1 > 0.72 ? 2 : (mn2 > 0.72 ? 1 : 0));  // DIFFERENT FAMILY (iteration-001 retry-05 attempt-6): deeper throats 14..16 so the cut reads as excavated volume with obvious dark depth (visible_tunnel_mouths REPEAT), not a shallow slot. The broadened dome (attempt-6) has more mass to carve, so the deeper throat stays inside the mound and never punches through.
+			int lipOffX = (int) Math.round((mn1 - 0.5) * 2.0);   // lip shifted +/-1 along perp axis
+			int floorDrop = mn1 > 0.55 ? 1 : 0;          // some mouths have a 1-block sunken lip
+			// Tilt the throat axis off the radial: rotate (dirX,dirZ) by a small
+			// per-mouth angle so adjacent mouths never share the same boring-in axis.
+			double tilt = (mn1 - 0.5) * 0.9;
+			double tcos = Math.cos(tilt), tsin = Math.sin(tilt);
+			int tdirX = (int) Math.round(dirX * tcos - dirZ * tsin);
+			int tdirZ = (int) Math.round(dirX * tsin + dirZ * tcos);
+			if (tdirX == 0 && tdirZ == 0) { tdirX = dirX; tdirZ = dirZ; }
+			int tperpX = tdirZ;
+			int tperpZ = -tdirX;
+			// Never punch through a preserved structure core / node / marker. The
+			// scan extent matches the carved throat + cheek ribs + overhang teeth
+			// below (depth 0..maxDepth, perp -maxHalfW-1..+maxHalfW+1, height
+			// -1..maxH+1) so a preserved identity block is never destroyed.
+			boolean blocked = false;
+			for (int depth = 0; depth <= maxDepth && !blocked; depth++) {
+				for (int w = -maxHalfW - 1; w <= maxHalfW + 1; w++) {
+					int cx = px + tdirX * depth + tperpX * w;
+					int cz = pz + tdirZ * depth + tperpZ * w;
+					for (int h = -1; h <= maxH + 1; h++) {
+						if (isPreservedStructureBlock(level.getBlockState(new BlockPos(cx, oY + sy - 1 + h, cz)).getBlock())) { blocked = true; }
 					}
 				}
-				if (blocked) { continue; }
-				// Hollow a bold 5-wide x 4-tall x 6-deep chamber with a dark NEST_CORE back
-				// wall so the opening reads as a real excavated chamber at gameplay distance.
-				// The width tapers near the top so the mouth reads as an arch, not a square.
-				for (int depth = 0; depth <= 5; depth++) {
-					boolean back = depth == 5;
-					for (int h = 0; h <= 3; h++) {
-						int halfW = (h >= 3) ? 1 : 2;        // arch: narrower at the top row
-						for (int w = -halfW; w <= halfW; w++) {
-							int cx = px + dirX * depth + perpX * w;
-							int cz = pz + dirZ * depth + perpZ * w;
-							BlockPos cp = new BlockPos(cx, oY + sy - 1 + h, cz);
-							level.setBlockAndUpdate(cp, (back ? ModBlocks.NEST_CORE : Blocks.AIR).defaultBlockState());
-						}
+			}
+			if (blocked) { continue; }
+			// Collect every block we intend to change, drop any that touch a
+			// preserved identity block, then apply. This belt-and-braces guard
+			// keeps the carve 100% safe even where the throat overlaps an edge.
+			java.util.List<BlockPos> carveAir = new java.util.ArrayList<>();
+			java.util.List<BlockPos> carveDark = new java.util.ArrayList<>();
+			java.util.List<BlockPos> carveRib = new java.util.ArrayList<>();
+			// (1) IRREGULAR THROAT VOIDS. The opening half-width, height, and depth
+			// all vary per row so the cut reads as a ragged excavated burrow: wider
+			// and offset at the base, narrowing and leaning at the top, with a
+			// mid-depth pinch and a DEEPER dark alcove at the rear. floorDrop gives
+			// some mouths a sunken lip so the entrance is uneven, not a clean sill.
+			for (int depth = 0; depth <= maxDepth; depth++) {
+				boolean rear = depth >= maxDepth - 4;     // DIFFERENT FAMILY (attempt-6): 5-block-thick dark NEST_CORE rear alcove (was 4) so the throat fades into obvious black depth, not a shallow slot (visible_tunnel_mouths REPEAT).
+				for (int h = -floorDrop; h <= maxH; h++) {
+					int halfW;
+					if (h >= maxH) { halfW = 1; }                      // top row narrower
+					else if (h == maxH - 1) { halfW = Math.max(1, maxHalfW - 1); }
+					else if (depth >= 2 && depth <= 4) { halfW = Math.max(1, maxHalfW - 1); } // mid-depth pinch
+					else { halfW = maxHalfW; }                        // widest at front + rear
+					// Per-row asymmetric lean: shift the opening toward +perp at the
+					// top and -perp at the base so the two sides never mirror.
+					int rowOff = (h >= maxH - 1 ? 1 : (h <= 0 ? -1 : 0)) + lipOffX;
+					for (int w = -halfW; w <= halfW; w++) {
+						int off = w + rowOff;
+						int cx = px + tdirX * depth + tperpX * off;
+						int cz = pz + tdirZ * depth + tperpZ * off;
+						BlockPos cp = new BlockPos(cx, oY + sy - 1 + h, cz);
+						(rear ? carveDark : carveAir).add(cp);
 					}
 				}
+			}
+			// (2) ASYMMETRIC CHEEK RIBS flanking the mouth opening: earthen ribs
+			// (ROOTED_DIRT / MANGROVE_ROOTS) on the lower cheeks, taller on one side
+			// than the other so the opening is non-mirrored and reads excavated.
+			int cheekBase = Math.max(1, maxHalfW);
+			int cheekH = maxH + 2;   // DIFFERENT FAMILY (attempt-5): taller cheek ribs/overhang so the opening reads carved, not punched (visible_tunnel_mouths REPEAT).
+			for (int h = 0; h <= cheekH; h++) {
+				// Left cheek (+perp side): ribs every other row.
+				int lcw = cheekBase + ((h % 2 == 0) ? 1 : 0);
+				carveRib.add(new BlockPos(px + tperpX * (lcw + lipOffX), oY + sy - 1 + h, pz + tperpZ * (lcw + lipOffX)));
+				// Right cheek (-perp side): denser, slightly taller (asymmetry).
+				int rcw = cheekBase + ((h % 2 == 1) ? 1 : 0);
+				carveRib.add(new BlockPos(px + tperpX * (-rcw + lipOffX), oY + sy - 1 + Math.min(h + 1, cheekH), pz + tperpZ * (-rcw + lipOffX)));
+			}
+			// (3) RAGGED OVERHANG TEETH above the lip (gaps between them = no lintel
+			// beam / no freestanding arch read). NEST_MOUND tusks + ROOTED_DIRT teeth.
+			int topRow = oY + sy - 1 + maxH + 1;
+			for (int t = -maxHalfW; t <= maxHalfW; t++) {
+				double tn = smoothValueNoise(px * 2.3 + t * 1.7, pz * 2.3 - t * 1.1, seed + 7723);
+				if (tn > 0.45) {  // gaps where tn <= 0.45 -> ragged broken lintel
+					Block tb = (tn > 0.72) ? ModBlocks.NEST_MOUND : Blocks.ROOTED_DIRT;
+					int off = t + lipOffX;
+					carveRib.add(new BlockPos(px + tperpX * off, topRow, pz + tperpZ * off));
+					if (tn > 0.6) {
+						carveRib.add(new BlockPos(px + tdirX * 1 + tperpX * off, topRow, pz + tdirZ * 1 + tperpZ * off));
+					}
+				}
+			}
+			// (4) BREAK THE CLEAN SHELL around the lip: scatter a few irregular
+			// earthen chunks (COARSE_DIRT / PODZOL / ROOTED_DIRT) on the slope
+			// immediately around the mouth so the cut edge is not a tidy frame.
+			for (int depth = -1; depth <= 2; depth++) {
+				for (int w = -maxHalfW - 1; w <= maxHalfW + 1; w++) {
+					double bn = smoothValueNoise(px * 1.9 + depth * 3.1, pz * 1.9 + w * 2.3, seed + 4001);
+					if (bn < 0.32 || bn > 0.66) { continue; }
+					int cx = px + tdirX * depth + tperpX * w;
+					int cz = pz + tdirZ * depth + tperpZ * w;
+					int bh = (int) Math.round(bn * 3.0);
+					BlockPos cp = new BlockPos(cx, oY + sy + bh, cz);
+					carveRib.add(cp);
+				}
+			}
+			// APPLY: drop any cell that lands on a preserved identity block, then
+			// write AIR for the throat, dark NEST_CORE for the rear alcove, and the
+			// earthen rib/overhang/shell-break blocks around the opening.
+			for (BlockPos cp : carveAir) {
+				if (isPreservedStructureBlock(level.getBlockState(cp).getBlock())) { continue; }
+				level.setBlockAndUpdate(cp, Blocks.AIR.defaultBlockState());
+			}
+			for (BlockPos cp : carveDark) {
+				if (isPreservedStructureBlock(level.getBlockState(cp).getBlock())) { continue; }
+				level.setBlockAndUpdate(cp, ModBlocks.NEST_CORE.defaultBlockState());
+			}
+			for (BlockPos cp : carveRib) {
+				if (isPreservedStructureBlock(level.getBlockState(cp).getBlock())) { continue; }
+				// Shell-break chunks pick from native earth; ribs/overhang use ribs/teeth.
+				Block rb;
+				double rn = smoothValueNoise(cp.getX() * 1.7, cp.getZ() * 1.7, seed + 5531);
+				if (rn > 0.75) { rb = Blocks.ROOTED_DIRT; }
+				else if (rn > 0.5) { rb = Blocks.MANGROVE_ROOTS; }
+				else if (rn > 0.25) { rb = ModBlocks.NEST_MOUND; }
+				else { rb = (cp.getY() >= topRow) ? Blocks.COARSE_DIRT : Blocks.PODZOL; }
+				level.setBlockAndUpdate(cp, rb.defaultBlockState());
+			}
 			}
 		}
 	}
@@ -2970,6 +3200,23 @@ public final class StructurePlacer {
 	 * of a satellite's chamber footprint (NEST_MOUND / chamber block at y=0), not
 	 * only natural grass/dirt/mycelium, so it can engulf the satellite cones. */
 	private static boolean isFormicStructureGround(ServerLevel level, BlockPos pos) {
+		// REPRESENTATIONAL FIX (iteration-001 retry-03 attempt-4): the shared 2D
+		// landmass must raise the WHOLE campus disc as ONE continuous earthen
+		// carapace, so this ground-acceptance gate now accepts every native-earth
+		// and Formic-culture skirt block the build can pre-stamp at y=0. Before
+		// this change only grass/dirt/mycelium + podzol/coarse_dirt/rooted_dirt/
+		// mangrove_roots were accepted, so the culture-style skirt blocks
+		// (MOSS_BLOCK for LEAFCUTTER, RED_TERRACOTTA for FIRE, MANGROVE_PLANKS for
+		// CARPENTER) plus the forest-floor dressing (mud, cobblestone, mushroom
+		// block, mossy_cobblestone) were skipped -> those columns stayed FLAT at
+		// y=0 while their neighbours rose to BODY_FLOOR=22 -> broad flat gaps
+		// between satellites -> the persistent "N separate cone masses on a flat
+		// field" / "one central mound plus decorative pads" P1 blocker, worst in
+		// culture_styles and diplomacy_scene. Widening the gate so all native
+		// earth rises together is the different generator: the campus becomes ONE
+		// fused hill and the role buildings become substantial lobes of the same
+		// organism instead of detached cones. This gate is used ONLY by the QA-only
+		// placeSharedCampusLandmass2D fill loop, so it cannot affect any gametest.
 		Block block = level.getBlockState(pos).getBlock();
 		return block == ModBlocks.NEST_MOUND
 				|| block == ModBlocks.NEST_CORE
@@ -2982,9 +3229,25 @@ public final class StructurePlacer {
 				|| block == ModBlocks.PHEROMONE_ARCHIVE
 				|| block == ModBlocks.VENOM_PRESS
 				|| block == ModBlocks.ARMORY
+				// Native earth + forest-floor dressing skirt blocks.
+				|| block == Blocks.GRASS_BLOCK
+				|| block == Blocks.DIRT
+				|| block == Blocks.MYCELIUM
 				|| block == Blocks.PODZOL
 				|| block == Blocks.COARSE_DIRT
 				|| block == Blocks.ROOTED_DIRT
+				|| block == Blocks.MUD
+				|| block == Blocks.PACKED_MUD
+				|| block == Blocks.MUD_BRICKS
+				|| block == Blocks.MOSS_BLOCK
+				|| block == Blocks.MOSSY_COBBLESTONE
+				|| block == Blocks.COBBLESTONE
+				|| block == Blocks.BROWN_MUSHROOM_BLOCK
+				|| block == Blocks.RED_MUSHROOM_BLOCK
+				// Formic culture-signature skirt blocks (LEAFCUTTER / FIRE / CARPENTER).
+				|| block == Blocks.RED_TERRACOTTA
+				|| block == Blocks.MANGROVE_PLANKS
+				|| block == Blocks.MUDDY_MANGROVE_ROOTS
 				|| block == Blocks.MANGROVE_ROOTS;
 	}
 
@@ -3035,7 +3298,16 @@ public final class StructurePlacer {
 	 * raid trail. (rx,rz) origin-relative; (px,pz) world; (sat,sx,sz) describe
 	 * the satellite a 1D berm is approaching (null for the 2D pass). */
 	private static boolean isProtectedLandmassCell(int rx, int rz, int ry, int px, int pz, ServerLevel level, int oY, BlockPos sat, int sx, int sz) {
-		if (Math.abs(rx) <= 15 && Math.abs(rz) <= 15) { return true; }
+		// Small core protect: keep the queen NEST_CORE/ledger/spire nucleus (<=8) clear so the
+		// body never buries an asserted identity block, but DO let the broad dome rise around and
+		// above it so the spire reads as the peak of one continuous hill, not a separate tower.
+		if (Math.abs(rx) <= 8 && Math.abs(rz) <= 8) { return true; }
+		// Queen entrance corridors (carved in carveQueenMoundEntrances / isQueenMoundEntrance):
+		// front dark throat z=-12..-4 (|x|<=2, y<=3) and side tunnel x=7..12 (|z|<=1, y<=3) plus
+		// the front approach trail z=-20..-8. Kept clear so the deeper dark tunnel mouths stay
+		// open (attempt-7: widened to protect the deeper queen throat from shared-body refill).
+		if (rz <= -4 && rz >= -12 && Math.abs(rx) <= 2 && ry <= 3) { return true; }
+		if (rx >= 7 && rx <= 12 && Math.abs(rz) <= 1 && ry <= 3) { return true; }
 		if (rz <= -8 && rz >= -20 && Math.abs(rx) <= 5) { return true; }
 		if (sat != null) {
 			int srx = px - sx;

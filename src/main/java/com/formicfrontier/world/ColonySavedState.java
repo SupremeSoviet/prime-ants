@@ -7,6 +7,7 @@ import com.formicfrontier.sim.ColonyEconomy;
 import com.formicfrontier.sim.ColonyLogistics;
 import com.formicfrontier.sim.NativeBlockRole;
 import com.formicfrontier.sim.CasteJobLoop;
+import com.formicfrontier.sim.CasteBalancer;
 import com.formicfrontier.sim.ColonyStageProgression;
 import com.formicfrontier.sim.TradeCaravan;
 import com.mojang.serialization.Codec;
@@ -102,6 +103,11 @@ public final class ColonySavedState extends SavedData {
 			ColonyLogistics.tick(colony);
 			CasteJobLoop.tick(colony);
 			ColonyStageProgression.tick(colony);
+			// Content row caste_population_auto_balances: castes auto-rebalance toward
+			// the colony's current need over time (starving food/ore/defense pulls
+			// surplus workers into the needed role), so a colony shifts with needs
+			// instead of only ever growing. No-op for a healthy colony.
+			CasteBalancer.tick(colony);
 			// Content row block_native_gameplay_roles: native blocks have active
 			// gameplay roles in the colony tick, not decoration. The FUNGUS_GARDEN
 			// block composts stored FOOD into FUNGUS each pass, gated by a food
