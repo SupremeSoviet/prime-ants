@@ -44,6 +44,38 @@ final class OrganicBuildingBlueprintTest {
 	}
 
 	@Test
+	void nurseriesAreWarmBulbousSingleStoreyMoundsWithDistinctSilhouettes() {
+		var variants = OrganicBuildingPlacer.variants(BuildingType.NURSERY);
+		Assertions.assertEquals(2, variants.size(), "repeated nurseries need two authored silhouettes");
+		Assertions.assertEquals(Set.of("nursery_a", "nursery_b"), variants.stream()
+				.map(TieredMoundBlueprint::name).collect(Collectors.toSet()));
+
+		Set<Set<FootprintCell>> footprints = new HashSet<>();
+		for (TieredMoundBlueprint blueprint : variants) {
+			Assertions.assertEquals("nursery", blueprint.palette());
+			Assertions.assertTrue(blueprint.maxY() <= 7, "nurseries should remain single-storey brood domes");
+			Assertions.assertEquals(1, blueprint.chambers().size());
+			Assertions.assertEquals("nursery", blueprint.chambers().getFirst().purpose());
+			Assertions.assertTrue(blueprint.connections().isEmpty(), "a single-storey nursery needs no stairs");
+			Assertions.assertEquals(1, blueprint.mouths().size());
+			Assertions.assertFalse(blueprint.isSolid(0, 2, 2), "the brood room interior must be carved");
+
+			Set<Cell> solid = solidCells(blueprint);
+			Assertions.assertFalse(solid.isEmpty());
+			Set<Cell> connected = connectedCells(solid);
+			Set<Cell> disconnected = new HashSet<>(solid);
+			disconnected.removeAll(connected);
+			Assertions.assertEquals(solid.size(), connected.size(),
+					blueprint.name() + " must be one connected brood dome; disconnected cells: " + disconnected);
+			Set<FootprintCell> footprint = solid.stream().filter(cell -> cell.y == 0)
+					.map(cell -> new FootprintCell(cell.x, cell.z)).collect(Collectors.toSet());
+			Assertions.assertTrue(footprint.size() >= 150, "nursery should be visibly fuller than a tiny marker hut");
+			footprints.add(footprint);
+		}
+		Assertions.assertEquals(2, footprints.size(), "nursery variants need genuinely different footprints");
+	}
+
+	@Test
 	void positionSelectorIsStableAndUsesBothFoodStoreVariants() {
 		Set<String> selected = new HashSet<>();
 		for (int x = 0; x < 64; x++) {
@@ -54,6 +86,19 @@ final class OrganicBuildingBlueprintTest {
 			selected.add(first);
 		}
 		Assertions.assertEquals(Set.of("food_store_a", "food_store_b"), selected);
+	}
+
+	@Test
+	void positionSelectorIsStableAndUsesBothNurseryVariants() {
+		Set<String> selected = new HashSet<>();
+		for (int x = 0; x < 64; x++) {
+			BlockPos center = new BlockPos(-x, 0, -x / 3);
+			String first = OrganicBuildingPlacer.blueprintFor(BuildingType.NURSERY, center).name();
+			String second = OrganicBuildingPlacer.blueprintFor(BuildingType.NURSERY, center).name();
+			Assertions.assertEquals(first, second, "the same nursery site must keep its silhouette across rebuilds");
+			selected.add(first);
+		}
+		Assertions.assertEquals(Set.of("nursery_a", "nursery_b"), selected);
 	}
 
 	private static Set<Cell> solidCells(TieredMoundBlueprint blueprint) {

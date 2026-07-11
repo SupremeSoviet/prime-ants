@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.Blocks;
 public final class DiplomacyConsequences {
 	private static final int ENDPOINT_BUFFER = 12;
 	private static final int WAR_PACT_ROUTE_OFFSET = 14;
+	private static final int PACT_CACHE_ROUTE_OFFSET = 10;
 	public static final int TRUCE_COOLDOWN_TICKS = 20 * 90;
 
 	private DiplomacyConsequences() {
@@ -129,6 +130,22 @@ public final class DiplomacyConsequences {
 		int dx = Integer.compare(target.getX(), source.getX());
 		int dz = Integer.compare(target.getZ(), source.getZ());
 		return midpoint.offset(sideX(dx, dz) * 18, 0, sideZ(dx, dz) * 18);
+	}
+
+	/** Keeps pact caches off the direct colony-to-colony axis where role mounds live. */
+	public static BlockPos pactCacheSite(BlockPos first, BlockPos second) {
+		BlockPos midpoint = new BlockPos(
+				(first.getX() + second.getX()) / 2,
+				first.getY(),
+				(first.getZ() + second.getZ()) / 2
+		);
+		int dx = Integer.compare(second.getX(), first.getX());
+		int dz = Integer.compare(second.getZ(), first.getZ());
+		return midpoint.offset(
+				sideX(dx, dz) * PACT_CACHE_ROUTE_OFFSET,
+				0,
+				sideZ(dx, dz) * PACT_CACHE_ROUTE_OFFSET
+		);
 	}
 
 	private static void placePactBeacon(ServerLevel level, BlockPos origin, BlockPos other) {
@@ -249,12 +266,7 @@ public final class DiplomacyConsequences {
 	}
 
 	private static void placeTributeCache(ServerLevel level, BlockPos first, BlockPos second) {
-		BlockPos midpoint = new BlockPos(
-				(first.getX() + second.getX()) / 2,
-				first.getY(),
-				(first.getZ() + second.getZ()) / 2
-		);
-		BlockPos base = ColonyService.anchorToSurface(level, midpoint);
+		BlockPos base = ColonyService.anchorToSurface(level, pactCacheSite(first, second));
 		// Force the visible cache column so it survives even when a colony mound
 		// overlaps the pact midpoint (safeSet would lose to a non-replaceable
 		// NEST_MOUND block and leave the cache invisible).
@@ -299,12 +311,7 @@ public final class DiplomacyConsequences {
 	}
 
 	private static void placeTruceCache(ServerLevel level, BlockPos first, BlockPos second) {
-		BlockPos midpoint = new BlockPos(
-				(first.getX() + second.getX()) / 2,
-				first.getY(),
-				(first.getZ() + second.getZ()) / 2
-		);
-		BlockPos base = ColonyService.anchorToSurface(level, midpoint);
+		BlockPos base = ColonyService.anchorToSurface(level, pactCacheSite(first, second));
 		// Force the visible cache column so it survives a colony mound overlapping
 		// the pact midpoint (see placeTributeCache).
 		level.setBlockAndUpdate(base, Blocks.MOSS_BLOCK.defaultBlockState());

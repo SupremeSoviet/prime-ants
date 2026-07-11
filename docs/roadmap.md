@@ -102,8 +102,9 @@ Current R2 implementation order:
    organic silhouettes.
 5. `GREAT_MOUND`, `QUEEN_VAULT`, then `TRADE_HUB`.
 
-The food-store slice is implemented; it remains subject to focused screenshot
-acceptance before the nursery slice begins.
+The food-store and nursery slices are implemented and accepted in focused
+Structure-QA. The active starter-economy slice is now the low rounded mine with
+a shallow internal pit, followed by the pit-free chitin farm.
 
 Slice R3: Colony Tablet 2.0.
 

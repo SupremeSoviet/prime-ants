@@ -180,6 +180,18 @@ public final class TieredMoundPlacer {
 				placeDecoration(level, center, chamber, -4, 2, 0, Blocks.LANTERN);
 				placeDecoration(level, center, chamber, 4, 2, 0, Blocks.LANTERN);
 			}
+			case "nursery" -> {
+				// The brood room uses paired resting alcoves and warm incubation
+				// materials, leaving the entrance-to-back-wall axis unobstructed.
+				placeDecoration(level, center, chamber, -4, 1, 0, ModBlocks.CHITIN_BED);
+				placeDecoration(level, center, chamber, 4, 1, 0, ModBlocks.CHITIN_BED);
+				placeDecoration(level, center, chamber, -3, 1, 3, Blocks.HONEYCOMB_BLOCK);
+				placeDecoration(level, center, chamber, 3, 1, 3, Blocks.BONE_BLOCK);
+				placeDecoration(level, center, chamber, -2, 1, 4, Blocks.BARREL);
+				placeDecoration(level, center, chamber, 2, 1, 4, Blocks.OCHRE_FROGLIGHT);
+				placeDecoration(level, center, chamber, -4, 2, 0, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, 4, 2, 0, Blocks.LANTERN);
+			}
 			default -> throw new IllegalArgumentException("Unsupported chamber purpose " + chamber.purpose());
 		}
 	}
@@ -212,6 +224,13 @@ public final class TieredMoundPlacer {
 				if (roll < 78) yield Blocks.ROOTED_DIRT;
 				if (roll < 88) yield Blocks.COARSE_DIRT;
 				if (roll < 95) yield Blocks.MOSS_BLOCK;
+				yield Blocks.MANGROVE_ROOTS;
+			}
+			case "nursery" -> {
+				if (roll < 62) yield ModBlocks.NEST_MOUND;
+				if (roll < 78) yield Blocks.ROOTED_DIRT;
+				if (roll < 89) yield Blocks.PACKED_MUD;
+				if (roll < 97) yield Blocks.MUD;
 				yield Blocks.MANGROVE_ROOTS;
 			}
 			default -> throw new IllegalArgumentException("Unsupported material palette " + blueprint.palette());

@@ -295,7 +295,9 @@ public final class ColonyBuilder {
 			case FOOD_STORE -> existing == 0
 					? origin.offset(38, 0, 0)
 					: origin.offset(66 + (existing - 1) * 28, 0, 21 + (existing - 1) * 24);
-			case NURSERY -> origin.offset(-38 - existing * 20, 0, 0);
+			case NURSERY -> existing == 0
+					? origin.offset(-38, 0, 0)
+					: origin.offset(-66 - (existing - 1) * 28, 0, -21 - (existing - 1) * 24);
 			case MINE -> origin.offset(0, 0, 38 + existing * 20);
 			case CHITIN_FARM -> origin.offset(-38 - existing * 18, 0, 34 + existing * 12);
 			case BARRACKS -> origin.offset(0, 0, -38 - existing * 20);

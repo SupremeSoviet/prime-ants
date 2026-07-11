@@ -67,6 +67,14 @@ aisle, and furnish the walls with storage, food processing and warm light. The
 two footprints are structurally distinct and the second colony site is placed
 far enough away to preserve open ground between them.
 
+The nursery follows the same compiler contract without copying the granary. Its
+two `nursery_a.json` / `nursery_b.json` variants are fuller eight-block brood
+domes with offset side lobes, a warmer mud/packed-mud shell palette, paired
+chitin resting alcoves, incubation materials and a clear central aisle. Repeated
+nurseries move diagonally away from the first site, and diplomacy caches are
+offset from the colony-to-colony axis so the enlarged role mound cannot swallow
+them.
+
 ## Iteration order
 
 1. Establish the shared blueprint vocabulary with the main mound.

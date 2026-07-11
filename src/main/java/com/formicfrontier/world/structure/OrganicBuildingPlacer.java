@@ -21,12 +21,19 @@ import java.util.Map;
 public final class OrganicBuildingPlacer {
 	public static final String FOOD_STORE_A_RESOURCE = "formic_blueprints/food_store_a.json";
 	public static final String FOOD_STORE_B_RESOURCE = "formic_blueprints/food_store_b.json";
+	public static final String NURSERY_A_RESOURCE = "formic_blueprints/nursery_a.json";
+	public static final String NURSERY_B_RESOURCE = "formic_blueprints/nursery_b.json";
 
 	private static final Map<BuildingType, Family> FAMILIES = Map.of(
 			BuildingType.FOOD_STORE,
 			new Family(List.of(
 					TieredMoundBlueprint.load(FOOD_STORE_A_RESOURCE),
 					TieredMoundBlueprint.load(FOOD_STORE_B_RESOURCE)
+			)),
+			BuildingType.NURSERY,
+			new Family(List.of(
+					TieredMoundBlueprint.load(NURSERY_A_RESOURCE),
+					TieredMoundBlueprint.load(NURSERY_B_RESOURCE)
 			))
 	);
 
@@ -71,6 +78,7 @@ public final class OrganicBuildingPlacer {
 	private static Block functionalBlock(BuildingType type) {
 		return switch (type) {
 			case FOOD_STORE -> ModBlocks.FOOD_CHAMBER;
+			case NURSERY -> ModBlocks.NURSERY_CHAMBER;
 			default -> throw new IllegalArgumentException("No functional block registered for " + type);
 		};
 	}

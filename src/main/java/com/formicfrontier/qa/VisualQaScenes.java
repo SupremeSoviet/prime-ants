@@ -77,6 +77,8 @@ public final class VisualQaScenes {
 	public static final String MOUND_LOOKOUT_INTERIOR = "mound_lookout_interior";
 	public static final String FOOD_STORE_VARIANTS = "food_store_variants";
 	public static final String FOOD_STORE_INTERIOR = "food_store_interior";
+	public static final String NURSERY_VARIANTS = "nursery_variants";
+	public static final String NURSERY_INTERIOR = "nursery_interior";
 	private static final List<String> SCENES = List.of(
 			COLONY_OVERVIEW,
 			COLONY_GROUND,
@@ -103,7 +105,9 @@ public final class VisualQaScenes {
 			MOUND_STORAGE_INTERIOR,
 			MOUND_LOOKOUT_INTERIOR,
 			FOOD_STORE_VARIANTS,
-			FOOD_STORE_INTERIOR
+			FOOD_STORE_INTERIOR,
+			NURSERY_VARIANTS,
+			NURSERY_INTERIOR
 	);
 	private static final List<AntCaste> ANT_LINEUP_CASTES = List.of(
 			AntCaste.QUEEN,
@@ -197,9 +201,12 @@ public final class VisualQaScenes {
 		boolean moundInteriorFocused = normalized.equals(MOUND_INTERIOR)
 				|| normalized.equals(MOUND_STORAGE_INTERIOR) || normalized.equals(MOUND_LOOKOUT_INTERIOR);
 		boolean foodFocused = normalized.equals(FOOD_STORE_VARIANTS) || normalized.equals(FOOD_STORE_INTERIOR);
-		boolean interiorFocused = moundInteriorFocused || normalized.equals(FOOD_STORE_INTERIOR);
+		boolean nurseryFocused = normalized.equals(NURSERY_VARIANTS) || normalized.equals(NURSERY_INTERIOR);
+		boolean roleBuildingFocused = foodFocused || nurseryFocused;
+		boolean interiorFocused = moundInteriorFocused || normalized.equals(FOOD_STORE_INTERIOR)
+				|| normalized.equals(NURSERY_INTERIOR);
 		boolean structureFocused = normalized.equals(STRUCTURE_PREVIEW_3Q)
-				|| normalized.equals(STRUCTURE_PREVIEW_FRONT) || interiorFocused || foodFocused;
+				|| normalized.equals(STRUCTURE_PREVIEW_FRONT) || interiorFocused || roleBuildingFocused;
 		if (structureFocused && structureQaOrigin == null) {
 			// Start each focused run on fresh terrain, then reuse exactly the same
 			// origin so the next angle clears the preceding build instead of leaving
@@ -225,10 +232,18 @@ public final class VisualQaScenes {
 			} else if (normalized.equals(FOOD_STORE_INTERIOR)) {
 				StructurePlacer.placeBuilding(level, origin, BuildingType.FOOD_STORE,
 						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+			} else if (normalized.equals(NURSERY_VARIANTS)) {
+				StructurePlacer.placeBuilding(level, origin.offset(-16, 0, 0), BuildingType.NURSERY,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+				StructurePlacer.placeBuilding(level, origin.offset(16, 0, 1), BuildingType.NURSERY,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+			} else if (normalized.equals(NURSERY_INTERIOR)) {
+				StructurePlacer.placeBuilding(level, origin, BuildingType.NURSERY,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
 			} else {
 				ColonyService.createColony(level, origin, true);
 			}
-			if (!interiorFocused && !foodFocused) {
+			if (!interiorFocused && !roleBuildingFocused) {
 				dressForestFloor(level, origin, normalized);
 			}
 			clearQaItemDrops(level, origin, qaRadius(normalized));
@@ -1043,6 +1058,8 @@ public final class VisualQaScenes {
 			case MOUND_LOOKOUT_INTERIOR -> new Vec3(origin.getX() + 2.5, origin.getY() + 14.8, origin.getZ() + 2.5);
 			case FOOD_STORE_VARIANTS -> Vec3.atCenterOf(origin).add(0.0, 3.0, 1.0);
 			case FOOD_STORE_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 1.5, 3.4);
+			case NURSERY_VARIANTS -> Vec3.atCenterOf(origin).add(0.0, 3.2, 1.5);
+			case NURSERY_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 1.5, 4.0);
 			default -> Vec3.atCenterOf(origin).add(0.0, 2.0, 0.0);
 		};
 		Vec3 camera = switch (sceneName) {
@@ -1065,6 +1082,8 @@ public final class VisualQaScenes {
 			case MOUND_LOOKOUT_INTERIOR -> new Vec3(origin.getX() + 2.5, origin.getY() + 14.7, origin.getZ() - 0.8);
 			case FOOD_STORE_VARIANTS -> new Vec3(origin.getX() + 0.5, origin.getY() + 11.0, origin.getZ() - 38.0);
 			case FOOD_STORE_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.1, origin.getZ() - 1.8);
+			case NURSERY_VARIANTS -> new Vec3(origin.getX() + 0.5, origin.getY() + 11.0, origin.getZ() - 38.0);
+			case NURSERY_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.1, origin.getZ() - 1.8);
 			default -> new Vec3(origin.getX() + 28.0, origin.getY() + 18.0, origin.getZ() - 32.0);
 		};
 		player.teleportTo(camera.x, camera.y, camera.z);
