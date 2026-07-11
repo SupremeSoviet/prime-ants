@@ -4,6 +4,7 @@ import com.formicfrontier.registry.ModBlocks;
 import com.formicfrontier.sim.BuildingType;
 import com.formicfrontier.sim.BuildingVisualStage;
 import com.formicfrontier.sim.ColonyCulture;
+import com.formicfrontier.world.structure.TieredMoundPlacer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.server.level.ServerLevel;
@@ -16,9 +17,9 @@ import net.minecraft.world.level.block.state.BlockState;
  *
  * <p>The previous procedural and schematic generators deliberately do not live
  * behind a feature flag: they were removed so new mound work cannot accidentally
- * inherit their geometry. Until a new design is introduced, every building is a
- * one-block functional marker. Queen and great-mound sites additionally keep a
- * buried nest core, making those sites two blocks in total.</p>
+ * inherit their geometry. Ordinary buildings remain one-block functional
+ * markers while the queen mound is rebuilt through a new validated tier
+ * blueprint.</p>
  */
 public final class StructurePlacer {
 	private StructurePlacer() {
@@ -42,18 +43,26 @@ public final class StructurePlacer {
 			safeSet(level, center, Blocks.DIRT_PATH);
 			return;
 		}
-		if (type == BuildingType.QUEEN_CHAMBER || type == BuildingType.GREAT_MOUND) {
-			placeMoundMarker(level, center);
+		if (type == BuildingType.QUEEN_CHAMBER) {
+			placeQueenHall(level, center, culture);
+			return;
+		}
+		if (type == BuildingType.GREAT_MOUND) {
+			placeGreatMoundProject(level, center, culture);
 			return;
 		}
 		safeSet(level, center, markerBlock(type));
 	}
 
 	public static boolean safeSet(ServerLevel level, BlockPos pos, Block block) {
+		return safeSet(level, pos, block.defaultBlockState());
+	}
+
+	public static boolean safeSet(ServerLevel level, BlockPos pos, BlockState state) {
 		if (!canReplace(level, pos)) {
 			return false;
 		}
-		level.setBlockAndUpdate(pos, block.defaultBlockState());
+		level.setBlockAndUpdate(pos, state);
 		return true;
 	}
 
@@ -80,6 +89,7 @@ public final class StructurePlacer {
 				|| block == Blocks.MUD
 				|| block == Blocks.PACKED_MUD
 				|| block == Blocks.MUD_BRICKS
+				|| block == Blocks.MUD_BRICK_STAIRS
 				|| block == Blocks.GRAVEL
 				|| block == Blocks.STONE
 				|| block == Blocks.COBBLESTONE
@@ -109,7 +119,10 @@ public final class StructurePlacer {
 				|| block == Blocks.OCHRE_FROGLIGHT
 				|| block == Blocks.AMETHYST_BLOCK
 				|| block == Blocks.CANDLE
+				|| block == Blocks.LANTERN
 				|| block == Blocks.BARREL
+				|| block == Blocks.CRAFTING_TABLE
+				|| block == Blocks.COMPOSTER
 				|| block == Blocks.BELL
 				|| block == Blocks.OAK_FENCE
 				|| block == Blocks.OAK_LOG
@@ -142,11 +155,13 @@ public final class StructurePlacer {
 	}
 
 	public static void placeQueenHall(ServerLevel level, BlockPos center, ColonyCulture culture) {
-		placeMoundMarker(level, center);
+		TieredMoundPlacer.placeQueenStageOne(level, center);
 	}
 
 	public static void placeGreatMoundProject(ServerLevel level, BlockPos center, ColonyCulture culture) {
-		placeMoundMarker(level, center);
+		// Stage two will extend the same blueprint vocabulary upward and outward.
+		// Until that slice is authored, the endgame project preserves stage one.
+		TieredMoundPlacer.placeQueenStageOne(level, center);
 	}
 
 	public static void placeQueenVault(ServerLevel level, BlockPos center, ColonyCulture culture) {
@@ -175,11 +190,6 @@ public final class StructurePlacer {
 
 	public static void placeColonyLedger(ServerLevel level, BlockPos pos) {
 		safeSet(level, pos, ModBlocks.COLONY_LEDGER);
-	}
-
-	private static void placeMoundMarker(ServerLevel level, BlockPos center) {
-		safeSet(level, center.below(), ModBlocks.NEST_CORE);
-		safeSet(level, center, ModBlocks.NEST_MOUND);
 	}
 
 	private static Block markerBlock(BuildingType type) {

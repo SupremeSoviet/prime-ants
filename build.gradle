@@ -61,6 +61,7 @@ tasks.withType(JavaExec).configureEach {
 		systemProperty "formic.visualQa.dir", System.getProperty("formic.visualQa.dir", file("build/visual-qa").absolutePath)
 		systemProperty "formic.visualQa.exit", System.getProperty("formic.visualQa.exit", "true")
 		systemProperty "formic.visualQa.world", System.getProperty("formic.visualQa.world", "FormicVisualQA")
+		systemProperty "formic.visualQa.scope", System.getProperty("formic.visualQa.scope", "full")
 	}
 }
 

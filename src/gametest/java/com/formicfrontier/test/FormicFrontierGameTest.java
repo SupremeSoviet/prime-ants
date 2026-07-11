@@ -46,8 +46,7 @@ public final class FormicFrontierGameTest {
 		prepareCampusArea(helper, origin);
 		ColonyData colony = ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
 
-		assertMinimalBuildingMarker(helper, origin, ModBlocks.NEST_MOUND, "queen chamber");
-		helper.assertBlockPresent(ModBlocks.NEST_CORE, origin.below());
+		assertTieredMoundProfile(helper, origin, ModBlocks.NEST_MOUND, "queen chamber");
 		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0), ModBlocks.FOOD_CHAMBER, "food store");
 		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.NURSERY, 0), ModBlocks.NURSERY_CHAMBER, "nursery");
 		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.MINE, 0), ModBlocks.MINE_CHAMBER, "mine");
@@ -55,8 +54,8 @@ public final class FormicFrontierGameTest {
 		helper.assertBlockPresent(ModBlocks.FOOD_NODE, origin.offset(54, 0, 8));
 		helper.assertBlockPresent(ModBlocks.ORE_NODE, origin.offset(8, 0, 54));
 		helper.assertBlockPresent(ModBlocks.CHITIN_NODE, origin.offset(-54, 0, 8));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(7, 0, 0));
-		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(7, 0, 1));
+		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(0, 0, -10));
+		helper.assertBlockPresent(Blocks.DIRT_PATH, origin.offset(0, 0, -9));
 		if (colony.casteCount(AntCaste.GIANT) != 0) {
 			helper.fail("Starter colony should not begin with a giant.");
 		}
@@ -96,22 +95,16 @@ public final class FormicFrontierGameTest {
 
 	@GameTest
 
-	public void starterQueenChamberUsesTwoBlockBaseline(GameTestHelper helper) {
+	public void starterQueenChamberUsesTallTieredBlueprint(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin);
 		ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
 
-		assertMinimalBuildingMarker(helper, origin, ModBlocks.NEST_MOUND, "queen chamber");
-		helper.assertBlockPresent(ModBlocks.NEST_CORE, origin.below());
-		for (BlockPos offset : new BlockPos[] {
-				origin.offset(1, 1, 0),
-				origin.offset(-1, 1, 0),
-				origin.offset(0, 1, 1),
-				origin.offset(0, 1, -1)
-		}) {
-			if (!helper.getLevel().getBlockState(helper.absolutePos(offset)).isAir()) {
-				helper.fail("Reset queen chamber should not retain old mound geometry at " + offset.toShortString());
-			}
+		assertTieredMoundProfile(helper, origin, ModBlocks.NEST_MOUND, "queen chamber");
+		if (!VisualQaScenes.scenes().contains(VisualQaScenes.MOUND_INTERIOR)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.MOUND_STORAGE_INTERIOR)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.MOUND_LOOKOUT_INTERIOR)) {
+			helper.fail("Visual QA should expose a focused scene for every mound floor.");
 		}
 		helper.succeed();
 	}
@@ -133,8 +126,7 @@ public final class FormicFrontierGameTest {
 			BlockPos food = queen.offset(0, 0, 28);
 			StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(queen), BuildingType.QUEEN_CHAMBER, BuildingVisualStage.COMPLETE, cultures.get(i));
 			StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(food), BuildingType.FOOD_STORE, BuildingVisualStage.COMPLETE, cultures.get(i));
-			assertMinimalBuildingMarker(helper, queen, ModBlocks.NEST_MOUND, cultures.get(i).id() + " queen");
-			helper.assertBlockPresent(ModBlocks.NEST_CORE, queen.below());
+			assertTieredMoundProfile(helper, queen, ModBlocks.NEST_MOUND, cultures.get(i).id() + " queen");
 			assertMinimalBuildingMarker(helper, food, ModBlocks.FOOD_CHAMBER, cultures.get(i).id() + " food store");
 		}
 
@@ -720,8 +712,8 @@ public final class FormicFrontierGameTest {
 			helper.fail("Colony overview camera needs enough prepared terrain beyond the foreground; radius "
 					+ radius + " leaves only " + (radius - cameraGroundDistance) + " blocks.");
 		}
-		if (target.y < origin.getY() + 4.0 || target.y > origin.getY() + 6.5) {
-			helper.fail("Colony overview target should stay on the starter mound instead of drifting to empty terrain.");
+		if (target.y < origin.getY() + 10.5 || target.y > origin.getY() + 12.5) {
+			helper.fail("Colony overview target should frame the middle of the tall starter mound.");
 		}
 		for (BlockPos landmark : List.of(
 				origin,
@@ -809,8 +801,7 @@ public final class FormicFrontierGameTest {
 		if (!colony.progress().hasResearch(ResearchNode.CHITIN_CULTIVATION.id())) {
 			helper.fail("Renovation should preserve research.");
 		}
-		assertMinimalBuildingMarker(helper, origin, ModBlocks.NEST_MOUND, "renovated queen chamber");
-		helper.assertBlockPresent(ModBlocks.NEST_CORE, origin.below());
+		assertTieredMoundProfile(helper, origin, ModBlocks.NEST_MOUND, "renovated queen chamber");
 		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0), ModBlocks.FOOD_CHAMBER, "renovated food store");
 		helper.succeed();
 	}
@@ -1552,8 +1543,7 @@ public final class FormicFrontierGameTest {
 		if (!greatMound.complete()) {
 			helper.fail("Great mound should complete from the prepared endgame resources, got " + greatMound.constructionProgress() + "%.");
 		}
-		assertMinimalBuildingMarker(helper, origin, ModBlocks.NEST_MOUND, "great mound");
-		helper.assertBlockPresent(ModBlocks.NEST_CORE, origin.below());
+		assertTieredMoundProfile(helper, origin, ModBlocks.NEST_MOUND, "great mound");
 		if (colony.progress().eventsView().stream().noneMatch(event -> event.message().contains("great_mound"))) {
 			helper.fail("Great mound project should leave a colony event for the player.");
 		}
@@ -1594,8 +1584,7 @@ public final class FormicFrontierGameTest {
 		if (!vault.complete()) {
 			helper.fail("Queen vault should complete from prepared endgame resources, got " + vault.constructionProgress() + "%.");
 		}
-		assertMinimalBuildingMarker(helper, origin, ModBlocks.NEST_CORE, "queen vault");
-		helper.assertBlockPresent(ModBlocks.NEST_CORE, origin.below());
+		assertTieredMoundProfile(helper, origin, ModBlocks.NEST_CORE, "queen vault");
 		if (colony.progress().eventsView().stream().noneMatch(event -> event.message().contains("queen_vault"))) {
 			helper.fail("Queen vault project should leave a colony event for the player.");
 		}
@@ -1953,6 +1942,61 @@ public final class FormicFrontierGameTest {
 				|| !helper.getLevel().getBlockState(absolute.above(2)).isAir()) {
 			helper.fail(label + " should remain a one-block surface marker with no old mound mass above it.");
 		}
+	}
+
+	private static void assertTieredMoundProfile(GameTestHelper helper, BlockPos center,
+			net.minecraft.world.level.block.Block expectedCenter, String label) {
+		helper.assertBlockPresent(expectedCenter, center);
+		helper.assertBlockPresent(ModBlocks.NEST_CORE, center.below());
+		helper.assertBlockPresent(ModBlocks.NEST_MOUND, center.offset(0, 23, 1));
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 2, -6))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(-2, 9, -4))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(2, 15, -3))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 2, 2))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(-2, 9, 1))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(2, 15, 1))).isAir()) {
+			helper.fail(label + " should expose carved mouths on three vertical floors.");
+		}
+		helper.assertBlockPresent(Blocks.CHEST, center.offset(-4, 1, 2));
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(4, 1, 2));
+		helper.assertBlockPresent(Blocks.CRAFTING_TABLE, center.offset(3, 1, 5));
+		helper.assertBlockPresent(ModBlocks.CHITIN_BED, center.offset(0, 1, 5));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(-4, 2, 2));
+		helper.assertBlockPresent(Blocks.CHEST, center.offset(-5, 8, 1));
+		helper.assertBlockPresent(Blocks.COMPOSTER, center.offset(1, 8, 3));
+		helper.assertBlockPresent(ModBlocks.PHEROMONE_ARCHIVE, center.offset(2, 14, 3));
+		helper.assertBlockPresent(Blocks.BELL, center.offset(4, 14, 2));
+		helper.assertBlockPresent(Blocks.MUD_BRICK_STAIRS, center.offset(4, 0, 3));
+		helper.assertBlockPresent(Blocks.MUD_BRICK_STAIRS, center.offset(-2, 6, 3));
+		helper.assertBlockPresent(Blocks.MUD_BRICK_STAIRS, center.offset(-4, 7, 0));
+		helper.assertBlockPresent(Blocks.MUD_BRICK_STAIRS, center.offset(1, 12, 0));
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 24, 1))).isAir()) {
+			helper.fail(label + " should end at the declared 24-block height.");
+		}
+		int base = countMoundLayer(helper, center, 1, 12);
+		int second = countMoundLayer(helper, center, 8, 10);
+		int third = countMoundLayer(helper, center, 14, 8);
+		int crown = countMoundLayer(helper, center, 20, 6);
+		if (base < 120 || second < 70 || third < 35 || crown < 5
+				|| !(base > second && second > third && third > crown)) {
+			helper.fail(label + " should form a compact four-tier taper, got layer masses "
+					+ base + "/" + second + "/" + third + "/" + crown);
+		}
+	}
+
+	private static int countMoundLayer(GameTestHelper helper, BlockPos center, int y, int radius) {
+		int count = 0;
+		for (int x = -radius; x <= radius; x++) {
+			for (int z = -radius; z <= radius; z++) {
+				var state = helper.getLevel().getBlockState(helper.absolutePos(center.offset(x, y, z)));
+				if (state.is(ModBlocks.NEST_MOUND) || state.is(ModBlocks.NEST_CORE)
+						|| state.is(Blocks.ROOTED_DIRT) || state.is(Blocks.COARSE_DIRT)
+						|| state.is(Blocks.MANGROVE_ROOTS)) {
+					count++;
+				}
+			}
+		}
+		return count;
 	}
 
 	private static void assertBlockInColumn(GameTestHelper helper, BlockPos base, net.minecraft.world.level.block.Block block, int minOffset, int maxOffset, String label) {

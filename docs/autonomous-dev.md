@@ -17,9 +17,9 @@ R3 Colony Tablet 2.0.
 
 R2 architecture polish is a structural scale pass, not a decorative pass. Agents
 should be willing to spend visual compute on much larger ant-hill forms:
-complete landmark mounds and important buildings should usually reach 20-30
-blocks of height with broad bases, layered mound shells, tunnel mouths,
-vertical shafts, ribs, yards, terraces, and role-specific crowns or chambers.
+the main mound should usually reach 20-30 blocks of height with a compact base,
+stacked inhabited floors, layered mound shells, tunnel mouths, vertical shafts,
+ribs, terraces, and later connected side lobes.
 Tiny 3-5 block huts with a few accent blocks do not satisfy R2 if screenshots
 still read as arcade props. QA camera framing and prepared terrain radius may be
 expanded so the larger structures can be assessed.

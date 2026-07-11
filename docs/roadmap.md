@@ -38,10 +38,10 @@ Scale ambition for the renovation track:
 
 - The colony should look like a real monumental ant settlement, not an arcade
   prop village. Workers may make structural changes that are visually large.
-- Major mounds and landmark buildings should usually be 20-30 blocks tall when
-  complete, with broad 24-40 block footprints where the scene needs it.
-  Secondary buildings can be smaller, but should still read as substantial
-  chambers, not 3-5 block huts.
+- The main mound should usually be 20-30 blocks tall when complete, with a
+  compact base so height dominates its silhouette. Progression grows it upward
+  and later adds connected side lobes. Secondary buildings can be smaller, but
+  should still read as substantial chambers, not 3-5 block huts.
 - Architecture work should add real mass: layered mound shells, tunnel mouths,
   buttresses/ribs, yards, vertical chambers, role-specific crowns, shafts,
   fungus/brood/storage terraces, and readable entrances.

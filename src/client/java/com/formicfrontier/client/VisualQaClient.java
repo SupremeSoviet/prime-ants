@@ -14,17 +14,12 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public final class VisualQaClient {
-	// PROTOTYPE (structure-schematic): capture ONLY the isolated building previews
-	// for fast iteration. This client-side list does not affect gametests (those use
-	// the server VisualQaScenes.scenes()). Restore the full 19-scene list below before
-	// any real visual-baseline run:
-	//   colony_overview, colony_ground, ant_lineup, work_cycle, tablet_en, tablet_ru,
-	//   tablet_guide, tablet_trade, tablet_research_map, tablet_market, tablet_requests,
-	//   progression_scene, settlement_scale, construction_stage, repair_scene,
-	//   culture_styles, diplomacy_scene, worldgen_encounter, endgame_project
-	private static final String[] SCENES = {
+	private static final String[] FULL_SCENES = {
 			"colony_overview",
 			"colony_ground",
+			"mound_interior",
+			"mound_storage_interior",
+			"mound_lookout_interior",
 			"ant_lineup",
 			"work_cycle",
 			"tablet_en",
@@ -43,6 +38,17 @@ public final class VisualQaClient {
 			"worldgen_encounter",
 			"endgame_project"
 	};
+	private static final String[] WORLD_SCENES = {
+			"colony_overview", "colony_ground", "mound_interior", "mound_storage_interior",
+			"mound_lookout_interior", "ant_lineup", "work_cycle",
+			"progression_scene", "settlement_scale", "construction_stage", "repair_scene",
+			"culture_styles", "diplomacy_scene", "worldgen_encounter", "endgame_project"
+	};
+	private static final String[] STRUCTURE_SCENES = {
+			"structure_preview_front", "structure_preview_3q", "mound_interior",
+			"mound_storage_interior", "mound_lookout_interior"
+	};
+	private static final String[] SCENES = selectScenes();
 	private static final int WAIT_FOR_WORLD_TICKS = Integer.getInteger("formic.visualQa.worldWaitTicks", 600);
 	private static final int COMMAND_TO_SCREENSHOT_TICKS = Integer.getInteger("formic.visualQa.captureDelayTicks", 70);
 	private static final int SCENE_TOTAL_TICKS = Integer.getInteger("formic.visualQa.sceneTicks", 110);
@@ -68,6 +74,14 @@ public final class VisualQaClient {
 	private static CompletableFuture<Void> languageReload;
 
 	private VisualQaClient() {
+	}
+
+	private static String[] selectScenes() {
+		return switch (System.getProperty("formic.visualQa.scope", "full").toLowerCase(java.util.Locale.ROOT)) {
+			case "structure" -> STRUCTURE_SCENES;
+			case "world" -> WORLD_SCENES;
+			default -> FULL_SCENES;
+		};
 	}
 
 	public static void initialize() {
@@ -183,6 +197,7 @@ public final class VisualQaClient {
 			// the first time. A 120-tick delay captured a half-rendered snowy canopy
 			// instead of the colony. Give the cold-start wide scene extra settle time.
 			case "colony_overview" -> Math.max(COMMAND_TO_SCREENSHOT_TICKS, 220);
+			case "structure_preview_front", "structure_preview_3q" -> Math.max(COMMAND_TO_SCREENSHOT_TICKS, 120);
 			case "settlement_scale", "diplomacy_scene", "endgame_project" ->
 					Math.max(COMMAND_TO_SCREENSHOT_TICKS, 120);
 			case "colony_ground", "culture_styles", "construction_stage", "repair_scene", "progression_scene" ->

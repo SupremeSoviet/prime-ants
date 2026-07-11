@@ -3,6 +3,8 @@ param(
     [int]$TimeoutSeconds = 900,
     [int]$Width = 1600,
     [int]$Height = 900,
+    [ValidateSet("Full", "World", "Structure")]
+    [string]$Scope = "Full",
     [switch]$SkipWorldPrepare,
     [switch]$NoLaunch
 )
@@ -12,6 +14,7 @@ $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $VisualQaDir = Join-Path $RepoRoot "build\visual-qa"
 $ClientLog = Join-Path $VisualQaDir "runClient.log"
 $ClientErr = Join-Path $VisualQaDir "runClient.err.log"
+$ScopeId = $Scope.ToLowerInvariant()
 
 function Initialize-VisualQaOptions {
     param(
@@ -96,13 +99,14 @@ try {
             "-Dformic.visualQa.dir=$VisualQaDir",
             "-Dformic.visualQa.exit=true",
             "-Dformic.visualQa.world=$QuickPlayWorld",
+            "-Dformic.visualQa.scope=$ScopeId",
             "runClient",
             "`"--args=$quickPlayArgs`""
         )
         $gradleCommand = ($gradleArgs | ForEach-Object { $_ }) -join " "
         $gradleCommand = ".\gradlew.bat $gradleCommand"
 
-        Write-Host "Launching visual QA client. World: $QuickPlayWorld"
+        Write-Host "Launching visual QA client. World: $QuickPlayWorld; scope: $ScopeId"
         $process = Start-Process -FilePath "cmd.exe" -ArgumentList @("/d", "/c", $gradleCommand) -WorkingDirectory $RepoRoot -PassThru -NoNewWindow -RedirectStandardOutput $ClientLog -RedirectStandardError $ClientErr
         $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
         while (-not $process.HasExited -and (Get-Date) -lt $deadline) {
@@ -123,7 +127,7 @@ try {
         }
     }
 
-    & python tools\visual_qa_report.py --visual-qa-dir $VisualQaDir
+    & python tools\visual_qa_report.py --visual-qa-dir $VisualQaDir --scope $ScopeId
     if ($LASTEXITCODE -ne 0) {
         exit $LASTEXITCODE
     }

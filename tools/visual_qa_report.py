@@ -8,9 +8,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DIR = ROOT / "build/visual-qa"
-EXPECTED = [
+FULL_EXPECTED = [
     "colony_overview.png",
     "colony_ground.png",
+    "mound_interior.png",
+    "mound_storage_interior.png",
+    "mound_lookout_interior.png",
     "ant_lineup.png",
     "work_cycle.png",
     "tablet_en.png",
@@ -29,6 +32,19 @@ EXPECTED = [
     "worldgen_encounter.png",
     "endgame_project.png",
 ]
+WORLD_EXPECTED = [name for name in FULL_EXPECTED if not name.startswith("tablet_")]
+STRUCTURE_EXPECTED = [
+    "structure_preview_front.png",
+    "structure_preview_3q.png",
+    "mound_interior.png",
+    "mound_storage_interior.png",
+    "mound_lookout_interior.png",
+]
+EXPECTED_BY_SCOPE = {
+    "full": FULL_EXPECTED,
+    "world": WORLD_EXPECTED,
+    "structure": STRUCTURE_EXPECTED,
+}
 
 
 def png_size(path: Path) -> tuple[int, int]:
@@ -41,18 +57,21 @@ def png_size(path: Path) -> tuple[int, int]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--visual-qa-dir", default=str(DEFAULT_DIR))
+    parser.add_argument("--scope", choices=EXPECTED_BY_SCOPE, default="full")
     parser.add_argument("--ci-manifest-only", action="store_true")
     args = parser.parse_args()
 
     output = Path(args.visual_qa_dir)
     screenshots = output / "screenshots"
     output.mkdir(parents=True, exist_ok=True)
+    expected = EXPECTED_BY_SCOPE[args.scope]
 
     if args.ci_manifest_only:
         report = {
             "status": "manifest_only",
             "reason": "GUI screenshots are produced by local Windows visual QA runs.",
-            "expectedScreenshots": EXPECTED,
+            "scope": args.scope,
+            "expectedScreenshots": expected,
         }
         (output / "visual-qa-ci-report.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
         (output / "visual-qa-ci-report.md").write_text(
@@ -66,7 +85,7 @@ def main() -> int:
 
     errors: list[str] = []
     found: list[dict[str, object]] = []
-    for name in EXPECTED:
+    for name in expected:
         path = screenshots / name
         if not path.exists():
             errors.append(f"Missing screenshot: {path}")
@@ -84,7 +103,7 @@ def main() -> int:
         found.append({"file": f"screenshots/{name}", "width": width, "height": height, "bytes": path.stat().st_size})
 
     status = "failed" if errors else "passed"
-    report = {"status": status, "screenshots": found, "errors": errors}
+    report = {"status": status, "scope": args.scope, "screenshots": found, "errors": errors}
     (output / "visual-qa-report.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     lines = ["# Visual QA Report", "", f"Status: {status}", ""]
     lines.extend(f"- {entry['file']} {entry['width']}x{entry['height']}" for entry in found)

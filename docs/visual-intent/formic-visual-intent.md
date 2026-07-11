@@ -32,8 +32,8 @@ roots, grass, leaf litter, tunnels, chambers, and ant traffic.
 
 The desired direction is:
 
-- Monumental earthen ant-hill architecture with a broad base and a tall,
-  tapered silhouette.
+- Monumental earthen ant-hill architecture with a compact base and a tall,
+  multi-level tapered silhouette.
 - Multiple large organic chambers and tunnel mouths visible at once.
 - Several role-specific landmarks around the main mound, not one lonely tower.
 - Organic, ant-like role buildings: asymmetrical mound/chamber silhouettes,
@@ -73,59 +73,53 @@ ant-hills, but there is still obvious breakage. These are first-class blockers:
 
 ## Current Architecture Target
 
-The active visual blocker is the building family. Do not spend the next loop on
-forest-floor cleanup. Do not spend it on broad material migration. The next
-world worker should make the buildings more ant-like and less symmetrical.
+The active slice is the main colony building. It is rebuilt independently
+before the surrounding role buildings: first establish a compact vertical core,
+then add growth stages and attached mound-lobes in later slices.
 
 ### Why the last several attempts failed (read this first)
 
-Past attempts kept the same wrong *representation* and only tuned its
-parameters: a cluster of separate, steep, tapered cones/pyramids, each built
-from visible stacked block steps, with chamber holes punched in near-regular
-rows. The assessor kept returning the same "stepped towers / tower cluster"
-verdict, and each retry only nudged a cone center by a few blocks. That is a
-local minimum.
-
-The fix is NOT "make the asymmetry bolder" or "offset the cone more." The fix is
-a representational change. If you find yourself adjusting a cone radius, a taper
-slope, or a center offset, stop — you are repeating the failing approach.
+Past attempts mixed every settlement building into one large geometry method.
+That made small visual changes risky and encouraged repeated parameter nudges
+without a clear description of the intended form. The replacement is a small,
+validated blueprint that the generator compiles deterministically. Each stage
+can therefore be evaluated as a whole silhouette instead of as thousands of
+unrelated block placements.
 
 ### Required representation (the recipe, not adjectives)
 
-Build the colony as ONE continuous, broad, low earthen mound landmass that the
-whole settlement is carved into and grows out of — not as N free-standing
-buildings on a flat field. Concretely, the generator should aim for:
+Build the colony's main building as a compact, tall earthen hill with several
+readable floors. Its height should exceed its width, and it should leave room for
+later growth upward and for smaller connected lobes at the sides. Concretely:
 
-- A single base heightmap driven by low-frequency value/Perlin noise over a wide
-  footprint (think one big hill, ~40-70 blocks across), so the silhouette is
-  broad and dome-like: wider than it is tall. The main mass peaks around 20-30
-  blocks but the base flares much wider than the peak (no steep pointed cone).
-- Role "buildings" are sub-lobes: local bulges added to that one shared
-  heightmap at offset centers, each with its own noise seed so its bump has a
-  distinct, non-mirrored silhouette. They read as organs of one organism, joined
-  by shared earth skirts/berms, with readable saddle gaps between the lobe peaks
-  — not as separate huts you could pick up and move.
-- Surface jitter: perturb the shell height by +/-1-2 blocks with a second
-  high-frequency noise so the surface never reads as clean ziggurat stair-steps.
-  Add scattered surface debris (coarse dirt, mud, roots, mossy/rooted dirt,
-  occasional sticks/pebbles via fences/walls) so the skin looks packed and
-  lived-in rather than tiled.
+- Stage one targets a footprint around 21x17 blocks and a height around 24
+  blocks. It is a main-building prototype, not the completed settlement.
+- Compose the hill from overlapping, vertically offset tiers. Each tier narrows
+  and shifts slightly, creating irregular ledges and floor breaks while keeping
+  one connected mass. Avoid a perfect cone, a symmetric pyramid, and a stack of
+  identical circular plates.
+- Later progression stages extend the same blueprint with extra upper tiers and
+  attached mound-lobes. Lobes remain visibly joined to the main mass but retain
+  readable saddle gaps and distinct silhouettes.
+- Use deterministic boundary variation and a restrained earth/root palette to
+  break up long stair-steps without hiding the overall form under decoration.
 - Chambers/tunnel mouths are carved voids, not punched grid holes: scatter
   entrance positions with noise (varied X/Y/Z and varied size 1x1 up to 3x3),
   carve a dark throat at least 4-6 blocks deep into the mass behind each mouth,
   and face the rear of the throat with a dark block so the opening reads as
   depth, not a sticker. No freestanding arch, lintel, or portal frame in front
   of any entrance.
-- Spacing/non-overlap is a hard rule: separate lobe peaks must keep a readable
-  gap or passage between their silhouettes; the deterministic footprint check
-  (bounding ellipses, see the matrix `structure_spacing_non_overlap` row) must
-  not report overlapping building cores. Shared berms/skirts are allowed only
-  when each lobe peak still reads as its own mass.
+- Entrances should occupy different floors so the height reads as inhabited.
+  Preserve structural continuity around every carved throat, and validate the
+  finished solid volume as one connected component.
+- Every visible floor must lead to a real furnished chamber. Floors use distinct
+  purposes and furnishing sets rather than cloned chest layouts, and adjacent
+  floors are joined by playable internal stairs/passages with two-block
+  headroom.
 
-Aim the QA cameras so the wide shots (colony_overview, settlement_scale,
-culture_styles, endgame_project) show this one broad chambered mound family,
-and the close shots (colony_ground, construction_stage, repair_scene) show deep
-irregular mouths with dark depth and clear gaps between lobes.
+Aim the QA cameras at the vertical middle of the structure. Wide shots must show
+both base and peak; the close shot must show the stacked floors and deep,
+irregular mouths without cropping the 24-block silhouette.
 
 ## Native Blocks And Materials
 

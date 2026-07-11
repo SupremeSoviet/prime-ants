@@ -33,6 +33,7 @@ import net.minecraft.world.entity.Display.ItemDisplay;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -48,6 +49,7 @@ import java.util.Locale;
 import java.util.Set;
 
 public final class VisualQaScenes {
+	private static BlockPos structureQaOrigin;
 	public static final String COLONY_OVERVIEW = "colony_overview";
 	public static final String COLONY_GROUND = "colony_ground";
 	public static final String ANT_LINEUP = "ant_lineup";
@@ -70,6 +72,9 @@ public final class VisualQaScenes {
 	// Structure-schematic prototype: isolated single-building preview scenes.
 	public static final String STRUCTURE_PREVIEW_3Q = "structure_preview_3q";
 	public static final String STRUCTURE_PREVIEW_FRONT = "structure_preview_front";
+	public static final String MOUND_INTERIOR = "mound_interior";
+	public static final String MOUND_STORAGE_INTERIOR = "mound_storage_interior";
+	public static final String MOUND_LOOKOUT_INTERIOR = "mound_lookout_interior";
 	private static final List<String> SCENES = List.of(
 			COLONY_OVERVIEW,
 			COLONY_GROUND,
@@ -91,7 +96,10 @@ public final class VisualQaScenes {
 			WORLDGEN_ENCOUNTER,
 			ENDGAME_PROJECT,
 			STRUCTURE_PREVIEW_3Q,
-			STRUCTURE_PREVIEW_FRONT
+			STRUCTURE_PREVIEW_FRONT,
+			MOUND_INTERIOR,
+			MOUND_STORAGE_INTERIOR,
+			MOUND_LOOKOUT_INTERIOR
 	);
 	private static final List<AntCaste> ANT_LINEUP_CASTES = List.of(
 			AntCaste.QUEEN,
@@ -182,23 +190,43 @@ public final class VisualQaScenes {
 
 		ServerLevel level = source.getLevel();
 		BlockPos requested = BlockPos.containing(source.getPosition());
-		BlockPos origin = ColonyService.anchorToSurface(level, requested);
+		boolean interiorFocused = normalized.equals(MOUND_INTERIOR)
+				|| normalized.equals(MOUND_STORAGE_INTERIOR) || normalized.equals(MOUND_LOOKOUT_INTERIOR);
+		boolean structureFocused = normalized.equals(STRUCTURE_PREVIEW_3Q)
+				|| normalized.equals(STRUCTURE_PREVIEW_FRONT) || interiorFocused;
+		if (structureFocused && structureQaOrigin == null) {
+			// Start each focused run on fresh terrain, then reuse exactly the same
+			// origin so the next angle clears the preceding build instead of leaving
+			// old mounds visible in the background.
+			structureQaOrigin = ColonyService.anchorToSurface(level, requested.offset(160, 0, 160));
+		}
+		BlockPos origin = structureFocused ? structureQaOrigin : ColonyService.anchorToSurface(level, requested);
 		prepareFlatQaArea(level, origin, qaRadius(normalized));
 		level.setDayTime(6000);
 		level.setWeatherParameters(0, 0, false, false);
 
 		ColonySavedState savedState = ColonySavedState.get(source.getServer());
 		savedState.clearColonies();
-		if (normalized.equals(STRUCTURE_PREVIEW_3Q) || normalized.equals(STRUCTURE_PREVIEW_FRONT)) {
+		if (structureFocused) {
 			// PREVIEW = GAME: render the real in-game colony through the exact
 			// createColony path (no seedVisualState QA overlays) so the preview is
-			// precisely what a player sees - the schematic queen spire at the centre,
-			// the food spire and the campus economy mounds out on the ring.
+			// precisely what a player sees: the stage-one tiered queen mound at the
+			// centre and the intentionally minimal role-building markers around it.
 			ColonyService.createColony(level, origin, true);
-			dressForestFloor(level, origin, normalized);
+			if (!interiorFocused) {
+				dressForestFloor(level, origin, normalized);
+			}
+			clearQaItemDrops(level, origin, qaRadius(normalized));
 			ServerPlayer player = source.getPlayer();
 			if (player != null) {
 				positionCamera(player, origin, normalized);
+				if (interiorFocused) {
+					AABB cameraClear = new AABB(
+							player.getX() - 2.0, player.getY() - 2.0, player.getZ() - 2.0,
+							player.getX() + 2.0, player.getY() + 2.0, player.getZ() + 2.0
+					);
+					level.getEntitiesOfClass(AntEntity.class, cameraClear).forEach(AntEntity::discard);
+				}
 			}
 			savedState.setDirty();
 			return 1;
@@ -285,7 +313,7 @@ public final class VisualQaScenes {
 	}
 
 	public static Vec3 colonyOverviewTarget(BlockPos origin) {
-		return Vec3.atCenterOf(origin).add(0.0, 5.0, 0.0);
+		return Vec3.atCenterOf(origin).add(0.0, 11.0, 0.0);
 	}
 
 	public static Vec3 colonyOverviewCamera(BlockPos origin) {
@@ -984,6 +1012,7 @@ public final class VisualQaScenes {
 		player.setGameMode(GameType.SPECTATOR);
 		Vec3 target = switch (sceneName) {
 			case COLONY_OVERVIEW, SETTLEMENT_SCALE -> colonyOverviewTarget(origin);
+			case COLONY_GROUND -> Vec3.atCenterOf(origin).add(0.0, 11.0, 0.0);
 			case ANT_LINEUP -> Vec3.atCenterOf(origin.offset(0, 2, 20)); // row center, body height
 			case WORK_CYCLE -> Vec3.atCenterOf(origin.offset(0, 1, -23)).add(0.0, 1.35, 0.0);
 			case TABLET_EN, TABLET_RU, TABLET_GUIDE, TABLET_TRADE, TABLET_RESEARCH_MAP, TABLET_MARKET, TABLET_REQUESTS -> Vec3.atCenterOf(origin).add(0.0, 3.0, 0.0);
@@ -992,15 +1021,16 @@ public final class VisualQaScenes {
 			case CULTURE_STYLES -> Vec3.atCenterOf(origin.offset(0, 0, 4)).add(0.0, 4.0, 0.0);
 			case DIPLOMACY_SCENE -> Vec3.atCenterOf(origin).add(0.0, 4.0, 0.0);
 			case WORLDGEN_ENCOUNTER -> worldgenEncounterTarget(origin);
-			case ENDGAME_PROJECT -> Vec3.atCenterOf(origin).add(0.0, 5.8, 0.0);
-			case PROGRESSION_SCENE -> Vec3.atCenterOf(origin).add(0.0, 5.0, 0.0);
-			case STRUCTURE_PREVIEW_3Q -> Vec3.atCenterOf(origin).add(1.0, 9.0, 0.0);
-			case STRUCTURE_PREVIEW_FRONT -> Vec3.atCenterOf(origin).add(1.0, 9.0, 0.0);
+			case ENDGAME_PROJECT, PROGRESSION_SCENE -> Vec3.atCenterOf(origin).add(0.0, 11.0, 0.0);
+			case STRUCTURE_PREVIEW_3Q, STRUCTURE_PREVIEW_FRONT -> Vec3.atCenterOf(origin).add(1.0, 11.0, 0.0);
+			case MOUND_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 1.7, 3.5);
+			case MOUND_STORAGE_INTERIOR -> new Vec3(origin.getX() - 1.5, origin.getY() + 9.2, origin.getZ() + 3.0);
+			case MOUND_LOOKOUT_INTERIOR -> new Vec3(origin.getX() + 2.5, origin.getY() + 14.8, origin.getZ() + 2.5);
 			default -> Vec3.atCenterOf(origin).add(0.0, 2.0, 0.0);
 		};
 		Vec3 camera = switch (sceneName) {
 			case COLONY_OVERVIEW, SETTLEMENT_SCALE -> colonyOverviewCamera(origin);
-			case COLONY_GROUND -> new Vec3(origin.getX() + 26.0, origin.getY() + 8.5, origin.getZ() - 46.0);
+			case COLONY_GROUND -> new Vec3(origin.getX() + 16.0, origin.getY() + 8.5, origin.getZ() - 30.0);
 			case ANT_LINEUP -> new Vec3(origin.getX() + 0.0, origin.getY() + 11.0, origin.getZ() + 52.0); // dist ~32 from row at z=+20, y+11 for ~17deg downward; full 30-wide row fits with margin, foreground corridor cleared
 			case WORK_CYCLE -> new Vec3(origin.getX() + 14.0, origin.getY() + 6.6, origin.getZ() - 38.0);
 			case TABLET_EN, TABLET_RU, TABLET_GUIDE, TABLET_TRADE, TABLET_RESEARCH_MAP, TABLET_MARKET, TABLET_REQUESTS -> new Vec3(origin.getX() + 12.0, origin.getY() + 5.0, origin.getZ() - 18.0);
@@ -1011,8 +1041,11 @@ public final class VisualQaScenes {
 			case WORLDGEN_ENCOUNTER -> worldgenEncounterCamera(origin);
 			case ENDGAME_PROJECT -> new Vec3(origin.getX() + 54.0, origin.getY() + 36.0, origin.getZ() - 68.0);
 			case PROGRESSION_SCENE -> new Vec3(origin.getX() + 52.0, origin.getY() + 36.0, origin.getZ() - 66.0);
-			case STRUCTURE_PREVIEW_3Q -> new Vec3(origin.getX() + 54.0, origin.getY() + 46.0, origin.getZ() + 78.0);
-			case STRUCTURE_PREVIEW_FRONT -> new Vec3(origin.getX() + 1.0, origin.getY() + 22.0, origin.getZ() + 80.0);
+			case STRUCTURE_PREVIEW_3Q -> new Vec3(origin.getX() + 20.0, origin.getY() + 17.0, origin.getZ() - 34.0);
+			case STRUCTURE_PREVIEW_FRONT -> new Vec3(origin.getX() + 0.5, origin.getY() + 13.0, origin.getZ() - 34.0);
+			case MOUND_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 3.4, origin.getZ() - 1.2);
+			case MOUND_STORAGE_INTERIOR -> new Vec3(origin.getX() - 1.5, origin.getY() + 10.3, origin.getZ() - 1.2);
+			case MOUND_LOOKOUT_INTERIOR -> new Vec3(origin.getX() + 2.5, origin.getY() + 14.7, origin.getZ() - 0.8);
 			default -> new Vec3(origin.getX() + 28.0, origin.getY() + 18.0, origin.getZ() - 32.0);
 		};
 		player.teleportTo(camera.x, camera.y, camera.z);
@@ -1022,7 +1055,7 @@ public final class VisualQaScenes {
 	/**
 	 * R2 forest-floor density: scatter dirt variation, roots, stones, flowers, leaf
 	 * litter, small piles, and terrain breakup across the colony footprint so the
-	 * ground reads as a living forest floor (see reference-forest-foraging.png), not
+	 * ground reads as a living forest floor (see reference-mega-nest-front.png), not
 	 * a superflat grass sheet. Deterministic per (x,z) so screenshots are stable.
 	 * Only writes y==0 ground (and occasional y==1 low tufts) and skips cells already
 	 * claimed by a building footprint so it never hides the subject. The dressing is
@@ -1314,6 +1347,7 @@ public final class VisualQaScenes {
 		);
 		level.getEntitiesOfClass(AntEntity.class, cleanup).forEach(AntEntity::discard);
 		level.getEntitiesOfClass(Display.class, cleanup).forEach(Display::discard);
+		level.getEntitiesOfClass(ItemEntity.class, cleanup).forEach(ItemEntity::discard);
 		for (int x = -radius; x <= radius; x++) {
 			for (int z = -radius; z <= radius; z++) {
 				BlockPos ground = origin.offset(x, 0, z);
@@ -1325,5 +1359,14 @@ public final class VisualQaScenes {
 				}
 			}
 		}
+		clearQaItemDrops(level, origin, radius);
+	}
+
+	private static void clearQaItemDrops(ServerLevel level, BlockPos origin, int radius) {
+		AABB cleanup = new AABB(
+				origin.getX() - radius, origin.getY() - 8, origin.getZ() - radius,
+				origin.getX() + radius, origin.getY() + 96, origin.getZ() + radius
+		);
+		level.getEntitiesOfClass(ItemEntity.class, cleanup).forEach(ItemEntity::discard);
 	}
 }
