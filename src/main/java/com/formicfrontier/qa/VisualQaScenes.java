@@ -96,6 +96,8 @@ public final class VisualQaScenes {
 	public static final String SHRINE_SANCTUM = "shrine_sanctum";
 	public static final String RESIN_DEPOT_VARIANTS = "resin_depot_variants";
 	public static final String RESIN_DEPOT_INTERIOR = "resin_depot_interior";
+	public static final String FUNGUS_GARDEN_VARIANTS = "fungus_garden_variants";
+	public static final String FUNGUS_GARDEN_INTERIOR = "fungus_garden_interior";
 	private static final List<String> SCENES = List.of(
 			COLONY_OVERVIEW,
 			COLONY_GROUND,
@@ -141,7 +143,9 @@ public final class VisualQaScenes {
 			SHRINE_VARIANTS,
 			SHRINE_SANCTUM,
 			RESIN_DEPOT_VARIANTS,
-			RESIN_DEPOT_INTERIOR
+			RESIN_DEPOT_INTERIOR,
+			FUNGUS_GARDEN_VARIANTS,
+			FUNGUS_GARDEN_INTERIOR
 	);
 	private static final List<AntCaste> ANT_LINEUP_CASTES = List.of(
 			AntCaste.QUEEN,
@@ -245,13 +249,16 @@ public final class VisualQaScenes {
 		boolean armoryFocused = normalized.equals(ARMORY_VARIANTS) || normalized.equals(ARMORY_INTERIOR);
 		boolean shrineFocused = normalized.equals(SHRINE_VARIANTS) || normalized.equals(SHRINE_SANCTUM);
 		boolean resinDepotFocused = normalized.equals(RESIN_DEPOT_VARIANTS) || normalized.equals(RESIN_DEPOT_INTERIOR);
+		boolean fungusGardenFocused = normalized.equals(FUNGUS_GARDEN_VARIANTS) || normalized.equals(FUNGUS_GARDEN_INTERIOR);
 		boolean roleBuildingFocused = foodFocused || nurseryFocused || mineFocused || chitinFarmFocused
-				|| barracksFocused || marketFocused || archiveFocused || armoryFocused || shrineFocused || resinDepotFocused;
+				|| barracksFocused || marketFocused || archiveFocused || armoryFocused || shrineFocused || resinDepotFocused
+				|| fungusGardenFocused;
 		boolean interiorFocused = moundInteriorFocused || normalized.equals(FOOD_STORE_INTERIOR)
 				|| normalized.equals(NURSERY_INTERIOR) || normalized.equals(MINE_INTERIOR)
 				|| normalized.equals(CHITIN_FARM_INTERIOR) || normalized.equals(BARRACKS_INTERIOR)
 				|| normalized.equals(ARCHIVE_HALL_INTERIOR) || normalized.equals(ARCHIVE_LOFT_INTERIOR)
-				|| normalized.equals(ARMORY_INTERIOR) || normalized.equals(RESIN_DEPOT_INTERIOR);
+				|| normalized.equals(ARMORY_INTERIOR) || normalized.equals(RESIN_DEPOT_INTERIOR)
+				|| normalized.equals(FUNGUS_GARDEN_INTERIOR);
 		boolean structureFocused = normalized.equals(STRUCTURE_PREVIEW_3Q)
 				|| normalized.equals(STRUCTURE_PREVIEW_FRONT) || interiorFocused || roleBuildingFocused;
 		if (structureFocused && structureQaOrigin == null) {
@@ -353,6 +360,14 @@ public final class VisualQaScenes {
 			} else if (normalized.equals(RESIN_DEPOT_INTERIOR)) {
 				StructurePlacer.placeBuilding(level, origin, BuildingType.RESIN_DEPOT,
 						BuildingVisualStage.COMPLETE, ColonyCulture.CARPENTER);
+			} else if (normalized.equals(FUNGUS_GARDEN_VARIANTS)) {
+				StructurePlacer.placeBuilding(level, origin.offset(-18, 0, 0), BuildingType.FUNGUS_GARDEN,
+						BuildingVisualStage.COMPLETE, ColonyCulture.LEAFCUTTER);
+				StructurePlacer.placeBuilding(level, origin.offset(18, 0, 1), BuildingType.FUNGUS_GARDEN,
+						BuildingVisualStage.COMPLETE, ColonyCulture.LEAFCUTTER);
+			} else if (normalized.equals(FUNGUS_GARDEN_INTERIOR)) {
+				StructurePlacer.placeBuilding(level, origin, BuildingType.FUNGUS_GARDEN,
+						BuildingVisualStage.COMPLETE, ColonyCulture.LEAFCUTTER);
 			} else {
 				ColonyService.createColony(level, origin, true);
 			}
@@ -1190,6 +1205,8 @@ public final class VisualQaScenes {
 			case SHRINE_SANCTUM -> Vec3.atCenterOf(origin).add(0.0, 1.8, 3.0);
 			case RESIN_DEPOT_VARIANTS -> Vec3.atCenterOf(origin).add(0.0, 3.8, 2.0);
 			case RESIN_DEPOT_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 1.8, 3.2);
+			case FUNGUS_GARDEN_VARIANTS -> Vec3.atCenterOf(origin).add(0.0, 3.4, 2.0);
+			case FUNGUS_GARDEN_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 1.8, 4.0);
 			default -> Vec3.atCenterOf(origin).add(0.0, 2.0, 0.0);
 		};
 		Vec3 camera = switch (sceneName) {
@@ -1231,6 +1248,8 @@ public final class VisualQaScenes {
 			case SHRINE_SANCTUM -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.3, origin.getZ() - 2.8);
 			case RESIN_DEPOT_VARIANTS -> new Vec3(origin.getX() + 0.5, origin.getY() + 14.0, origin.getZ() - 43.0);
 			case RESIN_DEPOT_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.3, origin.getZ() - 3.2);
+			case FUNGUS_GARDEN_VARIANTS -> new Vec3(origin.getX() + 0.5, origin.getY() + 13.0, origin.getZ() - 43.0);
+			case FUNGUS_GARDEN_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.3, origin.getZ() - 3.2);
 			default -> new Vec3(origin.getX() + 28.0, origin.getY() + 18.0, origin.getZ() - 32.0);
 		};
 		player.teleportTo(camera.x, camera.y, camera.z);

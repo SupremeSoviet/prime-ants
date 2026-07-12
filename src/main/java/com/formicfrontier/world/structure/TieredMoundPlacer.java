@@ -323,6 +323,19 @@ public final class TieredMoundPlacer {
 				placeDecoration(level, center, chamber, 0, 2, 1, Blocks.OCHRE_FROGLIGHT);
 				placeDecoration(level, center, chamber, 0, 2, -1, Blocks.LANTERN);
 			}
+			case "fungus_garden" -> {
+				placeDecoration(level, center, chamber, -4, 1, 0, Blocks.MYCELIUM);
+				placeDecoration(level, center, chamber, -4, 2, 0, Blocks.BROWN_MUSHROOM);
+				placeDecoration(level, center, chamber, 4, 1, 0, Blocks.PODZOL);
+				placeDecoration(level, center, chamber, 4, 2, 0, Blocks.RED_MUSHROOM);
+				placeDecoration(level, center, chamber, -3, 1, 2, Blocks.BROWN_MUSHROOM_BLOCK);
+				placeDecoration(level, center, chamber, -3, 2, 2, Blocks.SHROOMLIGHT);
+				placeDecoration(level, center, chamber, 3, 1, 2, Blocks.RED_MUSHROOM_BLOCK);
+				placeDecoration(level, center, chamber, 3, 2, 2, Blocks.SHROOMLIGHT);
+				placeDecoration(level, center, chamber, -2, 1, 4, Blocks.COMPOSTER);
+				placeDecoration(level, center, chamber, 0, 1, 4, ModBlocks.FUNGUS_GARDEN);
+				placeDecoration(level, center, chamber, 2, 1, 4, Blocks.BARREL);
+			}
 			default -> throw new IllegalArgumentException("Unsupported chamber purpose " + chamber.purpose());
 		}
 	}
@@ -432,6 +445,16 @@ public final class TieredMoundPlacer {
 				if (roll < 95) yield Blocks.STRIPPED_MANGROVE_WOOD;
 				if (roll < 98) yield Blocks.HONEYCOMB_BLOCK;
 				yield Blocks.CUT_COPPER;
+			}
+			case "fungus_garden" -> {
+				if (roll < 52) yield ModBlocks.NEST_MOUND;
+				if (roll < 65) yield Blocks.ROOTED_DIRT;
+				if (roll < 75) yield Blocks.MUD;
+				if (roll < 84) yield Blocks.MOSS_BLOCK;
+				if (roll < 90) yield Blocks.MYCELIUM;
+				if (roll < 95) yield Blocks.BROWN_MUSHROOM_BLOCK;
+				if (roll < 98) yield Blocks.MUSHROOM_STEM;
+				yield Blocks.RED_MUSHROOM_BLOCK;
 			}
 			default -> throw new IllegalArgumentException("Unsupported material palette " + blueprint.palette());
 		};

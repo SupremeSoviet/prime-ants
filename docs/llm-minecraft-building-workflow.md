@@ -148,6 +148,17 @@ distinct footprints and more than 42 blocks between repeat sites. Focused
 Structure QA verifies both silhouettes and the furnished interior without
 opening UI scenes.
 
+The fungus garden uses a low clover plan rather than another circular storage
+mound. `fungus_garden_a.json` and `fungus_garden_b.json` overlap a central hall
+with uneven left, right, rear and entrance lobes, then close the broad shell
+with a shallow cap. A five-block harvest mouth opens onto a clear central aisle;
+mycelium and podzol beds, live red and brown mushrooms, mushroom-block planters,
+shroomlights, a composter, barrel and culture block make the shaded chamber read
+as an actively tended farm. Unit tests require all clover lobes, a sealed rear
+shell, connected mass and distinct footprints, while GameTests verify the live
+furnishings, broad mouth and two well-spaced variants. Focused Structure QA
+checks both silhouettes and the interior at original screenshot resolution.
+
 Every enclosed role chamber has a discrete rear-shell invariant in addition to
 whole-mound connectivity. For each vaulted ceiling layer, the first block behind
 the carved ellipse must remain solid. This prevents a geometrically connected

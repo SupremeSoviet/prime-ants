@@ -139,7 +139,7 @@ public final class FormicFrontierGameTest {
 		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(fireSignature), BuildingType.WATCH_POST, BuildingVisualStage.COMPLETE, ColonyCulture.FIRE);
 		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(carpenterSignature), BuildingType.RESIN_DEPOT, BuildingVisualStage.COMPLETE, ColonyCulture.CARPENTER);
 		assertDiplomacyShrineProfile(helper, amberSignature, "amber signature");
-		assertMinimalBuildingMarker(helper, leafcutterSignature, ModBlocks.FUNGUS_GARDEN, "leafcutter signature");
+		assertFungusGardenProfile(helper, leafcutterSignature, "leafcutter signature");
 		assertMinimalBuildingMarker(helper, fireSignature, ModBlocks.WATCH_POST, "fire signature");
 		assertMinimalBuildingMarker(helper, carpenterSignature, ModBlocks.RESIN_DEPOT, "carpenter signature");
 		helper.succeed();
@@ -304,6 +304,27 @@ public final class FormicFrontierGameTest {
 		if (!VisualQaScenes.scenes().contains(VisualQaScenes.RESIN_DEPOT_VARIANTS)
 				|| !VisualQaScenes.scenes().contains(VisualQaScenes.RESIN_DEPOT_INTERIOR)) {
 			helper.fail("Visual QA should expose resin cistern silhouettes and its connected workshop.");
+		}
+		helper.succeed();
+	}
+
+	@GameTest
+	public void fungusGardenCompilesToEnclosedFurnishedCloverVariants(GameTestHelper helper) {
+		BlockPos origin = new BlockPos(2, 3, 2);
+		prepareCampusArea(helper, origin, 64);
+		BlockPos first = origin.offset(-18, 0, 0);
+		BlockPos second = origin.offset(18, 0, 1);
+
+		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(first), BuildingType.FUNGUS_GARDEN,
+				BuildingVisualStage.COMPLETE, ColonyCulture.LEAFCUTTER);
+		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(second), BuildingType.FUNGUS_GARDEN,
+				BuildingVisualStage.COMPLETE, ColonyCulture.LEAFCUTTER);
+
+		assertFungusGardenProfile(helper, first, "first fungus garden variant");
+		assertFungusGardenProfile(helper, second, "second fungus garden variant");
+		if (!VisualQaScenes.scenes().contains(VisualQaScenes.FUNGUS_GARDEN_VARIANTS)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.FUNGUS_GARDEN_INTERIOR)) {
+			helper.fail("Visual QA should expose fungus clover silhouettes and its shaded cultivation hall.");
 		}
 		helper.succeed();
 	}
@@ -2466,6 +2487,48 @@ public final class FormicFrontierGameTest {
 		}
 	}
 
+	private static void assertFungusGardenProfile(GameTestHelper helper, BlockPos center, String label) {
+		helper.assertBlockPresent(ModBlocks.FUNGUS_GARDEN, center);
+		int hallCenterX;
+		if (helper.getLevel().getBlockState(helper.absolutePos(center.offset(-1, 1, 6))).is(ModBlocks.FUNGUS_GARDEN)) {
+			hallCenterX = -1;
+		} else if (helper.getLevel().getBlockState(helper.absolutePos(center.offset(1, 1, 6))).is(ModBlocks.FUNGUS_GARDEN)) {
+			hallCenterX = 1;
+		} else {
+			helper.fail(label + " should contain a furnished fungus cultivation hall.");
+			return;
+		}
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(hallCenterX, 2, -6))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(hallCenterX, 2, 2))).isAir()) {
+			helper.fail(label + " should expose a broad harvest mouth connected to the grow room.");
+		}
+		helper.assertBlockPresent(Blocks.MYCELIUM, center.offset(hallCenterX - 4, 1, 2));
+		helper.assertBlockPresent(Blocks.BROWN_MUSHROOM, center.offset(hallCenterX - 4, 2, 2));
+		helper.assertBlockPresent(Blocks.PODZOL, center.offset(hallCenterX + 4, 1, 2));
+		helper.assertBlockPresent(Blocks.RED_MUSHROOM, center.offset(hallCenterX + 4, 2, 2));
+		helper.assertBlockPresent(Blocks.BROWN_MUSHROOM_BLOCK, center.offset(hallCenterX - 3, 1, 4));
+		helper.assertBlockPresent(Blocks.RED_MUSHROOM_BLOCK, center.offset(hallCenterX + 3, 1, 4));
+		helper.assertBlockPresent(Blocks.SHROOMLIGHT, center.offset(hallCenterX - 3, 2, 4));
+		helper.assertBlockPresent(Blocks.SHROOMLIGHT, center.offset(hallCenterX + 3, 2, 4));
+		helper.assertBlockPresent(Blocks.COMPOSTER, center.offset(hallCenterX - 2, 1, 6));
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(hallCenterX + 2, 1, 6));
+
+		if (!isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(-8, 2, 3))).getBlock())
+				|| !isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(8, 2, 3))).getBlock())
+				|| !isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 4, 8))).getBlock())
+				|| !isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 6, 2))).getBlock())
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 7, 2))).isAir()) {
+			helper.fail(label + " should retain three grow pods under a sealed six-block mushroom crown.");
+		}
+		int base = countMoundLayer(helper, center, 0, 14);
+		int shoulder = countMoundLayer(helper, center, 4, 13);
+		int crown = countMoundLayer(helper, center, 6, 10);
+		if (base < 200 || shoulder < 45 || crown < 12 || !(base > shoulder && shoulder > crown)) {
+			helper.fail(label + " should read as a broad shaded clover mound, got layer masses "
+					+ base + "/" + shoulder + "/" + crown);
+		}
+	}
+
 	private static void assertNurseryProfile(GameTestHelper helper, BlockPos center, String label) {
 		helper.assertBlockPresent(ModBlocks.NURSERY_CHAMBER, center);
 		if (helper.getLevel().getBlockState(helper.absolutePos(center.below())).is(ModBlocks.NEST_CORE)) {
@@ -2503,6 +2566,7 @@ public final class FormicFrontierGameTest {
 				|| block == Blocks.MUD
 				|| block == Blocks.PACKED_MUD
 				|| block == Blocks.MOSS_BLOCK
+				|| block == Blocks.MYCELIUM
 				|| block == Blocks.MANGROVE_ROOTS
 				|| block == Blocks.STONE
 				|| block == Blocks.COBBLED_DEEPSLATE
@@ -2519,6 +2583,9 @@ public final class FormicFrontierGameTest {
 				|| block == Blocks.BLACKSTONE
 				|| block == Blocks.DEEPSLATE_IRON_ORE
 				|| block == Blocks.STRIPPED_MANGROVE_WOOD
+				|| block == Blocks.BROWN_MUSHROOM_BLOCK
+				|| block == Blocks.RED_MUSHROOM_BLOCK
+				|| block == Blocks.MUSHROOM_STEM
 				|| block == Blocks.GOLD_BLOCK;
 	}
 

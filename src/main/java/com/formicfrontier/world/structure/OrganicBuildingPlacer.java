@@ -40,59 +40,55 @@ public final class OrganicBuildingPlacer {
 	public static final String DIPLOMACY_SHRINE_B_RESOURCE = "formic_blueprints/diplomacy_shrine_b.json";
 	public static final String RESIN_DEPOT_A_RESOURCE = "formic_blueprints/resin_depot_a.json";
 	public static final String RESIN_DEPOT_B_RESOURCE = "formic_blueprints/resin_depot_b.json";
+	public static final String FUNGUS_GARDEN_A_RESOURCE = "formic_blueprints/fungus_garden_a.json";
+	public static final String FUNGUS_GARDEN_B_RESOURCE = "formic_blueprints/fungus_garden_b.json";
 
-	private static final Map<BuildingType, Family> FAMILIES = Map.of(
-			BuildingType.FOOD_STORE,
-			new Family(List.of(
+	private static final Map<BuildingType, Family> FAMILIES = Map.ofEntries(
+			Map.entry(BuildingType.FOOD_STORE, new Family(List.of(
 					TieredMoundBlueprint.load(FOOD_STORE_A_RESOURCE),
 					TieredMoundBlueprint.load(FOOD_STORE_B_RESOURCE)
-			)),
-			BuildingType.NURSERY,
-			new Family(List.of(
+			))),
+			Map.entry(BuildingType.NURSERY, new Family(List.of(
 					TieredMoundBlueprint.load(NURSERY_A_RESOURCE),
 					TieredMoundBlueprint.load(NURSERY_B_RESOURCE)
-			)),
-			BuildingType.MINE,
-			new Family(List.of(
+			))),
+			Map.entry(BuildingType.MINE, new Family(List.of(
 					TieredMoundBlueprint.load(MINE_A_RESOURCE),
 					TieredMoundBlueprint.load(MINE_B_RESOURCE)
-			)),
-			BuildingType.CHITIN_FARM,
-			new Family(List.of(
+			))),
+			Map.entry(BuildingType.CHITIN_FARM, new Family(List.of(
 					TieredMoundBlueprint.load(CHITIN_FARM_A_RESOURCE),
 					TieredMoundBlueprint.load(CHITIN_FARM_B_RESOURCE),
 					TieredMoundBlueprint.load(CHITIN_FARM_C_RESOURCE)
-			)),
-			BuildingType.BARRACKS,
-			new Family(List.of(
+			))),
+			Map.entry(BuildingType.BARRACKS, new Family(List.of(
 					TieredMoundBlueprint.load(BARRACKS_A_RESOURCE),
 					TieredMoundBlueprint.load(BARRACKS_B_RESOURCE)
-			)),
-			BuildingType.MARKET,
-			new Family(List.of(
+			))),
+			Map.entry(BuildingType.MARKET, new Family(List.of(
 					TieredMoundBlueprint.load(MARKET_A_RESOURCE),
 					TieredMoundBlueprint.load(MARKET_B_RESOURCE)
-			)),
-			BuildingType.PHEROMONE_ARCHIVE,
-			new Family(List.of(
+			))),
+			Map.entry(BuildingType.PHEROMONE_ARCHIVE, new Family(List.of(
 					TieredMoundBlueprint.load(PHEROMONE_ARCHIVE_A_RESOURCE),
 					TieredMoundBlueprint.load(PHEROMONE_ARCHIVE_B_RESOURCE)
-			)),
-			BuildingType.ARMORY,
-			new Family(List.of(
+			))),
+			Map.entry(BuildingType.ARMORY, new Family(List.of(
 					TieredMoundBlueprint.load(ARMORY_A_RESOURCE),
 					TieredMoundBlueprint.load(ARMORY_B_RESOURCE)
-			)),
-			BuildingType.DIPLOMACY_SHRINE,
-			new Family(List.of(
+			))),
+			Map.entry(BuildingType.DIPLOMACY_SHRINE, new Family(List.of(
 					TieredMoundBlueprint.load(DIPLOMACY_SHRINE_A_RESOURCE),
 					TieredMoundBlueprint.load(DIPLOMACY_SHRINE_B_RESOURCE)
-			)),
-			BuildingType.RESIN_DEPOT,
-			new Family(List.of(
+			))),
+			Map.entry(BuildingType.RESIN_DEPOT, new Family(List.of(
 					TieredMoundBlueprint.load(RESIN_DEPOT_A_RESOURCE),
 					TieredMoundBlueprint.load(RESIN_DEPOT_B_RESOURCE)
-			))
+			))),
+			Map.entry(BuildingType.FUNGUS_GARDEN, new Family(List.of(
+					TieredMoundBlueprint.load(FUNGUS_GARDEN_A_RESOURCE),
+					TieredMoundBlueprint.load(FUNGUS_GARDEN_B_RESOURCE)
+			)))
 	);
 
 	private OrganicBuildingPlacer() {
@@ -145,6 +141,7 @@ public final class OrganicBuildingPlacer {
 			case ARMORY -> ModBlocks.ARMORY;
 			case DIPLOMACY_SHRINE -> ModBlocks.DIPLOMACY_SHRINE;
 			case RESIN_DEPOT -> ModBlocks.RESIN_DEPOT;
+			case FUNGUS_GARDEN -> ModBlocks.FUNGUS_GARDEN;
 			default -> throw new IllegalArgumentException("No functional block registered for " + type);
 		};
 	}

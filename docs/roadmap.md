@@ -117,7 +117,10 @@ rings with asymmetrical three-horn crowns, intimate entrances and furnished
 amber sanctums under the sky. The resin depot is implemented and accepted as
 two low asymmetrical cistern mounds with a controlled entrance, connected resin
 workshop and sealed side vault, warm wood/amber accents, and clear storage
-aisles. The next implementation slice is the fungus garden.
+aisles. The fungus garden is implemented and accepted as two low clover-shaped
+mounds with uneven cultivation lobes, broad harvest mouths, sealed shaded
+halls, clear work aisles, live fungi and mushroom lighting. The next
+implementation slice is the venom press.
 
 Slice R3: Colony Tablet 2.0.
 

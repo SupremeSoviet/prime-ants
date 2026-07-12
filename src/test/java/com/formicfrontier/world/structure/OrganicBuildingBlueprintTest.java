@@ -417,6 +417,41 @@ final class OrganicBuildingBlueprintTest {
 	}
 
 	@Test
+	void fungusGardensAreLowCloverMoundsWithEnclosedCultivationHalls() {
+		var variants = OrganicBuildingPlacer.variants(BuildingType.FUNGUS_GARDEN);
+		Assertions.assertEquals(Set.of("fungus_garden_a", "fungus_garden_b"), variants.stream()
+				.map(TieredMoundBlueprint::name).collect(Collectors.toSet()));
+		Set<Set<FootprintCell>> footprints = new HashSet<>();
+		for (TieredMoundBlueprint blueprint : variants) {
+			Assertions.assertEquals("fungus_garden", blueprint.palette());
+			Assertions.assertEquals(6, blueprint.maxY(), "fungus garden should stay a low humid clover mound");
+			Assertions.assertEquals(1, blueprint.chambers().size());
+			TieredMoundBlueprint.Chamber hall = blueprint.chambers().getFirst();
+			Assertions.assertEquals("cultivation_hall", hall.id());
+			Assertions.assertEquals("fungus_garden", hall.purpose());
+			Assertions.assertEquals(0, hall.floorY());
+			Assertions.assertFalse(hall.openToSky(), "fungus cultures need a shaded enclosed room");
+			Assertions.assertTrue(blueprint.pits().isEmpty());
+			Assertions.assertTrue(blueprint.connections().isEmpty());
+			Assertions.assertEquals(5, blueprint.mouths().getFirst().width(), "fungus workers need a broad harvest mouth");
+			assertRearShell(blueprint, hall);
+			assertEnclosedExceptMouths(blueprint, hall);
+
+			Set<Cell> solid = solidCells(blueprint);
+			assertConnected(blueprint, solid, "fungus clover mound");
+			Set<FootprintCell> footprint = footprint(solid);
+			Assertions.assertTrue(footprint.size() >= 220, "fungus garden needs several substantial grounded lobes");
+			Assertions.assertTrue(footprint.stream().anyMatch(cell -> cell.x <= -10), "fungus garden needs a left grow pod");
+			Assertions.assertTrue(footprint.stream().anyMatch(cell -> cell.x >= 10), "fungus garden needs a right grow pod");
+			Assertions.assertTrue(footprint.stream().anyMatch(cell -> cell.z >= 10), "fungus garden needs a rear spore pod");
+			long crownMass = solid.stream().filter(cell -> cell.y >= 5).count();
+			Assertions.assertTrue(crownMass >= 24, "fungus garden needs a readable shaded crown");
+			footprints.add(footprint);
+		}
+		Assertions.assertEquals(2, footprints.size(), "fungus garden variants need distinct asymmetric clover shells");
+	}
+
+	@Test
 	void repeatedRoleSitesSelectEveryAuthoredVariant() {
 		BlockPos origin = new BlockPos(11, 0, -7);
 		Set<String> mineVariants = new HashSet<>();
@@ -486,6 +521,17 @@ final class OrganicBuildingBlueprintTest {
 		BlockPos secondResinDepot = ColonyBuilder.siteFor(origin, BuildingType.RESIN_DEPOT, 1);
 		Assertions.assertTrue(firstResinDepot.distSqr(secondResinDepot) >= 42 * 42,
 				"repeated resin depots need open working ground around their storage pods");
+
+		Set<String> fungusVariants = new HashSet<>();
+		for (int existing = 0; existing < 2; existing++) {
+			BlockPos site = ColonyBuilder.siteFor(origin, BuildingType.FUNGUS_GARDEN, existing);
+			fungusVariants.add(OrganicBuildingPlacer.blueprintFor(BuildingType.FUNGUS_GARDEN, site).name());
+		}
+		Assertions.assertEquals(Set.of("fungus_garden_a", "fungus_garden_b"), fungusVariants);
+		BlockPos firstFungusGarden = ColonyBuilder.siteFor(origin, BuildingType.FUNGUS_GARDEN, 0);
+		BlockPos secondFungusGarden = ColonyBuilder.siteFor(origin, BuildingType.FUNGUS_GARDEN, 1);
+		Assertions.assertTrue(firstFungusGarden.distSqr(secondFungusGarden) >= 46 * 46,
+				"repeated fungus gardens need open harvesting ground around their grow pods");
 	}
 
 	private static void assertConnected(TieredMoundBlueprint blueprint, Set<Cell> solid, String label) {
