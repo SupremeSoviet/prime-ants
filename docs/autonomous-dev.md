@@ -6,8 +6,8 @@ Formic Frontier now has a two-layer QA loop for Codex-driven work:
 2. `scripts/test-mod.cmd` runs the build, unit tests, server GameTests, asset validation, and log scan.
 3. `scripts/prepare-gui-world.cmd` bootstraps a dev single-player world if it is missing.
 4. `scripts/gui-smoke.cmd` launches the Fabric client with `-Dformic.visualQa=true`, prepares deterministic visual QA scenes, captures screenshots, and writes `build/visual-qa/visual-qa-report.md`.
-5. `scripts/openai-visual-assessment.cmd` sends fresh screenshots to OpenAI `gpt-5.4-mini` and writes `build/visual-qa/formic-visual-assessment.md`.
-6. `scripts/autonomous-gate.cmd -AllowMissingGitHub` runs the local gate and requires a fresh `build/visual-qa/formic-visual-assessment.md` with `Assessor: GPT-5.4 mini` and `Verdict: PASS` or `Verdict: PASS WITH NOTES`.
+5. Codex inspects every fresh screenshot at original resolution and writes `build/visual-qa/formic-visual-assessment.md`; GPT-5.4 mini is intentionally not used.
+6. `scripts/autonomous-gate.cmd -AllowMissingGitHub` runs the local gate and requires that fresh manual report with `Verdict: PASS` or `Verdict: PASS WITH NOTES`.
 7. `scripts/start-autonomous-loop.cmd -AllowMissingGitHub` starts a hidden local Codex supervisor that runs one playable roadmap slice per iteration and re-checks `autonomous-gate.cmd -AllowMissingGitHub -NoLaunch` after each iteration.
 
 When `docs/roadmap.md` contains an active Renovation Track, autonomous agents
@@ -100,50 +100,32 @@ Optional knobs:
 
 Proxy diagnostics live in `build/zai-codex-proxy/`, which is ignored by Git.
 
-## GPT-5.4 Mini Visual Assessment
+## Manual Original-Resolution Visual Assessment
 
-Codex development still uses `glm-5.2` through the local Responses proxy because
-that model is strong for long-running text/code work. Final visual acceptance is
-separate: `scripts/openai-visual-assessment.cmd` calls OpenAI `gpt-5.4-mini`
-through the Responses API with the actual `build/visual-qa/screenshots/*.png`
-images.
-
-This split is intentional. `glm-5.2` is text-only in Z.AI's model metadata, so it
-must not be trusted to visually accept Minecraft screenshots from pixel summaries
-alone. `gpt-5.4-mini` is the checker for silhouette, scale, camera framing, UI
-readability, ant readability, clipping, and composition.
-
-The assessor uses Codex CLI auth by default (`-Transport codex`), so it does not
-need an `OPENAI_API_KEY` for the normal autonomous loop. When explicitly run with
-`-Transport api`, it uses `OPENAI_API_KEY` from the environment only and does not
-store the key in the repo, prompts, or logs. The API endpoint for that transport is:
+Final visual acceptance is a direct Codex review of the actual
+`build/visual-qa/screenshots/*.png` files at original resolution. The reviewer
+must inspect every expected scene, apply the project rubric, and write
+`build/visual-qa/formic-visual-assessment.md` with this assessor line:
 
 ```text
-https://api.openai.com/v1/responses
+Assessor: Codex manual original-resolution review (GPT-5.4 mini explicitly disabled by user)
 ```
 
-The OpenAI model id is `gpt-5.4-mini`. It supports image input; the local script
-uses `detail=high` for 1600x900 Minecraft screenshots.
-
-By default, `scripts/openai-visual-assessment.cmd` uses Codex CLI auth
-(`-Transport codex`), so autonomous agents must not block merely because
-`OPENAI_API_KEY` is unset. `OPENAI_API_KEY` is needed only when explicitly using
-`-Transport api`. Because assessment sends 19 screenshots plus reference
-images, it can take longer than five minutes; a command timeout should be
-retried with more time or checked for background output before diagnosing auth.
+The legacy `scripts/openai-visual-assessment.cmd` remains available only as an
+explicit opt-in experiment. It is not called by the default gate or autonomous
+loop.
 
 Manual run:
 
 ```powershell
 scripts\gui-smoke.cmd
-scripts\openai-visual-assessment.cmd
+# inspect build\visual-qa\screenshots\*.png and write the manual report
 scripts\autonomous-gate.cmd -AllowMissingGitHub -NoLaunch
 ```
 
-`autonomous-gate.cmd` runs the OpenAI visual assessor by default after fresh GUI
-smoke. Use `-SkipVisionAssessment` only for offline debugging; autonomous visual
-loop acceptance must not use that bypass. `-VisionAssessor glm5v` is still
-available if Z.AI GLM-5V access is restored later.
+`autonomous-gate.cmd` validates the manual report by default after fresh GUI
+smoke. `-VisionAssessor openai` and `-VisionAssessor glm5v` are explicit opt-in
+alternatives; `-SkipVisionAssessment` remains an offline-debugging bypass only.
 
 ## Required Local Setup
 
@@ -192,7 +174,7 @@ Agents should treat a change as ready only when:
 
 - `scripts/test-mod.cmd` passes.
 - `scripts/gui-smoke.cmd` produces all expected screenshots.
-- `scripts/openai-visual-assessment.cmd` is run on the latest screenshots and saves `build/visual-qa/formic-visual-assessment.md` with `Assessor: GPT-5.4 mini`.
+- every latest screenshot is inspected manually at original resolution and the report uses the required Codex manual assessor line.
 - `scripts/autonomous-gate.cmd -AllowMissingGitHub -NoLaunch` accepts the saved assessment report.
 - The GUI tester agent confirms no `P0`/`P1` issues: no unreadable UI, floating colony floors, invisible ants, broken labels, mojibake, or visual clutter regressions.
 
@@ -215,7 +197,7 @@ agent that accepts the visual result. Each loop should follow:
 1. scout chooses one visual target and screenshot acceptance set;
 2. one worker owns one subsystem and write area;
 3. fresh `scripts/gui-smoke.cmd` screenshots are produced;
-4. visual assessor runs `scripts/openai-visual-assessment.cmd` and writes `build/visual-qa/formic-visual-assessment.md`;
+4. visual assessor inspects the original PNGs and writes `build/visual-qa/formic-visual-assessment.md`;
 5. gatekeeper verifies `test-mod`, assessment freshness, and `autonomous-gate`.
 
 For R2 architecture loops, the scout must prefer one substantial structural
@@ -261,5 +243,5 @@ Status and logs:
 - `build/autonomous-loop/iteration-*.final.md`
 
 The supervisor is local-only. It can edit files, run Gradle, launch GUI smoke,
-run the GPT-5.4 mini visual assessment command, and enforce the local gate. It cannot publish
+run the manual original-resolution visual assessment, and enforce the local gate. It cannot publish
 pull requests until a Git remote and GitHub tooling are configured.

@@ -265,5 +265,8 @@ remains available with `-Scope Full` when a whole-mod release review is
 explicitly needed. After a complete Structure run, a single changed scene can
 be refreshed with `-Scenes <scene_id>`; existing screenshots are preserved and
 the full Structure manifest is still revalidated. Structure runs reuse the
-already loaded QA area to avoid fresh-chunk capture races, and the report gate
-rejects suspiciously small sky-only PNGs.
+already loaded QA area to avoid fresh-chunk capture races, pin its ground to a
+safe Y instead of deriving it from the previous spectator camera, and clear any
+old high platform on first use. The focused stage-one and Great Mound scenes
+also assert their live Y+23/Y+32 crowns before capture; the report gate rejects
+both those runtime failures and suspiciously small sky-only PNGs.

@@ -62,6 +62,7 @@ tasks.withType(JavaExec).configureEach {
 		systemProperty "formic.visualQa.exit", System.getProperty("formic.visualQa.exit", "true")
 		systemProperty "formic.visualQa.world", System.getProperty("formic.visualQa.world", "FormicVisualQA")
 		systemProperty "formic.visualQa.scope", System.getProperty("formic.visualQa.scope", "full")
+		systemProperty "formic.visualQa.scenes", System.getProperty("formic.visualQa.scenes", "")
 	}
 }
 

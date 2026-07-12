@@ -8,7 +8,7 @@ Every roadmap slice must pass:
 
 - `scripts/test-mod.cmd -AllowMissingGitHub`
 - `scripts/gui-smoke.cmd`
-- `scripts/openai-visual-assessment.cmd` on the latest screenshots
+- manual original-resolution review of every latest screenshot (no GPT-5.4 mini)
 - `scripts/autonomous-gate.cmd -AllowMissingGitHub -NoLaunch`
 
 `P0` and `P1` visual findings block the slice. `PASS` and `PASS WITH NOTES` are
@@ -142,10 +142,13 @@ high caravan complex on a newly spaced site. It combines a large roofless
 exchange court with directly connected enclosed warehouse and brokerage lobes,
 keeps a clear central circulation lane, and uses visibly different cargo and
 high-value trade furnishings. All planned structure families and both central
-mound expansions are now complete. The next implementation slice is R3, the
-from-scratch Colony Tablet/research/trade UI redesign.
+mound expansions are now complete. R3, the from-scratch Colony
+Tablet/research/trade UI redesign, is also complete; the remaining required
+visual-baseline work is the separate 32x32 asset slice described above.
 
 Slice R3: Colony Tablet 2.0.
+
+Status: complete (2026-07-12 manual original-resolution QA, no GPT-5.4 mini).
 
 - Player promise: the tablet feels like a living colony journal, not a 2000s RTS
   ledger.
@@ -159,6 +162,15 @@ Slice R3: Colony Tablet 2.0.
   are player-facing help cards, the whole interface is very beautiful rather
   than a pile of buttons, labels/icons/cards/buttons do not overlap, and no
   P0/P1 visual findings remain.
+
+Implemented result: a shared adaptive journal shell with persistent navigation;
+an icon-based prerequisite graph that pans by drag/scroll, resets on right click
+and exposes hover details in a fixed inspector; direct research-node actions;
+two-column request/wares trade cards with direct actions and a non-occluding
+hover inspector; integrated request Help actions; and complete EN/RU layouts.
+All seven tablet scenes pass at 1600x900. The remaining P2 texture-resolution
+rows are intentionally tracked as a later asset slice rather than hidden by the
+R3 completion status.
 
 ## Slice Format For Autonomous Work
 

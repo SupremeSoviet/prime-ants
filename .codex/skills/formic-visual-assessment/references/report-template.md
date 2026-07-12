@@ -6,6 +6,7 @@ Use this format for strict screenshot QA reports.
 # Formic Visual Assessment
 
 Verdict: FAIL | PASS WITH NOTES | PASS
+Assessor: Codex manual original-resolution review (GPT-5.4 mini explicitly disabled by user)
 Artifacts:
 - Report: build/visual-qa/visual-qa-report.md
 - Screenshots: build/visual-qa/screenshots

@@ -125,12 +125,26 @@ def main() -> int:
 
     errors: list[str] = []
     found: list[dict[str, object]] = []
+
+    # Focused structure scenes emit a precise server-side failure when their
+    # authored crown cannot be placed (for example, when an invalid QA ground Y
+    # would push it above the world ceiling). Do not let a non-empty landscape PNG
+    # turn that failed command into a false-positive screenshot pass.
+    client_log = output / "runClient.log"
+    if client_log.exists():
+        for line in client_log.read_text(encoding="utf-8", errors="replace").splitlines():
+            if "(formic_frontier) Invalid " in line and " crown at " in line:
+                errors.append(f"Runtime structure assertion failed: {line.strip()}")
+
     for name in expected:
         path = screenshots / name
         if not path.exists():
             errors.append(f"Missing screenshot: {path}")
             continue
-        minimum_bytes = 100_000 if name.startswith("tablet_") else 200_000
+        # The dark, mostly flat-color tablet UI compresses substantially better
+        # than world screenshots. Valid 1600x900 tablet captures routinely land
+        # around 85-100 KiB, while genuinely blank frames stay far below this.
+        minimum_bytes = 70_000 if name.startswith("tablet_") else 200_000
         if path.stat().st_size < minimum_bytes:
             errors.append(
                 f"Screenshot is suspiciously small and likely blank: {path} "

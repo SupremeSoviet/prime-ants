@@ -173,7 +173,7 @@ public final class VisualQaClient {
 
 	private static String languageForScene(String scene) {
 		// tablet_ru and tablet_requests both exercise Russian-localized tablet UI.
-		// tablet_requests specifically covers the Needs/Requests tab so the GPT
+		// tablet_requests specifically covers the Needs/Requests tab so manual
 		// visual assessment can confirm request cards, helper buttons, and the
 		// footer render translated text with no English leakage.
 		return "tablet_ru".equals(scene) || "tablet_requests".equals(scene) ? "ru_ru" : DEFAULT_LANGUAGE;

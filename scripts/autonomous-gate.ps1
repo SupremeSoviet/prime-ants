@@ -2,8 +2,8 @@ param(
     [switch]$AllowMissingGitHub,
     [string]$AssessmentReport = "build\visual-qa\formic-visual-assessment.md",
     [string]$IntentDir = "docs\visual-intent",
-    [ValidateSet("openai", "glm5v")]
-    [string]$VisionAssessor = "openai",
+    [ValidateSet("manual", "openai", "glm5v")]
+    [string]$VisionAssessor = "manual",
     [switch]$SkipVisionAssessment,
     [switch]$NoLaunch,
     [string]$FreshnessMarker = "",
@@ -109,15 +109,24 @@ try {
 
     $requiredAssessor = ""
     if (-not $SkipVisionAssessment) {
-        if ($VisionAssessor -eq "glm5v") {
+        if ($VisionAssessor -eq "manual") {
+            $requiredAssessor = "Codex manual original-resolution review (GPT-5.4 mini explicitly disabled by user)"
+            $assessmentPath = Resolve-RepoRelativePath -Path $AssessmentReport
+            if (-not (Test-Path -LiteralPath $assessmentPath)) {
+                throw "Manual visual assessment report is missing: $assessmentPath"
+            }
+        } elseif ($VisionAssessor -eq "glm5v") {
             & (Join-Path $PSScriptRoot "glm5v-visual-assessment.ps1") -VisualQaDir "build\visual-qa" -Output $AssessmentReport -IntentDir $IntentDir
             $requiredAssessor = "GLM-5V-Turbo"
+            if ($LASTEXITCODE -ne 0) {
+                exit $LASTEXITCODE
+            }
         } else {
             & (Join-Path $PSScriptRoot "openai-visual-assessment.ps1") -VisualQaDir "build\visual-qa" -Output $AssessmentReport -IntentDir $IntentDir
             $requiredAssessor = "GPT-5.4 mini"
-        }
-        if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
+            if ($LASTEXITCODE -ne 0) {
+                exit $LASTEXITCODE
+            }
         }
     }
     & (Join-Path $PSScriptRoot "visual-loop-brief.ps1") -IntentDir $IntentDir

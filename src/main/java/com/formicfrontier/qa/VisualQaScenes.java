@@ -1,5 +1,6 @@
 package com.formicfrontier.qa;
 
+import com.formicfrontier.FormicFrontier;
 import com.formicfrontier.entity.AntEntity;
 import com.formicfrontier.registry.ModBlocks;
 import com.formicfrontier.registry.ModItems;
@@ -54,7 +55,9 @@ import java.util.Locale;
 import java.util.Set;
 
 public final class VisualQaScenes {
-	private static BlockPos structureQaOrigin;
+	private static final int PREFERRED_QA_GROUND_Y = 96;
+	private static BlockPos qaOrigin;
+	private static boolean qaAreaInitialized;
 	public static final String COLONY_OVERVIEW = "colony_overview";
 	public static final String COLONY_GROUND = "colony_ground";
 	public static final String ANT_LINEUP = "ant_lineup";
@@ -324,15 +327,17 @@ public final class VisualQaScenes {
 				|| normalized.equals(TRADE_HUB_BROKERAGE);
 		boolean structureFocused = normalized.equals(STRUCTURE_PREVIEW_3Q)
 				|| normalized.equals(STRUCTURE_PREVIEW_FRONT) || interiorFocused || roleBuildingFocused || greatMoundFocused;
-		if (structureFocused && structureQaOrigin == null) {
-			// Reuse the already loaded player area in the dedicated QA world. Moving
-			// another 160 blocks on every process start eventually raced screenshot
-			// capture against fresh chunk delivery and produced valid-size sky frames.
-			// Every focused scene still clears and rebuilds this whole area from scratch.
-			structureQaOrigin = ColonyService.anchorToSurface(level, requested);
+		if (qaOrigin == null) {
+			// Reuse one loaded area for the entire process, but pin its ground height.
+			// Deriving every scene from the previous spectator camera made successive
+			// runs ratchet the platform upward until tall mound crowns crossed Y=320.
+			int groundY = Math.max(level.getMinY() + 16,
+					Math.min(PREFERRED_QA_GROUND_Y, level.getMaxY() - 97));
+			qaOrigin = new BlockPos(requested.getX(), groundY, requested.getZ());
 		}
-		BlockPos origin = structureFocused ? structureQaOrigin : ColonyService.anchorToSurface(level, requested);
-		prepareFlatQaArea(level, origin, qaRadius(normalized));
+		BlockPos origin = qaOrigin;
+		prepareFlatQaArea(level, origin, qaRadius(normalized), !qaAreaInitialized);
+		qaAreaInitialized = true;
 		level.setDayTime(6000);
 		level.setWeatherParameters(0, 0, false, false);
 
@@ -342,7 +347,10 @@ public final class VisualQaScenes {
 			// PREVIEW = GAME: focused scenes call the same public placement paths as
 			// live colonies. Role-family scenes omit the queen mound only to keep the
 			// single-storey subject large and legible in the frame.
-			if (normalized.equals(FOOD_STORE_VARIANTS)) {
+			if (normalized.equals(STRUCTURE_PREVIEW_FRONT) || normalized.equals(STRUCTURE_PREVIEW_3Q)) {
+				StructurePlacer.placeBuilding(level, origin, BuildingType.QUEEN_CHAMBER,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+			} else if (normalized.equals(FOOD_STORE_VARIANTS)) {
 				StructurePlacer.placeBuilding(level, origin.offset(-16, 0, 0), BuildingType.FOOD_STORE,
 						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
 				StructurePlacer.placeBuilding(level, origin.offset(16, 0, 1), BuildingType.FOOD_STORE,
@@ -473,6 +481,9 @@ public final class VisualQaScenes {
 			} else {
 				ColonyService.createColony(level, origin, true);
 			}
+			if (!validateMoundPreview(level, origin, normalized, source)) {
+				return 0;
+			}
 			if (!interiorFocused && !roleBuildingFocused) {
 				dressForestFloor(level, origin, normalized);
 			}
@@ -552,7 +563,7 @@ public final class VisualQaScenes {
 					case TABLET_RESEARCH_MAP -> "Research";
 					default -> "Needs";
 				};
-				ColonyService.openColonyScreen(player, colony, tab, "QA: " + normalized);
+				ColonyService.openColonyScreen(player, colony, tab, "");
 			}
 		}
 
@@ -581,6 +592,10 @@ public final class VisualQaScenes {
 	}
 
 	public static int qaRadius(String sceneName) {
+		if (sceneName.equals(STRUCTURE_PREVIEW_FRONT) || sceneName.equals(STRUCTURE_PREVIEW_3Q)
+				|| sceneName.equals(GREAT_MOUND_GROWTH)) {
+			return 112;
+		}
 		if (sceneName.equals(COLONY_OVERVIEW) || sceneName.equals(SETTLEMENT_SCALE)) {
 			return 128;
 		}
@@ -1268,6 +1283,39 @@ public final class VisualQaScenes {
 			}
 		}
 	}
+
+	/**
+	 * Keep screenshot evidence tied to the authored vertical profile. A focused QA
+	 * capture is invalid when the expected crown is missing, even if the PNG itself
+	 * is non-empty and otherwise passes the screenshot-size gate.
+	 */
+	private static boolean validateMoundPreview(ServerLevel level, BlockPos origin, String sceneName,
+			CommandSourceStack source) {
+		BlockPos[] peaks;
+		if (sceneName.equals(STRUCTURE_PREVIEW_FRONT) || sceneName.equals(STRUCTURE_PREVIEW_3Q)) {
+			peaks = new BlockPos[] {origin.offset(0, 23, 1)};
+		} else if (sceneName.equals(GREAT_MOUND_GROWTH)) {
+			peaks = new BlockPos[] {origin.offset(-18, 23, 1), origin.offset(18, 32, 1)};
+		} else {
+			return true;
+		}
+
+		for (BlockPos peak : peaks) {
+			var peakState = level.getBlockState(peak);
+			var aboveState = level.getBlockState(peak.above());
+			if (peakState.isAir() || !aboveState.isAir()) {
+				String message = "Invalid " + sceneName + " crown at " + peak.toShortString()
+						+ ": peak=" + peakState.getBlock() + ", above=" + aboveState.getBlock();
+				FormicFrontier.LOGGER.error(message);
+				source.sendFailure(Component.literal(message));
+				return false;
+			}
+			FormicFrontier.LOGGER.info("Visual QA {} crown verified at {} with {}",
+					sceneName, peak.toShortString(), peakState.getBlock());
+		}
+		return true;
+	}
+
 	private static void positionCamera(ServerPlayer player, BlockPos origin, String sceneName) {
 		player.setGameMode(GameType.SPECTATOR);
 		TieredMoundBlueprint.Chamber watchLookout = sceneName.equals(WATCH_POST_LOOKOUT_INTERIOR)
@@ -1761,7 +1809,7 @@ public final class VisualQaScenes {
 		}
 	}
 
-	private static void prepareFlatQaArea(ServerLevel level, BlockPos origin, int radius) {
+	private static void prepareFlatQaArea(ServerLevel level, BlockPos origin, int radius, boolean clearToWorldCeiling) {
 		AABB cleanup = new AABB(
 				origin.getX() - radius, origin.getY() - 8, origin.getZ() - radius,
 				origin.getX() + radius, origin.getY() + 96, origin.getZ() + radius
@@ -1769,14 +1817,18 @@ public final class VisualQaScenes {
 		level.getEntitiesOfClass(AntEntity.class, cleanup).forEach(AntEntity::discard);
 		level.getEntitiesOfClass(Display.class, cleanup).forEach(Display::discard);
 		level.getEntitiesOfClass(ItemEntity.class, cleanup).forEach(ItemEntity::discard);
+		int clearTopY = clearToWorldCeiling ? level.getMaxY() - 1 : origin.getY() + 96;
 		for (int x = -radius; x <= radius; x++) {
 			for (int z = -radius; z <= radius; z++) {
 				BlockPos ground = origin.offset(x, 0, z);
 				level.setBlock(ground.below(2), Blocks.DIRT.defaultBlockState(), 3);
 				level.setBlock(ground.below(), Blocks.DIRT.defaultBlockState(), 3);
 				level.setBlock(ground, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
-				for (int y = 1; y <= 96; y++) {
-					level.setBlock(ground.above(y), Blocks.AIR.defaultBlockState(), 3);
+				for (int worldY = origin.getY() + 1; worldY <= clearTopY; worldY++) {
+					BlockPos clearPos = new BlockPos(ground.getX(), worldY, ground.getZ());
+					if (!level.getBlockState(clearPos).isAir()) {
+						level.setBlock(clearPos, Blocks.AIR.defaultBlockState(), 3);
+					}
 				}
 			}
 		}

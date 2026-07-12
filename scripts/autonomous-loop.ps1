@@ -681,7 +681,7 @@ function Get-VisualFailureHandoff {
         )
     }
     if ($parts.Count -eq 0) {
-        return "No visual assessment handoff exists yet. Generate fresh screenshots and run scripts/openai-visual-assessment.cmd."
+        return "No visual assessment handoff exists yet. Generate fresh screenshots, inspect every PNG at original resolution, and write the manual report."
     }
     return ($parts -join [Environment]::NewLine)
 }
@@ -763,7 +763,7 @@ Start by reading:
 - build/autonomous-loop/visual-progress.jsonl tail when present
 
 Two parallel tracks - pick exactly ONE per iteration:
-- world-visual: how the colony LOOKS. Backlog build/autonomous-loop/visual-feature-matrix.json, intent docs/visual-intent/formic-visual-intent.md. Accepted by the visual gate (gui-smoke + GPT-5.4 mini assessment).
+- world-visual: how the colony LOOKS. Backlog build/autonomous-loop/visual-feature-matrix.json, intent docs/visual-intent/formic-visual-intent.md. Accepted by the visual gate (gui-smoke + manual original-resolution assessment).
 - content: how the colony PLAYS and develops over time - castes, resources, time-based progression, trade, politics, native blocks, weapons. Backlog build/autonomous-loop/content-feature-matrix.json, intent docs/content-intent/formic-content-intent.md. Accepted by the content gate (test-mod gametests).
 Set "activeTrack" to "world-visual" or "content" in build/autonomous-loop/visual-loop-state.json so the supervisor runs the matching gate. The tracks are independent: a content slice is NOT blocked by the world still being visually fail, and a content slice needs neither gui-smoke nor the visual assessment. Make real product progress: when the current world-visual target is blocked or waiting on a representational change, advance a content row instead of re-tuning the same world geometry. Whichever track you pick, do not regress scripts/test-mod.cmd or existing visual QA scenes.
 
@@ -820,9 +820,7 @@ Visual compute loop:
 2. Assign exactly one worker ownership area: tablet UI, settlement/world, ants, assets/icons, or QA harness.
 3. Implement only that target.
 4. Generate fresh screenshots; never assess stale screenshots.
-5. Use scripts/openai-visual-assessment.cmd for the separate visual assessor pass. This sends visual intent plus fresh PNG screenshots to OpenAI gpt-5.4-mini through Codex CLI auth and writes build/visual-qa/formic-visual-assessment.md. Do not synthesize the final visual verdict yourself with text-only GLM-5.2.
-   - Default assessment transport is Codex CLI auth; do not block on OPENAI_API_KEY unless you explicitly switch to -Transport api.
-   - Image assessment can take longer than five minutes for 19 screenshots plus references. Run it with a long command timeout when the harness allows it, and treat a local command timeout as "retry with more time or inspect background output", not as a missing API key.
+5. Inspect every fresh PNG at original resolution and write build/visual-qa/formic-visual-assessment.md with the required Codex manual assessor line. Do not run GPT-5.4 mini.
 6. If P0/P1 appears, repair only those findings or leave a precise blocker.
 7. Use a final gatekeeper pass for commands and artifact freshness.
 
@@ -849,7 +847,7 @@ If activeTrack = world-visual:
 1. Implement the slice.
 2. Run scripts/test-mod.cmd -AllowMissingGitHub.
 3. Run scripts/gui-smoke.cmd.
-4. Run scripts/openai-visual-assessment.cmd on the fresh build/visual-qa artifacts. The report must include Assessor: GPT-5.4 mini and be saved to build/visual-qa/formic-visual-assessment.md.
+4. Inspect the fresh build/visual-qa PNGs at original resolution and save the manual report to build/visual-qa/formic-visual-assessment.md with the required assessor line.
 5. Run scripts/autonomous-gate.cmd -AllowMissingGitHub -NoLaunch.
 6. If any command or visual assessment fails, fix the issue or clearly leave the iteration blocked with the exact blocker.
 
@@ -914,7 +912,7 @@ Hard visual contract still applies:
 - Current retargeting: forest-floor density and broad material palette are accepted by the user for now. Do not retry those rows unless explicitly reopened. The active architecture blockers are asymmetrical ant-like buildings, no overlapping houses, no freestanding entrance arches, and deeper irregular tunnel cuts. A later asset slice must redraw the holey block texture at 32x32 and upgrade Formic block/item textures from 16x16 to 32x32. A later tablet slice must make the interface very beautiful and verify no text/icon overlap.
 - Visual QA reports, every reported screenshot, and formic-visual-assessment.md must be newer than the retry freshness marker.
 - Run fresh scripts/gui-smoke.cmd before visual assessment whenever screenshots are older than this retry marker.
-- Use scripts/openai-visual-assessment.cmd for the independent image-capable verdict; do not synthesize final visual acceptance with text-only GLM.
+- Perform the independent manual original-resolution screenshot review and write the required report; do not run GPT-5.4 mini.
 
 Critical visual handoff:
 $visualHandoff
@@ -923,8 +921,7 @@ If the manual image-capable diagnosis says a screenshot artifact is invalid (for
 
 Mandatory continuation behavior:
 - If the failure says visual artifacts or screenshots were not refreshed, your first action must be to run scripts/gui-smoke.cmd.
-- After fresh screenshots exist, run scripts/openai-visual-assessment.cmd and write build/visual-qa/formic-visual-assessment.md with Assessor: GPT-5.4 mini.
-- `scripts/openai-visual-assessment.cmd` uses Codex CLI auth by default; do not require OPENAI_API_KEY unless using -Transport api.
+- After fresh screenshots exist, inspect every PNG at original resolution and write build/visual-qa/formic-visual-assessment.md with the required Codex manual assessor line.
 - Then run scripts/autonomous-gate.cmd -AllowMissingGitHub -NoLaunch.
 - Do not finish with an intention, plan, or "let me..." message.
 - Final response is allowed only after fresh screenshots, fresh assessment, and the gate have completed, or after a real command failure with exact output/path.
