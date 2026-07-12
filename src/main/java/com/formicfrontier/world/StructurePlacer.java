@@ -5,6 +5,7 @@ import com.formicfrontier.sim.BuildingType;
 import com.formicfrontier.sim.BuildingVisualStage;
 import com.formicfrontier.sim.ColonyCulture;
 import com.formicfrontier.world.structure.OrganicBuildingPlacer;
+import com.formicfrontier.world.structure.SubterraneanVaultPlacer;
 import com.formicfrontier.world.structure.TieredMoundPlacer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
@@ -52,6 +53,10 @@ public final class StructurePlacer {
 			placeGreatMoundProject(level, center, culture);
 			return;
 		}
+		if (type == BuildingType.QUEEN_VAULT) {
+			placeQueenVault(level, center, culture);
+			return;
+		}
 		if (OrganicBuildingPlacer.supports(type)
 				&& (stage == BuildingVisualStage.COMPLETE || stage == BuildingVisualStage.UPGRADED)) {
 			OrganicBuildingPlacer.place(level, center, type);
@@ -69,6 +74,15 @@ public final class StructurePlacer {
 			return false;
 		}
 		level.setBlockAndUpdate(pos, state);
+		return true;
+	}
+
+	/** Excavates authored rooms while preserving block entities and bedrock. */
+	public static boolean safeCarve(ServerLevel level, BlockPos pos) {
+		if (level.getBlockEntity(pos) != null || level.getBlockState(pos).is(Blocks.BEDROCK)) {
+			return false;
+		}
+		level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
 		return true;
 	}
 
@@ -170,7 +184,7 @@ public final class StructurePlacer {
 	}
 
 	public static void placeQueenVault(ServerLevel level, BlockPos center, ColonyCulture culture) {
-		safeSet(level, center, ModBlocks.NEST_CORE);
+		SubterraneanVaultPlacer.placeQueenVault(level, center);
 	}
 
 	public static void placeTradeHub(ServerLevel level, BlockPos center, ColonyCulture culture) {

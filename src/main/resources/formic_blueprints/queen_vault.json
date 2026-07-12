@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "name": "queen_vault",
+  "seed": 9107,
+  "palette": "queen_vault",
+  "surfaceAccess": {
+    "id": "queen_hall_descent",
+    "to": "guard_vestibule",
+    "surfaceFloorY": 0,
+    "startX": -4,
+    "startZ": 3,
+    "direction": "east",
+    "width": 1
+  },
+  "chambers": [
+    {
+      "id": "guard_vestibule",
+      "purpose": "vault_guard",
+      "x": 0,
+      "floorY": -6,
+      "z": 2,
+      "radiusX": 5.5,
+      "radiusZ": 4.5,
+      "height": 4
+    },
+    {
+      "id": "royal_treasury",
+      "purpose": "vault_treasury",
+      "x": -3,
+      "floorY": -12,
+      "z": 3,
+      "radiusX": 4.5,
+      "radiusZ": 3.8,
+      "height": 4
+    },
+    {
+      "id": "brood_sanctum",
+      "purpose": "vault_sanctum",
+      "x": 4,
+      "floorY": -12,
+      "z": 3,
+      "radiusX": 4.2,
+      "radiusZ": 3.6,
+      "height": 4
+    }
+  ],
+  "connections": [
+    {
+      "id": "guard_to_lower_vault",
+      "from": "guard_vestibule",
+      "to": "royal_treasury",
+      "startX": 4,
+      "startZ": 3,
+      "direction": "west",
+      "width": 1
+    }
+  ]
+}

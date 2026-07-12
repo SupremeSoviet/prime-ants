@@ -1818,7 +1818,7 @@ public final class FormicFrontierGameTest {
 	@GameTest
 
 	public void citadelColonyCompletesMinimalQueenVaultAfterGreatMound(GameTestHelper helper) {
-		BlockPos origin = new BlockPos(2, 3, 2);
+		BlockPos origin = new BlockPos(2, 20, 2);
 		prepareCampusArea(helper, origin, 76);
 		ColonyData colony = ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
 		colony.progress().buildQueue().clear();
@@ -1835,6 +1835,17 @@ public final class FormicFrontierGameTest {
 				StructurePlacer.placeBuilding(helper.getLevel(), pos, type, BuildingVisualStage.COMPLETE, colony.progress().culture());
 			}
 		}
+		// Exercise the live excavation path through granite, which the intentionally
+		// conservative surface-building replacement policy does not overwrite.
+		for (BlockPos graniteProbe : List.of(
+				origin.below(),
+				origin.offset(-3, -1, 3), origin.offset(-2, -2, 3), origin.offset(-1, -3, 3),
+				origin.offset(0, -4, 3), origin.offset(1, -5, 3),
+				origin.offset(4, -6, 3), origin.offset(3, -7, 3), origin.offset(2, -8, 3),
+				origin.offset(1, -9, 3), origin.offset(0, -10, 3), origin.offset(-1, -11, 3),
+				origin.offset(0, -4, 2), origin.offset(-3, -10, 3), origin.offset(4, -10, 3))) {
+			helper.getLevel().setBlock(helper.absolutePos(graniteProbe), Blocks.GRANITE.defaultBlockState(), 3);
+		}
 		ColonyBuilder.tick(helper.getLevel(), colony);
 		ColonyBuilding vault = colony.progress().buildings().stream()
 				.filter(building -> building.type() == BuildingType.QUEEN_VAULT)
@@ -1849,7 +1860,14 @@ public final class FormicFrontierGameTest {
 		if (!vault.complete()) {
 			helper.fail("Queen vault should complete from prepared endgame resources, got " + vault.constructionProgress() + "%.");
 		}
-		assertGreatMoundProfile(helper, origin, ModBlocks.NEST_CORE, "queen vault shell");
+		if (!VisualQaScenes.scenes().contains(VisualQaScenes.QUEEN_VAULT_DESCENT_INTERIOR)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.QUEEN_VAULT_GUARD_INTERIOR)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.QUEEN_VAULT_LOWER_INTERIOR)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.QUEEN_VAULT_SANCTUM_INTERIOR)) {
+			helper.fail("Visual QA should expose the descent and all three authored Queen Vault rooms.");
+		}
+		assertGreatMoundProfile(helper, origin, ModBlocks.NEST_MOUND, "queen vault host mound");
+		assertQueenVaultProfile(helper, origin, "completed queen vault");
 		if (colony.progress().eventsView().stream().noneMatch(event -> event.message().contains("queen_vault"))) {
 			helper.fail("Queen vault project should leave a colony event for the player.");
 		}
@@ -1859,7 +1877,7 @@ public final class FormicFrontierGameTest {
 	@GameTest
 
 	public void citadelColonyCompletesMinimalTradeHubAfterQueenVault(GameTestHelper helper) {
-		BlockPos origin = new BlockPos(2, 3, 2);
+		BlockPos origin = new BlockPos(2, 20, 2);
 		prepareCampusArea(helper, origin, 90);
 		ColonyData colony = ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
 		colony.progress().buildQueue().clear();
@@ -2903,6 +2921,55 @@ public final class FormicFrontierGameTest {
 			helper.fail(label + " should form a steep six-step taper with annex mass, got layer masses "
 					+ base + "/" + second + "/" + third + "/" + fourth + "/" + crown + "/" + peak);
 		}
+	}
+
+	private static void assertQueenVaultProfile(GameTestHelper helper, BlockPos center, String label) {
+		helper.assertBlockPresent(ModBlocks.NEST_MOUND, center);
+		helper.assertBlockPresent(ModBlocks.NEST_CORE, center.below());
+
+		for (BlockPos stair : List.of(
+				center.offset(-4, 0, 3), center.offset(-3, -1, 3), center.offset(-2, -2, 3),
+				center.offset(-1, -3, 3), center.offset(0, -4, 3), center.offset(1, -5, 3),
+				center.offset(4, -6, 3), center.offset(3, -7, 3), center.offset(2, -8, 3),
+				center.offset(1, -9, 3), center.offset(0, -10, 3), center.offset(-1, -11, 3))) {
+			helper.assertBlockPresent(Blocks.MUD_BRICK_STAIRS, stair);
+			if (!helper.getLevel().getBlockState(helper.absolutePos(stair.above())).isAir()
+					|| !helper.getLevel().getBlockState(helper.absolutePos(stair.above(2))).isAir()) {
+				helper.fail(label + " stair must retain two blocks of headroom at " + stair.toShortString());
+			}
+		}
+
+		for (BlockPos interior : List.of(
+				center.offset(0, -4, 2),
+				center.offset(-3, -10, 3),
+				center.offset(4, -10, 3),
+				center.offset(0, -10, 4),
+				center.offset(1, -10, 4))) {
+			if (!helper.getLevel().getBlockState(helper.absolutePos(interior)).isAir()) {
+				helper.fail(label + " should retain connected carved chamber air at " + interior.toShortString());
+			}
+		}
+
+		// Guard vestibule: security and maintenance, distinct from both lower rooms.
+		helper.assertBlockPresent(Blocks.CHEST, center.offset(-4, -5, 2));
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(4, -5, 2));
+		helper.assertBlockPresent(Blocks.TARGET, center.offset(-3, -5, 5));
+		helper.assertBlockPresent(Blocks.SMITHING_TABLE, center.offset(3, -5, 5));
+		helper.assertBlockPresent(ModBlocks.NEST_CORE, center.offset(0, -5, 5));
+
+		// Royal treasury: dense storage and visibly rare protected materials.
+		helper.assertBlockPresent(Blocks.CHEST, center.offset(-6, -11, 3));
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(-1, -11, 2));
+		helper.assertBlockPresent(Blocks.GOLD_BLOCK, center.offset(-5, -11, 5));
+		helper.assertBlockPresent(ModBlocks.NEST_CORE, center.offset(-3, -11, 5));
+		helper.assertBlockPresent(Blocks.AMETHYST_BLOCK, center.offset(-1, -11, 5));
+
+		// Brood sanctuary: warm sleeping/nursery identity rather than copied storage.
+		helper.assertBlockPresent(ModBlocks.CHITIN_BED, center.offset(2, -11, 3));
+		helper.assertBlockPresent(ModBlocks.CHITIN_BED, center.offset(7, -11, 3));
+		helper.assertBlockPresent(Blocks.BONE_BLOCK, center.offset(2, -11, 5));
+		helper.assertBlockPresent(Blocks.HONEYCOMB_BLOCK, center.offset(6, -11, 5));
+		helper.assertBlockPresent(Blocks.OCHRE_FROGLIGHT, center.offset(4, -11, 5));
 	}
 
 	private static int countMoundLayer(GameTestHelper helper, BlockPos center, int y, int radius) {

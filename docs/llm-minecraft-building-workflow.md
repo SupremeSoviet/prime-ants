@@ -203,6 +203,22 @@ live in-place upgrade, furnishings and clear headroom. Focused Structure QA
 accepts all 37 scenes at original resolution, including a direct stage-one/
 stage-two comparison and the three added room roles.
 
+`queen_vault.json` uses a separate compact subterranean IR because a protected
+underground expansion has different invariants from an above-ground mound. The
+file authors chamber roles, floor depths and directed stair topology; the
+compiler owns ellipsoidal protective shells, tunnel envelopes, two-block
+headroom and deterministic underground materials. A six-step descent from the
+inherited queen hall reaches a guarded vestibule at `y=-6`; a second six-step
+descent reaches the treasury at `y=-12`, whose carved edge overlaps a distinct
+brood sanctuary on the same level. Placement excavates through ordinary stone,
+granite and ores while preserving bedrock and block entities, and restores the
+Great Mound surface block plus its queen core after the in-place project marker.
+Unit tests enforce reachability, connected shell mass, chamber overlap and stair
+headroom. GameTests exercise granite excavation, all twelve stairs, three
+different furnishing identities and preservation of the evolved host mound.
+Focused Structure QA now accepts all 41 scenes at original resolution, including
+separate views for the descent, guard room, treasury and brood sanctuary.
+
 Every enclosed role chamber has a discrete rear-shell invariant in addition to
 whole-mound connectivity. For each vaulted ceiling layer, the first block behind
 the carved ellipse must remain solid. This prevents a geometrically connected
@@ -221,7 +237,7 @@ validates that it reaches the mound top.
 3. Finish the starter economy in order: food store, nursery, mine, chitin farm.
 4. Continue through infrastructure, research and defense families.
 5. Return to the central mound for `GREAT_MOUND` height/lobes and the underground
-   `QUEEN_VAULT`, then author the separate late-game trade hub.
+   `QUEEN_VAULT` (both complete), then author the separate late-game trade hub.
 
 Each step must pass unit/GameTests before screenshot QA. Visual acceptance is
 based on the rendered silhouette and entrances, not on how plausible the source

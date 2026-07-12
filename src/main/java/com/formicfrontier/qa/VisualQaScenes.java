@@ -22,6 +22,8 @@ import com.formicfrontier.world.ColonySavedState;
 import com.formicfrontier.world.ColonyService;
 import com.formicfrontier.world.StructurePlacer;
 import com.formicfrontier.world.structure.OrganicBuildingPlacer;
+import com.formicfrontier.world.structure.SubterraneanVaultBlueprint;
+import com.formicfrontier.world.structure.SubterraneanVaultPlacer;
 import com.formicfrontier.world.structure.TieredMoundBlueprint;
 import com.formicfrontier.world.structure.TieredMoundPlacer;
 import com.mojang.math.Transformation;
@@ -110,6 +112,10 @@ public final class VisualQaScenes {
 	public static final String GREAT_MOUND_LARDER_INTERIOR = "great_mound_larder_interior";
 	public static final String GREAT_MOUND_WORKSHOP_INTERIOR = "great_mound_workshop_interior";
 	public static final String GREAT_MOUND_CROWN_INTERIOR = "great_mound_crown_interior";
+	public static final String QUEEN_VAULT_DESCENT_INTERIOR = "queen_vault_descent_interior";
+	public static final String QUEEN_VAULT_GUARD_INTERIOR = "queen_vault_guard_interior";
+	public static final String QUEEN_VAULT_LOWER_INTERIOR = "queen_vault_lower_interior";
+	public static final String QUEEN_VAULT_SANCTUM_INTERIOR = "queen_vault_sanctum_interior";
 	private static final List<String> SCENES = List.of(
 			COLONY_OVERVIEW,
 			COLONY_GROUND,
@@ -166,7 +172,11 @@ public final class VisualQaScenes {
 			GREAT_MOUND_GROWTH,
 			GREAT_MOUND_LARDER_INTERIOR,
 			GREAT_MOUND_WORKSHOP_INTERIOR,
-			GREAT_MOUND_CROWN_INTERIOR
+			GREAT_MOUND_CROWN_INTERIOR,
+			QUEEN_VAULT_DESCENT_INTERIOR,
+			QUEEN_VAULT_GUARD_INTERIOR,
+			QUEEN_VAULT_LOWER_INTERIOR,
+			QUEEN_VAULT_SANCTUM_INTERIOR
 	);
 	private static final List<AntCaste> ANT_LINEUP_CASTES = List.of(
 			AntCaste.QUEEN,
@@ -278,9 +288,13 @@ public final class VisualQaScenes {
 				|| normalized.equals(GREAT_MOUND_LARDER_INTERIOR)
 				|| normalized.equals(GREAT_MOUND_WORKSHOP_INTERIOR)
 				|| normalized.equals(GREAT_MOUND_CROWN_INTERIOR);
+		boolean queenVaultFocused = normalized.equals(QUEEN_VAULT_DESCENT_INTERIOR)
+				|| normalized.equals(QUEEN_VAULT_GUARD_INTERIOR)
+				|| normalized.equals(QUEEN_VAULT_LOWER_INTERIOR)
+				|| normalized.equals(QUEEN_VAULT_SANCTUM_INTERIOR);
 		boolean roleBuildingFocused = foodFocused || nurseryFocused || mineFocused || chitinFarmFocused
 				|| barracksFocused || marketFocused || archiveFocused || armoryFocused || shrineFocused || resinDepotFocused
-				|| fungusGardenFocused || venomPressFocused || watchPostFocused || greatMoundFocused;
+				|| fungusGardenFocused || venomPressFocused || watchPostFocused || greatMoundFocused || queenVaultFocused;
 		boolean interiorFocused = moundInteriorFocused || normalized.equals(FOOD_STORE_INTERIOR)
 				|| normalized.equals(NURSERY_INTERIOR) || normalized.equals(MINE_INTERIOR)
 				|| normalized.equals(CHITIN_FARM_INTERIOR) || normalized.equals(BARRACKS_INTERIOR)
@@ -290,7 +304,8 @@ public final class VisualQaScenes {
 				|| normalized.equals(WATCH_POST_GUARD_INTERIOR) || normalized.equals(WATCH_POST_LOOKOUT_INTERIOR)
 				|| normalized.equals(GREAT_MOUND_LARDER_INTERIOR)
 				|| normalized.equals(GREAT_MOUND_WORKSHOP_INTERIOR)
-				|| normalized.equals(GREAT_MOUND_CROWN_INTERIOR);
+				|| normalized.equals(GREAT_MOUND_CROWN_INTERIOR)
+				|| queenVaultFocused;
 		boolean structureFocused = normalized.equals(STRUCTURE_PREVIEW_3Q)
 				|| normalized.equals(STRUCTURE_PREVIEW_FRONT) || interiorFocused || roleBuildingFocused || greatMoundFocused;
 		if (structureFocused && structureQaOrigin == null) {
@@ -429,6 +444,12 @@ public final class VisualQaScenes {
 					|| normalized.equals(GREAT_MOUND_WORKSHOP_INTERIOR)
 					|| normalized.equals(GREAT_MOUND_CROWN_INTERIOR)) {
 				StructurePlacer.placeBuilding(level, origin, BuildingType.GREAT_MOUND,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+			} else if (queenVaultFocused) {
+				prepareVaultQaSubsurface(level, origin, SubterraneanVaultPlacer.queenVaultBlueprint());
+				StructurePlacer.placeBuilding(level, origin, BuildingType.GREAT_MOUND,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+				StructurePlacer.placeBuilding(level, origin, BuildingType.QUEEN_VAULT,
 						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
 			} else {
 				ColonyService.createColony(level, origin, true);
@@ -1245,6 +1266,14 @@ public final class VisualQaScenes {
 				: TieredMoundPlacer.queenStageTwoBlueprint().chambers().stream()
 						.filter(chamber -> chamber.id().equals(greatMoundRoomId))
 						.findFirst().orElseThrow();
+		SubterraneanVaultBlueprint vaultBlueprint = sceneName.startsWith("queen_vault_")
+				? SubterraneanVaultPlacer.queenVaultBlueprint() : null;
+		SubterraneanVaultBlueprint.Chamber vaultGuard = vaultBlueprint == null ? null
+				: vaultBlueprint.chamber("guard_vestibule");
+		SubterraneanVaultBlueprint.Chamber vaultTreasury = vaultBlueprint == null ? null
+				: vaultBlueprint.chamber("royal_treasury");
+		SubterraneanVaultBlueprint.Chamber vaultSanctum = vaultBlueprint == null ? null
+				: vaultBlueprint.chamber("brood_sanctum");
 		Vec3 target = switch (sceneName) {
 			case COLONY_OVERVIEW, SETTLEMENT_SCALE -> colonyOverviewTarget(origin);
 			case COLONY_GROUND -> Vec3.atCenterOf(origin).add(0.0, 11.0, 0.0);
@@ -1294,6 +1323,15 @@ public final class VisualQaScenes {
 			case GREAT_MOUND_LARDER_INTERIOR, GREAT_MOUND_WORKSHOP_INTERIOR, GREAT_MOUND_CROWN_INTERIOR ->
 					Vec3.atCenterOf(origin).add(greatMoundRoom.x(), greatMoundRoom.floorY() + 1.7,
 							greatMoundRoom.z() + 0.9);
+			case QUEEN_VAULT_DESCENT_INTERIOR -> new Vec3(
+					origin.getX() - 4.0, origin.getY() + 0.5, origin.getZ() + 3.0
+			);
+			case QUEEN_VAULT_GUARD_INTERIOR -> Vec3.atCenterOf(origin).add(
+					vaultGuard.x() + 1.2, vaultGuard.floorY() + 1.7, vaultGuard.z() + 3.0);
+			case QUEEN_VAULT_LOWER_INTERIOR -> Vec3.atCenterOf(origin).add(
+					2.0, vaultTreasury.floorY() + 1.6, vaultTreasury.z() + 1.5);
+			case QUEEN_VAULT_SANCTUM_INTERIOR -> Vec3.atCenterOf(origin).add(
+					vaultSanctum.x(), vaultSanctum.floorY() + 1.6, vaultSanctum.z() + 2.0);
 			default -> Vec3.atCenterOf(origin).add(0.0, 2.0, 0.0);
 		};
 		Vec3 camera = switch (sceneName) {
@@ -1361,6 +1399,24 @@ public final class VisualQaScenes {
 					origin.getX() + greatMoundRoom.x() + 0.5,
 					origin.getY() + greatMoundRoom.floorY() + 0.2,
 					origin.getZ() + greatMoundRoom.z() - 1.2
+			);
+			case QUEEN_VAULT_DESCENT_INTERIOR -> new Vec3(
+					origin.getX() + 2.5, origin.getY() - 5.8, origin.getZ() + 3.0
+			);
+			case QUEEN_VAULT_GUARD_INTERIOR -> new Vec3(
+					origin.getX() + vaultGuard.x() - 3.6,
+					origin.getY() + vaultGuard.floorY() + 0.8,
+					origin.getZ() + vaultGuard.z() - 2.2
+			);
+			case QUEEN_VAULT_LOWER_INTERIOR -> new Vec3(
+					origin.getX() + vaultTreasury.x() - 2.4,
+					origin.getY() + vaultTreasury.floorY() + 1.3,
+					origin.getZ() + vaultTreasury.z() - 2.3
+			);
+			case QUEEN_VAULT_SANCTUM_INTERIOR -> new Vec3(
+					origin.getX() + vaultSanctum.x() + 0.5,
+					origin.getY() + vaultSanctum.floorY() + 1.3,
+					origin.getZ() + vaultSanctum.z() - 2.7
 			);
 			default -> new Vec3(origin.getX() + 28.0, origin.getY() + 18.0, origin.getZ() - 32.0);
 		};
@@ -1676,6 +1732,17 @@ public final class VisualQaScenes {
 			}
 		}
 		clearQaItemDrops(level, origin, radius);
+	}
+
+	private static void prepareVaultQaSubsurface(ServerLevel level, BlockPos origin,
+			SubterraneanVaultBlueprint blueprint) {
+		for (int x = blueprint.minX() - 1; x <= blueprint.maxX() + 1; x++) {
+			for (int y = blueprint.minY() - 1; y < 0; y++) {
+				for (int z = blueprint.minZ() - 1; z <= blueprint.maxZ() + 1; z++) {
+					level.setBlock(origin.offset(x, y, z), Blocks.STONE.defaultBlockState(), 3);
+				}
+			}
+		}
 	}
 
 	private static void clearQaItemDrops(ServerLevel level, BlockPos origin, int radius) {

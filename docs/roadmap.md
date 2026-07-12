@@ -132,7 +132,12 @@ in-place evolution of the central mound. It preserves the first three inhabited
 floors, adds a connected crown map/signal room and two asymmetrical ground
 annexes for food logistics and fabrication, with six facade mouths and three
 internal stair passages in total. The next implementation slice is the
-underground `QUEEN_VAULT` expansion beneath this evolved centre.
+underground `QUEEN_VAULT` expansion beneath this evolved centre. That expansion
+is now implemented and accepted as a protected two-depth interior extending to
+12 blocks below the mound: a guarded vestibule opens onto a royal treasury and
+a separate warm brood sanctuary, with two explicit six-step descents, distinct
+furnishings, a connected shell and preserved Great Mound surface/core anchors.
+The next structure slice is the separate late-game `TRADE_HUB`.
 
 Slice R3: Colony Tablet 2.0.
 
