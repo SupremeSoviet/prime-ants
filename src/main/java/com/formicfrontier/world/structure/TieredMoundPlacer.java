@@ -238,6 +238,17 @@ public final class TieredMoundPlacer {
 				placeDecoration(level, center, chamber, -4, 2, 0, Blocks.LANTERN);
 				placeDecoration(level, center, chamber, 4, 2, 0, Blocks.LANTERN);
 			}
+			case "barracks" -> {
+				placeDecoration(level, center, chamber, -6, 1, 0, ModBlocks.CHITIN_BED);
+				placeDecoration(level, center, chamber, 6, 1, 0, ModBlocks.CHITIN_BED);
+				placeDecoration(level, center, chamber, -5, 1, 3, ModBlocks.CHITIN_BED);
+				placeDecoration(level, center, chamber, 5, 1, 3, ModBlocks.CHITIN_BED);
+				placeDecoration(level, center, chamber, -3, 1, 4, Blocks.ANVIL);
+				placeDecoration(level, center, chamber, 0, 1, 4, Blocks.SMITHING_TABLE);
+				placeDecoration(level, center, chamber, 3, 1, 4, Blocks.TARGET);
+				placeDecoration(level, center, chamber, -6, 3, 0, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, 6, 3, 0, Blocks.LANTERN);
+			}
 			default -> throw new IllegalArgumentException("Unsupported chamber purpose " + chamber.purpose());
 		}
 	}
@@ -294,6 +305,14 @@ public final class TieredMoundPlacer {
 				if (roll < 94) yield Blocks.BONE_BLOCK;
 				if (roll < 98) yield Blocks.HONEYCOMB_BLOCK;
 				yield Blocks.MANGROVE_ROOTS;
+			}
+			case "barracks" -> {
+				if (roll < 55) yield ModBlocks.NEST_MOUND;
+				if (roll < 70) yield Blocks.ROOTED_DIRT;
+				if (roll < 82) yield Blocks.PACKED_MUD;
+				if (roll < 92) yield Blocks.MUD_BRICKS;
+				if (roll < 98) yield Blocks.TUFF;
+				yield Blocks.IRON_ORE;
 			}
 			default -> throw new IllegalArgumentException("Unsupported material palette " + blueprint.palette());
 		};

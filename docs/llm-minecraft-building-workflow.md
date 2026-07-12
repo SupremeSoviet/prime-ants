@@ -87,6 +87,18 @@ floor and instead use chitin beds, bone, honeycomb and a composter. Unit tests
 verify connected shells and distinct footprints; GameTests verify the compiled
 pit depth, furnishings, crowns and repeat-site spacing.
 
+The barracks family demonstrates that the same vocabulary is not limited to
+round economy domes. Two overlapping-lobe blueprints form long capsule-like
+footprints with a five-block entrance, fortified mud/tuff palette and a broad
+troop hall. Four side resting alcoves leave the central aisle clear, while an
+anvil, smithing table and target distinguish the rear training wall. Repeated
+sites alternate variants and move more than 32 blocks apart.
+
+Every role chamber now has a discrete rear-shell invariant in addition to whole
+mound connectivity. For each vaulted ceiling layer, the first block behind the
+carved ellipse must remain solid. This prevents a geometrically connected mound
+from accidentally exposing one-block windows to the sky.
+
 ## Iteration order
 
 1. Establish the shared blueprint vocabulary with the main mound.

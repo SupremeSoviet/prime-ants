@@ -306,7 +306,9 @@ public final class ColonyBuilder {
 				case 1 -> origin.offset(-67, 0, 58);
 				default -> origin.offset(-91 - (existing - 2) * 30, 0, 30 - (existing - 2) * 26);
 			};
-			case BARRACKS -> origin.offset(0, 0, -38 - existing * 20);
+			case BARRACKS -> existing == 0
+					? origin.offset(0, 0, -38)
+					: origin.offset(25 + (existing - 1) * 31, 0, -68 - (existing - 1) * 28);
 			case MARKET -> origin.offset(34 + existing * 18, 0, -34 - existing * 14);
 			case DIPLOMACY_SHRINE -> origin.offset(-34 - existing * 18, 0, -34 - existing * 14);
 			case WATCH_POST -> origin.offset(56 + existing * 14, 0, -46);

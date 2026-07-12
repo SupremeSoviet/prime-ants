@@ -47,6 +47,8 @@ STRUCTURE_EXPECTED = [
     "mine_interior.png",
     "chitin_farm_variants.png",
     "chitin_farm_interior.png",
+    "barracks_variants.png",
+    "barracks_interior.png",
 ]
 EXPECTED_BY_SCOPE = {
     "full": FULL_EXPECTED,

@@ -18,9 +18,9 @@ import net.minecraft.world.level.block.state.BlockState;
  *
  * <p>The previous procedural and schematic generators deliberately do not live
  * behind a feature flag: they were removed so new mound work cannot accidentally
- * inherit their geometry. Ordinary buildings remain one-block functional
- * markers while the queen mound is rebuilt through a new validated tier
- * blueprint.</p>
+ * inherit their geometry. Migrated families use the new validated blueprint
+ * compiler; only not-yet-rebuilt families remain one-block functional
+ * markers.</p>
  */
 public final class StructurePlacer {
 	private StructurePlacer() {

@@ -28,6 +28,8 @@ public final class OrganicBuildingPlacer {
 	public static final String CHITIN_FARM_A_RESOURCE = "formic_blueprints/chitin_farm_a.json";
 	public static final String CHITIN_FARM_B_RESOURCE = "formic_blueprints/chitin_farm_b.json";
 	public static final String CHITIN_FARM_C_RESOURCE = "formic_blueprints/chitin_farm_c.json";
+	public static final String BARRACKS_A_RESOURCE = "formic_blueprints/barracks_a.json";
+	public static final String BARRACKS_B_RESOURCE = "formic_blueprints/barracks_b.json";
 
 	private static final Map<BuildingType, Family> FAMILIES = Map.of(
 			BuildingType.FOOD_STORE,
@@ -50,6 +52,11 @@ public final class OrganicBuildingPlacer {
 					TieredMoundBlueprint.load(CHITIN_FARM_A_RESOURCE),
 					TieredMoundBlueprint.load(CHITIN_FARM_B_RESOURCE),
 					TieredMoundBlueprint.load(CHITIN_FARM_C_RESOURCE)
+			)),
+			BuildingType.BARRACKS,
+			new Family(List.of(
+					TieredMoundBlueprint.load(BARRACKS_A_RESOURCE),
+					TieredMoundBlueprint.load(BARRACKS_B_RESOURCE)
 			))
 	);
 
@@ -97,6 +104,7 @@ public final class OrganicBuildingPlacer {
 			case NURSERY -> ModBlocks.NURSERY_CHAMBER;
 			case MINE -> ModBlocks.MINE_CHAMBER;
 			case CHITIN_FARM -> ModBlocks.CHITIN_BED;
+			case BARRACKS -> ModBlocks.BARRACKS_CHAMBER;
 			default -> throw new IllegalArgumentException("No functional block registered for " + type);
 		};
 	}

@@ -28,6 +28,7 @@ final class OrganicBuildingBlueprintTest {
 			Assertions.assertTrue(blueprint.connections().isEmpty(), "a single-storey store needs no stairs");
 			Assertions.assertEquals(1, blueprint.mouths().size());
 			Assertions.assertFalse(blueprint.isSolid(0, 2, 1), "the granary interior must be carved");
+			assertRearShell(blueprint, blueprint.chambers().getFirst());
 
 			Set<Cell> solid = solidCells(blueprint);
 			Assertions.assertFalse(solid.isEmpty());
@@ -60,6 +61,7 @@ final class OrganicBuildingBlueprintTest {
 			Assertions.assertTrue(blueprint.connections().isEmpty(), "a single-storey nursery needs no stairs");
 			Assertions.assertEquals(1, blueprint.mouths().size());
 			Assertions.assertFalse(blueprint.isSolid(0, 2, 2), "the brood room interior must be carved");
+			assertRearShell(blueprint, blueprint.chambers().getFirst());
 
 			Set<Cell> solid = solidCells(blueprint);
 			Assertions.assertFalse(solid.isEmpty());
@@ -155,7 +157,39 @@ final class OrganicBuildingBlueprintTest {
 	}
 
 	@Test
-	void repeatedMineAndFarmSitesSelectEveryAuthoredVariant() {
+	void barracksAreWideElongatedFortifiedMounds() {
+		var variants = OrganicBuildingPlacer.variants(BuildingType.BARRACKS);
+		Assertions.assertEquals(Set.of("barracks_a", "barracks_b"), variants.stream()
+				.map(TieredMoundBlueprint::name).collect(Collectors.toSet()));
+		Set<Set<FootprintCell>> footprints = new HashSet<>();
+		for (TieredMoundBlueprint blueprint : variants) {
+			Assertions.assertEquals("barracks", blueprint.palette());
+			Assertions.assertTrue(blueprint.maxY() <= 7, "barracks should remain a broad single-storey mound");
+			TieredMoundBlueprint.Chamber chamber = blueprint.chambers().getFirst();
+			Assertions.assertEquals("barracks", chamber.purpose());
+			Assertions.assertTrue(blueprint.pits().isEmpty());
+			Assertions.assertTrue(blueprint.connections().isEmpty());
+			Assertions.assertEquals(5, blueprint.mouths().getFirst().width(),
+					"barracks needs a wider troop entrance than economy rooms");
+			Assertions.assertFalse(blueprint.isSolid(0, 2, 1), "barracks hall must be carved");
+			assertRearShell(blueprint, chamber);
+			Set<Cell> solid = solidCells(blueprint);
+			assertConnected(blueprint, solid, "barracks mound");
+			Set<FootprintCell> footprint = footprint(solid);
+			int width = footprint.stream().mapToInt(FootprintCell::x).max().orElseThrow()
+					- footprint.stream().mapToInt(FootprintCell::x).min().orElseThrow() + 1;
+			int depth = footprint.stream().mapToInt(FootprintCell::z).max().orElseThrow()
+					- footprint.stream().mapToInt(FootprintCell::z).min().orElseThrow() + 1;
+			Assertions.assertTrue(width >= 22 && width >= depth + 5,
+					"barracks should read as a long rounded rectangle, got " + width + "x" + depth);
+			Assertions.assertTrue(footprint.size() >= 200, "barracks needs a substantial troop hall footprint");
+			footprints.add(footprint);
+		}
+		Assertions.assertEquals(2, footprints.size(), "barracks variants need distinct asymmetrical footprints");
+	}
+
+	@Test
+	void repeatedRoleSitesSelectEveryAuthoredVariant() {
 		BlockPos origin = new BlockPos(11, 0, -7);
 		Set<String> mineVariants = new HashSet<>();
 		for (int existing = 0; existing < 2; existing++) {
@@ -170,6 +204,13 @@ final class OrganicBuildingBlueprintTest {
 			farmVariants.add(OrganicBuildingPlacer.blueprintFor(BuildingType.CHITIN_FARM, site).name());
 		}
 		Assertions.assertEquals(Set.of("chitin_farm_a", "chitin_farm_b", "chitin_farm_c"), farmVariants);
+
+		Set<String> barracksVariants = new HashSet<>();
+		for (int existing = 0; existing < 2; existing++) {
+			BlockPos site = ColonyBuilder.siteFor(origin, BuildingType.BARRACKS, existing);
+			barracksVariants.add(OrganicBuildingPlacer.blueprintFor(BuildingType.BARRACKS, site).name());
+		}
+		Assertions.assertEquals(Set.of("barracks_a", "barracks_b"), barracksVariants);
 	}
 
 	private static void assertConnected(TieredMoundBlueprint blueprint, Set<Cell> solid, String label) {
