@@ -61,6 +61,11 @@ change, not a parameter tweak.
 - Findings:
   - [P?] ...
 
+### equipment_showcase
+- Verdict: PASS | FAIL | NEEDS WORK
+- Findings:
+  - [P?] ...
+
 ### tablet_en
 - Verdict: PASS | FAIL | NEEDS WORK
 - Findings:

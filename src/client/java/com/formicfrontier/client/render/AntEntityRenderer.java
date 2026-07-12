@@ -3,6 +3,7 @@ package com.formicfrontier.client.render;
 import com.formicfrontier.FormicFrontier;
 import com.formicfrontier.entity.AntEntity;
 import com.formicfrontier.sim.AntCaste;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.Identifier;
@@ -51,5 +52,11 @@ public final class AntEntityRenderer extends MobRenderer<AntEntity, AntEntityRen
 			return SOLDIER;
 		}
 		return WORKER;
+	}
+
+	@Override
+	protected void scale(AntEntityRenderState state, PoseStack poseStack) {
+		float scale = state.caste.visualScale();
+		poseStack.scale(scale, scale, scale);
 	}
 }

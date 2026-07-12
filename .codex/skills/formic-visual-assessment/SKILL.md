@@ -39,6 +39,7 @@ Evaluate these scenes in this order:
 - `colony_ground.png`: playable eye-level view, no floating colony parts, no overhead clutter, ants/resources readable from normal gameplay distance.
 - `ant_lineup.png`: caste silhouettes, scale, orientation, texture clarity, distinct roles, no tiny/unreadable or broken models.
 - `work_cycle.png`: worker/resource/construction/patrol jobs readable without relying on debug text, work markers visible but not noisy.
+- `equipment_showcase.png`: both armor families render on humanoid geometry with coherent UVs, distinct materials, and readable held equipment.
 - `tablet_en.png`: English tablet readability, layout, clipping, hierarchy, labels, controls, overflow, contrast.
 - `tablet_ru.png`: Russian tablet readability, localization length handling, mojibake, clipping, wrapping, tab state.
 - `tablet_guide.png`: guide chapter readability, unlock state clarity, coverage of castes/resources/buildings/cultures/relations/research/help basics.

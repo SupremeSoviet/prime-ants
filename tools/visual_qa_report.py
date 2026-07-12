@@ -16,6 +16,7 @@ FULL_EXPECTED = [
     "mound_lookout_interior.png",
     "ant_lineup.png",
     "work_cycle.png",
+    "equipment_showcase.png",
     "tablet_en.png",
     "tablet_ru.png",
     "tablet_guide.png",

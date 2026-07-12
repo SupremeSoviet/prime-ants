@@ -93,6 +93,35 @@ def main() -> int:
         if width <= 0 or height <= 0 or width > 512 or height > 512:
             errors.append(f"Suspicious PNG size: {path.relative_to(ROOT)} is {width}x{height}")
 
+    # Player-facing Formic items deliberately use a consistent 32px art grid.
+    # Keeping this contractual prevents a newly added 16px placeholder from
+    # silently reintroducing the mixed-resolution inventory that the redesign
+    # replaced.
+    for path in (ASSETS / "textures/item").glob("*.png"):
+        try:
+            size = png_size(path)
+        except Exception:
+            continue
+        if size != (32, 32):
+            errors.append(f"Item texture must be 32x32: {path.relative_to(ROOT)} is {size[0]}x{size[1]}")
+
+    for path in (ASSETS / "textures/entity").glob("ant_*.png"):
+        try:
+            size = png_size(path)
+        except Exception:
+            continue
+        if size != (256, 128):
+            errors.append(f"Ant texture must be 256x128: {path.relative_to(ROOT)} is {size[0]}x{size[1]}")
+
+    for folder in ("humanoid", "humanoid_leggings"):
+        for path in (ASSETS / "textures/entity/equipment" / folder).glob("*.png"):
+            try:
+                size = png_size(path)
+            except Exception:
+                continue
+            if size != (128, 64):
+                errors.append(f"Armor texture must be 128x64: {path.relative_to(ROOT)} is {size[0]}x{size[1]}")
+
     if errors:
         print("Asset validation failed:")
         for error in errors:

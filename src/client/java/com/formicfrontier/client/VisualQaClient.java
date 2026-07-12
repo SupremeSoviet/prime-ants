@@ -22,6 +22,7 @@ public final class VisualQaClient {
 			"mound_lookout_interior",
 			"ant_lineup",
 			"work_cycle",
+			"equipment_showcase",
 			"tablet_en",
 			"tablet_ru",
 			"tablet_guide",
@@ -40,7 +41,7 @@ public final class VisualQaClient {
 	};
 	private static final String[] WORLD_SCENES = {
 			"colony_overview", "colony_ground", "mound_interior", "mound_storage_interior",
-			"mound_lookout_interior", "ant_lineup", "work_cycle",
+			"mound_lookout_interior", "ant_lineup", "work_cycle", "equipment_showcase",
 			"progression_scene", "settlement_scale", "construction_stage", "repair_scene",
 			"culture_styles", "diplomacy_scene", "worldgen_encounter", "endgame_project"
 	};

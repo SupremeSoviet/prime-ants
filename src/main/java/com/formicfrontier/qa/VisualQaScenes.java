@@ -31,14 +31,17 @@ import com.mojang.math.Transformation;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Rotations;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Display.BlockDisplay;
 import net.minecraft.world.entity.Display.ItemDisplay;
 import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
@@ -62,6 +65,7 @@ public final class VisualQaScenes {
 	public static final String COLONY_GROUND = "colony_ground";
 	public static final String ANT_LINEUP = "ant_lineup";
 	public static final String WORK_CYCLE = "work_cycle";
+	public static final String EQUIPMENT_SHOWCASE = "equipment_showcase";
 	public static final String TABLET_EN = "tablet_en";
 	public static final String TABLET_RU = "tablet_ru";
 	public static final String TABLET_GUIDE = "tablet_guide";
@@ -128,6 +132,7 @@ public final class VisualQaScenes {
 			COLONY_GROUND,
 			ANT_LINEUP,
 			WORK_CYCLE,
+			EQUIPMENT_SHOWCASE,
 			TABLET_EN,
 			TABLET_RU,
 			TABLET_GUIDE,
@@ -535,6 +540,15 @@ public final class VisualQaScenes {
 			savedState.setDirty();
 			return 1;
 		}
+		if (normalized.equals(EQUIPMENT_SHOWCASE)) {
+			seedEquipmentShowcase(level, origin);
+			ServerPlayer player = source.getPlayer();
+			if (player != null) {
+				positionCamera(player, origin, normalized);
+			}
+			savedState.setDirty();
+			return 1;
+		}
 		ColonyData colony = ColonyService.createColony(level, origin, true);
 		seedVisualState(level, colony, normalized);
 
@@ -747,6 +761,58 @@ public final class VisualQaScenes {
 		colony.addEvent("Recurring event: trade caravan exchanged 8 food for 8 resin with colony #7");
 		colony.addEvent("Visual QA Trade Hub terms seeded");
 		ColonyLabelService.syncLabels(level, colony);
+	}
+
+	private static void seedEquipmentShowcase(ServerLevel level, BlockPos origin) {
+		AABB cleanup = new AABB(
+				origin.getX() - 14, origin.getY(), origin.getZ() - 8,
+				origin.getX() + 14, origin.getY() + 12, origin.getZ() + 10
+		);
+		level.getEntitiesOfClass(ArmorStand.class, cleanup).forEach(ArmorStand::discard);
+
+		for (int x = -10; x <= 10; x++) {
+			for (int z = -4; z <= 6; z++) {
+				StructurePlacer.safeSet(level, origin.offset(x, 0, z),
+						(x + z) % 4 == 0 ? Blocks.POLISHED_DEEPSLATE : Blocks.DEEPSLATE_TILES);
+			}
+		}
+		for (int x = -9; x <= 9; x++) {
+			for (int y = 1; y <= 7; y++) {
+				StructurePlacer.safeSet(level, origin.offset(x, y, 6),
+						(x + y) % 5 == 0 ? Blocks.CUT_COPPER : Blocks.DEEPSLATE_BRICKS);
+			}
+		}
+		StructurePlacer.safeSet(level, origin.offset(-8, 3, 5), Blocks.SHROOMLIGHT);
+		StructurePlacer.safeSet(level, origin.offset(8, 3, 5), Blocks.SHROOMLIGHT);
+		StructurePlacer.safeSet(level, origin.offset(-4, 0, 0), Blocks.CHISELED_DEEPSLATE);
+		StructurePlacer.safeSet(level, origin.offset(4, 0, 0), Blocks.CHISELED_DEEPSLATE);
+
+		spawnEquipmentStand(level, origin.offset(-4, 1, 0), false);
+		spawnEquipmentStand(level, origin.offset(4, 1, 0), true);
+	}
+
+	private static void spawnEquipmentStand(ServerLevel level, BlockPos pos, boolean resin) {
+		ArmorStand stand = EntityType.ARMOR_STAND.create(level, EntitySpawnReason.TRIGGERED);
+		if (stand == null) {
+			return;
+		}
+		stand.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+		stand.setYRot(180.0f);
+		stand.setYHeadRot(180.0f);
+		stand.setShowArms(true);
+		stand.setRightArmPose(new Rotations(-72.0f, 0.0f, resin ? -12.0f : 12.0f));
+		stand.setLeftArmPose(new Rotations(-28.0f, 0.0f, resin ? 18.0f : -18.0f));
+		stand.setNoGravity(true);
+		stand.setInvulnerable(true);
+		stand.setCustomName(Component.literal(resin ? "Resin Chitin" : "Chitin Guard"));
+		stand.setCustomNameVisible(true);
+		stand.setItemSlot(EquipmentSlot.HEAD, new ItemStack(resin ? ModItems.RESIN_CHITIN_HELMET : ModItems.CHITIN_HELMET));
+		stand.setItemSlot(EquipmentSlot.CHEST, new ItemStack(resin ? ModItems.RESIN_CHITIN_CHESTPLATE : ModItems.CHITIN_CHESTPLATE));
+		stand.setItemSlot(EquipmentSlot.LEGS, new ItemStack(resin ? ModItems.RESIN_CHITIN_LEGGINGS : ModItems.CHITIN_LEGGINGS));
+		stand.setItemSlot(EquipmentSlot.FEET, new ItemStack(resin ? ModItems.RESIN_CHITIN_BOOTS : ModItems.CHITIN_BOOTS));
+		stand.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(resin ? ModItems.VENOM_SPEAR : ModItems.MANDIBLE_SABER));
+		stand.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(resin ? ModItems.WAR_BANNER : ModItems.CHITIN_PLATE));
+		level.addFreshEntity(stand);
 	}
 
 	private static void seedCultureStyles(ServerLevel level, BlockPos origin) {
@@ -1105,10 +1171,10 @@ public final class VisualQaScenes {
 		AntEntity patrolAnt = spawnWorkAnt(level, patrol.offset(0, 1, -4), AntCaste.SOLDIER, colony.id(), com.formicfrontier.sim.AntWorkState.PATROLLING, 180.0f);
 		AntEntity logistics = spawnWorkAnt(level, logisticsPad.above(), AntCaste.WORKER, colony.id(), com.formicfrontier.sim.AntWorkState.CARRYING_FOOD, 180.0f);
 
-		placeBlockMarker(level, builder, Blocks.MANGROVE_ROOTS.defaultBlockState().getBlock(), 0.55f);
-		placeItemMarker(level, carrier, new ItemStack(Items.RAW_IRON), 0.65f);
-		placeBlockMarker(level, patrolAnt, Blocks.POLISHED_DEEPSLATE.defaultBlockState().getBlock(), 0.45f);
-		placeItemMarker(level, logistics, new ItemStack(Items.WHEAT), 0.55f);
+		placeBlockMarker(level, builder, Blocks.MANGROVE_ROOTS.defaultBlockState().getBlock(), 0.72f);
+		placeItemMarker(level, carrier, new ItemStack(Items.RAW_IRON), 0.82f);
+		placeBlockMarker(level, patrolAnt, Blocks.POLISHED_DEEPSLATE.defaultBlockState().getBlock(), 0.68f);
+		placeItemMarker(level, logistics, new ItemStack(Items.WHEAT), 0.72f);
 		placeJobAnchor(level, builder, construction, Blocks.MANGROVE_ROOTS, Blocks.DIRT_PATH);
 		placeJobAnchor(level, carrier, ore, Blocks.IRON_ORE, Blocks.COBBLED_DEEPSLATE);
 		placeJobAnchor(level, patrolAnt, patrol, Blocks.POLISHED_DEEPSLATE, Blocks.BONE_BLOCK);
@@ -1227,7 +1293,7 @@ public final class VisualQaScenes {
 	}
 
 	private static void configureTaskMarker(Display marker, AntEntity ant, float scale) {
-		marker.setPos(ant.getX() - scale * 0.5, ant.getY() + ant.getBbHeight() * 0.72, ant.getZ() - scale * 0.5);
+		marker.setPos(ant.getX() - scale * 0.5, ant.getY() + ant.getBbHeight() + 0.35, ant.getZ() - scale * 0.5);
 		marker.setNoGravity(true);
 		marker.setBillboardConstraints(Display.BillboardConstraints.CENTER);
 		marker.setViewRange(32.0f);
@@ -1354,6 +1420,7 @@ public final class VisualQaScenes {
 			case COLONY_GROUND -> Vec3.atCenterOf(origin).add(0.0, 11.0, 0.0);
 			case ANT_LINEUP -> Vec3.atCenterOf(origin.offset(0, 2, 20)); // row center, body height
 			case WORK_CYCLE -> Vec3.atCenterOf(origin.offset(0, 1, -23)).add(0.0, 1.35, 0.0);
+			case EQUIPMENT_SHOWCASE -> Vec3.atCenterOf(origin).add(0.0, 2.4, 0.5);
 			case TABLET_EN, TABLET_RU, TABLET_GUIDE, TABLET_TRADE, TABLET_RESEARCH_MAP, TABLET_MARKET, TABLET_REQUESTS -> Vec3.atCenterOf(origin).add(0.0, 3.0, 0.0);
 			case CONSTRUCTION_STAGE -> Vec3.atCenterOf(origin.offset(0, 0, -25)).add(0.0, 2.8, 0.0);
 			case REPAIR_SCENE -> Vec3.atCenterOf(origin.offset(0, 0, -26)).add(0.0, 2.6, 0.0);
@@ -1420,6 +1487,7 @@ public final class VisualQaScenes {
 			case COLONY_GROUND -> new Vec3(origin.getX() + 16.0, origin.getY() + 8.5, origin.getZ() - 30.0);
 			case ANT_LINEUP -> new Vec3(origin.getX() + 0.0, origin.getY() + 11.0, origin.getZ() + 52.0); // dist ~32 from row at z=+20, y+11 for ~17deg downward; full 30-wide row fits with margin, foreground corridor cleared
 			case WORK_CYCLE -> new Vec3(origin.getX() + 14.0, origin.getY() + 6.6, origin.getZ() - 38.0);
+			case EQUIPMENT_SHOWCASE -> new Vec3(origin.getX() + 0.5, origin.getY() + 3.0, origin.getZ() - 9.0);
 			case TABLET_EN, TABLET_RU, TABLET_GUIDE, TABLET_TRADE, TABLET_RESEARCH_MAP, TABLET_MARKET, TABLET_REQUESTS -> new Vec3(origin.getX() + 12.0, origin.getY() + 5.0, origin.getZ() - 18.0);
 			case CONSTRUCTION_STAGE -> new Vec3(origin.getX() + 18.0, origin.getY() + 13.0, origin.getZ() - 55.0);
 			case REPAIR_SCENE -> new Vec3(origin.getX() + 20.0, origin.getY() + 12.0, origin.getZ() - 55.0);
