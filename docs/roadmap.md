@@ -119,11 +119,16 @@ two low asymmetrical cistern mounds with a controlled entrance, connected resin
 workshop and sealed side vault, warm wood/amber accents, and clear storage
 aisles. The fungus garden is implemented and accepted as two low clover-shaped
 mounds with uneven cultivation lobes, broad harvest mouths, sealed shaded
-halls, clear work aisles, live fungi and mushroom lighting. The next
-implementation slice, the venom press, is implemented and accepted as two dark
-compressed capsule mounds with paired jaw lobes, narrow controlled mouths, a
-readable piston-and-cauldron press hall, toxin work zones and a sealed reagent
-vault. The next implementation slice is the watch post.
+halls, clear work aisles, live fungi and mushroom lighting. The venom press is
+implemented and accepted as two dark compressed capsule mounds with paired jaw
+lobes, narrow controlled mouths, a readable piston-and-cauldron press hall,
+toxin work zones and a sealed reagent vault. The watch post is implemented and
+accepted as three tall two-storey sentinel variants with distinct asymmetric
+silhouettes, a furnished guard room, an internal stair and a separately
+furnished lookout loft. Its first four instances occupy widely separated
+perimeter sites. This completes all 14 standalone role-building families; the
+next implementation slice is the `GREAT_MOUND` growth stage for the colony
+centre.
 
 Slice R3: Colony Tablet 2.0.
 

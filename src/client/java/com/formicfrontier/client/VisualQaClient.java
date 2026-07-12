@@ -58,7 +58,8 @@ public final class VisualQaClient {
 			"shrine_variants", "shrine_sanctum",
 			"resin_depot_variants", "resin_depot_interior",
 			"fungus_garden_variants", "fungus_garden_interior",
-			"venom_press_variants", "venom_press_interior"
+			"venom_press_variants", "venom_press_interior",
+			"watch_post_variants", "watch_post_guard_interior", "watch_post_lookout_interior"
 	};
 	private static final String[] SCENES = selectScenes();
 	private static final int WAIT_FOR_WORLD_TICKS = Integer.getInteger("formic.visualQa.worldWaitTicks", 600);

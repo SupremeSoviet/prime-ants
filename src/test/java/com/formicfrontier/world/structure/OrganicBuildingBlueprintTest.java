@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayDeque;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -505,6 +506,65 @@ final class OrganicBuildingBlueprintTest {
 	}
 
 	@Test
+	void watchPostsAreTallTwoStoreySentinelsWithInternalStairs() {
+		var variants = OrganicBuildingPlacer.variants(BuildingType.WATCH_POST);
+		Assertions.assertEquals(Set.of("watch_post_a", "watch_post_b", "watch_post_c"), variants.stream()
+				.map(TieredMoundBlueprint::name).collect(Collectors.toSet()));
+		Set<Set<FootprintCell>> footprints = new HashSet<>();
+		Set<String> stairDirections = new HashSet<>();
+		for (TieredMoundBlueprint blueprint : variants) {
+			Assertions.assertEquals("watch_post", blueprint.palette());
+			Assertions.assertEquals(13, blueprint.maxY(), "watch post should rise above single-storey role mounds");
+			Assertions.assertEquals(2, blueprint.chambers().size());
+			TieredMoundBlueprint.Chamber guard = blueprint.chambers().stream()
+					.filter(chamber -> chamber.id().equals("guard_room")).findFirst().orElseThrow();
+			TieredMoundBlueprint.Chamber lookout = blueprint.chambers().stream()
+					.filter(chamber -> chamber.id().equals("lookout_loft")).findFirst().orElseThrow();
+			Assertions.assertEquals("watch_guard", guard.purpose());
+			Assertions.assertEquals("watch_lookout", lookout.purpose());
+			Assertions.assertEquals(0, guard.floorY());
+			Assertions.assertEquals(6, lookout.floorY());
+			Assertions.assertFalse(guard.openToSky());
+			Assertions.assertFalse(lookout.openToSky());
+			Assertions.assertTrue(blueprint.pits().isEmpty());
+			Assertions.assertEquals(2, blueprint.mouths().size(), "guard room and lookout need separate facade openings");
+			Assertions.assertEquals(1, blueprint.connections().size(), "watch floors need one internal stair");
+			TieredMoundBlueprint.Connection stair = blueprint.connections().getFirst();
+			Assertions.assertEquals(guard.id(), stair.from());
+			Assertions.assertEquals(lookout.id(), stair.to());
+			Assertions.assertEquals(1, stair.width());
+			stairDirections.add(stair.direction());
+			int rise = lookout.floorY() - guard.floorY();
+			for (int step = 0; step < rise; step++) {
+				int x = stair.startX() + stair.dx() * step;
+				int z = stair.startZ() + stair.dz() * step;
+				Assertions.assertFalse(blueprint.isSolid(x, guard.floorY() + step + 1, z),
+						"watch stair must carve headroom at step " + step);
+			}
+			assertRearShell(blueprint, guard);
+			assertRearShell(blueprint, lookout);
+
+			Set<Cell> solid = solidCells(blueprint);
+			assertConnected(blueprint, solid, "two-storey watch post");
+			Set<FootprintCell> footprint = footprint(solid);
+			int width = footprint.stream().mapToInt(FootprintCell::x).max().orElseThrow()
+					- footprint.stream().mapToInt(FootprintCell::x).min().orElseThrow() + 1;
+			int depth = footprint.stream().mapToInt(FootprintCell::z).max().orElseThrow()
+					- footprint.stream().mapToInt(FootprintCell::z).min().orElseThrow() + 1;
+			Assertions.assertTrue(footprint.size() >= 150, "watch post needs a grounded buttressed guard-room base");
+			Assertions.assertTrue(width <= 22 && depth <= 20, "watch post base should stay compact, got " + width + "x" + depth);
+			long upperMass = solid.stream().filter(cell -> cell.y == lookout.floorY()).count();
+			long crownMass = solid.stream().filter(cell -> cell.y >= 11).count();
+			Assertions.assertTrue(upperMass >= 45, "watch post needs a readable second-storey shoulder");
+			Assertions.assertTrue(crownMass >= 20, "watch post needs a visible high sentinel crown");
+			footprints.add(footprint);
+		}
+		Assertions.assertEquals(Set.of("east", "west", "south"), stairDirections,
+				"watch variants should vary both silhouette and stair circulation");
+		Assertions.assertEquals(3, footprints.size(), "watch post variants need three distinct asymmetric bases");
+	}
+
+	@Test
 	void repeatedRoleSitesSelectEveryAuthoredVariant() {
 		BlockPos origin = new BlockPos(11, 0, -7);
 		Set<String> mineVariants = new HashSet<>();
@@ -596,6 +656,21 @@ final class OrganicBuildingBlueprintTest {
 		BlockPos secondVenomPress = ColonyBuilder.siteFor(origin, BuildingType.VENOM_PRESS, 1);
 		Assertions.assertTrue(firstVenomPress.distSqr(secondVenomPress) >= 46 * 46,
 				"repeated venom presses need a safe processing yard between their toxic workshops");
+
+		Set<String> watchVariants = new HashSet<>();
+		List<BlockPos> watchSites = new java.util.ArrayList<>();
+		for (int existing = 0; existing < 4; existing++) {
+			BlockPos site = ColonyBuilder.siteFor(origin, BuildingType.WATCH_POST, existing);
+			watchSites.add(site);
+			watchVariants.add(OrganicBuildingPlacer.blueprintFor(BuildingType.WATCH_POST, site).name());
+		}
+		Assertions.assertEquals(Set.of("watch_post_a", "watch_post_b", "watch_post_c"), watchVariants);
+		for (int first = 0; first < watchSites.size(); first++) {
+			for (int second = first + 1; second < watchSites.size(); second++) {
+				Assertions.assertTrue(watchSites.get(first).distSqr(watchSites.get(second)) >= 90 * 90,
+						"perimeter watch posts need broad defensive fields without crowding");
+			}
+		}
 	}
 
 	private static void assertConnected(TieredMoundBlueprint blueprint, Set<Cell> solid, String label) {

@@ -364,6 +364,26 @@ public final class TieredMoundPlacer {
 				placeDecoration(level, center, chamber, 0, 1, -1, Blocks.POLISHED_BLACKSTONE);
 				placeDecoration(level, center, chamber, 0, 2, -1, Blocks.SOUL_LANTERN);
 			}
+			case "watch_guard" -> {
+				placeDecoration(level, center, chamber, -3, 1, 0, Blocks.BARREL);
+				placeDecoration(level, center, chamber, 3, 1, 0, Blocks.CHEST);
+				placeDecoration(level, center, chamber, -3, 2, 0, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, 3, 2, 0, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, -3, 1, 2, Blocks.FLETCHING_TABLE);
+				placeDecoration(level, center, chamber, 3, 1, 2, Blocks.TARGET);
+				placeDecoration(level, center, chamber, 0, 1, 3, ModBlocks.WATCH_POST);
+				placeDecoration(level, center, chamber, 0, 2, 3, Blocks.BELL);
+			}
+			case "watch_lookout" -> {
+				placeDecoration(level, center, chamber, -2, 1, 0, Blocks.CARTOGRAPHY_TABLE);
+				placeDecoration(level, center, chamber, 2, 1, 0, Blocks.LECTERN);
+				placeDecoration(level, center, chamber, -2, 2, 0, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, 2, 2, 0, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, -1, 1, 2, Blocks.OCHRE_FROGLIGHT);
+				placeDecoration(level, center, chamber, 1, 1, 2, Blocks.DEEPSLATE_IRON_ORE);
+				placeDecoration(level, center, chamber, 0, 1, 2, ModBlocks.WATCH_POST);
+				placeDecoration(level, center, chamber, 0, 2, 2, Blocks.LIGHTNING_ROD);
+			}
 			default -> throw new IllegalArgumentException("Unsupported chamber purpose " + chamber.purpose());
 		}
 	}
@@ -493,6 +513,17 @@ public final class TieredMoundPlacer {
 				if (roll < 95) yield Blocks.POLISHED_BLACKSTONE;
 				if (roll < 98) yield Blocks.MOSS_BLOCK;
 				yield Blocks.SLIME_BLOCK;
+			}
+			case "watch_post" -> {
+				if (roll < 50) yield ModBlocks.NEST_MOUND;
+				if (roll < 64) yield Blocks.ROOTED_DIRT;
+				if (roll < 75) yield Blocks.PACKED_MUD;
+				if (roll < 84) yield Blocks.MUD_BRICKS;
+				if (roll < 91) yield Blocks.TUFF;
+				if (roll < 96) yield Blocks.COBBLED_DEEPSLATE;
+				if (roll < 98) yield Blocks.DEEPSLATE_TILES;
+				if (roll < 99) yield Blocks.DEEPSLATE_IRON_ORE;
+				yield Blocks.OCHRE_FROGLIGHT;
 			}
 			default -> throw new IllegalArgumentException("Unsupported material palette " + blueprint.palette());
 		};

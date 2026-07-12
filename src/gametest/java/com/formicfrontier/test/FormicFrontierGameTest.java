@@ -140,7 +140,7 @@ public final class FormicFrontierGameTest {
 		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(carpenterSignature), BuildingType.RESIN_DEPOT, BuildingVisualStage.COMPLETE, ColonyCulture.CARPENTER);
 		assertDiplomacyShrineProfile(helper, amberSignature, "amber signature");
 		assertFungusGardenProfile(helper, leafcutterSignature, "leafcutter signature");
-		assertMinimalBuildingMarker(helper, fireSignature, ModBlocks.WATCH_POST, "fire signature");
+		assertWatchPostProfile(helper, fireSignature, "fire signature");
 		assertMinimalBuildingMarker(helper, carpenterSignature, ModBlocks.RESIN_DEPOT, "carpenter signature");
 		helper.succeed();
 	}
@@ -346,6 +346,30 @@ public final class FormicFrontierGameTest {
 		if (!VisualQaScenes.scenes().contains(VisualQaScenes.VENOM_PRESS_VARIANTS)
 				|| !VisualQaScenes.scenes().contains(VisualQaScenes.VENOM_PRESS_INTERIOR)) {
 			helper.fail("Visual QA should expose venom press capsule silhouettes and its processing hall.");
+		}
+		helper.succeed();
+	}
+
+	@GameTest
+	public void watchPostCompilesToThreeFurnishedTwoStoreySentinels(GameTestHelper helper) {
+		BlockPos origin = new BlockPos(2, 3, 2);
+		prepareCampusArea(helper, origin, 80);
+		BlockPos first = origin.offset(-26, 0, 0);
+		BlockPos second = origin.offset(0, 0, 1);
+		BlockPos third = origin.offset(26, 0, 2);
+
+		for (BlockPos center : List.of(first, second, third)) {
+			StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(center), BuildingType.WATCH_POST,
+					BuildingVisualStage.COMPLETE, ColonyCulture.FIRE);
+		}
+
+		assertWatchPostProfile(helper, first, "first watch post variant");
+		assertWatchPostProfile(helper, second, "second watch post variant");
+		assertWatchPostProfile(helper, third, "third watch post variant");
+		if (!VisualQaScenes.scenes().contains(VisualQaScenes.WATCH_POST_VARIANTS)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.WATCH_POST_GUARD_INTERIOR)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.WATCH_POST_LOOKOUT_INTERIOR)) {
+			helper.fail("Visual QA should expose watch silhouettes, guard room and elevated lookout.");
 		}
 		helper.succeed();
 	}
@@ -2599,6 +2623,77 @@ public final class FormicFrontierGameTest {
 		}
 	}
 
+	private static void assertWatchPostProfile(GameTestHelper helper, BlockPos center, String label) {
+		helper.assertBlockPresent(ModBlocks.WATCH_POST, center);
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 2, -5))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 2, 1))).isAir()) {
+			helper.fail(label + " should expose a narrow lower mouth connected to its guard room.");
+		}
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(-3, 1, 1));
+		helper.assertBlockPresent(Blocks.CHEST, center.offset(3, 1, 1));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(-3, 2, 1));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(3, 2, 1));
+		helper.assertBlockPresent(Blocks.FLETCHING_TABLE, center.offset(-3, 1, 3));
+		helper.assertBlockPresent(Blocks.TARGET, center.offset(3, 1, 3));
+		helper.assertBlockPresent(ModBlocks.WATCH_POST, center.offset(0, 1, 4));
+		helper.assertBlockPresent(Blocks.BELL, center.offset(0, 2, 4));
+
+		int upperCenterX;
+		int upperCenterZ;
+		if (helper.getLevel().getBlockState(helper.absolutePos(center.offset(1, 7, 3))).is(ModBlocks.WATCH_POST)) {
+			upperCenterX = 1;
+			upperCenterZ = 1;
+		} else if (helper.getLevel().getBlockState(helper.absolutePos(center.offset(-1, 7, 3))).is(ModBlocks.WATCH_POST)) {
+			upperCenterX = -1;
+			upperCenterZ = 1;
+		} else if (helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 7, 4))).is(ModBlocks.WATCH_POST)) {
+			upperCenterX = 0;
+			upperCenterZ = 2;
+		} else {
+			helper.fail(label + " should furnish a distinct elevated lookout.");
+			return;
+		}
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(upperCenterX, 8, -3))).isAir()) {
+			helper.fail(label + " lookout should open onto a high observation balcony.");
+		}
+		helper.assertBlockPresent(Blocks.CARTOGRAPHY_TABLE,
+				center.offset(upperCenterX - 2, 7, upperCenterZ));
+		helper.assertBlockPresent(Blocks.LECTERN, center.offset(upperCenterX + 2, 7, upperCenterZ));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(upperCenterX - 2, 8, upperCenterZ));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(upperCenterX + 2, 8, upperCenterZ));
+		helper.assertBlockPresent(Blocks.OCHRE_FROGLIGHT,
+				center.offset(upperCenterX - 1, 7, upperCenterZ + 2));
+		helper.assertBlockPresent(Blocks.DEEPSLATE_IRON_ORE,
+				center.offset(upperCenterX + 1, 7, upperCenterZ + 2));
+		helper.assertBlockPresent(Blocks.LIGHTNING_ROD,
+				center.offset(upperCenterX, 8, upperCenterZ + 2));
+
+		int stairs = 0;
+		for (int y = 0; y < 6; y++) {
+			for (int x = -5; x <= 5; x++) {
+				for (int z = -4; z <= 6; z++) {
+					if (helper.getLevel().getBlockState(helper.absolutePos(center.offset(x, y, z)))
+							.is(Blocks.MUD_BRICK_STAIRS)) {
+						stairs++;
+					}
+				}
+			}
+		}
+		if (stairs < 6) {
+			helper.fail(label + " should retain a complete six-step internal stair, found " + stairs);
+		}
+		int base = countMoundLayer(helper, center, 0, 13);
+		int upper = countMoundLayer(helper, center, 6, 10);
+		int crown = countMoundLayer(helper, center, 13, 7);
+		if (base < 135 || upper < 40 || crown < 6 || !(base > upper && upper > crown)) {
+			helper.fail(label + " should read as a tall compact sentinel, got layer masses "
+					+ base + "/" + upper + "/" + crown);
+		}
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 14, 1))).isAir()) {
+			helper.fail(label + " should end at its thirteen-block crown without floating fragments.");
+		}
+	}
+
 	private static void assertNurseryProfile(GameTestHelper helper, BlockPos center, String label) {
 		helper.assertBlockPresent(ModBlocks.NURSERY_CHAMBER, center);
 		if (helper.getLevel().getBlockState(helper.absolutePos(center.below())).is(ModBlocks.NEST_CORE)) {
@@ -2652,6 +2747,8 @@ public final class FormicFrontierGameTest {
 				|| block == Blocks.POLISHED_DEEPSLATE
 				|| block == Blocks.BLACKSTONE
 				|| block == Blocks.DEEPSLATE_IRON_ORE
+				|| block == Blocks.DEEPSLATE_TILES
+				|| block == Blocks.OCHRE_FROGLIGHT
 				|| block == Blocks.STRIPPED_MANGROVE_WOOD
 				|| block == Blocks.BROWN_MUSHROOM_BLOCK
 				|| block == Blocks.RED_MUSHROOM_BLOCK

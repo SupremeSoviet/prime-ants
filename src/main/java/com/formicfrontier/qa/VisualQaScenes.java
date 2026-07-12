@@ -21,6 +21,8 @@ import com.formicfrontier.world.RaidPlanner;
 import com.formicfrontier.world.ColonySavedState;
 import com.formicfrontier.world.ColonyService;
 import com.formicfrontier.world.StructurePlacer;
+import com.formicfrontier.world.structure.OrganicBuildingPlacer;
+import com.formicfrontier.world.structure.TieredMoundBlueprint;
 import com.mojang.math.Transformation;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
@@ -100,6 +102,9 @@ public final class VisualQaScenes {
 	public static final String FUNGUS_GARDEN_INTERIOR = "fungus_garden_interior";
 	public static final String VENOM_PRESS_VARIANTS = "venom_press_variants";
 	public static final String VENOM_PRESS_INTERIOR = "venom_press_interior";
+	public static final String WATCH_POST_VARIANTS = "watch_post_variants";
+	public static final String WATCH_POST_GUARD_INTERIOR = "watch_post_guard_interior";
+	public static final String WATCH_POST_LOOKOUT_INTERIOR = "watch_post_lookout_interior";
 	private static final List<String> SCENES = List.of(
 			COLONY_OVERVIEW,
 			COLONY_GROUND,
@@ -149,7 +154,10 @@ public final class VisualQaScenes {
 			FUNGUS_GARDEN_VARIANTS,
 			FUNGUS_GARDEN_INTERIOR,
 			VENOM_PRESS_VARIANTS,
-			VENOM_PRESS_INTERIOR
+			VENOM_PRESS_INTERIOR,
+			WATCH_POST_VARIANTS,
+			WATCH_POST_GUARD_INTERIOR,
+			WATCH_POST_LOOKOUT_INTERIOR
 	);
 	private static final List<AntCaste> ANT_LINEUP_CASTES = List.of(
 			AntCaste.QUEEN,
@@ -255,15 +263,18 @@ public final class VisualQaScenes {
 		boolean resinDepotFocused = normalized.equals(RESIN_DEPOT_VARIANTS) || normalized.equals(RESIN_DEPOT_INTERIOR);
 		boolean fungusGardenFocused = normalized.equals(FUNGUS_GARDEN_VARIANTS) || normalized.equals(FUNGUS_GARDEN_INTERIOR);
 		boolean venomPressFocused = normalized.equals(VENOM_PRESS_VARIANTS) || normalized.equals(VENOM_PRESS_INTERIOR);
+		boolean watchPostFocused = normalized.equals(WATCH_POST_VARIANTS)
+				|| normalized.equals(WATCH_POST_GUARD_INTERIOR) || normalized.equals(WATCH_POST_LOOKOUT_INTERIOR);
 		boolean roleBuildingFocused = foodFocused || nurseryFocused || mineFocused || chitinFarmFocused
 				|| barracksFocused || marketFocused || archiveFocused || armoryFocused || shrineFocused || resinDepotFocused
-				|| fungusGardenFocused || venomPressFocused;
+				|| fungusGardenFocused || venomPressFocused || watchPostFocused;
 		boolean interiorFocused = moundInteriorFocused || normalized.equals(FOOD_STORE_INTERIOR)
 				|| normalized.equals(NURSERY_INTERIOR) || normalized.equals(MINE_INTERIOR)
 				|| normalized.equals(CHITIN_FARM_INTERIOR) || normalized.equals(BARRACKS_INTERIOR)
 				|| normalized.equals(ARCHIVE_HALL_INTERIOR) || normalized.equals(ARCHIVE_LOFT_INTERIOR)
 				|| normalized.equals(ARMORY_INTERIOR) || normalized.equals(RESIN_DEPOT_INTERIOR)
-				|| normalized.equals(FUNGUS_GARDEN_INTERIOR) || normalized.equals(VENOM_PRESS_INTERIOR);
+				|| normalized.equals(FUNGUS_GARDEN_INTERIOR) || normalized.equals(VENOM_PRESS_INTERIOR)
+				|| normalized.equals(WATCH_POST_GUARD_INTERIOR) || normalized.equals(WATCH_POST_LOOKOUT_INTERIOR);
 		boolean structureFocused = normalized.equals(STRUCTURE_PREVIEW_3Q)
 				|| normalized.equals(STRUCTURE_PREVIEW_FRONT) || interiorFocused || roleBuildingFocused;
 		if (structureFocused && structureQaOrigin == null) {
@@ -380,6 +391,17 @@ public final class VisualQaScenes {
 						BuildingVisualStage.COMPLETE, ColonyCulture.FIRE);
 			} else if (normalized.equals(VENOM_PRESS_INTERIOR)) {
 				StructurePlacer.placeBuilding(level, origin, BuildingType.VENOM_PRESS,
+						BuildingVisualStage.COMPLETE, ColonyCulture.FIRE);
+			} else if (normalized.equals(WATCH_POST_VARIANTS)) {
+				StructurePlacer.placeBuilding(level, origin.offset(-26, 0, 0), BuildingType.WATCH_POST,
+						BuildingVisualStage.COMPLETE, ColonyCulture.FIRE);
+				StructurePlacer.placeBuilding(level, origin.offset(0, 0, 1), BuildingType.WATCH_POST,
+						BuildingVisualStage.COMPLETE, ColonyCulture.FIRE);
+				StructurePlacer.placeBuilding(level, origin.offset(26, 0, 2), BuildingType.WATCH_POST,
+						BuildingVisualStage.COMPLETE, ColonyCulture.FIRE);
+			} else if (normalized.equals(WATCH_POST_GUARD_INTERIOR)
+					|| normalized.equals(WATCH_POST_LOOKOUT_INTERIOR)) {
+				StructurePlacer.placeBuilding(level, origin, BuildingType.WATCH_POST,
 						BuildingVisualStage.COMPLETE, ColonyCulture.FIRE);
 			} else {
 				ColonyService.createColony(level, origin, true);
@@ -1181,6 +1203,11 @@ public final class VisualQaScenes {
 	}
 	private static void positionCamera(ServerPlayer player, BlockPos origin, String sceneName) {
 		player.setGameMode(GameType.SPECTATOR);
+		TieredMoundBlueprint.Chamber watchLookout = sceneName.equals(WATCH_POST_LOOKOUT_INTERIOR)
+				? OrganicBuildingPlacer.blueprintFor(BuildingType.WATCH_POST, origin).chambers().stream()
+						.filter(chamber -> chamber.id().equals("lookout_loft"))
+						.findFirst().orElseThrow()
+				: null;
 		Vec3 target = switch (sceneName) {
 			case COLONY_OVERVIEW, SETTLEMENT_SCALE -> colonyOverviewTarget(origin);
 			case COLONY_GROUND -> Vec3.atCenterOf(origin).add(0.0, 11.0, 0.0);
@@ -1222,6 +1249,10 @@ public final class VisualQaScenes {
 			case FUNGUS_GARDEN_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 1.8, 4.0);
 			case VENOM_PRESS_VARIANTS -> Vec3.atCenterOf(origin).add(0.0, 4.2, 2.0);
 			case VENOM_PRESS_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 1.8, 3.8);
+			case WATCH_POST_VARIANTS -> Vec3.atCenterOf(origin).add(0.0, 6.8, 2.0);
+			case WATCH_POST_GUARD_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 1.8, 3.5);
+			case WATCH_POST_LOOKOUT_INTERIOR -> Vec3.atCenterOf(origin)
+					.add(watchLookout.x(), 7.8, watchLookout.z() + 2.2);
 			default -> Vec3.atCenterOf(origin).add(0.0, 2.0, 0.0);
 		};
 		Vec3 camera = switch (sceneName) {
@@ -1267,6 +1298,13 @@ public final class VisualQaScenes {
 			case FUNGUS_GARDEN_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.3, origin.getZ() - 3.2);
 			case VENOM_PRESS_VARIANTS -> new Vec3(origin.getX() + 0.5, origin.getY() + 14.0, origin.getZ() - 43.0);
 			case VENOM_PRESS_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.3, origin.getZ() - 3.2);
+			case WATCH_POST_VARIANTS -> new Vec3(origin.getX() + 0.5, origin.getY() + 20.0, origin.getZ() - 54.0);
+			case WATCH_POST_GUARD_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.3, origin.getZ() - 3.2);
+			case WATCH_POST_LOOKOUT_INTERIOR -> new Vec3(
+					origin.getX() + watchLookout.x() + 0.5,
+					origin.getY() + 7.3,
+					origin.getZ() - 2.8
+			);
 			default -> new Vec3(origin.getX() + 28.0, origin.getY() + 18.0, origin.getZ() - 32.0);
 		};
 		player.teleportTo(camera.x, camera.y, camera.z);

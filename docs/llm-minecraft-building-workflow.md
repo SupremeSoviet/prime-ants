@@ -172,6 +172,21 @@ walkable room overlap and safe repeat spacing; GameTests verify the machine and
 reagent furnishings in both variants. Focused Structure QA accepts all 30
 regression and venom scenes at original resolution without opening UI scenes.
 
+The watch post deliberately breaks the low role-mound profile. The three
+`watch_post_*.json` variants are tall two-storey sentinels with different
+asymmetric buttresses and crowns, a grounded guard room, a separate lookout
+loft and an explicit one-block internal stair between them. The lower floor is
+furnished for storage, equipment and target practice; the upper floor uses
+mapping, observation and signal props, so the storeys do not read as copies.
+Mud, tuff and dark deepslate keep the tower inside the colony palette while a
+few iron-ore and ochre-light accents make its defensive role legible. The first
+four posts use widely separated perimeter sites instead of crowding the colony
+core. Unit tests enforce the height, connected shells, two distinct chambers,
+stair headroom, variant diversity and perimeter spacing; GameTests verify both
+furnished floors in all three variants. Focused Structure QA accepts all 33
+structure scenes at original resolution, with the interior camera following
+each variant's offset lookout rather than assuming a fixed room position.
+
 Every enclosed role chamber has a discrete rear-shell invariant in addition to
 whole-mound connectivity. For each vaulted ceiling layer, the first block behind
 the carved ellipse must remain solid. This prevents a geometrically connected

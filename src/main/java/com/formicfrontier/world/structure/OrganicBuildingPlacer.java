@@ -44,6 +44,9 @@ public final class OrganicBuildingPlacer {
 	public static final String FUNGUS_GARDEN_B_RESOURCE = "formic_blueprints/fungus_garden_b.json";
 	public static final String VENOM_PRESS_A_RESOURCE = "formic_blueprints/venom_press_a.json";
 	public static final String VENOM_PRESS_B_RESOURCE = "formic_blueprints/venom_press_b.json";
+	public static final String WATCH_POST_A_RESOURCE = "formic_blueprints/watch_post_a.json";
+	public static final String WATCH_POST_B_RESOURCE = "formic_blueprints/watch_post_b.json";
+	public static final String WATCH_POST_C_RESOURCE = "formic_blueprints/watch_post_c.json";
 
 	private static final Map<BuildingType, Family> FAMILIES = Map.ofEntries(
 			Map.entry(BuildingType.FOOD_STORE, new Family(List.of(
@@ -94,6 +97,11 @@ public final class OrganicBuildingPlacer {
 			Map.entry(BuildingType.VENOM_PRESS, new Family(List.of(
 					TieredMoundBlueprint.load(VENOM_PRESS_A_RESOURCE),
 					TieredMoundBlueprint.load(VENOM_PRESS_B_RESOURCE)
+			))),
+			Map.entry(BuildingType.WATCH_POST, new Family(List.of(
+					TieredMoundBlueprint.load(WATCH_POST_A_RESOURCE),
+					TieredMoundBlueprint.load(WATCH_POST_B_RESOURCE),
+					TieredMoundBlueprint.load(WATCH_POST_C_RESOURCE)
 			)))
 	);
 
@@ -149,6 +157,7 @@ public final class OrganicBuildingPlacer {
 			case RESIN_DEPOT -> ModBlocks.RESIN_DEPOT;
 			case FUNGUS_GARDEN -> ModBlocks.FUNGUS_GARDEN;
 			case VENOM_PRESS -> ModBlocks.VENOM_PRESS;
+			case WATCH_POST -> ModBlocks.WATCH_POST;
 			default -> throw new IllegalArgumentException("No functional block registered for " + type);
 		};
 	}
