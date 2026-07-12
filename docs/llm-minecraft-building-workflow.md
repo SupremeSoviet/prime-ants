@@ -219,6 +219,21 @@ different furnishing identities and preservation of the evolved host mound.
 Focused Structure QA now accepts all 41 scenes at original resolution, including
 separate views for the descent, guard room, treasury and brood sanctuary.
 
+`trade_hub.json` completes the structure catalog with a unique late-game
+destination rather than a scaled copy of the starter market. Four overlapping
+ground tiers form an asymmetric eight-block-high perimeter around a large
+roofless exchange court. Two enclosed same-floor lobes overlap that court: the
+bonded warehouse concentrates bulk cargo and storage against its outer walls,
+while the brokerage uses maps, records, pheromone equipment, gold and amethyst.
+Both interfaces keep two blocks of clear headroom and the court retains a broad
+caravan aisle. The live site moved from the crowded old marker beside the market
+to `(74, 0, -52)` relative to the colony, leaving at least 42 blocks to the
+nearest market, venom press and first watch post. Unit tests enforce the larger
+footprint, open roof, connected mass, chamber overlap and spacing. GameTests
+verify the completed endgame project and every furnishing zone. Focused
+Structure QA now accepts all 45 scenes at original resolution, with separate
+exterior, court, warehouse and brokerage captures.
+
 Every enclosed role chamber has a discrete rear-shell invariant in addition to
 whole-mound connectivity. For each vaulted ceiling layer, the first block behind
 the carved ellipse must remain solid. This prevents a geometrically connected
@@ -237,7 +252,7 @@ validates that it reaches the mound top.
 3. Finish the starter economy in order: food store, nursery, mine, chitin farm.
 4. Continue through infrastructure, research and defense families.
 5. Return to the central mound for `GREAT_MOUND` height/lobes and the underground
-   `QUEEN_VAULT` (both complete), then author the separate late-game trade hub.
+   `QUEEN_VAULT`, then author the separate late-game trade hub (all complete).
 
 Each step must pass unit/GameTests before screenshot QA. Visual acceptance is
 based on the rendered silhouette and entrances, not on how plausible the source

@@ -63,7 +63,8 @@ public final class VisualQaClient {
 			"great_mound_growth", "great_mound_crown_interior",
 			"great_mound_larder_interior", "great_mound_workshop_interior",
 			"queen_vault_descent_interior", "queen_vault_guard_interior", "queen_vault_lower_interior",
-			"queen_vault_sanctum_interior"
+			"queen_vault_sanctum_interior",
+			"trade_hub_exterior", "trade_hub_courtyard", "trade_hub_warehouse", "trade_hub_brokerage"
 	};
 	private static final String[] SCENES = selectScenes();
 	private static final int WAIT_FOR_WORLD_TICKS = Integer.getInteger("formic.visualQa.worldWaitTicks", 600);
@@ -232,6 +233,8 @@ public final class VisualQaClient {
 					"queen_vault_descent_interior", "queen_vault_guard_interior", "queen_vault_lower_interior",
 					"queen_vault_sanctum_interior" ->
 					Math.max(COMMAND_TO_SCREENSHOT_TICKS, 240);
+			case "trade_hub_exterior", "trade_hub_courtyard", "trade_hub_warehouse", "trade_hub_brokerage" ->
+					Math.max(COMMAND_TO_SCREENSHOT_TICKS, 180);
 			case "colony_ground", "culture_styles", "construction_stage", "repair_scene", "progression_scene" ->
 					Math.max(COMMAND_TO_SCREENSHOT_TICKS, 90);
 			default -> COMMAND_TO_SCREENSHOT_TICKS;

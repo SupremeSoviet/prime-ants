@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "name": "trade_hub",
+  "seed": 51827,
+  "palette": "trade_hub",
+  "tiers": [
+    {
+      "baseY": 0,
+      "height": 8,
+      "baseRadiusX": 13.0,
+      "baseRadiusZ": 10.0,
+      "topRadiusX": 9.2,
+      "topRadiusZ": 7.2,
+      "offsetX": 0.0,
+      "offsetZ": 2.0
+    },
+    {
+      "baseY": 0,
+      "height": 8,
+      "baseRadiusX": 7.0,
+      "baseRadiusZ": 5.5,
+      "topRadiusX": 3.2,
+      "topRadiusZ": 2.6,
+      "offsetX": -8.0,
+      "offsetZ": 3.5
+    },
+    {
+      "baseY": 0,
+      "height": 7,
+      "baseRadiusX": 6.5,
+      "baseRadiusZ": 5.0,
+      "topRadiusX": 3.0,
+      "topRadiusZ": 2.4,
+      "offsetX": 8.0,
+      "offsetZ": 2.5
+    },
+    {
+      "baseY": 0,
+      "height": 8,
+      "baseRadiusX": 7.2,
+      "baseRadiusZ": 5.4,
+      "topRadiusX": 3.4,
+      "topRadiusZ": 2.5,
+      "offsetX": 0.8,
+      "offsetZ": 7.0
+    }
+  ],
+  "terraces": [],
+  "chambers": [
+    {
+      "id": "exchange_court",
+      "purpose": "trade_hub_court",
+      "x": 0,
+      "floorY": 0,
+      "z": 2,
+      "radiusX": 6.4,
+      "radiusZ": 5.2,
+      "height": 7,
+      "openToSky": true
+    },
+    {
+      "id": "bonded_warehouse",
+      "purpose": "trade_hub_warehouse",
+      "x": -7,
+      "floorY": 0,
+      "z": 3,
+      "radiusX": 4.2,
+      "radiusZ": 3.6,
+      "height": 4
+    },
+    {
+      "id": "brokerage_chamber",
+      "purpose": "trade_hub_brokerage",
+      "x": 7,
+      "floorY": 0,
+      "z": 3,
+      "radiusX": 4.2,
+      "radiusZ": 3.6,
+      "height": 4
+    }
+  ],
+  "pits": [],
+  "connections": [],
+  "mouths": [
+    {
+      "x": 0,
+      "y": 1,
+      "frontZ": -8,
+      "width": 5,
+      "height": 4,
+      "depth": 8
+    }
+  ]
+}

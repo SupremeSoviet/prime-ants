@@ -426,6 +426,39 @@ public final class TieredMoundPlacer {
 				placeDecoration(level, center, chamber, 2, 2, 1, Blocks.LANTERN);
 				placeDecoration(level, center, chamber, 0, 2, 2, Blocks.LIGHTNING_ROD);
 			}
+			case "trade_hub_court" -> {
+				// A broad public exchange lane, with cargo on the flanks and a
+				// broker/map station at the rear. The centre stays open for caravans.
+				placeDecoration(level, center, chamber, -5, 1, -1, Blocks.CHEST);
+				placeDecoration(level, center, chamber, 5, 1, -1, Blocks.BARREL);
+				placeDecoration(level, center, chamber, -3, 1, 2, Blocks.HAY_BLOCK);
+				placeDecoration(level, center, chamber, 3, 1, 2, Blocks.HONEYCOMB_BLOCK);
+				placeDecoration(level, center, chamber, -2, 1, 4, Blocks.CARTOGRAPHY_TABLE);
+				placeDecoration(level, center, chamber, 2, 1, 4, Blocks.LECTERN);
+				placeDecoration(level, center, chamber, 0, 1, 4, Blocks.BELL);
+				placeDecoration(level, center, chamber, -4, 1, -3, Blocks.OAK_FENCE);
+				placeDecoration(level, center, chamber, -4, 2, -3, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, 4, 1, -3, Blocks.OAK_FENCE);
+				placeDecoration(level, center, chamber, 4, 2, -3, Blocks.LANTERN);
+			}
+			case "trade_hub_warehouse" -> {
+				placeDecoration(level, center, chamber, -3, 1, 0, Blocks.CHEST);
+				placeDecoration(level, center, chamber, -3, 1, 2, Blocks.BARREL);
+				placeDecoration(level, center, chamber, -1, 1, 2, Blocks.HAY_BLOCK);
+				placeDecoration(level, center, chamber, 1, 1, 2, Blocks.HONEYCOMB_BLOCK);
+				placeDecoration(level, center, chamber, 3, 1, 2, Blocks.CUT_COPPER);
+				placeDecoration(level, center, chamber, -3, 2, 0, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, -3, 2, 2, Blocks.LANTERN);
+			}
+			case "trade_hub_brokerage" -> {
+				placeDecoration(level, center, chamber, 3, 1, 0, Blocks.CARTOGRAPHY_TABLE);
+				placeDecoration(level, center, chamber, 3, 1, 2, Blocks.LECTERN);
+				placeDecoration(level, center, chamber, -3, 1, 2, ModBlocks.PHEROMONE_ARCHIVE);
+				placeDecoration(level, center, chamber, -1, 1, 2, Blocks.GOLD_BLOCK);
+				placeDecoration(level, center, chamber, 1, 1, 2, Blocks.AMETHYST_BLOCK);
+				placeDecoration(level, center, chamber, 3, 2, 0, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, 3, 2, 2, Blocks.LANTERN);
+			}
 			default -> throw new IllegalArgumentException("Unsupported chamber purpose " + chamber.purpose());
 		}
 	}
@@ -575,6 +608,17 @@ public final class TieredMoundPlacer {
 				if (roll < 93) yield Blocks.TUFF;
 				if (roll < 97) yield Blocks.CHISELED_TUFF;
 				if (roll < 99) yield Blocks.CUT_COPPER;
+				yield Blocks.AMETHYST_BLOCK;
+			}
+			case "trade_hub" -> {
+				if (roll < 48) yield ModBlocks.NEST_MOUND;
+				if (roll < 61) yield Blocks.ROOTED_DIRT;
+				if (roll < 72) yield Blocks.PACKED_MUD;
+				if (roll < 82) yield Blocks.MUD_BRICKS;
+				if (roll < 89) yield Blocks.CHISELED_TUFF;
+				if (roll < 95) yield Blocks.CUT_COPPER;
+				if (roll < 98) yield Blocks.HONEYCOMB_BLOCK;
+				if (roll < 99) yield Blocks.GOLD_BLOCK;
 				yield Blocks.AMETHYST_BLOCK;
 			}
 			default -> throw new IllegalArgumentException("Unsupported material palette " + blueprint.palette());

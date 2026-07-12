@@ -338,7 +338,7 @@ public final class ColonyBuilder {
 					: origin.offset(35 + (existing - 1) * 32, 0, -82 - (existing - 1) * 28);
 			case GREAT_MOUND -> origin;
 			case QUEEN_VAULT -> origin;
-			case TRADE_HUB -> origin.offset(44 + existing * 18, 0, -32 - existing * 12);
+			case TRADE_HUB -> origin.offset(74 + existing * 34, 0, -52 - existing * 30);
 			case ROAD -> origin.offset(existing * 7, 0, existing * 7);
 		};
 	}

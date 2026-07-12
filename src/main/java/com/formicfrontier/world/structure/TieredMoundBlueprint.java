@@ -37,13 +37,14 @@ public record TieredMoundBlueprint(
 	private static final Set<String> SUPPORTED_PALETTES = Set.of(
 			"earth", "food_store", "nursery", "mine", "chitin_farm", "barracks", "market",
 			"pheromone_archive", "armory", "diplomacy_shrine", "resin_depot", "fungus_garden", "venom_press",
-			"watch_post", "great_mound"
+			"watch_post", "great_mound", "trade_hub"
 	);
 	private static final Set<String> SUPPORTED_CHAMBER_PURPOSES = Set.of(
 			"queen_hall", "storage", "lookout", "food_store", "nursery", "mine", "chitin_farm", "barracks", "market",
 			"archive_hall", "archive_loft", "armory_forge", "armory_vault", "diplomacy_shrine",
 			"resin_workshop", "resin_vault", "fungus_garden", "venom_press_hall", "venom_vault",
-			"watch_guard", "watch_lookout", "great_larder", "great_workshop", "great_crown"
+			"watch_guard", "watch_lookout", "great_larder", "great_workshop", "great_crown",
+			"trade_hub_court", "trade_hub_warehouse", "trade_hub_brokerage"
 	);
 
 	public TieredMoundBlueprint {

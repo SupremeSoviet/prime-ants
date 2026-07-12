@@ -188,7 +188,7 @@ public final class StructurePlacer {
 	}
 
 	public static void placeTradeHub(ServerLevel level, BlockPos center, ColonyCulture culture) {
-		safeSet(level, center, ModBlocks.MARKET_CHAMBER);
+		OrganicBuildingPlacer.place(level, center, BuildingType.TRADE_HUB);
 	}
 
 	public static void placeCampusBuilding(ServerLevel level, BlockPos center, BuildingType type) {

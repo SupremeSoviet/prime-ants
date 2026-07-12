@@ -75,6 +75,10 @@ STRUCTURE_EXPECTED = [
     "queen_vault_guard_interior.png",
     "queen_vault_lower_interior.png",
     "queen_vault_sanctum_interior.png",
+    "trade_hub_exterior.png",
+    "trade_hub_courtyard.png",
+    "trade_hub_warehouse.png",
+    "trade_hub_brokerage.png",
 ]
 EXPECTED_BY_SCOPE = {
     "full": FULL_EXPECTED,

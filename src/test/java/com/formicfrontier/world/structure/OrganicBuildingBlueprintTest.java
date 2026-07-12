@@ -225,6 +225,58 @@ final class OrganicBuildingBlueprintTest {
 	}
 
 	@Test
+	void tradeHubIsALargeRooflessThreeZoneCaravanComplexAtAnOpenSite() {
+		var variants = OrganicBuildingPlacer.variants(BuildingType.TRADE_HUB);
+		Assertions.assertEquals(1, variants.size(), "the unique endgame hub needs one authored landmark blueprint");
+		TieredMoundBlueprint blueprint = variants.getFirst();
+		Assertions.assertEquals("trade_hub", blueprint.name());
+		Assertions.assertEquals("trade_hub", blueprint.palette());
+		Assertions.assertEquals(7, blueprint.maxY(), "the hub should stand twice as tall as the starter market banks");
+		Assertions.assertEquals(4, blueprint.tiers().size());
+		Assertions.assertEquals(3, blueprint.chambers().size());
+		Assertions.assertEquals(Set.of("trade_hub_court", "trade_hub_warehouse", "trade_hub_brokerage"),
+				blueprint.chambers().stream().map(TieredMoundBlueprint.Chamber::purpose).collect(Collectors.toSet()));
+		TieredMoundBlueprint.Chamber court = blueprint.chambers().stream()
+				.filter(chamber -> chamber.id().equals("exchange_court")).findFirst().orElseThrow();
+		TieredMoundBlueprint.Chamber warehouse = blueprint.chambers().stream()
+				.filter(chamber -> chamber.id().equals("bonded_warehouse")).findFirst().orElseThrow();
+		TieredMoundBlueprint.Chamber brokerage = blueprint.chambers().stream()
+				.filter(chamber -> chamber.id().equals("brokerage_chamber")).findFirst().orElseThrow();
+		Assertions.assertTrue(court.openToSky(), "the exchange lane must remain a real open-air caravan court");
+		Assertions.assertFalse(warehouse.openToSky());
+		Assertions.assertFalse(brokerage.openToSky());
+		Assertions.assertTrue(blueprint.connections().isEmpty(), "all three ground-floor zones should meet through overlaps");
+		Assertions.assertEquals(5, blueprint.mouths().getFirst().width(), "caravans need a broad public gate");
+		for (int y = 1; y <= blueprint.maxY(); y++) {
+			Assertions.assertFalse(blueprint.isSolid(court.x(), y, court.z()),
+					"exchange court must stay roofless through y=" + y);
+		}
+		Assertions.assertTrue(chambersOverlap(court, warehouse), "warehouse must open directly into the exchange court");
+		Assertions.assertTrue(chambersOverlap(court, brokerage), "brokerage must open directly into the exchange court");
+		assertRearShell(blueprint, warehouse);
+		assertRearShell(blueprint, brokerage);
+
+		Set<Cell> solid = solidCells(blueprint);
+		assertConnected(blueprint, solid, "trade hub perimeter and cargo lobes");
+		Set<FootprintCell> footprint = footprint(solid);
+		int width = footprint.stream().mapToInt(FootprintCell::x).max().orElseThrow()
+				- footprint.stream().mapToInt(FootprintCell::x).min().orElseThrow() + 1;
+		int depth = footprint.stream().mapToInt(FootprintCell::z).max().orElseThrow()
+				- footprint.stream().mapToInt(FootprintCell::z).min().orElseThrow() + 1;
+		Assertions.assertTrue(footprint.size() >= 390, "late-game hub needs substantially more ground mass than a market");
+		Assertions.assertTrue(width >= 27 && depth >= 21,
+				"hub should read as a broad multi-lobed destination, got " + width + "x" + depth);
+
+		BlockPos origin = new BlockPos(11, 0, -7);
+		BlockPos hub = ColonyBuilder.siteFor(origin, BuildingType.TRADE_HUB, 0);
+		for (BuildingType neighbor : List.of(BuildingType.MARKET, BuildingType.VENOM_PRESS, BuildingType.WATCH_POST)) {
+			BlockPos site = ColonyBuilder.siteFor(origin, neighbor, 0);
+			Assertions.assertTrue(hub.distSqr(site) >= 42 * 42,
+					"Trade Hub needs open caravan ground away from " + neighbor.id());
+		}
+	}
+
+	@Test
 	void pheromoneArchivesHaveTwoDistinctFloorsJoinedByAnInternalStair() {
 		var variants = OrganicBuildingPlacer.variants(BuildingType.PHEROMONE_ARCHIVE);
 		Assertions.assertEquals(Set.of("pheromone_archive_a", "pheromone_archive_b"), variants.stream()
@@ -680,6 +732,18 @@ final class OrganicBuildingBlueprintTest {
 		disconnected.removeAll(connected);
 		Assertions.assertEquals(solid.size(), connected.size(),
 				blueprint.name() + " must be one connected " + label + "; disconnected cells: " + disconnected);
+	}
+
+	private static boolean chambersOverlap(TieredMoundBlueprint.Chamber first,
+			TieredMoundBlueprint.Chamber second) {
+		for (int x = -24; x <= 24; x++) {
+			for (int z = -24; z <= 24; z++) {
+				if (first.carves(x, 1, z) && second.carves(x, 1, z)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private static void assertRearShell(TieredMoundBlueprint blueprint, TieredMoundBlueprint.Chamber chamber) {

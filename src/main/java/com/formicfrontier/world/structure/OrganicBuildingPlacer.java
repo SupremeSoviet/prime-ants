@@ -47,6 +47,7 @@ public final class OrganicBuildingPlacer {
 	public static final String WATCH_POST_A_RESOURCE = "formic_blueprints/watch_post_a.json";
 	public static final String WATCH_POST_B_RESOURCE = "formic_blueprints/watch_post_b.json";
 	public static final String WATCH_POST_C_RESOURCE = "formic_blueprints/watch_post_c.json";
+	public static final String TRADE_HUB_RESOURCE = "formic_blueprints/trade_hub.json";
 
 	private static final Map<BuildingType, Family> FAMILIES = Map.ofEntries(
 			Map.entry(BuildingType.FOOD_STORE, new Family(List.of(
@@ -102,6 +103,9 @@ public final class OrganicBuildingPlacer {
 					TieredMoundBlueprint.load(WATCH_POST_A_RESOURCE),
 					TieredMoundBlueprint.load(WATCH_POST_B_RESOURCE),
 					TieredMoundBlueprint.load(WATCH_POST_C_RESOURCE)
+			))),
+			Map.entry(BuildingType.TRADE_HUB, new Family(List.of(
+					TieredMoundBlueprint.load(TRADE_HUB_RESOURCE)
 			)))
 	);
 
@@ -158,6 +162,7 @@ public final class OrganicBuildingPlacer {
 			case FUNGUS_GARDEN -> ModBlocks.FUNGUS_GARDEN;
 			case VENOM_PRESS -> ModBlocks.VENOM_PRESS;
 			case WATCH_POST -> ModBlocks.WATCH_POST;
+			case TRADE_HUB -> ModBlocks.MARKET_CHAMBER;
 			default -> throw new IllegalArgumentException("No functional block registered for " + type);
 		};
 	}

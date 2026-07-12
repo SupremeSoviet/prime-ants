@@ -1878,7 +1878,7 @@ public final class FormicFrontierGameTest {
 
 	public void citadelColonyCompletesMinimalTradeHubAfterQueenVault(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 20, 2);
-		prepareCampusArea(helper, origin, 90);
+		prepareCampusArea(helper, origin, 108);
 		ColonyData colony = ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
 		colony.progress().buildQueue().clear();
 		for (ResourceType resource : ResourceType.values()) {
@@ -1909,7 +1909,13 @@ public final class FormicFrontierGameTest {
 			helper.fail("Trade hub should complete from prepared endgame resources, got " + tradeHub.constructionProgress() + "%.");
 		}
 		BlockPos hub = ColonyBuilder.siteFor(origin, BuildingType.TRADE_HUB, 0);
-		assertMinimalBuildingMarker(helper, hub, ModBlocks.MARKET_CHAMBER, "trade hub");
+		assertTradeHubProfile(helper, hub, "trade hub");
+		if (!VisualQaScenes.scenes().contains(VisualQaScenes.TRADE_HUB_EXTERIOR)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.TRADE_HUB_COURTYARD)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.TRADE_HUB_WAREHOUSE)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.TRADE_HUB_BROKERAGE)) {
+			helper.fail("Visual QA should expose the Trade Hub exterior and all three trading zones.");
+		}
 		if (colony.progress().eventsView().stream().noneMatch(event -> event.message().contains("trade_hub"))) {
 			helper.fail("Trade hub project should leave a colony event for the player.");
 		}
@@ -2386,6 +2392,48 @@ public final class FormicFrontierGameTest {
 			helper.fail(label + " should read as a broad low roofless enclosure, got layer masses "
 					+ base + "/" + bank + "/" + topRing);
 		}
+	}
+
+	private static void assertTradeHubProfile(GameTestHelper helper, BlockPos center, String label) {
+		helper.assertBlockPresent(ModBlocks.MARKET_CHAMBER, center);
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(-2, 2, -7))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(2, 2, -7))).isAir()) {
+			helper.fail(label + " should expose a five-block-wide caravan gate.");
+		}
+		for (int y = 1; y <= 8; y++) {
+			if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, y, 2))).isAir()) {
+				helper.fail(label + " exchange court should remain open to the sky at y=" + y + ".");
+			}
+		}
+		helper.assertBlockPresent(Blocks.PACKED_MUD, center.offset(0, 0, 4));
+		for (BlockPos passage : List.of(center.offset(-4, 2, 3), center.offset(4, 2, 3))) {
+			if (!helper.getLevel().getBlockState(helper.absolutePos(passage)).isAir()) {
+				helper.fail(label + " side trading zone must open directly into the court at " + passage.toShortString());
+			}
+		}
+
+		// Public court: visible cargo, wayfinding and a clear central caravan aisle.
+		helper.assertBlockPresent(Blocks.CHEST, center.offset(-5, 1, 1));
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(5, 1, 1));
+		helper.assertBlockPresent(Blocks.HAY_BLOCK, center.offset(-3, 1, 4));
+		helper.assertBlockPresent(Blocks.HONEYCOMB_BLOCK, center.offset(3, 1, 4));
+		helper.assertBlockPresent(Blocks.CARTOGRAPHY_TABLE, center.offset(-2, 1, 6));
+		helper.assertBlockPresent(Blocks.LECTERN, center.offset(2, 1, 6));
+		helper.assertBlockPresent(Blocks.BELL, center.offset(0, 1, 6));
+
+		// Bonded warehouse: bulk cargo and two independent storage stations.
+		helper.assertBlockPresent(Blocks.CHEST, center.offset(-10, 1, 3));
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(-10, 1, 5));
+		helper.assertBlockPresent(Blocks.HAY_BLOCK, center.offset(-8, 1, 5));
+		helper.assertBlockPresent(Blocks.HONEYCOMB_BLOCK, center.offset(-6, 1, 5));
+		helper.assertBlockPresent(Blocks.CUT_COPPER, center.offset(-4, 1, 5));
+
+		// Brokerage: mapping, records and high-value exchange materials.
+		helper.assertBlockPresent(Blocks.CARTOGRAPHY_TABLE, center.offset(10, 1, 3));
+		helper.assertBlockPresent(Blocks.LECTERN, center.offset(10, 1, 5));
+		helper.assertBlockPresent(ModBlocks.PHEROMONE_ARCHIVE, center.offset(4, 1, 5));
+		helper.assertBlockPresent(Blocks.GOLD_BLOCK, center.offset(6, 1, 5));
+		helper.assertBlockPresent(Blocks.AMETHYST_BLOCK, center.offset(8, 1, 5));
 	}
 
 	private static void assertPheromoneArchiveProfile(GameTestHelper helper, BlockPos center, String label) {

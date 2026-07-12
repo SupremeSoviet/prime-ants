@@ -137,7 +137,13 @@ is now implemented and accepted as a protected two-depth interior extending to
 12 blocks below the mound: a guarded vestibule opens onto a royal treasury and
 a separate warm brood sanctuary, with two explicit six-step descents, distinct
 furnishings, a connected shell and preserved Great Mound surface/core anchors.
-The next structure slice is the separate late-game `TRADE_HUB`.
+The separate late-game `TRADE_HUB` is now implemented and accepted as a unique eight-block-
+high caravan complex on a newly spaced site. It combines a large roofless
+exchange court with directly connected enclosed warehouse and brokerage lobes,
+keeps a clear central circulation lane, and uses visibly different cargo and
+high-value trade furnishings. All planned structure families and both central
+mound expansions are now complete. The next implementation slice is R3, the
+from-scratch Colony Tablet/research/trade UI redesign.
 
 Slice R3: Colony Tablet 2.0.
 

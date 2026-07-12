@@ -116,6 +116,10 @@ public final class VisualQaScenes {
 	public static final String QUEEN_VAULT_GUARD_INTERIOR = "queen_vault_guard_interior";
 	public static final String QUEEN_VAULT_LOWER_INTERIOR = "queen_vault_lower_interior";
 	public static final String QUEEN_VAULT_SANCTUM_INTERIOR = "queen_vault_sanctum_interior";
+	public static final String TRADE_HUB_EXTERIOR = "trade_hub_exterior";
+	public static final String TRADE_HUB_COURTYARD = "trade_hub_courtyard";
+	public static final String TRADE_HUB_WAREHOUSE = "trade_hub_warehouse";
+	public static final String TRADE_HUB_BROKERAGE = "trade_hub_brokerage";
 	private static final List<String> SCENES = List.of(
 			COLONY_OVERVIEW,
 			COLONY_GROUND,
@@ -176,7 +180,11 @@ public final class VisualQaScenes {
 			QUEEN_VAULT_DESCENT_INTERIOR,
 			QUEEN_VAULT_GUARD_INTERIOR,
 			QUEEN_VAULT_LOWER_INTERIOR,
-			QUEEN_VAULT_SANCTUM_INTERIOR
+			QUEEN_VAULT_SANCTUM_INTERIOR,
+			TRADE_HUB_EXTERIOR,
+			TRADE_HUB_COURTYARD,
+			TRADE_HUB_WAREHOUSE,
+			TRADE_HUB_BROKERAGE
 	);
 	private static final List<AntCaste> ANT_LINEUP_CASTES = List.of(
 			AntCaste.QUEEN,
@@ -292,9 +300,14 @@ public final class VisualQaScenes {
 				|| normalized.equals(QUEEN_VAULT_GUARD_INTERIOR)
 				|| normalized.equals(QUEEN_VAULT_LOWER_INTERIOR)
 				|| normalized.equals(QUEEN_VAULT_SANCTUM_INTERIOR);
+		boolean tradeHubFocused = normalized.equals(TRADE_HUB_EXTERIOR)
+				|| normalized.equals(TRADE_HUB_COURTYARD)
+				|| normalized.equals(TRADE_HUB_WAREHOUSE)
+				|| normalized.equals(TRADE_HUB_BROKERAGE);
 		boolean roleBuildingFocused = foodFocused || nurseryFocused || mineFocused || chitinFarmFocused
 				|| barracksFocused || marketFocused || archiveFocused || armoryFocused || shrineFocused || resinDepotFocused
-				|| fungusGardenFocused || venomPressFocused || watchPostFocused || greatMoundFocused || queenVaultFocused;
+				|| fungusGardenFocused || venomPressFocused || watchPostFocused || greatMoundFocused || queenVaultFocused
+				|| tradeHubFocused;
 		boolean interiorFocused = moundInteriorFocused || normalized.equals(FOOD_STORE_INTERIOR)
 				|| normalized.equals(NURSERY_INTERIOR) || normalized.equals(MINE_INTERIOR)
 				|| normalized.equals(CHITIN_FARM_INTERIOR) || normalized.equals(BARRACKS_INTERIOR)
@@ -305,7 +318,10 @@ public final class VisualQaScenes {
 				|| normalized.equals(GREAT_MOUND_LARDER_INTERIOR)
 				|| normalized.equals(GREAT_MOUND_WORKSHOP_INTERIOR)
 				|| normalized.equals(GREAT_MOUND_CROWN_INTERIOR)
-				|| queenVaultFocused;
+				|| queenVaultFocused
+				|| normalized.equals(TRADE_HUB_COURTYARD)
+				|| normalized.equals(TRADE_HUB_WAREHOUSE)
+				|| normalized.equals(TRADE_HUB_BROKERAGE);
 		boolean structureFocused = normalized.equals(STRUCTURE_PREVIEW_3Q)
 				|| normalized.equals(STRUCTURE_PREVIEW_FRONT) || interiorFocused || roleBuildingFocused || greatMoundFocused;
 		if (structureFocused && structureQaOrigin == null) {
@@ -450,6 +466,9 @@ public final class VisualQaScenes {
 				StructurePlacer.placeBuilding(level, origin, BuildingType.GREAT_MOUND,
 						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
 				StructurePlacer.placeBuilding(level, origin, BuildingType.QUEEN_VAULT,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+			} else if (tradeHubFocused) {
+				StructurePlacer.placeBuilding(level, origin, BuildingType.TRADE_HUB,
 						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
 			} else {
 				ColonyService.createColony(level, origin, true);
@@ -1274,6 +1293,14 @@ public final class VisualQaScenes {
 				: vaultBlueprint.chamber("royal_treasury");
 		SubterraneanVaultBlueprint.Chamber vaultSanctum = vaultBlueprint == null ? null
 				: vaultBlueprint.chamber("brood_sanctum");
+		TieredMoundBlueprint tradeHubBlueprint = sceneName.startsWith("trade_hub_")
+				? OrganicBuildingPlacer.blueprintFor(BuildingType.TRADE_HUB, origin) : null;
+		TieredMoundBlueprint.Chamber tradeHubWarehouse = tradeHubBlueprint == null ? null
+				: tradeHubBlueprint.chambers().stream().filter(chamber -> chamber.id().equals("bonded_warehouse"))
+						.findFirst().orElseThrow();
+		TieredMoundBlueprint.Chamber tradeHubBrokerage = tradeHubBlueprint == null ? null
+				: tradeHubBlueprint.chambers().stream().filter(chamber -> chamber.id().equals("brokerage_chamber"))
+						.findFirst().orElseThrow();
 		Vec3 target = switch (sceneName) {
 			case COLONY_OVERVIEW, SETTLEMENT_SCALE -> colonyOverviewTarget(origin);
 			case COLONY_GROUND -> Vec3.atCenterOf(origin).add(0.0, 11.0, 0.0);
@@ -1332,6 +1359,12 @@ public final class VisualQaScenes {
 					2.0, vaultTreasury.floorY() + 1.6, vaultTreasury.z() + 1.5);
 			case QUEEN_VAULT_SANCTUM_INTERIOR -> Vec3.atCenterOf(origin).add(
 					vaultSanctum.x(), vaultSanctum.floorY() + 1.6, vaultSanctum.z() + 2.0);
+			case TRADE_HUB_EXTERIOR -> Vec3.atCenterOf(origin).add(0.0, 4.0, 2.0);
+			case TRADE_HUB_COURTYARD -> Vec3.atCenterOf(origin).add(0.0, 2.0, 5.5);
+			case TRADE_HUB_WAREHOUSE -> Vec3.atCenterOf(origin).add(
+					tradeHubWarehouse.x(), 2.0, tradeHubWarehouse.z() + 2.2);
+			case TRADE_HUB_BROKERAGE -> Vec3.atCenterOf(origin).add(
+					tradeHubBrokerage.x(), 2.0, tradeHubBrokerage.z() + 2.2);
 			default -> Vec3.atCenterOf(origin).add(0.0, 2.0, 0.0);
 		};
 		Vec3 camera = switch (sceneName) {
@@ -1417,6 +1450,22 @@ public final class VisualQaScenes {
 					origin.getX() + vaultSanctum.x() + 0.5,
 					origin.getY() + vaultSanctum.floorY() + 1.3,
 					origin.getZ() + vaultSanctum.z() - 2.7
+			);
+			case TRADE_HUB_EXTERIOR -> new Vec3(
+					origin.getX() + 14.0, origin.getY() + 9.0, origin.getZ() - 16.0
+			);
+			case TRADE_HUB_COURTYARD -> new Vec3(
+					origin.getX() + 0.5, origin.getY() + 1.2, origin.getZ() - 2.8
+			);
+			case TRADE_HUB_WAREHOUSE -> new Vec3(
+					origin.getX() + tradeHubWarehouse.x() + 0.5,
+					origin.getY() + 1.2,
+					origin.getZ() + tradeHubWarehouse.z() - 2.8
+			);
+			case TRADE_HUB_BROKERAGE -> new Vec3(
+					origin.getX() + tradeHubBrokerage.x() + 0.5,
+					origin.getY() + 1.2,
+					origin.getZ() + tradeHubBrokerage.z() - 2.8
 			);
 			default -> new Vec3(origin.getX() + 28.0, origin.getY() + 18.0, origin.getZ() - 32.0);
 		};
