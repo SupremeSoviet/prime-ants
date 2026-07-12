@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Catalog and deterministic variant selector for the colony's single-storey
- * organic buildings.
+ * Catalog and deterministic variant selector for the colony's organic role
+ * buildings.
  *
  * <p>Each family reuses the validated tier/chamber/mouth vocabulary of the
  * central mound. A family may expose several compact JSON silhouettes; the
@@ -34,6 +34,8 @@ public final class OrganicBuildingPlacer {
 	public static final String MARKET_B_RESOURCE = "formic_blueprints/market_b.json";
 	public static final String PHEROMONE_ARCHIVE_A_RESOURCE = "formic_blueprints/pheromone_archive_a.json";
 	public static final String PHEROMONE_ARCHIVE_B_RESOURCE = "formic_blueprints/pheromone_archive_b.json";
+	public static final String ARMORY_A_RESOURCE = "formic_blueprints/armory_a.json";
+	public static final String ARMORY_B_RESOURCE = "formic_blueprints/armory_b.json";
 
 	private static final Map<BuildingType, Family> FAMILIES = Map.of(
 			BuildingType.FOOD_STORE,
@@ -71,6 +73,11 @@ public final class OrganicBuildingPlacer {
 			new Family(List.of(
 					TieredMoundBlueprint.load(PHEROMONE_ARCHIVE_A_RESOURCE),
 					TieredMoundBlueprint.load(PHEROMONE_ARCHIVE_B_RESOURCE)
+			)),
+			BuildingType.ARMORY,
+			new Family(List.of(
+					TieredMoundBlueprint.load(ARMORY_A_RESOURCE),
+					TieredMoundBlueprint.load(ARMORY_B_RESOURCE)
 			))
 	);
 
@@ -121,6 +128,7 @@ public final class OrganicBuildingPlacer {
 			case BARRACKS -> ModBlocks.BARRACKS_CHAMBER;
 			case MARKET -> ModBlocks.MARKET_CHAMBER;
 			case PHEROMONE_ARCHIVE -> ModBlocks.PHEROMONE_ARCHIVE;
+			case ARMORY -> ModBlocks.ARMORY;
 			default -> throw new IllegalArgumentException("No functional block registered for " + type);
 		};
 	}

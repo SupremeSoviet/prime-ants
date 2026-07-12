@@ -90,6 +90,8 @@ public final class VisualQaScenes {
 	public static final String ARCHIVE_VARIANTS = "archive_variants";
 	public static final String ARCHIVE_HALL_INTERIOR = "archive_hall_interior";
 	public static final String ARCHIVE_LOFT_INTERIOR = "archive_loft_interior";
+	public static final String ARMORY_VARIANTS = "armory_variants";
+	public static final String ARMORY_INTERIOR = "armory_interior";
 	private static final List<String> SCENES = List.of(
 			COLONY_OVERVIEW,
 			COLONY_GROUND,
@@ -129,7 +131,9 @@ public final class VisualQaScenes {
 			MARKET_COURTYARD,
 			ARCHIVE_VARIANTS,
 			ARCHIVE_HALL_INTERIOR,
-			ARCHIVE_LOFT_INTERIOR
+			ARCHIVE_LOFT_INTERIOR,
+			ARMORY_VARIANTS,
+			ARMORY_INTERIOR
 	);
 	private static final List<AntCaste> ANT_LINEUP_CASTES = List.of(
 			AntCaste.QUEEN,
@@ -230,12 +234,14 @@ public final class VisualQaScenes {
 		boolean marketFocused = normalized.equals(MARKET_VARIANTS) || normalized.equals(MARKET_COURTYARD);
 		boolean archiveFocused = normalized.equals(ARCHIVE_VARIANTS)
 				|| normalized.equals(ARCHIVE_HALL_INTERIOR) || normalized.equals(ARCHIVE_LOFT_INTERIOR);
+		boolean armoryFocused = normalized.equals(ARMORY_VARIANTS) || normalized.equals(ARMORY_INTERIOR);
 		boolean roleBuildingFocused = foodFocused || nurseryFocused || mineFocused || chitinFarmFocused
-				|| barracksFocused || marketFocused || archiveFocused;
+				|| barracksFocused || marketFocused || archiveFocused || armoryFocused;
 		boolean interiorFocused = moundInteriorFocused || normalized.equals(FOOD_STORE_INTERIOR)
 				|| normalized.equals(NURSERY_INTERIOR) || normalized.equals(MINE_INTERIOR)
 				|| normalized.equals(CHITIN_FARM_INTERIOR) || normalized.equals(BARRACKS_INTERIOR)
-				|| normalized.equals(ARCHIVE_HALL_INTERIOR) || normalized.equals(ARCHIVE_LOFT_INTERIOR);
+				|| normalized.equals(ARCHIVE_HALL_INTERIOR) || normalized.equals(ARCHIVE_LOFT_INTERIOR)
+				|| normalized.equals(ARMORY_INTERIOR);
 		boolean structureFocused = normalized.equals(STRUCTURE_PREVIEW_3Q)
 				|| normalized.equals(STRUCTURE_PREVIEW_FRONT) || interiorFocused || roleBuildingFocused;
 		if (structureFocused && structureQaOrigin == null) {
@@ -312,6 +318,14 @@ public final class VisualQaScenes {
 						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
 			} else if (normalized.equals(ARCHIVE_HALL_INTERIOR) || normalized.equals(ARCHIVE_LOFT_INTERIOR)) {
 				StructurePlacer.placeBuilding(level, origin, BuildingType.PHEROMONE_ARCHIVE,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+			} else if (normalized.equals(ARMORY_VARIANTS)) {
+				StructurePlacer.placeBuilding(level, origin.offset(-18, 0, 0), BuildingType.ARMORY,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+				StructurePlacer.placeBuilding(level, origin.offset(18, 0, 1), BuildingType.ARMORY,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+			} else if (normalized.equals(ARMORY_INTERIOR)) {
+				StructurePlacer.placeBuilding(level, origin, BuildingType.ARMORY,
 						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
 			} else {
 				ColonyService.createColony(level, origin, true);
@@ -1144,6 +1158,8 @@ public final class VisualQaScenes {
 			case ARCHIVE_VARIANTS -> Vec3.atCenterOf(origin).add(0.0, 5.0, 1.0);
 			case ARCHIVE_HALL_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 2.0, 3.0);
 			case ARCHIVE_LOFT_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 6.5, 2.5);
+			case ARMORY_VARIANTS -> Vec3.atCenterOf(origin).add(0.0, 4.2, 1.0);
+			case ARMORY_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 1.8, 3.0);
 			default -> Vec3.atCenterOf(origin).add(0.0, 2.0, 0.0);
 		};
 		Vec3 camera = switch (sceneName) {
@@ -1179,6 +1195,8 @@ public final class VisualQaScenes {
 			case ARCHIVE_VARIANTS -> new Vec3(origin.getX() + 0.5, origin.getY() + 16.0, origin.getZ() - 43.0);
 			case ARCHIVE_HALL_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.3, origin.getZ() - 2.8);
 			case ARCHIVE_LOFT_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 6.3, origin.getZ() - 1.8);
+			case ARMORY_VARIANTS -> new Vec3(origin.getX() + 0.5, origin.getY() + 14.0, origin.getZ() - 43.0);
+			case ARMORY_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.3, origin.getZ() - 3.2);
 			default -> new Vec3(origin.getX() + 28.0, origin.getY() + 18.0, origin.getZ() - 32.0);
 		};
 		player.teleportTo(camera.x, camera.y, camera.z);

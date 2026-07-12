@@ -54,6 +54,8 @@ STRUCTURE_EXPECTED = [
     "archive_variants.png",
     "archive_hall_interior.png",
     "archive_loft_interior.png",
+    "armory_variants.png",
+    "armory_interior.png",
 ]
 EXPECTED_BY_SCOPE = {
     "full": FULL_EXPECTED,

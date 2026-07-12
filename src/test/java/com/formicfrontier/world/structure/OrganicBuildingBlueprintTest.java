@@ -275,6 +275,57 @@ final class OrganicBuildingBlueprintTest {
 	}
 
 	@Test
+	void armoriesAreHeavyFortifiedMoundsWithConnectedForgeAndWeaponVault() {
+		var variants = OrganicBuildingPlacer.variants(BuildingType.ARMORY);
+		Assertions.assertEquals(Set.of("armory_a", "armory_b"), variants.stream()
+				.map(TieredMoundBlueprint::name).collect(Collectors.toSet()));
+		Set<Set<FootprintCell>> footprints = new HashSet<>();
+		for (TieredMoundBlueprint blueprint : variants) {
+			Assertions.assertEquals("armory", blueprint.palette());
+			Assertions.assertEquals(8, blueprint.maxY(), "armory should stay lower than the archive but heavier than economy domes");
+			Assertions.assertEquals(2, blueprint.chambers().size());
+			TieredMoundBlueprint.Chamber forge = blueprint.chambers().stream()
+					.filter(chamber -> chamber.id().equals("forge_hall")).findFirst().orElseThrow();
+			TieredMoundBlueprint.Chamber vault = blueprint.chambers().stream()
+					.filter(chamber -> chamber.id().equals("weapon_vault")).findFirst().orElseThrow();
+			Assertions.assertEquals("armory_forge", forge.purpose());
+			Assertions.assertEquals("armory_vault", vault.purpose());
+			Assertions.assertEquals(0, forge.floorY());
+			Assertions.assertEquals(0, vault.floorY());
+			Assertions.assertTrue(blueprint.connections().isEmpty(), "same-floor armory rooms should connect through their overlap");
+			Assertions.assertEquals(3, blueprint.mouths().getFirst().width(), "armory needs a narrow defensible entrance");
+
+			boolean roomsOverlap = false;
+			for (int x = blueprint.minX(); x <= blueprint.maxX() && !roomsOverlap; x++) {
+				for (int z = blueprint.minZ(); z <= blueprint.maxZ(); z++) {
+					if (forge.carves(x, 1, z) && vault.carves(x, 1, z)) {
+						roomsOverlap = true;
+						break;
+					}
+				}
+			}
+			Assertions.assertTrue(roomsOverlap, "forge hall and weapon vault need a walkable shared passage");
+			assertRearShell(blueprint, forge);
+			assertRearShell(blueprint, vault);
+			assertEnclosedExceptMouths(blueprint, forge);
+			assertEnclosedExceptMouths(blueprint, vault);
+
+			Set<Cell> solid = solidCells(blueprint);
+			assertConnected(blueprint, solid, "armory mound");
+			Set<FootprintCell> footprint = footprint(solid);
+			int width = footprint.stream().mapToInt(FootprintCell::x).max().orElseThrow()
+					- footprint.stream().mapToInt(FootprintCell::x).min().orElseThrow() + 1;
+			int depth = footprint.stream().mapToInt(FootprintCell::z).max().orElseThrow()
+					- footprint.stream().mapToInt(FootprintCell::z).min().orElseThrow() + 1;
+			Assertions.assertTrue(footprint.size() >= 220, "armory needs a massive grounded shell");
+			Assertions.assertTrue(width >= 19 && depth >= 17 && Math.abs(width - depth) <= 5,
+					"armory should read as a broad armored dome, got " + width + "x" + depth);
+			footprints.add(footprint);
+		}
+		Assertions.assertEquals(2, footprints.size(), "armory variants need distinct asymmetrical shells");
+	}
+
+	@Test
 	void repeatedRoleSitesSelectEveryAuthoredVariant() {
 		BlockPos origin = new BlockPos(11, 0, -7);
 		Set<String> mineVariants = new HashSet<>();
@@ -311,6 +362,17 @@ final class OrganicBuildingBlueprintTest {
 			archiveVariants.add(OrganicBuildingPlacer.blueprintFor(BuildingType.PHEROMONE_ARCHIVE, site).name());
 		}
 		Assertions.assertEquals(Set.of("pheromone_archive_a", "pheromone_archive_b"), archiveVariants);
+
+		Set<String> armoryVariants = new HashSet<>();
+		for (int existing = 0; existing < 2; existing++) {
+			BlockPos site = ColonyBuilder.siteFor(origin, BuildingType.ARMORY, existing);
+			armoryVariants.add(OrganicBuildingPlacer.blueprintFor(BuildingType.ARMORY, site).name());
+		}
+		Assertions.assertEquals(Set.of("armory_a", "armory_b"), armoryVariants);
+		BlockPos firstArmory = ColonyBuilder.siteFor(origin, BuildingType.ARMORY, 0);
+		BlockPos secondArmory = ColonyBuilder.siteFor(origin, BuildingType.ARMORY, 1);
+		Assertions.assertTrue(firstArmory.distSqr(secondArmory) >= 34 * 34,
+				"repeated armories need open ground around their heavy shells");
 	}
 
 	private static void assertConnected(TieredMoundBlueprint blueprint, Set<Cell> solid, String label) {
@@ -329,6 +391,47 @@ final class OrganicBuildingBlueprintTest {
 			Assertions.assertTrue(blueprint.isSolid(chamber.x(), y, wallZ),
 					blueprint.name() + " must retain a rear shell at y=" + y + ", z=" + wallZ);
 		}
+	}
+
+	private static void assertEnclosedExceptMouths(TieredMoundBlueprint blueprint,
+			TieredMoundBlueprint.Chamber chamber) {
+		Set<Cell> exposed = new HashSet<>();
+		int minX = (int) Math.floor(chamber.x() - chamber.radiusX()) - 1;
+		int maxX = (int) Math.ceil(chamber.x() + chamber.radiusX()) + 1;
+		int minZ = (int) Math.floor(chamber.z() - chamber.radiusZ()) - 1;
+		int maxZ = (int) Math.ceil(chamber.z() + chamber.radiusZ()) + 1;
+		int[][] neighbors = {{1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, -1}};
+		for (int y = chamber.floorY() + 1; y <= chamber.topY(); y++) {
+			for (int x = minX; x <= maxX; x++) {
+				for (int z = minZ; z <= maxZ; z++) {
+					if (!chamber.carves(x, y, z)) {
+						continue;
+					}
+					if (!blueprint.contains(x, y, z) && !isAuthoredMouth(blueprint, x, y, z)) {
+						exposed.add(new Cell(x, y, z));
+						continue;
+					}
+					for (int[] neighbor : neighbors) {
+						int nx = x + neighbor[0];
+						int ny = y + neighbor[1];
+						int nz = z + neighbor[2];
+						if (!blueprint.contains(nx, ny, nz)
+								&& !isAuthoredMouth(blueprint, x, y, z)
+								&& !isAuthoredMouth(blueprint, nx, ny, nz)) {
+							exposed.add(new Cell(x, y, z));
+							break;
+						}
+					}
+				}
+			}
+		}
+		Assertions.assertTrue(exposed.isEmpty(), blueprint.name() + " chamber " + chamber.id()
+				+ " must be enclosed except at authored mouths; exposed cells: "
+				+ exposed.stream().limit(24).toList());
+	}
+
+	private static boolean isAuthoredMouth(TieredMoundBlueprint blueprint, int x, int y, int z) {
+		return blueprint.mouths().stream().anyMatch(mouth -> mouth.carves(x, y, z));
 	}
 
 	private static Set<FootprintCell> footprint(Set<Cell> solid) {

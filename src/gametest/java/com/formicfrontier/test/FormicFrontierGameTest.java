@@ -246,6 +246,27 @@ public final class FormicFrontierGameTest {
 	}
 
 	@GameTest
+	public void armoryCompilesToConnectedForgeAndWeaponVaultVariants(GameTestHelper helper) {
+		BlockPos origin = new BlockPos(2, 3, 2);
+		prepareCampusArea(helper, origin, 64);
+		BlockPos first = origin.offset(-18, 0, 0);
+		BlockPos second = origin.offset(18, 0, 1);
+
+		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(first), BuildingType.ARMORY,
+				BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(second), BuildingType.ARMORY,
+				BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+
+		assertArmoryProfile(helper, first, "first armory variant");
+		assertArmoryProfile(helper, second, "second armory variant");
+		if (!VisualQaScenes.scenes().contains(VisualQaScenes.ARMORY_VARIANTS)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.ARMORY_INTERIOR)) {
+			helper.fail("Visual QA should expose armory silhouettes and its connected interior.");
+		}
+		helper.succeed();
+	}
+
+	@GameTest
 
 	public void buildingVisualStagesUseBlueprintsOnlyWhenOperational(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
@@ -835,6 +856,8 @@ public final class FormicFrontierGameTest {
 		BlockPos barracks = ColonyBuilder.siteFor(origin, BuildingType.BARRACKS, 0);
 		BlockPos secondBarracks = ColonyBuilder.siteFor(origin, BuildingType.BARRACKS, 1);
 		BlockPos market = ColonyBuilder.siteFor(origin, BuildingType.MARKET, 0);
+		BlockPos armory = ColonyBuilder.siteFor(origin, BuildingType.ARMORY, 0);
+		BlockPos secondArmory = ColonyBuilder.siteFor(origin, BuildingType.ARMORY, 1);
 		BlockPos watch = ColonyBuilder.siteFor(origin, BuildingType.WATCH_POST, 0);
 		if (Math.abs(food.getX() - origin.getX()) < 36 || Math.abs(nursery.getX() - origin.getX()) < 36) {
 			helper.fail("Starter side chambers should move out to the large village ring.");
@@ -858,6 +881,10 @@ public final class FormicFrontierGameTest {
 		}
 		if (Math.max(Math.abs(market.getX() - origin.getX()), Math.abs(market.getZ() - origin.getZ())) < 34) {
 			helper.fail("Market should live in the larger diagonal village district.");
+		}
+		if (horizontalDistanceSquared(armory, barracks) < 30 * 30
+				|| horizontalDistanceSquared(armory, secondArmory) < 34 * 34) {
+			helper.fail("Armories need a separate outer district with open ground around their heavy shells.");
 		}
 		if (Math.max(Math.abs(watch.getX() - origin.getX()), Math.abs(watch.getZ() - origin.getZ())) < 50) {
 			helper.fail("Watch posts should mark the outer claim edge in the scale pass.");
@@ -2264,6 +2291,56 @@ public final class FormicFrontierGameTest {
 		}
 	}
 
+	private static void assertArmoryProfile(GameTestHelper helper, BlockPos center, String label) {
+		helper.assertBlockPresent(ModBlocks.ARMORY, center);
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 2, -6))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 2, 1))).isAir()) {
+			helper.fail(label + " should expose a narrow entrance connected to the forge hall.");
+		}
+
+		int forgeCenterX;
+		if (helper.getLevel().getBlockState(helper.absolutePos(center.offset(3, 1, 1))).is(ModBlocks.ARMORY)) {
+			forgeCenterX = -1;
+		} else if (helper.getLevel().getBlockState(helper.absolutePos(center.offset(5, 1, 1))).is(ModBlocks.ARMORY)) {
+			forgeCenterX = 1;
+		} else {
+			helper.fail(label + " should contain a furnished forge hall.");
+			return;
+		}
+		helper.assertBlockPresent(Blocks.ANVIL, center.offset(forgeCenterX - 4, 1, 1));
+		helper.assertBlockPresent(Blocks.SMITHING_TABLE, center.offset(forgeCenterX - 3, 1, 4));
+		helper.assertBlockPresent(Blocks.BLAST_FURNACE, center.offset(forgeCenterX, 1, 4));
+		helper.assertBlockPresent(Blocks.GRINDSTONE, center.offset(forgeCenterX + 3, 1, 4));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(forgeCenterX - 4, 2, 1));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(forgeCenterX + 4, 2, 1));
+
+		int vaultCenterX = forgeCenterX < 0 ? 4 : -4;
+		helper.assertBlockPresent(Blocks.CHEST, center.offset(vaultCenterX - 2, 1, 3));
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(vaultCenterX + 2, 1, 3));
+		helper.assertBlockPresent(Blocks.IRON_BLOCK, center.offset(vaultCenterX - 1, 1, 5));
+		helper.assertBlockPresent(Blocks.TARGET, center.offset(vaultCenterX + 1, 1, 5));
+		helper.assertBlockPresent(Blocks.IRON_BARS, center.offset(vaultCenterX, 2, 4));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(vaultCenterX, 2, 2));
+		int passageX = forgeCenterX < 0 ? 1 : -1;
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(passageX, 1, 2))).isAir()) {
+			helper.fail(label + " forge and weapon vault should share a walkable passage.");
+		}
+
+		if (!isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(-7, 3, 1))).getBlock())
+				|| !isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(7, 3, 1))).getBlock())
+				|| !isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 8, 1))).getBlock())
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 9, 1))).isAir()) {
+			helper.fail(label + " should retain broad armored shoulders and an eight-block crown.");
+		}
+		int base = countMoundLayer(helper, center, 0, 14);
+		int shoulder = countMoundLayer(helper, center, 5, 13);
+		int crown = countMoundLayer(helper, center, 8, 9);
+		if (base < 190 || shoulder < 45 || crown < 12 || !(base > shoulder && shoulder > crown)) {
+			helper.fail(label + " should read as a massive fortified taper, got layer masses "
+					+ base + "/" + shoulder + "/" + crown);
+		}
+	}
+
 	private static void assertNurseryProfile(GameTestHelper helper, BlockPos center, String label) {
 		helper.assertBlockPresent(ModBlocks.NURSERY_CHAMBER, center);
 		if (helper.getLevel().getBlockState(helper.absolutePos(center.below())).is(ModBlocks.NEST_CORE)) {
@@ -2312,7 +2389,10 @@ public final class FormicFrontierGameTest {
 				|| block == Blocks.CUT_COPPER
 				|| block == Blocks.CHISELED_TUFF
 				|| block == Blocks.AMETHYST_BLOCK
-				|| block == Blocks.TUFF;
+				|| block == Blocks.TUFF
+				|| block == Blocks.POLISHED_DEEPSLATE
+				|| block == Blocks.BLACKSTONE
+				|| block == Blocks.DEEPSLATE_IRON_ORE;
 	}
 
 	private static void assertTieredMoundProfile(GameTestHelper helper, BlockPos center,

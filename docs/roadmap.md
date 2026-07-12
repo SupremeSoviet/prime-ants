@@ -109,8 +109,10 @@ accepted with two wide fortified variants. The market is implemented and
 accepted as two low, open-to-sky courtyard variants with furnished trading
 yards. The pheromone archive is implemented and accepted as two compact
 two-storey variants with separate hall and loft interiors, an internal stair,
-and different furnishings on each floor. The next implementation slice is the
-armory.
+and different furnishings on each floor. The armory is implemented and
+accepted as two heavy single-storey variants with a narrow defended entrance,
+a connected forge hall and side weapon vault, and fully enclosed chamber
+shells. The next implementation slice is the diplomacy shrine.
 
 Slice R3: Colony Tablet 2.0.
 

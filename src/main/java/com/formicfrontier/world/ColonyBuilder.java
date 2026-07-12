@@ -320,7 +320,9 @@ public final class ColonyBuilder {
 					: origin.offset(-88 - (existing - 1) * 30, 0, -43 - (existing - 1) * 26);
 			case FUNGUS_GARDEN -> origin.offset(-50 - existing * 18, 0, 34);
 			case VENOM_PRESS -> origin.offset(50 + existing * 18, 0, -8);
-			case ARMORY -> origin.offset(6, 0, -56 - existing * 18);
+			case ARMORY -> existing == 0
+					? origin.offset(0, 0, -72)
+					: origin.offset(35 + (existing - 1) * 32, 0, -82 - (existing - 1) * 28);
 			case GREAT_MOUND -> origin;
 			case QUEEN_VAULT -> origin;
 			case TRADE_HUB -> origin.offset(44 + existing * 18, 0, -32 - existing * 12);

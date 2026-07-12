@@ -277,6 +277,23 @@ public final class TieredMoundPlacer {
 				placeDecoration(level, center, chamber, -2, 2, 0, Blocks.LANTERN);
 				placeDecoration(level, center, chamber, 2, 2, 0, Blocks.LANTERN);
 			}
+			case "armory_forge" -> {
+				placeDecoration(level, center, chamber, -4, 1, 0, Blocks.ANVIL);
+				placeDecoration(level, center, chamber, -3, 1, 3, Blocks.SMITHING_TABLE);
+				placeDecoration(level, center, chamber, 0, 1, 3, Blocks.BLAST_FURNACE);
+				placeDecoration(level, center, chamber, 3, 1, 3, Blocks.GRINDSTONE);
+				placeDecoration(level, center, chamber, 4, 1, 0, ModBlocks.ARMORY);
+				placeDecoration(level, center, chamber, -4, 2, 0, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, 4, 2, 0, Blocks.LANTERN);
+			}
+			case "armory_vault" -> {
+				placeDecoration(level, center, chamber, -2, 1, 0, Blocks.CHEST);
+				placeDecoration(level, center, chamber, 2, 1, 0, Blocks.BARREL);
+				placeDecoration(level, center, chamber, -1, 1, 2, Blocks.IRON_BLOCK);
+				placeDecoration(level, center, chamber, 1, 1, 2, Blocks.TARGET);
+				placeDecoration(level, center, chamber, 0, 2, 1, Blocks.IRON_BARS);
+				placeDecoration(level, center, chamber, 0, 2, -1, Blocks.LANTERN);
+			}
 			default -> throw new IllegalArgumentException("Unsupported chamber purpose " + chamber.purpose());
 		}
 	}
@@ -358,6 +375,15 @@ public final class TieredMoundPlacer {
 				if (roll < 94) yield Blocks.CHISELED_TUFF;
 				if (roll < 98) yield Blocks.AMETHYST_BLOCK;
 				yield Blocks.HONEYCOMB_BLOCK;
+			}
+			case "armory" -> {
+				if (roll < 48) yield ModBlocks.NEST_MOUND;
+				if (roll < 61) yield Blocks.ROOTED_DIRT;
+				if (roll < 71) yield Blocks.PACKED_MUD;
+				if (roll < 81) yield Blocks.MUD_BRICKS;
+				if (roll < 90) yield Blocks.POLISHED_DEEPSLATE;
+				if (roll < 96) yield Blocks.BLACKSTONE;
+				yield Blocks.DEEPSLATE_IRON_ORE;
 			}
 			default -> throw new IllegalArgumentException("Unsupported material palette " + blueprint.palette());
 		};

@@ -113,11 +113,25 @@ traversable contract instead of decoration and verify that both floors remain
 enclosed, connected and differently furnished. Repeated archives alternate the
 two silhouettes and retain open ground around neighboring colony buildings.
 
+The armory uses the grammar for connected rooms on one floor. `armory_a.json`
+and `armory_b.json` pair a broad forge hall with an overlapping side weapon
+vault behind a narrow three-block entrance. A stepped brow, heavy side lobes
+and dark deepslate/blackstone/ore veins make it read as protected without
+turning it into a conventional stone bunker. The forge contains an anvil,
+smithing table, blast furnace and grindstone; the vault carries storage,
+metal stock and a target rack. Besides whole-mound connectivity, tests walk the
+discrete boundary of both carved chambers and reject any opening that is not an
+authored mouth. This caught and removed a rear-side sky hole before visual
+acceptance. Repeated sites alternate mirrored layouts and stay in a separate
+outer district away from the barracks.
+
 Every enclosed role chamber has a discrete rear-shell invariant in addition to
 whole-mound connectivity. For each vaulted ceiling layer, the first block behind
 the carved ellipse must remain solid. This prevents a geometrically connected
-mound from accidentally exposing one-block windows to the sky, while the market
-opts into its opening deliberately and validates that it reaches the mound top.
+mound from accidentally exposing one-block windows to the sky. Complex or
+offset chambers additionally validate their complete discrete boundary against
+un-authored openings, while the market opts into its opening deliberately and
+validates that it reaches the mound top.
 
 ## Iteration order
 
