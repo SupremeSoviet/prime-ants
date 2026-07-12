@@ -52,7 +52,8 @@ public final class StructurePlacer {
 			placeGreatMoundProject(level, center, culture);
 			return;
 		}
-		if (OrganicBuildingPlacer.supports(type)) {
+		if (OrganicBuildingPlacer.supports(type)
+				&& (stage == BuildingVisualStage.COMPLETE || stage == BuildingVisualStage.UPGRADED)) {
 			OrganicBuildingPlacer.place(level, center, type);
 			return;
 		}

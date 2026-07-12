@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "name": "market_a",
+  "seed": 27143,
+  "palette": "market",
+  "tiers": [
+    {
+      "baseY": 0,
+      "height": 4,
+      "baseRadiusX": 8.5,
+      "baseRadiusZ": 7.2,
+      "topRadiusX": 6.6,
+      "topRadiusZ": 5.5,
+      "offsetX": 0.0,
+      "offsetZ": 1.0
+    },
+    {
+      "baseY": 0,
+      "height": 3,
+      "baseRadiusX": 4.3,
+      "baseRadiusZ": 3.8,
+      "topRadiusX": 3.2,
+      "topRadiusZ": 2.8,
+      "offsetX": -5.5,
+      "offsetZ": 2.0
+    },
+    {
+      "baseY": 0,
+      "height": 3,
+      "baseRadiusX": 4.0,
+      "baseRadiusZ": 3.6,
+      "topRadiusX": 3.0,
+      "topRadiusZ": 2.6,
+      "offsetX": 5.3,
+      "offsetZ": 1.2
+    },
+    {
+      "baseY": 0,
+      "height": 3,
+      "baseRadiusX": 5.0,
+      "baseRadiusZ": 3.5,
+      "topRadiusX": 3.5,
+      "topRadiusZ": 2.5,
+      "offsetX": 0.0,
+      "offsetZ": 4.0
+    }
+  ],
+  "terraces": [],
+  "chambers": [
+    {
+      "id": "market_yard",
+      "purpose": "market",
+      "x": 0,
+      "floorY": 0,
+      "z": 0,
+      "radiusX": 5.4,
+      "radiusZ": 4.4,
+      "height": 3,
+      "openToSky": true
+    }
+  ],
+  "pits": [],
+  "connections": [],
+  "mouths": [
+    {
+      "x": 0,
+      "y": 1,
+      "frontZ": -6,
+      "width": 5,
+      "height": 3,
+      "depth": 7
+    }
+  ]
+}

@@ -203,8 +203,29 @@ public final class FormicFrontierGameTest {
 	}
 
 	@GameTest
+	public void marketCompilesToOpenInhabitedCourtyardVariants(GameTestHelper helper) {
+		BlockPos origin = new BlockPos(2, 3, 2);
+		prepareCampusArea(helper, origin, 64);
+		BlockPos first = origin.offset(-18, 0, 0);
+		BlockPos second = origin.offset(18, 0, 1);
 
-	public void buildingVisualStagesUseMinimalMarkers(GameTestHelper helper) {
+		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(first), BuildingType.MARKET,
+				BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(second), BuildingType.MARKET,
+				BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+
+		assertMarketProfile(helper, first, "first market variant");
+		assertMarketProfile(helper, second, "second market variant");
+		if (!VisualQaScenes.scenes().contains(VisualQaScenes.MARKET_VARIANTS)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.MARKET_COURTYARD)) {
+			helper.fail("Visual QA should expose market perimeter and courtyard scenes.");
+		}
+		helper.succeed();
+	}
+
+	@GameTest
+
+	public void buildingVisualStagesUseBlueprintsOnlyWhenOperational(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin);
 		BlockPos planned = origin.offset(8, 0, 8);
@@ -222,9 +243,11 @@ public final class FormicFrontierGameTest {
 		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(repairing), BuildingType.MARKET, BuildingVisualStage.REPAIRING);
 
 		assertMinimalBuildingMarker(helper, planned, Blocks.DIRT_PATH, "planned market");
-		for (BlockPos center : List.of(construction, complete, upgraded, damaged, repairing)) {
-			assertMinimalBuildingMarker(helper, center, ModBlocks.MARKET_CHAMBER, "market stage");
+		for (BlockPos center : List.of(construction, damaged, repairing)) {
+			assertMinimalBuildingMarker(helper, center, ModBlocks.MARKET_CHAMBER, "transitional market stage");
 		}
+		assertMarketProfile(helper, complete, "complete market");
+		assertMarketProfile(helper, upgraded, "upgraded market");
 		helper.succeed();
 	}
 
@@ -241,8 +264,14 @@ public final class FormicFrontierGameTest {
 		BlockPos damaged = centers.get(4);
 		BlockPos repairing = centers.get(5);
 		assertMinimalBuildingMarker(helper, centers.get(0), Blocks.DIRT_PATH, "planned QA market");
-		for (int i = 1; i < centers.size(); i++) {
-			assertMinimalBuildingMarker(helper, centers.get(i), ModBlocks.MARKET_CHAMBER, "QA market stage");
+		for (int i : List.of(1, 4, 5)) {
+			assertMinimalBuildingMarker(helper, centers.get(i), ModBlocks.MARKET_CHAMBER, "transitional QA market stage");
+		}
+		for (int i : List.of(2, 3)) {
+			helper.assertBlockPresent(ModBlocks.MARKET_CHAMBER, centers.get(i));
+			if (!helper.getLevel().getBlockState(helper.absolutePos(centers.get(i).offset(0, 4, 1))).isAir()) {
+				helper.fail("Operational QA market should expose its roofless courtyard.");
+			}
 		}
 		helper.assertBlockPresent(Blocks.MANGROVE_ROOTS, construction.offset(-2, 0, -6));
 		helper.assertBlockPresent(ModBlocks.RESIN_DEPOT, construction.offset(4, 0, -7));
@@ -979,7 +1008,7 @@ public final class FormicFrontierGameTest {
 
 	@GameTest
 
-	public void damagedBuildingConsumesChitinAndRepairsWithMinimalMarker(GameTestHelper helper) {
+	public void damagedBuildingConsumesChitinAndRestoresMarketBlueprint(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin);
 		ColonyData colony = ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
@@ -1007,7 +1036,7 @@ public final class FormicFrontierGameTest {
 					+ damaged.visualStage().id() + " progress " + damaged.constructionProgress()
 					+ " disabled " + damaged.disabledTicks() + " task " + colony.currentTask());
 		}
-		assertMinimalBuildingMarker(helper, market, ModBlocks.MARKET_CHAMBER, "repaired market");
+		assertMarketProfile(helper, market, "repaired market");
 		helper.succeed();
 	}
 
@@ -1109,9 +1138,9 @@ public final class FormicFrontierGameTest {
 		BlockPos damaged = centers.get(0);
 		BlockPos repairing = centers.get(1);
 		BlockPos restored = centers.get(2);
-		for (BlockPos center : centers) {
-			assertMinimalBuildingMarker(helper, center, ModBlocks.MARKET_CHAMBER, "repair-scene market");
-		}
+		assertMinimalBuildingMarker(helper, damaged, ModBlocks.MARKET_CHAMBER, "damaged repair-scene market");
+		assertMinimalBuildingMarker(helper, repairing, ModBlocks.MARKET_CHAMBER, "active repair-scene market");
+		assertMarketProfile(helper, restored, "restored repair-scene market");
 		helper.assertBlockPresent(Blocks.RED_TERRACOTTA, damaged.offset(0, 1, -5));
 		helper.assertBlockPresent(Blocks.HONEYCOMB_BLOCK, repairing.offset(-2, 1, -5));
 		helper.assertBlockPresent(Blocks.BONE_BLOCK, repairing.offset(2, 1, -5));
@@ -1132,7 +1161,7 @@ public final class FormicFrontierGameTest {
 
 	@GameTest
 
-	public void idleMatureColonyStartsAndCompletesMinimalUpgrade(GameTestHelper helper) {
+	public void idleMatureColonyStartsAndCompletesMarketUpgrade(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin);
 		ColonyData colony = ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
@@ -1152,14 +1181,14 @@ public final class FormicFrontierGameTest {
 					+ " stage " + building.visualStage().id() + " task " + colony.currentTask()
 					+ " queue " + colony.progress().buildQueueView());
 		}
-		assertMinimalBuildingMarker(helper, market, ModBlocks.MARKET_CHAMBER, "upgrading market");
+		assertMarketProfile(helper, market, "market retained during upgrade");
 		for (int i = 0; i < 5; i++) {
 			ColonyBuilder.tick(helper.getLevel(), colony);
 		}
 		if (building.visualStage() != BuildingVisualStage.UPGRADED) {
 			helper.fail("Upgrade construction should complete into the upgraded visual stage.");
 		}
-		assertMinimalBuildingMarker(helper, market, ModBlocks.MARKET_CHAMBER, "upgraded market");
+		assertMarketProfile(helper, market, "upgraded market");
 		helper.succeed();
 	}
 
@@ -2129,6 +2158,40 @@ public final class FormicFrontierGameTest {
 		}
 	}
 
+	private static void assertMarketProfile(GameTestHelper helper, BlockPos center, String label) {
+		helper.assertBlockPresent(ModBlocks.MARKET_CHAMBER, center);
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(-2, 2, -5))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(2, 2, -5))).isAir()) {
+			helper.fail(label + " should expose a five-block-wide public entrance.");
+		}
+		for (int y = 1; y <= 5; y++) {
+			if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, y, 0))).isAir()) {
+				helper.fail(label + " courtyard should remain open to the sky at y=" + y + ".");
+			}
+		}
+		helper.assertBlockPresent(Blocks.PACKED_MUD, center.offset(0, 0, 3));
+		helper.assertBlockPresent(Blocks.CHEST, center.offset(-4, 1, 0));
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(4, 1, 0));
+		helper.assertBlockPresent(Blocks.HAY_BLOCK, center.offset(-3, 1, 3));
+		helper.assertBlockPresent(Blocks.COMPOSTER, center.offset(3, 1, 3));
+		helper.assertBlockPresent(Blocks.BELL, center.offset(0, 1, 4));
+		helper.assertBlockPresent(Blocks.OAK_FENCE, center.offset(-3, 1, -2));
+		helper.assertBlockPresent(Blocks.OAK_FENCE, center.offset(3, 1, -2));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(-3, 2, -2));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(3, 2, -2));
+		if (!isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(-6, 2, 1))).getBlock())
+				|| !isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(6, 2, 1))).getBlock())) {
+			helper.fail(label + " should retain low earth banks around both sides of the courtyard.");
+		}
+		int base = countMoundLayer(helper, center, 0, 13);
+		int bank = countMoundLayer(helper, center, 2, 13);
+		int topRing = countMoundLayer(helper, center, 3, 13);
+		if (base < 140 || bank < 45 || topRing < 20 || !(base > bank && bank > topRing)) {
+			helper.fail(label + " should read as a broad low roofless enclosure, got layer masses "
+					+ base + "/" + bank + "/" + topRing);
+		}
+	}
+
 	private static void assertNurseryProfile(GameTestHelper helper, BlockPos center, String label) {
 		helper.assertBlockPresent(ModBlocks.NURSERY_CHAMBER, center);
 		if (helper.getLevel().getBlockState(helper.absolutePos(center.below())).is(ModBlocks.NEST_CORE)) {
@@ -2174,6 +2237,7 @@ public final class FormicFrontierGameTest {
 				|| block == Blocks.BONE_BLOCK
 				|| block == Blocks.HONEYCOMB_BLOCK
 				|| block == Blocks.MUD_BRICKS
+				|| block == Blocks.CUT_COPPER
 				|| block == Blocks.TUFF;
 	}
 
@@ -2229,7 +2293,8 @@ public final class FormicFrontierGameTest {
 						|| state.is(Blocks.STONE) || state.is(Blocks.COBBLED_DEEPSLATE)
 						|| state.is(Blocks.DEEPSLATE) || state.is(Blocks.IRON_ORE)
 						|| state.is(Blocks.BONE_BLOCK) || state.is(Blocks.HONEYCOMB_BLOCK)
-						|| state.is(Blocks.MUD_BRICKS) || state.is(Blocks.TUFF)) {
+						|| state.is(Blocks.MUD_BRICKS) || state.is(Blocks.CUT_COPPER)
+						|| state.is(Blocks.TUFF)) {
 					count++;
 				}
 			}

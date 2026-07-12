@@ -35,10 +35,10 @@ public record TieredMoundBlueprint(
 	private static final int MAX_RADIUS = 24;
 	private static final int MAX_HEIGHT = 48;
 	private static final Set<String> SUPPORTED_PALETTES = Set.of(
-			"earth", "food_store", "nursery", "mine", "chitin_farm", "barracks"
+			"earth", "food_store", "nursery", "mine", "chitin_farm", "barracks", "market"
 	);
 	private static final Set<String> SUPPORTED_CHAMBER_PURPOSES = Set.of(
-			"queen_hall", "storage", "lookout", "food_store", "nursery", "mine", "chitin_farm", "barracks"
+			"queen_hall", "storage", "lookout", "food_store", "nursery", "mine", "chitin_farm", "barracks", "market"
 	);
 
 	public TieredMoundBlueprint {
@@ -94,7 +94,8 @@ public record TieredMoundBlueprint(
 						requiredInt(chamber, "z"),
 						requiredDouble(chamber, "radiusX"),
 						requiredDouble(chamber, "radiusZ"),
-						requiredInt(chamber, "height")
+						requiredInt(chamber, "height"),
+						optionalBoolean(chamber, "openToSky")
 				));
 			}
 			List<Connection> connections = new ArrayList<>();
@@ -295,6 +296,9 @@ public record TieredMoundBlueprint(
 			if (chamber.floorY() < 0 || chamber.height() < 3 || chamber.height() > 7 || chamber.topY() > connectedTop) {
 				throw new IllegalArgumentException("Chamber " + index + " has an invalid vertical range");
 			}
+			if (chamber.openToSky() && chamber.topY() != connectedTop) {
+				throw new IllegalArgumentException("Open chamber " + index + " must reach the mound top");
+			}
 			validateRadius(chamber.radiusX(), "chamber radiusX", index);
 			validateRadius(chamber.radiusZ(), "chamber radiusZ", index);
 			if (chamber.radiusX() > 8.0 || chamber.radiusZ() > 8.0
@@ -423,6 +427,16 @@ public record TieredMoundBlueprint(
 		return object.getAsJsonArray(key);
 	}
 
+	private static boolean optionalBoolean(JsonObject object, String key) {
+		if (!object.has(key)) {
+			return false;
+		}
+		if (!object.get(key).isJsonPrimitive() || !object.getAsJsonPrimitive(key).isBoolean()) {
+			throw new IllegalArgumentException("Expected boolean '" + key + "'");
+		}
+		return object.get(key).getAsBoolean();
+	}
+
 	private static int requiredInt(JsonObject object, String key) {
 		if (!object.has(key)) {
 			throw new IllegalArgumentException("Missing integer '" + key + "'");
@@ -481,7 +495,7 @@ public record TieredMoundBlueprint(
 
 	/** A vaulted room carved behind one facade mouth and furnished by purpose. */
 	public record Chamber(String id, String purpose, int x, int floorY, int z,
-			double radiusX, double radiusZ, int height) {
+			double radiusX, double radiusZ, int height, boolean openToSky) {
 		public int topY() {
 			return floorY + height;
 		}
@@ -490,7 +504,7 @@ public record TieredMoundBlueprint(
 			if (py <= floorY || py > topY()) {
 				return false;
 			}
-			double ceilingScale = py == topY() ? 0.72 : py == topY() - 1 ? 0.9 : 1.0;
+			double ceilingScale = openToSky ? 1.0 : py == topY() ? 0.72 : py == topY() - 1 ? 0.9 : 1.0;
 			double nx = (px - x) / (radiusX * ceilingScale);
 			double nz = (pz - z) / (radiusZ * ceilingScale);
 			return nx * nx + nz * nz <= 1.0;

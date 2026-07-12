@@ -105,8 +105,9 @@ Current R2 implementation order:
 The complete starter-economy set is implemented and accepted in focused
 Structure-QA: food store, nursery, low rounded mine with a shallow pit, and the
 pit-free chitin farm. The elongated barracks family is also implemented and
-accepted with two wide fortified variants. The next implementation slice is the
-open, roofless market yard.
+accepted with two wide fortified variants. The market is implemented and
+accepted as two low, open-to-sky courtyard variants with furnished trading
+yards. The next implementation slice is the pheromone archive.
 
 Slice R3: Colony Tablet 2.0.
 

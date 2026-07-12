@@ -51,7 +51,8 @@ public final class VisualQaClient {
 			"nursery_variants", "nursery_interior",
 			"mine_variants", "mine_interior",
 			"chitin_farm_variants", "chitin_farm_interior",
-			"barracks_variants", "barracks_interior"
+			"barracks_variants", "barracks_interior",
+			"market_variants", "market_courtyard"
 	};
 	private static final String[] SCENES = selectScenes();
 	private static final int WAIT_FOR_WORLD_TICKS = Integer.getInteger("formic.visualQa.worldWaitTicks", 600);
@@ -203,7 +204,8 @@ public final class VisualQaClient {
 			// instead of the colony. Give the cold-start wide scene extra settle time.
 			case "colony_overview" -> Math.max(COMMAND_TO_SCREENSHOT_TICKS, 220);
 			case "structure_preview_front", "structure_preview_3q", "food_store_variants", "nursery_variants",
-					"mine_variants", "chitin_farm_variants", "barracks_variants" -> Math.max(COMMAND_TO_SCREENSHOT_TICKS, 120);
+					"mine_variants", "chitin_farm_variants", "barracks_variants", "market_variants" ->
+					Math.max(COMMAND_TO_SCREENSHOT_TICKS, 120);
 			case "settlement_scale", "diplomacy_scene", "endgame_project" ->
 					Math.max(COMMAND_TO_SCREENSHOT_TICKS, 120);
 			case "colony_ground", "culture_styles", "construction_stage", "repair_scene", "progression_scene" ->

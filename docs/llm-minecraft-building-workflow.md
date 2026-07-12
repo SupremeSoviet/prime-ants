@@ -44,7 +44,9 @@ block placement and carving. A blueprint uses a few semantic primitives:
   buildings.
 - `chambers`: vaulted rooms with stable ids and purposes. The compiler selects
   furnishing sets, so `queen_hall`, `storage` and `lookout` do not become copies
-  of one generic room.
+  of one generic room. An explicit `openToSky` flag turns the same validated
+  footprint into a full-height courtyard instead of relying on an accidental
+  hole in an otherwise enclosed roof.
 - `pits`: optional shallow stepped excavations owned by a chamber. Their
   ellipsoid footprint and bounded depth are validated against the room, the
   chamber floor is not refilled over the opening, and the compiler lines each
@@ -94,10 +96,18 @@ troop hall. Four side resting alcoves leave the central aisle clear, while an
 anvil, smithing table and target distinguish the rear training wall. Repeated
 sites alternate variants and move more than 32 blocks apart.
 
-Every role chamber now has a discrete rear-shell invariant in addition to whole
-mound connectivity. For each vaulted ceiling layer, the first block behind the
-carved ellipse must remain solid. This prevents a geometrically connected mound
-from accidentally exposing one-block windows to the sky.
+The market family is the first intentional open-air use of the vocabulary.
+`market_a.json` and `market_b.json` compile to low asymmetrical earth banks
+around a roofless packed-mud yard with a five-block public entrance, storage,
+produce, a bell and paired lantern posts. Copper and honeycomb accents make the
+role readable without turning it into a conventional roofed house. Repeat sites
+alternate both footprints and remain more than 31 blocks apart.
+
+Every enclosed role chamber has a discrete rear-shell invariant in addition to
+whole-mound connectivity. For each vaulted ceiling layer, the first block behind
+the carved ellipse must remain solid. This prevents a geometrically connected
+mound from accidentally exposing one-block windows to the sky, while the market
+opts into its opening deliberately and validates that it reaches the mound top.
 
 ## Iteration order
 

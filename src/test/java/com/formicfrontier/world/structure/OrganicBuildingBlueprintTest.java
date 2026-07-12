@@ -189,6 +189,41 @@ final class OrganicBuildingBlueprintTest {
 	}
 
 	@Test
+	void marketsAreLowRooflessCourtyardsWithDistinctPerimeters() {
+		var variants = OrganicBuildingPlacer.variants(BuildingType.MARKET);
+		Assertions.assertEquals(Set.of("market_a", "market_b"), variants.stream()
+				.map(TieredMoundBlueprint::name).collect(Collectors.toSet()));
+		Set<Set<FootprintCell>> footprints = new HashSet<>();
+		for (TieredMoundBlueprint blueprint : variants) {
+			Assertions.assertEquals("market", blueprint.palette());
+			Assertions.assertEquals(3, blueprint.maxY(), "market banks should stay low and visibly open");
+			Assertions.assertEquals(1, blueprint.chambers().size());
+			TieredMoundBlueprint.Chamber yard = blueprint.chambers().getFirst();
+			Assertions.assertEquals("market", yard.purpose());
+			Assertions.assertTrue(yard.openToSky(), "market courtyard must opt into a full-height carving");
+			Assertions.assertEquals(blueprint.maxY(), yard.topY(), "courtyard opening must reach the mound top");
+			Assertions.assertTrue(blueprint.pits().isEmpty());
+			Assertions.assertTrue(blueprint.connections().isEmpty());
+			Assertions.assertEquals(5, blueprint.mouths().getFirst().width(), "market needs a broad public entrance");
+			Assertions.assertTrue(blueprint.isSolid(yard.x(), yard.floorY(), yard.z()),
+					"market courtyard needs a continuous packed-earth floor");
+			for (int y = yard.floorY() + 1; y <= blueprint.maxY(); y++) {
+				Assertions.assertFalse(blueprint.isSolid(yard.x(), y, yard.z()),
+						"market courtyard must stay roofless through y=" + y);
+			}
+
+			Set<Cell> solid = solidCells(blueprint);
+			assertConnected(blueprint, solid, "market perimeter");
+			Set<FootprintCell> footprint = footprint(solid);
+			Assertions.assertTrue(footprint.size() >= 180, "market needs a substantial public courtyard footprint");
+			long topRing = solid.stream().filter(cell -> cell.y == blueprint.maxY()).count();
+			Assertions.assertTrue(topRing >= 24, "roofless market still needs a readable upper perimeter ring");
+			footprints.add(footprint);
+		}
+		Assertions.assertEquals(2, footprints.size(), "market variants need genuinely different perimeter silhouettes");
+	}
+
+	@Test
 	void repeatedRoleSitesSelectEveryAuthoredVariant() {
 		BlockPos origin = new BlockPos(11, 0, -7);
 		Set<String> mineVariants = new HashSet<>();
@@ -211,6 +246,13 @@ final class OrganicBuildingBlueprintTest {
 			barracksVariants.add(OrganicBuildingPlacer.blueprintFor(BuildingType.BARRACKS, site).name());
 		}
 		Assertions.assertEquals(Set.of("barracks_a", "barracks_b"), barracksVariants);
+
+		Set<String> marketVariants = new HashSet<>();
+		for (int existing = 0; existing < 2; existing++) {
+			BlockPos site = ColonyBuilder.siteFor(origin, BuildingType.MARKET, existing);
+			marketVariants.add(OrganicBuildingPlacer.blueprintFor(BuildingType.MARKET, site).name());
+		}
+		Assertions.assertEquals(Set.of("market_a", "market_b"), marketVariants);
 	}
 
 	private static void assertConnected(TieredMoundBlueprint blueprint, Set<Cell> solid, String label) {

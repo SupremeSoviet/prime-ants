@@ -249,6 +249,17 @@ public final class TieredMoundPlacer {
 				placeDecoration(level, center, chamber, -6, 3, 0, Blocks.LANTERN);
 				placeDecoration(level, center, chamber, 6, 3, 0, Blocks.LANTERN);
 			}
+			case "market" -> {
+				placeDecoration(level, center, chamber, -4, 1, 0, Blocks.CHEST);
+				placeDecoration(level, center, chamber, 4, 1, 0, Blocks.BARREL);
+				placeDecoration(level, center, chamber, -3, 1, 3, Blocks.HAY_BLOCK);
+				placeDecoration(level, center, chamber, 3, 1, 3, Blocks.COMPOSTER);
+				placeDecoration(level, center, chamber, 0, 1, 4, Blocks.BELL);
+				placeDecoration(level, center, chamber, -3, 1, -2, Blocks.OAK_FENCE);
+				placeDecoration(level, center, chamber, -3, 2, -2, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, 3, 1, -2, Blocks.OAK_FENCE);
+				placeDecoration(level, center, chamber, 3, 2, -2, Blocks.LANTERN);
+			}
 			default -> throw new IllegalArgumentException("Unsupported chamber purpose " + chamber.purpose());
 		}
 	}
@@ -313,6 +324,14 @@ public final class TieredMoundPlacer {
 				if (roll < 92) yield Blocks.MUD_BRICKS;
 				if (roll < 98) yield Blocks.TUFF;
 				yield Blocks.IRON_ORE;
+			}
+			case "market" -> {
+				if (roll < 55) yield ModBlocks.NEST_MOUND;
+				if (roll < 70) yield Blocks.ROOTED_DIRT;
+				if (roll < 82) yield Blocks.COARSE_DIRT;
+				if (roll < 90) yield Blocks.MOSS_BLOCK;
+				if (roll < 96) yield Blocks.CUT_COPPER;
+				yield Blocks.HONEYCOMB_BLOCK;
 			}
 			default -> throw new IllegalArgumentException("Unsupported material palette " + blueprint.palette());
 		};
