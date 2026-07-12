@@ -336,6 +336,34 @@ public final class TieredMoundPlacer {
 				placeDecoration(level, center, chamber, 0, 1, 4, ModBlocks.FUNGUS_GARDEN);
 				placeDecoration(level, center, chamber, 2, 1, 4, Blocks.BARREL);
 			}
+			case "venom_press_hall" -> {
+				placeDecoration(level, center, chamber, -4, 1, 0, Blocks.POLISHED_BLACKSTONE);
+				placeDecoration(level, center, chamber, -4, 2, 0, Blocks.BREWING_STAND);
+				placeDecoration(level, center, chamber, 4, 1, 0, Blocks.BARREL);
+				placeDecoration(level, center, chamber, -4, 2, -1, Blocks.VERDANT_FROGLIGHT);
+				placeDecoration(level, center, chamber, 4, 2, -1, Blocks.VERDANT_FROGLIGHT);
+				placeDecoration(level, center, chamber, -3, 1, 3, Blocks.SLIME_BLOCK);
+				placeDecoration(level, center, chamber, -3, 2, 3, Blocks.LIME_STAINED_GLASS);
+				placeDecoration(level, center, chamber, 3, 1, 3, Blocks.CAULDRON);
+				placeDecoration(level, center, chamber, -1, 1, 3, Blocks.POLISHED_BLACKSTONE_WALL);
+				placeDecoration(level, center, chamber, 1, 1, 3, Blocks.POLISHED_BLACKSTONE_WALL);
+				placeDecoration(level, center, chamber, -1, 2, 3, Blocks.POLISHED_BLACKSTONE_WALL);
+				placeDecoration(level, center, chamber, 1, 2, 3, Blocks.POLISHED_BLACKSTONE_WALL);
+				placeDecoration(level, center, chamber, 0, 1, 3, Blocks.CAULDRON);
+				placeDecoration(level, center, chamber, 0, 2, 3, Blocks.IRON_CHAIN);
+				placeDecoration(level, center, chamber, 0, 3, 3, Blocks.PISTON);
+				placeDecoration(level, center, chamber, 0, 1, 4, ModBlocks.VENOM_PRESS);
+			}
+			case "venom_vault" -> {
+				placeDecoration(level, center, chamber, -2, 1, 0, Blocks.BARREL);
+				placeDecoration(level, center, chamber, 2, 1, 0, Blocks.CHEST);
+				placeDecoration(level, center, chamber, -1, 1, 2, Blocks.SLIME_BLOCK);
+				placeDecoration(level, center, chamber, -1, 2, 2, Blocks.LIME_STAINED_GLASS);
+				placeDecoration(level, center, chamber, 1, 1, 2, Blocks.POLISHED_BLACKSTONE);
+				placeDecoration(level, center, chamber, 1, 2, 2, Blocks.BREWING_STAND);
+				placeDecoration(level, center, chamber, 0, 1, -1, Blocks.POLISHED_BLACKSTONE);
+				placeDecoration(level, center, chamber, 0, 2, -1, Blocks.SOUL_LANTERN);
+			}
 			default -> throw new IllegalArgumentException("Unsupported chamber purpose " + chamber.purpose());
 		}
 	}
@@ -455,6 +483,16 @@ public final class TieredMoundPlacer {
 				if (roll < 95) yield Blocks.BROWN_MUSHROOM_BLOCK;
 				if (roll < 98) yield Blocks.MUSHROOM_STEM;
 				yield Blocks.RED_MUSHROOM_BLOCK;
+			}
+			case "venom_press" -> {
+				if (roll < 48) yield ModBlocks.NEST_MOUND;
+				if (roll < 61) yield Blocks.ROOTED_DIRT;
+				if (roll < 72) yield Blocks.PACKED_MUD;
+				if (roll < 82) yield Blocks.MUD_BRICKS;
+				if (roll < 90) yield Blocks.BLACKSTONE;
+				if (roll < 95) yield Blocks.POLISHED_BLACKSTONE;
+				if (roll < 98) yield Blocks.MOSS_BLOCK;
+				yield Blocks.SLIME_BLOCK;
 			}
 			default -> throw new IllegalArgumentException("Unsupported material palette " + blueprint.palette());
 		};

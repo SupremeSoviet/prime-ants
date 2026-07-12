@@ -452,6 +452,59 @@ final class OrganicBuildingBlueprintTest {
 	}
 
 	@Test
+	void venomPressesAreDarkJawedWorkshopsWithSealedReagentVaults() {
+		var variants = OrganicBuildingPlacer.variants(BuildingType.VENOM_PRESS);
+		Assertions.assertEquals(Set.of("venom_press_a", "venom_press_b"), variants.stream()
+				.map(TieredMoundBlueprint::name).collect(Collectors.toSet()));
+		Set<Set<FootprintCell>> footprints = new HashSet<>();
+		for (TieredMoundBlueprint blueprint : variants) {
+			Assertions.assertEquals("venom_press", blueprint.palette());
+			Assertions.assertEquals(8, blueprint.maxY(), "venom press should have a heavy but compact machine crown");
+			Assertions.assertEquals(2, blueprint.chambers().size());
+			TieredMoundBlueprint.Chamber hall = blueprint.chambers().stream()
+					.filter(chamber -> chamber.id().equals("press_hall")).findFirst().orElseThrow();
+			TieredMoundBlueprint.Chamber vault = blueprint.chambers().stream()
+					.filter(chamber -> chamber.id().equals("reagent_vault")).findFirst().orElseThrow();
+			Assertions.assertEquals("venom_press_hall", hall.purpose());
+			Assertions.assertEquals("venom_vault", vault.purpose());
+			Assertions.assertEquals(0, hall.floorY());
+			Assertions.assertEquals(0, vault.floorY());
+			Assertions.assertFalse(hall.openToSky());
+			Assertions.assertFalse(vault.openToSky(), "venom reagents need a sealed side chamber");
+			Assertions.assertTrue(blueprint.pits().isEmpty());
+			Assertions.assertTrue(blueprint.connections().isEmpty(), "same-floor press rooms should overlap directly");
+			Assertions.assertEquals(3, blueprint.mouths().getFirst().width(), "venom works need a controlled narrow mouth");
+
+			boolean roomsOverlap = false;
+			for (int x = blueprint.minX(); x <= blueprint.maxX() && !roomsOverlap; x++) {
+				for (int z = blueprint.minZ(); z <= blueprint.maxZ(); z++) {
+					if (hall.carves(x, 1, z) && vault.carves(x, 1, z)) {
+						roomsOverlap = true;
+						break;
+					}
+				}
+			}
+			Assertions.assertTrue(roomsOverlap, "press hall and reagent vault need a walkable shared throat");
+			assertRearShell(blueprint, hall);
+			assertRearShell(blueprint, vault);
+			assertEnclosedExceptMouths(blueprint, hall);
+			assertEnclosedExceptMouths(blueprint, vault);
+
+			Set<Cell> solid = solidCells(blueprint);
+			assertConnected(blueprint, solid, "venom press mound");
+			Set<FootprintCell> footprint = footprint(solid);
+			Assertions.assertTrue(footprint.size() >= 220, "venom press needs a grounded machine shell and reagent pods");
+			Assertions.assertTrue(footprint.stream().anyMatch(cell -> cell.x <= -10), "venom press needs a left jaw lobe");
+			Assertions.assertTrue(footprint.stream().anyMatch(cell -> cell.x >= 10), "venom press needs a right jaw lobe");
+			Assertions.assertTrue(footprint.stream().anyMatch(cell -> cell.z >= 10), "venom press needs a rear reagent pod");
+			long crownMass = solid.stream().filter(cell -> cell.y >= 6).count();
+			Assertions.assertTrue(crownMass >= 34, "venom press needs a readable compressed machine crown");
+			footprints.add(footprint);
+		}
+		Assertions.assertEquals(2, footprints.size(), "venom press variants need distinct asymmetric jaw shells");
+	}
+
+	@Test
 	void repeatedRoleSitesSelectEveryAuthoredVariant() {
 		BlockPos origin = new BlockPos(11, 0, -7);
 		Set<String> mineVariants = new HashSet<>();
@@ -532,6 +585,17 @@ final class OrganicBuildingBlueprintTest {
 		BlockPos secondFungusGarden = ColonyBuilder.siteFor(origin, BuildingType.FUNGUS_GARDEN, 1);
 		Assertions.assertTrue(firstFungusGarden.distSqr(secondFungusGarden) >= 46 * 46,
 				"repeated fungus gardens need open harvesting ground around their grow pods");
+
+		Set<String> venomVariants = new HashSet<>();
+		for (int existing = 0; existing < 2; existing++) {
+			BlockPos site = ColonyBuilder.siteFor(origin, BuildingType.VENOM_PRESS, existing);
+			venomVariants.add(OrganicBuildingPlacer.blueprintFor(BuildingType.VENOM_PRESS, site).name());
+		}
+		Assertions.assertEquals(Set.of("venom_press_a", "venom_press_b"), venomVariants);
+		BlockPos firstVenomPress = ColonyBuilder.siteFor(origin, BuildingType.VENOM_PRESS, 0);
+		BlockPos secondVenomPress = ColonyBuilder.siteFor(origin, BuildingType.VENOM_PRESS, 1);
+		Assertions.assertTrue(firstVenomPress.distSqr(secondVenomPress) >= 46 * 46,
+				"repeated venom presses need a safe processing yard between their toxic workshops");
 	}
 
 	private static void assertConnected(TieredMoundBlueprint blueprint, Set<Cell> solid, String label) {

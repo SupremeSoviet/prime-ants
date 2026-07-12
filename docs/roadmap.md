@@ -120,7 +120,10 @@ workshop and sealed side vault, warm wood/amber accents, and clear storage
 aisles. The fungus garden is implemented and accepted as two low clover-shaped
 mounds with uneven cultivation lobes, broad harvest mouths, sealed shaded
 halls, clear work aisles, live fungi and mushroom lighting. The next
-implementation slice is the venom press.
+implementation slice, the venom press, is implemented and accepted as two dark
+compressed capsule mounds with paired jaw lobes, narrow controlled mouths, a
+readable piston-and-cauldron press hall, toxin work zones and a sealed reagent
+vault. The next implementation slice is the watch post.
 
 Slice R3: Colony Tablet 2.0.
 

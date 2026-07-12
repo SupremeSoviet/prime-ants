@@ -42,6 +42,8 @@ public final class OrganicBuildingPlacer {
 	public static final String RESIN_DEPOT_B_RESOURCE = "formic_blueprints/resin_depot_b.json";
 	public static final String FUNGUS_GARDEN_A_RESOURCE = "formic_blueprints/fungus_garden_a.json";
 	public static final String FUNGUS_GARDEN_B_RESOURCE = "formic_blueprints/fungus_garden_b.json";
+	public static final String VENOM_PRESS_A_RESOURCE = "formic_blueprints/venom_press_a.json";
+	public static final String VENOM_PRESS_B_RESOURCE = "formic_blueprints/venom_press_b.json";
 
 	private static final Map<BuildingType, Family> FAMILIES = Map.ofEntries(
 			Map.entry(BuildingType.FOOD_STORE, new Family(List.of(
@@ -88,6 +90,10 @@ public final class OrganicBuildingPlacer {
 			Map.entry(BuildingType.FUNGUS_GARDEN, new Family(List.of(
 					TieredMoundBlueprint.load(FUNGUS_GARDEN_A_RESOURCE),
 					TieredMoundBlueprint.load(FUNGUS_GARDEN_B_RESOURCE)
+			))),
+			Map.entry(BuildingType.VENOM_PRESS, new Family(List.of(
+					TieredMoundBlueprint.load(VENOM_PRESS_A_RESOURCE),
+					TieredMoundBlueprint.load(VENOM_PRESS_B_RESOURCE)
 			)))
 	);
 
@@ -142,6 +148,7 @@ public final class OrganicBuildingPlacer {
 			case DIPLOMACY_SHRINE -> ModBlocks.DIPLOMACY_SHRINE;
 			case RESIN_DEPOT -> ModBlocks.RESIN_DEPOT;
 			case FUNGUS_GARDEN -> ModBlocks.FUNGUS_GARDEN;
+			case VENOM_PRESS -> ModBlocks.VENOM_PRESS;
 			default -> throw new IllegalArgumentException("No functional block registered for " + type);
 		};
 	}

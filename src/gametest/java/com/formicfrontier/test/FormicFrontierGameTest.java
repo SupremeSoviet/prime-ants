@@ -330,6 +330,27 @@ public final class FormicFrontierGameTest {
 	}
 
 	@GameTest
+	public void venomPressCompilesToFurnishedMachineAndReagentVariants(GameTestHelper helper) {
+		BlockPos origin = new BlockPos(2, 3, 2);
+		prepareCampusArea(helper, origin, 64);
+		BlockPos first = origin.offset(-18, 0, 0);
+		BlockPos second = origin.offset(18, 0, 1);
+
+		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(first), BuildingType.VENOM_PRESS,
+				BuildingVisualStage.COMPLETE, ColonyCulture.FIRE);
+		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(second), BuildingType.VENOM_PRESS,
+				BuildingVisualStage.COMPLETE, ColonyCulture.FIRE);
+
+		assertVenomPressProfile(helper, first, "first venom press variant");
+		assertVenomPressProfile(helper, second, "second venom press variant");
+		if (!VisualQaScenes.scenes().contains(VisualQaScenes.VENOM_PRESS_VARIANTS)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.VENOM_PRESS_INTERIOR)) {
+			helper.fail("Visual QA should expose venom press capsule silhouettes and its processing hall.");
+		}
+		helper.succeed();
+	}
+
+	@GameTest
 
 	public void buildingVisualStagesUseBlueprintsOnlyWhenOperational(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
@@ -2529,6 +2550,55 @@ public final class FormicFrontierGameTest {
 		}
 	}
 
+	private static void assertVenomPressProfile(GameTestHelper helper, BlockPos center, String label) {
+		helper.assertBlockPresent(ModBlocks.VENOM_PRESS, center);
+		int hallCenterX;
+		if (helper.getLevel().getBlockState(helper.absolutePos(center.offset(-1, 1, 5))).is(ModBlocks.VENOM_PRESS)) {
+			hallCenterX = -1;
+		} else if (helper.getLevel().getBlockState(helper.absolutePos(center.offset(1, 1, 5))).is(ModBlocks.VENOM_PRESS)) {
+			hallCenterX = 1;
+		} else {
+			helper.fail(label + " should contain a furnished venom processing hall.");
+			return;
+		}
+		int vaultCenterX = -hallCenterX * 4;
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(hallCenterX, 2, -6))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(hallCenterX, 2, 1))).isAir()) {
+			helper.fail(label + " should retain a clear controlled aisle from its mouth to the machine floor.");
+		}
+		helper.assertBlockPresent(Blocks.POLISHED_BLACKSTONE, center.offset(hallCenterX - 4, 1, 1));
+		helper.assertBlockPresent(Blocks.BREWING_STAND, center.offset(hallCenterX - 4, 2, 1));
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(hallCenterX + 4, 1, 1));
+		helper.assertBlockPresent(Blocks.VERDANT_FROGLIGHT, center.offset(hallCenterX - 4, 2, 0));
+		helper.assertBlockPresent(Blocks.VERDANT_FROGLIGHT, center.offset(hallCenterX + 4, 2, 0));
+		helper.assertBlockPresent(Blocks.SLIME_BLOCK, center.offset(hallCenterX - 3, 1, 4));
+		helper.assertBlockPresent(Blocks.LIME_STAINED_GLASS, center.offset(hallCenterX - 3, 2, 4));
+		helper.assertBlockPresent(Blocks.CAULDRON, center.offset(hallCenterX, 1, 4));
+		helper.assertBlockPresent(Blocks.IRON_CHAIN, center.offset(hallCenterX, 2, 4));
+		helper.assertBlockPresent(Blocks.PISTON, center.offset(hallCenterX, 3, 4));
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(vaultCenterX - 2, 1, 3));
+		helper.assertBlockPresent(Blocks.CHEST, center.offset(vaultCenterX + 2, 1, 3));
+		helper.assertBlockPresent(Blocks.SLIME_BLOCK, center.offset(vaultCenterX - 1, 1, 5));
+		helper.assertBlockPresent(Blocks.BREWING_STAND, center.offset(vaultCenterX + 1, 2, 5));
+		helper.assertBlockPresent(Blocks.SOUL_LANTERN, center.offset(vaultCenterX, 2, 2));
+
+		if (!isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(-8, 2, 1))).getBlock())
+				|| !isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(8, 2, 1))).getBlock())
+				|| !isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(
+						center.offset(-hallCenterX * 2, 5, 7))).getBlock())
+				|| !isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 8, 2))).getBlock())
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 9, 2))).isAir()) {
+			helper.fail(label + " should retain paired jaws, a rear reagent pod and a sealed eight-block crown.");
+		}
+		int base = countMoundLayer(helper, center, 0, 14);
+		int shoulder = countMoundLayer(helper, center, 4, 13);
+		int crown = countMoundLayer(helper, center, 8, 8);
+		if (base < 210 || shoulder < 55 || crown < 8 || !(base > shoulder && shoulder > crown)) {
+			helper.fail(label + " should read as a compressed heavy machine mound, got layer masses "
+					+ base + "/" + shoulder + "/" + crown);
+		}
+	}
+
 	private static void assertNurseryProfile(GameTestHelper helper, BlockPos center, String label) {
 		helper.assertBlockPresent(ModBlocks.NURSERY_CHAMBER, center);
 		if (helper.getLevel().getBlockState(helper.absolutePos(center.below())).is(ModBlocks.NEST_CORE)) {
@@ -2586,6 +2656,7 @@ public final class FormicFrontierGameTest {
 				|| block == Blocks.BROWN_MUSHROOM_BLOCK
 				|| block == Blocks.RED_MUSHROOM_BLOCK
 				|| block == Blocks.MUSHROOM_STEM
+				|| block == Blocks.SLIME_BLOCK
 				|| block == Blocks.GOLD_BLOCK;
 	}
 

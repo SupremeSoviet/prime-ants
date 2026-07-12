@@ -159,6 +159,19 @@ shell, connected mass and distinct footprints, while GameTests verify the live
 furnishings, broad mouth and two well-spaced variants. Focused Structure QA
 checks both silhouettes and the interior at original screenshot resolution.
 
+The venom press returns to a controlled narrow mouth but uses a compressed dark
+machine capsule rather than a storage cistern. `venom_press_a.json` and
+`venom_press_b.json` combine uneven jaw lobes, a rear reagent pod and a heavier
+crown over an overlapping press hall and sealed side vault. The central aisle
+ends at a cauldron press framed by blackstone supports, an iron chain and piston;
+brewing stands, barrels, toxin vats, lime glass and restrained verdant light
+fill the side work zones without blocking movement. Blackstone, mud and sparse
+green surface accents distinguish hazardous production from the armory's forge
+palette. Unit tests enforce connected asymmetric shells, full enclosure,
+walkable room overlap and safe repeat spacing; GameTests verify the machine and
+reagent furnishings in both variants. Focused Structure QA accepts all 30
+regression and venom scenes at original resolution without opening UI scenes.
+
 Every enclosed role chamber has a discrete rear-shell invariant in addition to
 whole-mound connectivity. For each vaulted ceiling layer, the first block behind
 the carved ellipse must remain solid. This prevents a geometrically connected
