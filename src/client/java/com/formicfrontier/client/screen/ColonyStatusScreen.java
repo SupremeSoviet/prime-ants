@@ -7,6 +7,8 @@ import com.formicfrontier.network.PriorityRequestPayload;
 import com.formicfrontier.network.ResearchRequestPayload;
 import com.formicfrontier.network.TradeRequestPayload;
 import com.formicfrontier.registry.ModItems;
+import com.formicfrontier.sim.ResearchNode;
+import com.formicfrontier.sim.ResourceType;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -25,27 +27,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.formicfrontier.sim.ResearchNode;
-
 /**
  * Colony tablet UI, redrawn from scratch as a cohesive amber-chitin "field
- * tablet". Everything - the panel, the tab bar, the resource strip, the cards
- * and the action buttons - is custom-drawn with the same warm gradient/bevel
- * language, so the screen no longer mixes vanilla grey stone buttons with a
- * hand-drawn panel. Layout is computed top-down from the panel rect with real
- * spacing between sections, so headings never collide with the resource strip
- * and cards are sized to their content instead of stretching across the panel.
+ * tablet". A persistent section rail separates navigation from the workspace;
+ * research lives on a pannable prerequisite canvas and trade offers are acted
+ * on directly. The remaining tabs share the same restrained amber, chitin and
+ * dark-soil visual language instead of falling back to vanilla grey widgets.
  */
 public final class ColonyStatusScreen extends Screen {
 	private static final Tab[] TABS = {
-			new Tab("Overview", "formic_frontier.ui.tab.overview_short", "formic_frontier.ui.tab.overview"),
-			new Tab("Build", "formic_frontier.ui.tab.build_short", "formic_frontier.ui.tab.buildings"),
-			new Tab("Needs", "formic_frontier.ui.tab.needs_short", "formic_frontier.ui.tab.requests"),
-			new Tab("Research", "formic_frontier.ui.tab.research_short", "formic_frontier.ui.tab.research"),
-			new Tab("Trade", "formic_frontier.ui.tab.trade_short", "formic_frontier.ui.tab.trade"),
-			new Tab("Instinct", "formic_frontier.ui.tab.instinct_short", "formic_frontier.ui.tab.instinct"),
-			new Tab("Guide", "formic_frontier.ui.tab.guide_short", "formic_frontier.ui.tab.guide"),
-			new Tab("Relations", "formic_frontier.ui.tab.relations_short", "formic_frontier.ui.tab.relations")
+		new Tab("Overview", "formic_frontier.ui.tab.overview", 0xD6A253),
+		new Tab("Build", "formic_frontier.ui.tab.buildings", 0xC68A54),
+		new Tab("Needs", "formic_frontier.ui.tab.requests", 0xD9C36A),
+		new Tab("Research", "formic_frontier.ui.tab.research", 0xA884E8),
+		new Tab("Trade", "formic_frontier.ui.tab.trade", 0x77C891),
+		new Tab("Instinct", "formic_frontier.ui.tab.instinct", 0xD17954),
+		new Tab("Guide", "formic_frontier.ui.tab.guide", 0x78A9C8),
+		new Tab("Relations", "formic_frontier.ui.tab.relations", 0xB78AD6)
 	};
 
 	// --- Palette -----------------------------------------------------------
@@ -74,10 +72,31 @@ public final class ColonyStatusScreen extends Screen {
 	private static final int TEXT_SOFT = 0xFFF1E2C0;
 	private static final int TEXT_MUTED = 0xFFD9B574;
 	private static final int TEXT_FAINT = 0xFF9C8054;
+	private static final int NAV_TOP = 0xF02B2117;
+	private static final int NAV_BOTTOM = 0xF015100B;
+	private static final int VIEWPORT_TOP = 0xF018140F;
+	private static final int VIEWPORT_BOTTOM = 0xF00D0A08;
+	private static final int RESEARCH_CANVAS_HEIGHT = 292;
 
 	private final ColonyUiSnapshot snapshot;
+	private final List<ResearchHitbox> researchHitboxes = new ArrayList<>();
+	private final List<TradeHitbox> tradeHitboxes = new ArrayList<>();
+	private final List<RequestHitbox> requestHitboxes = new ArrayList<>();
 	private String selectedTab;
 	private int selectedDiplomacyTargetId;
+	private int researchPanX = 16;
+	private int researchPanY = 12;
+	private boolean researchDragging;
+	private int tradeScroll;
+	private int tradeMaxScroll;
+	private int contentViewportX;
+	private int contentViewportY;
+	private int contentViewportWidth;
+	private int contentViewportHeight;
+	private int currentMouseX;
+	private int currentMouseY;
+	private ColonyUiSnapshot.ResearchEntry hoveredResearch;
+	private ColonyUiSnapshot.TradeEntry hoveredTrade;
 
 	public ColonyStatusScreen(ColonyUiSnapshot snapshot) {
 		super(Component.translatable("formic_frontier.ui.title"));
@@ -94,34 +113,31 @@ public final class ColonyStatusScreen extends Screen {
 		int px = panelX();
 		int py = panelY();
 		int pw = panelWidth();
-		int innerW = pw - 24;
-
-		// Tab bar: evenly spaced themed tabs, the active one highlighted.
-		int gap = 4;
-		int tabW = (innerW - (TABS.length - 1) * gap) / TABS.length;
-		int tabX = px + 12;
-		int tabY = py + 33;
+		int tabW = navigationWidth() - 14;
+		int tabX = px + 7;
+		int tabY = py + 55;
 		for (Tab tab : TABS) {
 			boolean isActive = tab.id().equals(selectedTab);
-			FormicButton button = new FormicButton(tabX, tabY, tabW, 19,
-					Component.translatable(tab.shortKey()),
+			String navigationKey = "Research".equals(tab.id())
+					? "formic_frontier.ui.tab.research_short"
+					: tab.titleKey();
+			FormicButton button = new FormicButton(tabX, tabY, tabW, 22,
+					Component.translatable(navigationKey),
 					() -> {
 						selectedTab = tab.id();
+						researchDragging = false;
 						rebuildWidgets();
 					}, ButtonStyle.TAB);
 			button.selected = isActive;
+			button.accent = tab.color();
 			addRenderableWidget(button);
-			tabX += tabW + gap;
+			tabY += 24;
 		}
 
-		// Close button lives in the header.
-		addRenderableWidget(new FormicButton(px + pw - 58, py + 6, 48, 17,
-				Component.translatable("formic_frontier.ui.close"), () -> onClose(), ButtonStyle.ACTION));
+		addRenderableWidget(new FormicButton(px + pw - 29, py + 7, 20, 18,
+				Component.literal("X"), () -> onClose(), ButtonStyle.ACTION));
 
 		switch (selectedTab) {
-			case "Trade" -> addTradeButtons();
-			case "Needs" -> addContractButtons();
-			case "Research" -> addResearchButtons();
 			case "Instinct" -> addInstinctButtons();
 			case "Relations" -> addRelationsButtons();
 			default -> {
@@ -134,14 +150,21 @@ public final class ColonyStatusScreen extends Screen {
 	// =======================================================================
 	@Override
 	public void render(GuiGraphics g, int mouseX, int mouseY, float delta) {
+		currentMouseX = mouseX;
+		currentMouseY = mouseY;
+		hoveredResearch = null;
+		hoveredTrade = null;
+		researchHitboxes.clear();
+		tradeHitboxes.clear();
+		requestHitboxes.clear();
 		g.fillGradient(0, 0, width, height, SCRIM_TOP, SCRIM_BOTTOM);
 
 		int px = panelX();
 		int py = panelY();
 		int pw = panelWidth();
 		int ph = panelHeight();
-		int x = px + 12;
-		int innerW = pw - 24;
+		int x = mainContentX();
+		int innerW = mainContentWidth();
 
 		// Panel body: drop shadow, warm gradient, dark outer + glowing inner frame.
 		g.fill(px + 7, py + 9, px + pw + 7, py + ph + 9, 0x59000000);
@@ -151,30 +174,46 @@ public final class ColonyStatusScreen extends Screen {
 		g.renderOutline(px, py, pw, ph, PANEL_BORDER);
 		g.renderOutline(px + 1, py + 1, pw - 2, ph - 2, PANEL_GLOW);
 
-		// Header band with title + meta and a bright accent seam.
+		// Header band with an amber colony insignia and identity.
 		g.fillGradient(px + 2, py + 2, px + pw - 2, py + 29, HEADER_TOP, HEADER_BOTTOM);
 		g.fill(px + 2, py + 29, px + pw - 2, py + 31, ACCENT);
 		g.fill(px + 2, py + 31, px + pw - 2, py + 32, 0x4D000000);
-		g.drawString(font, ellipsize(snapshot.title(), pw - 280), x, py + 10, TEXT_MAIN, true);
+		g.fill(px + 10, py + 8, px + 22, py + 21, 0xFF7A521F);
+		g.renderOutline(px + 9, py + 7, 14, 15, ACCENT);
+		g.fill(px + 14, py + 4, px + 18, py + 25, 0xA8E0B05A);
+		g.drawString(font, ellipsize(snapshot.title(), Math.max(120, pw - 360)), px + 29, py + 10, TEXT_MAIN, true);
 		String meta = translated(snapshot.cultureKey()) + "  ·  " + translated(snapshot.relationshipKey());
 		int metaW = font.width(meta);
-		g.drawString(font, ellipsize(meta, 220), px + pw - 70 - metaW, py + 11, TEXT_MUTED, false);
+		g.drawString(font, ellipsize(meta, 210), Math.max(px + pw / 2, px + pw - 40 - metaW), py + 11, TEXT_MUTED, false);
 
-		// Resource strip (hidden on the text-heavy Guide tab).
-		int cursorY = py + 56;
-		if (!"Guide".equals(selectedTab)) {
+		int footerY = py + ph - 22;
+		int navX = px + 5;
+		int navY = py + 38;
+		int navW = navigationWidth() - 10;
+		g.fillGradient(navX, navY, navX + navW, footerY - 7, NAV_TOP, NAV_BOTTOM);
+		g.renderOutline(navX, navY, navW, footerY - 7 - navY, CHIP_EDGE);
+		g.drawString(font, translated("formic_frontier.ui.navigation").toUpperCase(java.util.Locale.ROOT), navX + 6, navY + 7, TEXT_FAINT, false);
+		g.fill(navX + 6, navY + 18, navX + navW - 6, navY + 19, 0x548C6A38);
+
+		// Context-heavy workspaces keep their own focused information instead of
+		// repeating the global stock ledger above every interaction.
+		int cursorY = py + 39;
+		if (showsResourceStrip()) {
 			cursorY = drawResourceStrip(g, x, cursorY, innerW) + 6;
 		} else {
-			cursorY = py + 60;
+			cursorY = py + 42;
 		}
 
 		// Section heading, then the content body.
-		int footerY = py + ph - 22;
 		boolean rail = hasActionRail();
 		int contentBottom = rail ? actionRailY() - 8 : footerY - 8;
 		g.drawString(font, tabLabel(selectedTab).toUpperCase(java.util.Locale.ROOT), x, cursorY, ACCENT, false);
-		g.fill(x, cursorY + 11, x + Math.min(innerW, 46), cursorY + 12, ACCENT_DIM);
+		g.fill(x, cursorY + 11, x + Math.min(innerW, 56), cursorY + 12, ACCENT_DIM);
 		int contentTop = cursorY + 18;
+		contentViewportX = x;
+		contentViewportY = contentTop;
+		contentViewportWidth = innerW;
+		contentViewportHeight = Math.max(20, contentBottom - contentTop);
 		drawContent(g, x, contentTop, innerW, Math.max(20, contentBottom - contentTop));
 
 		if (rail) {
@@ -183,6 +222,88 @@ public final class ColonyStatusScreen extends Screen {
 		drawFooter(g, x, footerY, innerW);
 
 		super.render(g, mouseX, mouseY, delta);
+	}
+
+	@Override
+	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+		int mouseX = (int) event.x();
+		int mouseY = (int) event.y();
+		if ("Research".equals(selectedTab) && pointInsideViewport(mouseX, mouseY)) {
+			if (event.button() == 1) {
+				researchPanX = 16;
+				researchPanY = 12;
+				return true;
+			}
+			if (event.button() == 0) {
+				for (ResearchHitbox hitbox : researchHitboxes) {
+					if (hitbox.contains(mouseX, mouseY)) {
+						if (hitbox.entry().startable()) {
+							ClientPlayNetworking.send(new ResearchRequestPayload(hitbox.entry().nodeId()));
+						}
+						return true;
+					}
+				}
+				researchDragging = true;
+				return true;
+			}
+		}
+		if ("Trade".equals(selectedTab) && event.button() == 0 && pointInsideViewport(mouseX, mouseY)) {
+			for (TradeHitbox hitbox : tradeHitboxes) {
+				if (hitbox.contains(mouseX, mouseY)) {
+					if (hitbox.entry().available()) {
+						ClientPlayNetworking.send(new TradeRequestPayload(hitbox.entry().offerId()));
+					}
+					return true;
+				}
+			}
+		}
+		if ("Needs".equals(selectedTab) && event.button() == 0 && pointInsideViewport(mouseX, mouseY)) {
+			for (RequestHitbox hitbox : requestHitboxes) {
+				if (hitbox.contains(mouseX, mouseY) && !hitbox.entry().contractId().isBlank()) {
+					ClientPlayNetworking.send(new ContractRequestPayload(hitbox.entry().contractId()));
+					return true;
+				}
+			}
+		}
+		return super.mouseClicked(event, doubleClick);
+	}
+
+	@Override
+	public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+		if (researchDragging && "Research".equals(selectedTab) && event.button() == 0) {
+			researchPanX += (int) Math.round(dragX);
+			researchPanY += (int) Math.round(dragY);
+			clampResearchPan(contentViewportWidth, contentViewportHeight);
+			return true;
+		}
+		return super.mouseDragged(event, dragX, dragY);
+	}
+
+	@Override
+	public boolean mouseReleased(MouseButtonEvent event) {
+		if (researchDragging && event.button() == 0) {
+			researchDragging = false;
+			return true;
+		}
+		return super.mouseReleased(event);
+	}
+
+	@Override
+	public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+		if (!pointInsideViewport((int) mouseX, (int) mouseY)) {
+			return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+		}
+		if ("Research".equals(selectedTab)) {
+			researchPanX += (int) Math.round(horizontalAmount * 22.0);
+			researchPanY += (int) Math.round(verticalAmount * 22.0);
+			clampResearchPan(contentViewportWidth, contentViewportHeight);
+			return true;
+		}
+		if ("Trade".equals(selectedTab) && verticalAmount != 0.0) {
+			tradeScroll = Math.max(0, Math.min(tradeMaxScroll, tradeScroll - (int) Math.signum(verticalAmount)));
+			return true;
+		}
+		return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
 	}
 
 	// =======================================================================
@@ -211,7 +332,9 @@ public final class ColonyStatusScreen extends Screen {
 			drawItemIcon(g, itemForResourceId(m.id()), cx + 3, cy + 2);
 			int barX = cx + 22;
 			g.fill(barX, cy + 3, barX + 2, cy + rowH - 3, 0xFF000000 | m.color());
-			String label = shortName(m.labelKey());
+			String label = "knowledge".equals(m.id())
+					? translated("formic_frontier.ui.resource.knowledge_short")
+					: shortName(m.labelKey());
 			String value = String.valueOf(m.value());
 			g.drawString(font, ellipsize(label, chipW - 30 - font.width(value) - 4), barX + 6, cy + 6, TEXT_SOFT, false);
 			g.drawString(font, value, cx + chipW - 6 - font.width(value), cy + 6, TEXT_MAIN, false);
@@ -226,8 +349,8 @@ public final class ColonyStatusScreen extends Screen {
 		switch (selectedTab) {
 			case "Build" -> drawBuildings(g, x, y, width, height);
 			case "Needs" -> drawRequests(g, x, y, width, height);
-			case "Research" -> drawResearch(g, x, y, width, height);
-			case "Trade" -> drawTrades(g, x, y, width, height);
+			case "Research" -> drawResearchGraph(g, x, y, width, height);
+			case "Trade" -> drawTradeExchange(g, x, y, width, height);
 			case "Instinct" -> drawInstinct(g, x, y, width, height);
 			case "Guide" -> drawGuide(g, x, y, width, height);
 			case "Relations" -> drawRelations(g, x, y, width, height);
@@ -320,112 +443,233 @@ public final class ColonyStatusScreen extends Screen {
 				break;
 			}
 			int color = colorForResource(e.resourceId());
-			drawCardSurface(g, cx, cy, cardW, cardH, color, CARD_EDGE);
+			RequestHitbox hitbox = new RequestHitbox(e, cx, cy, cardW, cardH);
+			requestHitboxes.add(hitbox);
+			boolean hovered = hitbox.contains(currentMouseX, currentMouseY) && pointInsideViewport(currentMouseX, currentMouseY);
+			drawCardSurface(g, cx, cy, cardW, cardH, color, hovered ? brighten(color) : CARD_EDGE);
 			drawItemIcon(g, itemForResourceId(e.resourceId()), cx + 9, cy + 8);
 			drawItemIcon(g, itemForBuildingId(e.buildingId()), cx + cardW - 26, cy + 8);
 			g.drawString(font, ellipsize(translated("formic_frontier.ui.request.title", shortName(e.resourceKey()), requestBuildingName(e)), cardW - 78), cx + 32, cy + 7, TEXT_MAIN, false);
-			g.drawString(font, ellipsize(translated("formic_frontier.ui.request.delivery", e.deliveryItemCount() + " " + shortName(e.deliveryItemKey()), e.deliveryAmount(), shortName(e.resourceKey())), cardW - 44), cx + 32, cy + 20, TEXT_SOFT, false);
-			g.drawString(font, ellipsize(translated("formic_frontier.ui.request.reward", e.rewardTokens(), e.reputationDelta(), e.priority()), cardW - 44), cx + 32, cy + 33, TEXT_MUTED, false);
+			g.drawString(font, ellipsize(translated("formic_frontier.ui.request.delivery", e.deliveryItemCount() + " " + shortName(e.deliveryItemKey()), e.deliveryAmount(), shortName(e.resourceKey())), cardW - 106), cx + 32, cy + 20, TEXT_SOFT, false);
+			g.drawString(font, ellipsize(translated("formic_frontier.ui.request.reward", e.rewardTokens(), e.reputationDelta(), e.priority()), cardW - 106), cx + 32, cy + 33, TEXT_MUTED, false);
+			int pillW = 58;
+			int pillX = cx + cardW - pillW - 9;
+			g.fillGradient(pillX, cy + 31, pillX + pillW, cy + 45, 0xFF4B3B1E, 0xFF2D2112);
+			g.renderOutline(pillX, cy + 31, pillW, 14, hovered ? ACCENT : 0xFF8E6B33);
+			g.drawCenteredString(font, translated("formic_frontier.ui.request.help_action"), pillX + pillW / 2, cy + 34, hovered ? 0xFFFFF0C6 : TEXT_MAIN);
 			drawWideProgress(g, cx + 9, cy + cardH - 8, cardW - 18, percent(e.fulfilled(), e.needed()), color);
 		}
 	}
 
-	private void drawResearch(GuiGraphics g, int x, int y, int width, int height) {
-		// Real prerequisite map: nodes grouped into tier columns by their recursive
-		// prerequisite depth, connected by directed parent->child edges. Stacks are
-		// top-aligned and sized to content so there are no empty filler bands.
+	private void drawResearchGraph(GuiGraphics g, int x, int y, int width, int height) {
+		int viewX = x;
+		int viewY = y;
+		int viewW = width;
+		int viewH = height;
+		clampResearchPan(viewW, viewH);
+
+		g.fillGradient(viewX, viewY, viewX + viewW, viewY + viewH, VIEWPORT_TOP, VIEWPORT_BOTTOM);
+		g.renderOutline(viewX, viewY, viewW, viewH, CHIP_EDGE);
+		g.enableScissor(viewX + 1, viewY + 1, viewX + viewW - 1, viewY + viewH - 1);
+
+		// A sparse pheromone-grid gives the graph a sense of navigable space without
+		// competing with icons and labels.
+		for (int gx = researchPanX % 32; gx < viewW; gx += 32) {
+			g.fill(viewX + gx, viewY, viewX + gx + 1, viewY + viewH, 0x182F281E);
+		}
+		for (int gy = researchPanY % 32; gy < viewH; gy += 32) {
+			g.fill(viewX, viewY + gy, viewX + viewW, viewY + gy + 1, 0x182F281E);
+		}
+
 		Map<String, ColonyUiSnapshot.ResearchEntry> byId = new HashMap<>();
-		for (ColonyUiSnapshot.ResearchEntry e : snapshot.research()) {
-			byId.put(e.nodeId(), e);
+		for (ColonyUiSnapshot.ResearchEntry entry : snapshot.research()) {
+			byId.put(entry.nodeId(), entry);
 		}
-		Map<String, Integer> tier = new HashMap<>();
-		for (ResearchNode node : ResearchNode.values()) {
-			tier.put(node.id(), researchTier(node, tier));
-		}
-		int maxTier = 0;
-		for (int t : tier.values()) {
-			maxTier = Math.max(maxTier, t);
-		}
-		int columns = Math.min(maxTier + 1, 2);
-		int colGap = 58;
-		int nodeW = Math.max(150, Math.min(220, (width - (columns - 1) * colGap) / columns));
-		int nodeH = 50;
-		int rowGap = 10;
-
-		Map<Integer, List<ColonyUiSnapshot.ResearchEntry>> byTier = new HashMap<>();
-		for (ColonyUiSnapshot.ResearchEntry e : snapshot.research()) {
-			byTier.computeIfAbsent(tier.getOrDefault(e.nodeId(), 0), k -> new ArrayList<>()).add(e);
-		}
-		Comparator<ColonyUiSnapshot.ResearchEntry> order = Comparator
-				.comparing(ColonyUiSnapshot.ResearchEntry::complete)
-				.thenComparing(e -> !e.active())
-				.thenComparing(e -> !e.startable())
-				.thenComparing(ColonyUiSnapshot.ResearchEntry::nodeId);
-		int rowCapacity = Math.max(1, (height - 16) / (nodeH + rowGap));
-
-		Map<String, int[]> slot = new HashMap<>();
-		String[] tierLabel = {"TIER I · ROOTS", "TIER II · ADVANCED"};
-		for (int col = 0; col < columns; col++) {
-			List<ColonyUiSnapshot.ResearchEntry> entries = byTier.getOrDefault(col, List.of())
-					.stream().sorted(order).limit(rowCapacity).toList();
-			int colX = x + col * (nodeW + colGap);
-			g.drawString(font, tierLabel[Math.min(col, tierLabel.length - 1)], colX + 2, y, TEXT_MUTED, false);
-			int top = y + 14;
-			for (ColonyUiSnapshot.ResearchEntry e : entries) {
-				slot.put(e.nodeId(), new int[] {colX, top});
-				top += nodeH + rowGap;
-			}
-		}
-		// Directed prerequisite edges first, beneath the node cards.
+		int nodeW = Math.max(142, Math.min(184, (viewW - 88) / 2));
+		int nodeH = 48;
+		int advancedX = viewW - nodeW - 18;
 		for (ResearchNode child : ResearchNode.values()) {
-			int[] cs = slot.get(child.id());
-			if (cs == null) {
-				continue;
-			}
-			for (String prereqId : child.prerequisites()) {
-				int[] ps = slot.get(prereqId);
-				if (ps == null) {
-					continue;
-				}
-				ColonyUiSnapshot.ResearchEntry parent = byId.get(prereqId);
-				drawResearchEdge(g, ps[0] + nodeW, ps[1] + nodeH / 2, cs[0], cs[1] + nodeH / 2, parent != null && parent.complete());
+			ResearchCanvasPoint childPoint = researchCanvasPoint(child.id(), advancedX);
+			for (String prerequisiteId : child.prerequisites()) {
+				ResearchCanvasPoint parentPoint = researchCanvasPoint(prerequisiteId, advancedX);
+				ColonyUiSnapshot.ResearchEntry parent = byId.get(prerequisiteId);
+				int x1 = viewX + researchPanX + parentPoint.x() + nodeW;
+				int y1 = viewY + researchPanY + parentPoint.y() + nodeH / 2;
+				int x2 = viewX + researchPanX + childPoint.x();
+				int y2 = viewY + researchPanY + childPoint.y() + nodeH / 2;
+				drawResearchEdge(g, x1, y1, x2, y2, parent != null && parent.complete());
 			}
 		}
-		for (Map.Entry<String, int[]> s : slot.entrySet()) {
-			ColonyUiSnapshot.ResearchEntry e = byId.get(s.getKey());
-			if (e == null) {
+
+		for (ColonyUiSnapshot.ResearchEntry entry : snapshot.research()) {
+			ResearchCanvasPoint point = researchCanvasPoint(entry.nodeId(), advancedX);
+			int nx = viewX + researchPanX + point.x();
+			int ny = viewY + researchPanY + point.y();
+			boolean visible = rectanglesOverlap(nx, ny, nodeW, nodeH, viewX, viewY, viewW, viewH);
+			if (!visible) {
 				continue;
 			}
-			int progress = e.complete() ? 100 : percent(e.progress(), e.duration());
-			int color = e.active() ? 0xB58BFF : e.startable() ? 0x6DD08E : 0x8A6D47;
-			drawResearchNode(g, s.getValue()[0], s.getValue()[1], nodeW, nodeH, e, progress, color);
+			ResearchHitbox hitbox = new ResearchHitbox(entry, nx, ny, nodeW, nodeH);
+			researchHitboxes.add(hitbox);
+			boolean hovered = hitbox.contains(currentMouseX, currentMouseY) && pointInsideViewport(currentMouseX, currentMouseY);
+			if (hovered) {
+				hoveredResearch = entry;
+			}
+			drawResearchGraphNode(g, nx, ny, nodeW, nodeH, entry, hovered);
+		}
+		g.disableScissor();
+		drawResearchInspector(g, viewX + 6, viewY + 5, viewW - 12, hoveredResearch);
+	}
+
+	private void drawResearchGraphNode(GuiGraphics g, int x, int y, int width, int height,
+			ColonyUiSnapshot.ResearchEntry entry, boolean hovered) {
+		int progress = entry.complete() ? 100 : percent(entry.progress(), entry.duration());
+		int color = entry.complete() ? 0x6DD08E : entry.active() ? 0xB58BFF : entry.startable() ? 0xE0B05A : 0x6C5A43;
+		int top = hovered ? 0xF04A3822 : entry.active() ? 0xF0352749 : 0xF02E2418;
+		int bottom = hovered ? 0xF0251B10 : entry.active() ? 0xF019122C : 0xF016100B;
+		g.fillGradient(x, y, x + width, y + height, top, bottom);
+		g.fill(x, y, x + width, y + 1, BEVEL_HI);
+		g.fill(x, y + height - 1, x + width, y + height, BEVEL_LO);
+		g.renderOutline(x, y, width, height, hovered || entry.startable() || entry.active() ? brighten(color) : CARD_EDGE);
+		g.fill(x, y, x + 4, y + height, 0xFF000000 | color);
+
+		g.fillGradient(x + 10, y + 8, x + 36, y + 34, 0xFF3A2C1E, 0xFF17110C);
+		g.renderOutline(x + 9, y + 7, 28, 28, hovered ? ACCENT : CHIP_EDGE);
+		drawItemIcon(g, itemForResearch(entry.nodeId()), x + 15, y + 13);
+		g.drawString(font, ellipsize(researchLabel(entry), width - 54), x + 44, y + 9, TEXT_MAIN, false);
+		g.drawString(font, ellipsize(researchState(entry), width - 58), x + 44, y + 22, entry.startable() ? 0xFFFFD780 : TEXT_MUTED, false);
+		if (entry.startable()) {
+			g.drawString(font, ">", x + width - 14, y + 22, ACCENT, true);
+		}
+		drawWideProgress(g, x + 10, y + height - 10, width - 20, progress, color);
+	}
+
+	private void drawResearchInspector(GuiGraphics g, int x, int y, int width,
+			ColonyUiSnapshot.ResearchEntry entry) {
+		g.fillGradient(x, y, x + width, y + 45, 0xF13A2B1B, 0xF115100A);
+		g.fill(x, y, x + width, y + 2, entry == null ? ACCENT_DIM : ACCENT);
+		g.renderOutline(x, y, width, 45, entry == null ? CHIP_EDGE : 0xFF9C743A);
+		if (entry == null) {
+			drawItemIcon(g, ModItems.PHEROMONE_DUST, x + 8, y + 8);
+			g.drawString(font, ellipsize(translated("formic_frontier.ui.research.pan_hint"), width - 38), x + 31, y + 8, TEXT_MAIN, false);
+			g.drawString(font, ellipsize(translated("formic_frontier.ui.research.hover_hint"), width - 38), x + 31, y + 23, TEXT_MUTED, false);
+			return;
+		}
+		ResearchNode node;
+		try {
+			node = ResearchNode.fromId(entry.nodeId());
+		} catch (IllegalArgumentException ignored) {
+			return;
+		}
+		drawItemIcon(g, itemForResearch(entry.nodeId()), x + 8, y + 8);
+		String title = researchLabel(entry) + "  /  " + researchState(entry);
+		g.drawString(font, ellipsize(title, width - 38), x + 31, y + 7, TEXT_MAIN, false);
+		g.drawString(font, ellipsize(translated("formic_frontier.research." + entry.nodeId() + ".detail"), width - 38), x + 31, y + 19, TEXT_SOFT, false);
+		String requirements = translated("formic_frontier.ui.research.requires", translated(ColonyUiSnapshot.buildingLabelKey(node.requiredBuilding())))
+				+ "  /  " + translated("formic_frontier.ui.research.costs", researchCosts(node));
+		g.drawString(font, ellipsize(requirements, width - 38), x + 31, y + 32, TEXT_MUTED, false);
+	}
+
+	private void drawTradeExchange(GuiGraphics g, int x, int y, int width, int height) {
+		g.fillGradient(x, y, x + width, y + height, VIEWPORT_TOP, VIEWPORT_BOTTOM);
+		g.renderOutline(x, y, width, height, CHIP_EDGE);
+		int rowY = y + 7;
+		int bannerY = rowY;
+		drawTradeContextBanner(g, x + 7, bannerY, width - 14, null);
+		rowY += 31;
+
+		List<ColonyUiSnapshot.TradeEntry> sells = tradeRowsForDisplay().stream()
+				.filter(entry -> entry.offerId().startsWith("sell_"))
+				.toList();
+		List<ColonyUiSnapshot.TradeEntry> buys = tradeRowsForDisplay().stream()
+				.filter(entry -> !entry.offerId().startsWith("sell_"))
+				.toList();
+		boolean split = width >= 360;
+		int cardH = 42;
+		int pitch = cardH + 4;
+		int headerH = 17;
+		int rowsFit = Math.max(1, (y + height - rowY - headerH - 7) / pitch);
+		if (split) {
+			tradeMaxScroll = Math.max(0, Math.max(sells.size(), buys.size()) - rowsFit);
+			tradeScroll = Math.max(0, Math.min(tradeScroll, tradeMaxScroll));
+			int gap = 8;
+			int cardW = (width - 22 - gap) / 2;
+			int leftX = x + 7;
+			int rightX = leftX + cardW + gap;
+			drawTradeSection(g, sells, leftX, rowY, cardW, rowsFit, "formic_frontier.ui.trade.colony_buys");
+			drawTradeSection(g, buys, rightX, rowY, cardW, rowsFit, "formic_frontier.ui.trade.colony_offers");
+		} else {
+			List<ColonyUiSnapshot.TradeEntry> all = tradeRowsForDisplay();
+			tradeMaxScroll = Math.max(0, all.size() - rowsFit);
+			tradeScroll = Math.max(0, Math.min(tradeScroll, tradeMaxScroll));
+			drawTradeSection(g, all, x + 7, rowY, width - 14, rowsFit, "formic_frontier.ui.trade.exchange");
+		}
+		if (tradeMaxScroll > 0) {
+			String page = (tradeScroll + 1) + " / " + (tradeMaxScroll + 1);
+			g.drawString(font, page, x + width - 8 - font.width(page), y + height - 11, TEXT_FAINT, false);
+			g.drawString(font, translated("formic_frontier.ui.trade.scroll_hint"), x + 8, y + height - 11, TEXT_FAINT, false);
+		}
+		if (hoveredTrade != null) {
+			drawTradeContextBanner(g, x + 7, bannerY, width - 14, hoveredTrade);
 		}
 	}
 
-	private void drawTrades(GuiGraphics g, int x, int y, int width, int height) {
-		int rowY = y;
-		if (!snapshot.tradeActivity().isBlank() && height >= 130) {
-			drawInfoCard(g, x, rowY, width, 30, translated("formic_frontier.ui.trade"), snapshot.tradeActivity(), ModItems.PHEROMONE_TOKEN, 0xB58BFF);
-			rowY += 36;
+	private void drawTradeContextBanner(GuiGraphics g, int x, int y, int width,
+			ColonyUiSnapshot.TradeEntry entry) {
+		g.fillGradient(x, y, x + width, y + 25, 0xF02C2340, 0xF0181224);
+		g.renderOutline(x, y, width, 25, entry == null ? 0xFF70558F : 0xFF8E72B5);
+		drawItemIcon(g, entry == null ? ModItems.PHEROMONE_TOKEN : itemForKey(entry.outputKey()), x + 6, y + 4);
+		if (entry == null) {
+			String activity = snapshot.tradeActivity().isBlank()
+					? translated("formic_frontier.ui.trade.hover_hint")
+					: snapshot.tradeActivity();
+			g.drawString(font, ellipsize(activity, width - 34), x + 28, y + 8, 0xFFE1D0FF, false);
+			return;
 		}
-		int gap = 8;
-		int cardH = 52;
-		int pitch = cardH + 8;
-		// Compact fixed-width cards in a grid - never one stretched full-width card.
-		int cols = Math.max(1, Math.min(3, (width + gap) / (232 + gap)));
-		int cardW = (width - (cols - 1) * gap) / cols;
-		int rowsFit = Math.max(1, (y + height - rowY + 8) / pitch);
-		int limit = Math.min(cols * rowsFit, 6);
-		List<ColonyUiSnapshot.TradeEntry> rows = tradeRowsForDisplay().stream().limit(limit).toList();
-		for (int i = 0; i < rows.size(); i++) {
-			ColonyUiSnapshot.TradeEntry e = rows.get(i);
-			int cx = x + (i % cols) * (cardW + gap);
-			int cy = rowY + (i / cols) * pitch;
-			if (i >= cols && cy + cardH > y + height) {
-				break;
+		String exchange = translated("formic_frontier.ui.trade.tooltip_exchange",
+				entry.inputCount(), translated(entry.inputKey()), entry.outputCount(), translated(entry.outputKey()));
+		g.drawString(font, ellipsize(exchange, width - 34), x + 28, y + 4, TEXT_MAIN, false);
+		String detail = entry.status() + "  /  "
+				+ translated(entry.available() ? "formic_frontier.ui.trade.click" : "formic_frontier.ui.trade.unavailable");
+		g.drawString(font, ellipsize(detail, width - 34), x + 28, y + 15, entry.available() ? 0xFFBDECC7 : TEXT_MUTED, false);
+	}
+
+	private void drawTradeSection(GuiGraphics g, List<ColonyUiSnapshot.TradeEntry> entries, int x, int y,
+			int width, int rowsFit, String titleKey) {
+		g.drawString(font, translated(titleKey).toUpperCase(java.util.Locale.ROOT), x + 2, y + 3, TEXT_MUTED, false);
+		g.fill(x, y + 14, x + width, y + 15, 0x4C8C6A38);
+		int cardY = y + 19;
+		for (int i = tradeScroll; i < entries.size() && i < tradeScroll + rowsFit; i++) {
+			ColonyUiSnapshot.TradeEntry entry = entries.get(i);
+			int cy = cardY + (i - tradeScroll) * 46;
+			TradeHitbox hitbox = new TradeHitbox(entry, x, cy, width, 42);
+			tradeHitboxes.add(hitbox);
+			boolean hovered = hitbox.contains(currentMouseX, currentMouseY) && pointInsideViewport(currentMouseX, currentMouseY);
+			if (hovered) {
+				hoveredTrade = entry;
 			}
-			drawTradeCard(g, cx, cy, cardW, e);
+			drawInteractiveTradeCard(g, x, cy, width, entry, hovered);
 		}
+	}
+
+	private void drawInteractiveTradeCard(GuiGraphics g, int x, int y, int width,
+			ColonyUiSnapshot.TradeEntry entry, boolean hovered) {
+		int color = entry.available() ? 0x6DD08E : 0x6C5A43;
+		int edge = hovered ? brighten(color) : entry.available() ? 0xFF6E9D67 : CARD_EDGE;
+		drawCardSurface(g, x, y, width, 42, color, edge);
+		drawItemIcon(g, itemForKey(entry.inputKey()), x + 8, y + 5);
+		drawExchangeArrow(g, x + 27, y + 13, x + 38, entry.available());
+		drawItemIcon(g, itemForKey(entry.outputKey()), x + 41, y + 5);
+		int textX = x + 64;
+		g.drawString(font, ellipsize(shortName(entry.inputKey()) + " > " + shortName(entry.outputKey()), width - 72), textX, y + 5, TEXT_MAIN, false);
+		g.drawString(font, entry.inputCount() + "x  >  " + entry.outputCount() + "x", textX, y + 17, TEXT_SOFT, false);
+		String state = translated(entry.available() ? "formic_frontier.ui.trade.available" : "formic_frontier.ui.trade.locked");
+		g.drawString(font, state, textX, y + 29, entry.available() ? 0xFF9BE7AD : TEXT_FAINT, false);
+		int pillW = Math.min(46, Math.max(34, width / 5));
+		int pillX = x + width - pillW - 7;
+		g.fillGradient(pillX, y + 27, pillX + pillW, y + 39, entry.available() ? 0xFF315337 : 0xFF241B13, entry.available() ? 0xFF1D3824 : 0xFF17110C);
+		g.renderOutline(pillX, y + 27, pillW, 12, entry.available() ? 0xFF72C884 : CHIP_EDGE);
+		g.drawCenteredString(font, translated("formic_frontier.ui.trade.action"), pillX + pillW / 2, y + 29, entry.available() ? 0xFFD9F7DF : TEXT_FAINT);
 	}
 
 	private void drawInstinct(GuiGraphics g, int x, int y, int width, int height) {
@@ -495,22 +739,6 @@ public final class ColonyStatusScreen extends Screen {
 		}
 	}
 
-	private void drawResearchNode(GuiGraphics g, int x, int y, int width, int height, ColonyUiSnapshot.ResearchEntry e, int progress, int color) {
-		int top = e.complete() ? 0xF03B2E1A : e.active() ? 0xF0352749 : CARD_TOP;
-		int bottom = e.complete() ? 0xF01E160C : e.active() ? 0xF01B1330 : CARD_BOTTOM;
-		g.fillGradient(x, y, x + width, y + height, top, bottom);
-		g.fill(x, y, x + width, y + 1, BEVEL_HI);
-		g.fill(x, y + height - 1, x + width, y + height, BEVEL_LO);
-		g.renderOutline(x, y, width, height, e.startable() || e.active() ? ACCENT : CARD_EDGE);
-		g.fill(x, y, x + width, y + 3, 0xFF000000 | color);
-		g.fill(x, y, x + width, y + 1, 0x70FFFFFF);
-		drawItemIcon(g, itemForResearch(e.nodeId()), x + 8, y + 9);
-		String state = e.complete() ? "Open" : e.active() ? "Studying" : e.startable() ? "Ready" : "Locked";
-		g.drawString(font, ellipsize(e.label(), width - 36), x + 30, y + 9, TEXT_MAIN, false);
-		g.drawString(font, ellipsize(state + " · " + e.status(), width - 16), x + 8, y + 26, TEXT_MUTED, false);
-		drawWideProgress(g, x + 8, y + height - 9, width - 16, progress, color);
-	}
-
 	private void drawResearchEdge(GuiGraphics g, int x1, int y1, int x2, int y2, boolean unlocked) {
 		int color = unlocked ? 0xFF6FE08F : 0xFFD9A24A;
 		int midX = (x1 + x2) / 2;
@@ -519,22 +747,6 @@ public final class ColonyStatusScreen extends Screen {
 		g.fill(midX, y2 - 1, x2 - 5, y2 + 2, color);
 		g.fill(x2 - 6, y2 - 3, x2 - 1, y2 + 4, color);
 		g.fill(x2 - 4, y2 - 5, x2 - 1, y2 + 6, color);
-	}
-
-	private void drawTradeCard(GuiGraphics g, int x, int y, int width, ColonyUiSnapshot.TradeEntry e) {
-		int color = e.available() ? 0x6DD08E : 0x8A6D47;
-		drawCardSurface(g, x, y, width, 52, color, e.available() ? 0xFF8BCB86 : CARD_EDGE);
-		int iconY = y + 7;
-		drawItemIcon(g, itemForKey(e.inputKey()), x + 9, iconY);
-		int arrowX1 = x + 28;
-		int arrowX2 = x + 46;
-		drawExchangeArrow(g, arrowX1, iconY + 8, arrowX2, e.available());
-		drawItemIcon(g, itemForKey(e.outputKey()), x + 50, iconY);
-		int textX = x + 72;
-		g.drawString(font, ellipsize(shortName(e.inputKey()) + " → " + shortName(e.outputKey()), width - (textX - x) - 8), textX, y + 7, TEXT_MAIN, false);
-		g.drawString(font, ellipsize(e.status(), width - (textX - x) - 8), textX, y + 19, e.available() ? TEXT_SOFT : TEXT_MUTED, false);
-		String counts = e.inputCount() + "x  →  " + e.outputCount() + "x";
-		g.drawString(font, counts, x + 9, y + 38, TEXT_SOFT, false);
 	}
 
 	private void drawExchangeArrow(GuiGraphics g, int x1, int y, int x2, boolean available) {
@@ -629,63 +841,11 @@ public final class ColonyStatusScreen extends Screen {
 	// =======================================================================
 	// Action-rail buttons (themed)
 	// =======================================================================
-	private void addTradeButtons() {
-		int x = panelX() + 12;
-		int y = actionRailY();
-		int columns = Math.max(2, Math.min(5, (panelWidth() - 86) / 96));
-		int buttonW = Math.max(76, Math.min(120, (panelWidth() - 24 - (columns - 1) * 5) / columns));
-		List<ColonyUiSnapshot.TradeEntry> rows = tradeRowsForDisplay().stream().limit(5).toList();
-		for (int i = 0; i < rows.size(); i++) {
-			ColonyUiSnapshot.TradeEntry entry = rows.get(i);
-			FormicButton button = new FormicButton(x + (i % columns) * (buttonW + 5), y + (i / columns) * 22, buttonW, 19,
-					Component.literal(tradeButtonLabel(entry)), () -> ClientPlayNetworking.send(new TradeRequestPayload(entry.offerId())), ButtonStyle.ACTION);
-			button.active = entry.available();
-			addRenderableWidget(button);
-		}
-	}
-
-	private void addContractButtons() {
-		int x = panelX() + 12;
-		int y = actionRailY();
-		List<ColonyUiSnapshot.RequestEntry> rows = snapshot.requests().stream()
-				.filter(entry -> entry.fulfilled() < entry.needed())
-				.limit(4)
-				.toList();
-		int columns = Math.max(2, Math.min(4, (panelWidth() - 86) / 150));
-		int buttonW = Math.max(110, Math.min(180, (panelWidth() - 24 - (columns - 1) * 5) / columns));
-		for (int i = 0; i < rows.size(); i++) {
-			ColonyUiSnapshot.RequestEntry entry = rows.get(i);
-			FormicButton button = new FormicButton(x + (i % columns) * (buttonW + 5), y + (i / columns) * 22, buttonW, 19,
-					Component.literal(translated("formic_frontier.ui.request.help", requestBuildingName(entry))), () -> ClientPlayNetworking.send(new ContractRequestPayload(entry.contractId())), ButtonStyle.ACTION);
-			button.active = !entry.contractId().isBlank();
-			addRenderableWidget(button);
-		}
-	}
-
-	private void addResearchButtons() {
-		int x = panelX() + 12;
-		int y = actionRailY();
-		int columns = Math.max(2, Math.min(4, (panelWidth() - 86) / 110));
-		int buttonW = Math.max(96, Math.min(130, (panelWidth() - 24 - (columns - 1) * 5) / columns));
-		List<ColonyUiSnapshot.ResearchEntry> rows = snapshot.research().stream()
-				.filter(entry -> !entry.complete())
-				.sorted(Comparator.comparing(ColonyUiSnapshot.ResearchEntry::startable).reversed().thenComparing(ColonyUiSnapshot.ResearchEntry::nodeId))
-				.limit(4)
-				.toList();
-		for (int i = 0; i < rows.size(); i++) {
-			ColonyUiSnapshot.ResearchEntry entry = rows.get(i);
-			FormicButton button = new FormicButton(x + (i % columns) * (buttonW + 5), y + (i / columns) * 22, buttonW, 19,
-					Component.literal(entry.label()), () -> ClientPlayNetworking.send(new ResearchRequestPayload(entry.nodeId())), ButtonStyle.ACTION);
-			button.active = entry.startable();
-			addRenderableWidget(button);
-		}
-	}
-
 	private void addInstinctButtons() {
-		int x = panelX() + 12;
+		int x = mainContentX();
 		int y = actionRailY() + 11;
 		String[] ids = {"food", "ore", "chitin", "defense"};
-		int buttonW = Math.max(64, Math.min(110, (panelWidth() - 24 - (ids.length - 1) * 5) / ids.length));
+		int buttonW = Math.max(48, (mainContentWidth() - (ids.length - 1) * 5) / ids.length);
 		for (int i = 0; i < ids.length; i++) {
 			String id = ids[i];
 			addRenderableWidget(new FormicButton(x + i * (buttonW + 5), y, buttonW, 19,
@@ -694,7 +854,7 @@ public final class ColonyStatusScreen extends Screen {
 	}
 
 	private void addRelationsButtons() {
-		int x = panelX() + 12;
+		int x = mainContentX();
 		int y = actionRailY();
 		if (selectedDiplomacyTargetId <= 0 && !snapshot.relations().isEmpty()) {
 			selectedDiplomacyTargetId = snapshot.relations().getFirst().colonyId();
@@ -709,7 +869,7 @@ public final class ColonyStatusScreen extends Screen {
 			button.selected = selectedDiplomacyTargetId == entry.colonyId();
 			addRenderableWidget(button);
 		}
-		int actionW = Math.max(86, Math.min(130, (panelWidth() - 24 - 8) / 3));
+		int actionW = Math.max(72, (mainContentWidth() - 10) / 3);
 		for (int i = 0; i < snapshot.diplomacy().size() && i < 3; i++) {
 			ColonyUiSnapshot.DiplomacyEntry entry = snapshot.diplomacy().get(i);
 			addRenderableWidget(new FormicButton(x + i * (actionW + 5), y + 22, actionW, 19,
@@ -728,6 +888,7 @@ public final class ColonyStatusScreen extends Screen {
 		private final ButtonStyle style;
 		private final Runnable onPress;
 		private boolean selected;
+		private int accent = ACCENT_DIM;
 
 		private FormicButton(int x, int y, int w, int h, Component msg, Runnable onPress, ButtonStyle style) {
 			super(x, y, w, h, msg);
@@ -784,11 +945,75 @@ public final class ColonyStatusScreen extends Screen {
 			g.fill(x, y + h - 1, x + w, y + h, BEVEL_LO);
 			g.renderOutline(x, y, w, h, border);
 			if (selected && style == ButtonStyle.TAB) {
-				g.fill(x + 2, y + h - 2, x + w - 2, y + h - 1, ACCENT);
+				g.fill(x + 1, y + 2, x + 4, y + h - 2, 0xFF000000 | accent);
+				g.fill(x + 4, y + 2, x + 5, y + h - 2, 0x42FFFFFF);
+			} else if (style == ButtonStyle.TAB) {
+				g.fill(x + 1, y + 4, x + 3, y + h - 4, 0xB0000000 | accent);
 			}
 			String label = ellipsize(getMessage().getString(), w - 8);
 			g.drawCenteredString(font, label, x + w / 2, y + (h - 8) / 2, textColor);
 		}
+	}
+
+	private void clampResearchPan(int viewWidth, int viewHeight) {
+		int maxX = 16;
+		int maxY = 12;
+		int canvasWidth = viewWidth + 16;
+		int minX = Math.min(maxX, viewWidth - canvasWidth - 16);
+		int minY = Math.min(maxY, viewHeight - RESEARCH_CANVAS_HEIGHT - 12);
+		researchPanX = Math.max(minX, Math.min(maxX, researchPanX));
+		researchPanY = Math.max(minY, Math.min(maxY, researchPanY));
+	}
+
+	private ResearchCanvasPoint researchCanvasPoint(String nodeId, int advancedX) {
+		return switch (nodeId) {
+			case "chitin_cultivation" -> new ResearchCanvasPoint(18, 56);
+			case "resin_masonry" -> new ResearchCanvasPoint(18, 114);
+			case "fungus_symbiosis" -> new ResearchCanvasPoint(18, 172);
+			case "scented_ledger" -> new ResearchCanvasPoint(18, 230);
+			case "mandible_plating" -> new ResearchCanvasPoint(advancedX, 114);
+			case "venom_drills" -> new ResearchCanvasPoint(advancedX, 172);
+			case "treaty_sigils" -> new ResearchCanvasPoint(advancedX, 230);
+			default -> new ResearchCanvasPoint(18, 56);
+		};
+	}
+
+	private String researchLabel(ColonyUiSnapshot.ResearchEntry entry) {
+		String key = "formic_frontier.research." + entry.nodeId();
+		String localized = translated(key);
+		return localized.equals(key) ? entry.label() : localized;
+	}
+
+	private String researchState(ColonyUiSnapshot.ResearchEntry entry) {
+		String key = entry.complete()
+				? "formic_frontier.ui.research.state.complete"
+				: entry.active()
+						? "formic_frontier.ui.research.state.active"
+						: entry.startable()
+								? "formic_frontier.ui.research.state.ready"
+								: "formic_frontier.ui.research.state.locked";
+		return translated(key);
+	}
+
+	private String researchCosts(ResearchNode node) {
+		List<String> costs = new ArrayList<>();
+		for (ResourceType type : ResourceType.values()) {
+			int cost = node.cost(type);
+			if (cost > 0) {
+				costs.add(cost + " " + shortName("formic_frontier.resource." + type.id()));
+			}
+		}
+		return String.join(", ", costs);
+	}
+
+	private boolean pointInsideViewport(int x, int y) {
+		return x >= contentViewportX && x < contentViewportX + contentViewportWidth
+				&& y >= contentViewportY && y < contentViewportY + contentViewportHeight;
+	}
+
+	private static boolean rectanglesOverlap(int x1, int y1, int w1, int h1,
+			int x2, int y2, int w2, int h2) {
+		return x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2;
 	}
 
 	// =======================================================================
@@ -811,57 +1036,6 @@ public final class ColonyStatusScreen extends Screen {
 			return 2;
 		}
 		return entry.available() ? 3 : 4;
-	}
-
-	private String tradeButtonLabel(ColonyUiSnapshot.TradeEntry entry) {
-		String offerId = entry.offerId();
-		String verb = offerId.startsWith("sell_") ? "Sell " : "Buy ";
-		String noun = switch (offerId) {
-			case "sell_wheat", "sell_biomass" -> "Food";
-			case "sell_raw_iron", "sell_iron_ore" -> "Ore";
-			case "sell_chitin" -> "Chitin";
-			case "sell_resin" -> "Resin";
-			case "sell_fungus" -> "Fungus";
-			case "sell_venom" -> "Venom";
-			case "sell_royal_jelly" -> "Jelly";
-			case "buy_colony_seal" -> "Seal";
-			case "buy_war_banner" -> "Banner";
-			case "buy_chitin_boots", "buy_resin_chitin_boots" -> "Boots";
-			case "buy_chitin_helmet", "buy_resin_chitin_helmet" -> "Helmet";
-			case "buy_chitin_leggings", "buy_resin_chitin_leggings" -> "Legs";
-			case "buy_chitin_chestplate", "buy_resin_chitin_chestplate" -> "Chest";
-			case "buy_mandible_saber" -> "Saber";
-			case "buy_venom_spear" -> "Spear";
-			case "buy_queen_egg" -> "Queen Egg";
-			case "buy_chitin_spore" -> "Spore";
-			case "buy_pheromone_dust" -> "Dust";
-			case "buy_resin_glob" -> "Resin";
-			case "buy_fungus_culture" -> "Fungus";
-			case "buy_venom_sac" -> "Venom";
-			default -> shortName(entry.outputKey());
-		};
-		return verb + noun;
-	}
-
-	private static int researchTier(ResearchNode node, Map<String, Integer> cache) {
-		Integer cached = cache.get(node.id());
-		if (cached != null) {
-			return cached;
-		}
-		if (node.prerequisites().isEmpty()) {
-			cache.put(node.id(), 0);
-			return 0;
-		}
-		int depth = 0;
-		for (String prereqId : node.prerequisites()) {
-			try {
-				depth = Math.max(depth, researchTier(ResearchNode.fromId(prereqId), cache) + 1);
-			} catch (IllegalArgumentException ignored) {
-				// Unknown prerequisite id should not happen; never break the UI over it.
-			}
-		}
-		cache.put(node.id(), depth);
-		return depth;
 	}
 
 	private int percent(int value, int max) {
@@ -1033,11 +1207,13 @@ public final class ColonyStatusScreen extends Screen {
 	}
 
 	private int panelWidth() {
-		return Math.min(Math.max(420, width - 24), Math.max(640, (int) (width * 0.88f)));
+		int available = Math.max(320, width - 12);
+		return Math.min(available, Math.max(640, (int) (width * 0.94f)));
 	}
 
 	private int panelHeight() {
-		return Math.min(Math.max(308, height - 20), Math.max(360, (int) (height * 0.93f)));
+		int available = Math.max(180, height - 12);
+		return Math.min(available, Math.max(300, (int) (height * 0.94f)));
 	}
 
 	private int panelX() {
@@ -1048,9 +1224,28 @@ public final class ColonyStatusScreen extends Screen {
 		return (height - panelHeight()) / 2;
 	}
 
+	private int navigationWidth() {
+		return panelWidth() >= 560 ? 112 : 92;
+	}
+
+	private int mainContentX() {
+		return panelX() + navigationWidth() + 7;
+	}
+
+	private int mainContentWidth() {
+		return panelWidth() - navigationWidth() - 15;
+	}
+
 	private boolean hasActionRail() {
 		return switch (selectedTab) {
-			case "Trade", "Needs", "Research", "Instinct", "Relations" -> true;
+			case "Instinct", "Relations" -> true;
+			default -> false;
+		};
+	}
+
+	private boolean showsResourceStrip() {
+		return switch (selectedTab) {
+			case "Overview", "Build" -> true;
 			default -> false;
 		};
 	}
@@ -1059,6 +1254,27 @@ public final class ColonyStatusScreen extends Screen {
 		return panelY() + panelHeight() - 76;
 	}
 
-	private record Tab(String id, String shortKey, String titleKey) {
+	private record Tab(String id, String titleKey, int color) {
+	}
+
+	private record ResearchCanvasPoint(int x, int y) {
+	}
+
+	private record ResearchHitbox(ColonyUiSnapshot.ResearchEntry entry, int x, int y, int width, int height) {
+		private boolean contains(int px, int py) {
+			return px >= x && px < x + width && py >= y && py < y + height;
+		}
+	}
+
+	private record TradeHitbox(ColonyUiSnapshot.TradeEntry entry, int x, int y, int width, int height) {
+		private boolean contains(int px, int py) {
+			return px >= x && px < x + width && py >= y && py < y + height;
+		}
+	}
+
+	private record RequestHitbox(ColonyUiSnapshot.RequestEntry entry, int x, int y, int width, int height) {
+		private boolean contains(int px, int py) {
+			return px >= x && px < x + width && py >= y && py < y + height;
+		}
 	}
 }
