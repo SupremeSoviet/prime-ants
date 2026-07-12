@@ -13,7 +13,9 @@ import net.minecraft.world.level.block.state.BlockState;
 /** Deterministic compiler from a compact tier blueprint to Minecraft blocks. */
 public final class TieredMoundPlacer {
 	public static final String QUEEN_STAGE_ONE_RESOURCE = "formic_blueprints/queen_mound_stage_1.json";
+	public static final String QUEEN_STAGE_TWO_RESOURCE = "formic_blueprints/queen_mound_stage_2.json";
 	private static final TieredMoundBlueprint QUEEN_STAGE_ONE = TieredMoundBlueprint.load(QUEEN_STAGE_ONE_RESOURCE);
+	private static final TieredMoundBlueprint QUEEN_STAGE_TWO = TieredMoundBlueprint.load(QUEEN_STAGE_TWO_RESOURCE);
 	private static final Block TUNNEL_BACK = Blocks.MUD;
 
 	private TieredMoundPlacer() {
@@ -23,8 +25,18 @@ public final class TieredMoundPlacer {
 		return QUEEN_STAGE_ONE;
 	}
 
+	public static TieredMoundBlueprint queenStageTwoBlueprint() {
+		return QUEEN_STAGE_TWO;
+	}
+
 	public static void placeQueenStageOne(ServerLevel level, BlockPos center) {
 		place(level, center, QUEEN_STAGE_ONE);
+		StructurePlacer.safeSet(level, center.below(), ModBlocks.NEST_CORE);
+		StructurePlacer.safeSet(level, center, ModBlocks.NEST_MOUND);
+	}
+
+	public static void placeQueenStageTwo(ServerLevel level, BlockPos center) {
+		place(level, center, QUEEN_STAGE_TWO);
 		StructurePlacer.safeSet(level, center.below(), ModBlocks.NEST_CORE);
 		StructurePlacer.safeSet(level, center, ModBlocks.NEST_MOUND);
 	}
@@ -384,6 +396,36 @@ public final class TieredMoundPlacer {
 				placeDecoration(level, center, chamber, 0, 1, 2, ModBlocks.WATCH_POST);
 				placeDecoration(level, center, chamber, 0, 2, 2, Blocks.LIGHTNING_ROD);
 			}
+			case "great_larder" -> {
+				placeDecoration(level, center, chamber, -2, 1, 0, Blocks.CHEST);
+				placeDecoration(level, center, chamber, 2, 1, 0, Blocks.BARREL);
+				placeDecoration(level, center, chamber, -2, 1, 2, Blocks.HAY_BLOCK);
+				placeDecoration(level, center, chamber, 2, 1, 2, Blocks.COMPOSTER);
+				placeDecoration(level, center, chamber, 0, 1, 2, ModBlocks.FOOD_NODE);
+				placeDecoration(level, center, chamber, -2, 2, 0, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, 2, 2, 0, Blocks.LANTERN);
+			}
+			case "great_workshop" -> {
+				placeDecoration(level, center, chamber, -2, 1, 0, Blocks.BARREL);
+				placeDecoration(level, center, chamber, 2, 1, 0, Blocks.CHEST);
+				placeDecoration(level, center, chamber, -2, 1, 2, Blocks.CRAFTING_TABLE);
+				placeDecoration(level, center, chamber, 0, 1, 2, Blocks.SMITHING_TABLE);
+				placeDecoration(level, center, chamber, 2, 1, 2, Blocks.GRINDSTONE);
+				placeDecoration(level, center, chamber, -2, 2, 0, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, 2, 2, 0, Blocks.OCHRE_FROGLIGHT);
+			}
+			case "great_crown" -> {
+				// Keep the west stair landing and the centre aisle open. Mapping
+				// furniture hugs the side walls; signal stones form a rear altar.
+				placeDecoration(level, center, chamber, -2, 1, 1, Blocks.CARTOGRAPHY_TABLE);
+				placeDecoration(level, center, chamber, 2, 1, 1, Blocks.LECTERN);
+				placeDecoration(level, center, chamber, -1, 1, 2, Blocks.AMETHYST_BLOCK);
+				placeDecoration(level, center, chamber, 1, 1, 2, Blocks.CUT_COPPER);
+				placeDecoration(level, center, chamber, 0, 1, 2, ModBlocks.PHEROMONE_ARCHIVE);
+				placeDecoration(level, center, chamber, -2, 2, 1, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, 2, 2, 1, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, 0, 2, 2, Blocks.LIGHTNING_ROD);
+			}
 			default -> throw new IllegalArgumentException("Unsupported chamber purpose " + chamber.purpose());
 		}
 	}
@@ -524,6 +566,16 @@ public final class TieredMoundPlacer {
 				if (roll < 98) yield Blocks.DEEPSLATE_TILES;
 				if (roll < 99) yield Blocks.DEEPSLATE_IRON_ORE;
 				yield Blocks.OCHRE_FROGLIGHT;
+			}
+			case "great_mound" -> {
+				if (roll < 55) yield ModBlocks.NEST_MOUND;
+				if (roll < 68) yield Blocks.ROOTED_DIRT;
+				if (roll < 78) yield Blocks.PACKED_MUD;
+				if (roll < 87) yield Blocks.MUD_BRICKS;
+				if (roll < 93) yield Blocks.TUFF;
+				if (roll < 97) yield Blocks.CHISELED_TUFF;
+				if (roll < 99) yield Blocks.CUT_COPPER;
+				yield Blocks.AMETHYST_BLOCK;
 			}
 			default -> throw new IllegalArgumentException("Unsupported material palette " + blueprint.palette());
 		};

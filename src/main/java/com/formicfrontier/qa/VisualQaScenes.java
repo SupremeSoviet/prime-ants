@@ -23,6 +23,7 @@ import com.formicfrontier.world.ColonyService;
 import com.formicfrontier.world.StructurePlacer;
 import com.formicfrontier.world.structure.OrganicBuildingPlacer;
 import com.formicfrontier.world.structure.TieredMoundBlueprint;
+import com.formicfrontier.world.structure.TieredMoundPlacer;
 import com.mojang.math.Transformation;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
@@ -105,6 +106,10 @@ public final class VisualQaScenes {
 	public static final String WATCH_POST_VARIANTS = "watch_post_variants";
 	public static final String WATCH_POST_GUARD_INTERIOR = "watch_post_guard_interior";
 	public static final String WATCH_POST_LOOKOUT_INTERIOR = "watch_post_lookout_interior";
+	public static final String GREAT_MOUND_GROWTH = "great_mound_growth";
+	public static final String GREAT_MOUND_LARDER_INTERIOR = "great_mound_larder_interior";
+	public static final String GREAT_MOUND_WORKSHOP_INTERIOR = "great_mound_workshop_interior";
+	public static final String GREAT_MOUND_CROWN_INTERIOR = "great_mound_crown_interior";
 	private static final List<String> SCENES = List.of(
 			COLONY_OVERVIEW,
 			COLONY_GROUND,
@@ -157,7 +162,11 @@ public final class VisualQaScenes {
 			VENOM_PRESS_INTERIOR,
 			WATCH_POST_VARIANTS,
 			WATCH_POST_GUARD_INTERIOR,
-			WATCH_POST_LOOKOUT_INTERIOR
+			WATCH_POST_LOOKOUT_INTERIOR,
+			GREAT_MOUND_GROWTH,
+			GREAT_MOUND_LARDER_INTERIOR,
+			GREAT_MOUND_WORKSHOP_INTERIOR,
+			GREAT_MOUND_CROWN_INTERIOR
 	);
 	private static final List<AntCaste> ANT_LINEUP_CASTES = List.of(
 			AntCaste.QUEEN,
@@ -265,23 +274,31 @@ public final class VisualQaScenes {
 		boolean venomPressFocused = normalized.equals(VENOM_PRESS_VARIANTS) || normalized.equals(VENOM_PRESS_INTERIOR);
 		boolean watchPostFocused = normalized.equals(WATCH_POST_VARIANTS)
 				|| normalized.equals(WATCH_POST_GUARD_INTERIOR) || normalized.equals(WATCH_POST_LOOKOUT_INTERIOR);
+		boolean greatMoundFocused = normalized.equals(GREAT_MOUND_GROWTH)
+				|| normalized.equals(GREAT_MOUND_LARDER_INTERIOR)
+				|| normalized.equals(GREAT_MOUND_WORKSHOP_INTERIOR)
+				|| normalized.equals(GREAT_MOUND_CROWN_INTERIOR);
 		boolean roleBuildingFocused = foodFocused || nurseryFocused || mineFocused || chitinFarmFocused
 				|| barracksFocused || marketFocused || archiveFocused || armoryFocused || shrineFocused || resinDepotFocused
-				|| fungusGardenFocused || venomPressFocused || watchPostFocused;
+				|| fungusGardenFocused || venomPressFocused || watchPostFocused || greatMoundFocused;
 		boolean interiorFocused = moundInteriorFocused || normalized.equals(FOOD_STORE_INTERIOR)
 				|| normalized.equals(NURSERY_INTERIOR) || normalized.equals(MINE_INTERIOR)
 				|| normalized.equals(CHITIN_FARM_INTERIOR) || normalized.equals(BARRACKS_INTERIOR)
 				|| normalized.equals(ARCHIVE_HALL_INTERIOR) || normalized.equals(ARCHIVE_LOFT_INTERIOR)
 				|| normalized.equals(ARMORY_INTERIOR) || normalized.equals(RESIN_DEPOT_INTERIOR)
 				|| normalized.equals(FUNGUS_GARDEN_INTERIOR) || normalized.equals(VENOM_PRESS_INTERIOR)
-				|| normalized.equals(WATCH_POST_GUARD_INTERIOR) || normalized.equals(WATCH_POST_LOOKOUT_INTERIOR);
+				|| normalized.equals(WATCH_POST_GUARD_INTERIOR) || normalized.equals(WATCH_POST_LOOKOUT_INTERIOR)
+				|| normalized.equals(GREAT_MOUND_LARDER_INTERIOR)
+				|| normalized.equals(GREAT_MOUND_WORKSHOP_INTERIOR)
+				|| normalized.equals(GREAT_MOUND_CROWN_INTERIOR);
 		boolean structureFocused = normalized.equals(STRUCTURE_PREVIEW_3Q)
-				|| normalized.equals(STRUCTURE_PREVIEW_FRONT) || interiorFocused || roleBuildingFocused;
+				|| normalized.equals(STRUCTURE_PREVIEW_FRONT) || interiorFocused || roleBuildingFocused || greatMoundFocused;
 		if (structureFocused && structureQaOrigin == null) {
-			// Start each focused run on fresh terrain, then reuse exactly the same
-			// origin so the next angle clears the preceding build instead of leaving
-			// old mounds visible in the background.
-			structureQaOrigin = ColonyService.anchorToSurface(level, requested.offset(160, 0, 160));
+			// Reuse the already loaded player area in the dedicated QA world. Moving
+			// another 160 blocks on every process start eventually raced screenshot
+			// capture against fresh chunk delivery and produced valid-size sky frames.
+			// Every focused scene still clears and rebuilds this whole area from scratch.
+			structureQaOrigin = ColonyService.anchorToSurface(level, requested);
 		}
 		BlockPos origin = structureFocused ? structureQaOrigin : ColonyService.anchorToSurface(level, requested);
 		prepareFlatQaArea(level, origin, qaRadius(normalized));
@@ -403,6 +420,16 @@ public final class VisualQaScenes {
 					|| normalized.equals(WATCH_POST_LOOKOUT_INTERIOR)) {
 				StructurePlacer.placeBuilding(level, origin, BuildingType.WATCH_POST,
 						BuildingVisualStage.COMPLETE, ColonyCulture.FIRE);
+			} else if (normalized.equals(GREAT_MOUND_GROWTH)) {
+				StructurePlacer.placeBuilding(level, origin.offset(-18, 0, 0), BuildingType.QUEEN_CHAMBER,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+				StructurePlacer.placeBuilding(level, origin.offset(18, 0, 0), BuildingType.GREAT_MOUND,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+			} else if (normalized.equals(GREAT_MOUND_LARDER_INTERIOR)
+					|| normalized.equals(GREAT_MOUND_WORKSHOP_INTERIOR)
+					|| normalized.equals(GREAT_MOUND_CROWN_INTERIOR)) {
+				StructurePlacer.placeBuilding(level, origin, BuildingType.GREAT_MOUND,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
 			} else {
 				ColonyService.createColony(level, origin, true);
 			}
@@ -1208,6 +1235,16 @@ public final class VisualQaScenes {
 						.filter(chamber -> chamber.id().equals("lookout_loft"))
 						.findFirst().orElseThrow()
 				: null;
+		String greatMoundRoomId = switch (sceneName) {
+			case GREAT_MOUND_LARDER_INTERIOR -> "left_larder";
+			case GREAT_MOUND_WORKSHOP_INTERIOR -> "right_workshop";
+			case GREAT_MOUND_CROWN_INTERIOR -> "crown_chamber";
+			default -> null;
+		};
+		TieredMoundBlueprint.Chamber greatMoundRoom = greatMoundRoomId == null ? null
+				: TieredMoundPlacer.queenStageTwoBlueprint().chambers().stream()
+						.filter(chamber -> chamber.id().equals(greatMoundRoomId))
+						.findFirst().orElseThrow();
 		Vec3 target = switch (sceneName) {
 			case COLONY_OVERVIEW, SETTLEMENT_SCALE -> colonyOverviewTarget(origin);
 			case COLONY_GROUND -> Vec3.atCenterOf(origin).add(0.0, 11.0, 0.0);
@@ -1253,6 +1290,10 @@ public final class VisualQaScenes {
 			case WATCH_POST_GUARD_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 1.8, 3.5);
 			case WATCH_POST_LOOKOUT_INTERIOR -> Vec3.atCenterOf(origin)
 					.add(watchLookout.x(), 7.8, watchLookout.z() + 2.2);
+			case GREAT_MOUND_GROWTH -> Vec3.atCenterOf(origin).add(2.0, 15.0, 1.0);
+			case GREAT_MOUND_LARDER_INTERIOR, GREAT_MOUND_WORKSHOP_INTERIOR, GREAT_MOUND_CROWN_INTERIOR ->
+					Vec3.atCenterOf(origin).add(greatMoundRoom.x(), greatMoundRoom.floorY() + 1.7,
+							greatMoundRoom.z() + 0.9);
 			default -> Vec3.atCenterOf(origin).add(0.0, 2.0, 0.0);
 		};
 		Vec3 camera = switch (sceneName) {
@@ -1304,6 +1345,22 @@ public final class VisualQaScenes {
 					origin.getX() + watchLookout.x() + 0.5,
 					origin.getY() + 7.3,
 					origin.getZ() - 2.8
+			);
+			case GREAT_MOUND_GROWTH -> new Vec3(origin.getX() + 0.5, origin.getY() + 27.0, origin.getZ() - 58.0);
+			case GREAT_MOUND_LARDER_INTERIOR -> new Vec3(
+					origin.getX() + greatMoundRoom.x() + 0.5,
+					origin.getY() + greatMoundRoom.floorY() + 1.3,
+					origin.getZ() - 0.2
+			);
+			case GREAT_MOUND_WORKSHOP_INTERIOR -> new Vec3(
+					origin.getX() + greatMoundRoom.x() + 0.5,
+					origin.getY() + greatMoundRoom.floorY() + 1.3,
+					origin.getZ() - 0.2
+			);
+			case GREAT_MOUND_CROWN_INTERIOR -> new Vec3(
+					origin.getX() + greatMoundRoom.x() + 0.5,
+					origin.getY() + greatMoundRoom.floorY() + 0.2,
+					origin.getZ() + greatMoundRoom.z() - 1.2
 			);
 			default -> new Vec3(origin.getX() + 28.0, origin.getY() + 18.0, origin.getZ() - 32.0);
 		};

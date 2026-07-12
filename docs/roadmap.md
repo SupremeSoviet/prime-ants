@@ -127,8 +127,12 @@ accepted as three tall two-storey sentinel variants with distinct asymmetric
 silhouettes, a furnished guard room, an internal stair and a separately
 furnished lookout loft. Its first four instances occupy widely separated
 perimeter sites. This completes all 14 standalone role-building families; the
-next implementation slice is the `GREAT_MOUND` growth stage for the colony
-centre.
+`GREAT_MOUND` growth stage is also implemented and accepted as a 33-block-tall
+in-place evolution of the central mound. It preserves the first three inhabited
+floors, adds a connected crown map/signal room and two asymmetrical ground
+annexes for food logistics and fabrication, with six facade mouths and three
+internal stair passages in total. The next implementation slice is the
+underground `QUEEN_VAULT` expansion beneath this evolved centre.
 
 Slice R3: Colony Tablet 2.0.
 

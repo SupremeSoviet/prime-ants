@@ -59,7 +59,9 @@ public final class VisualQaClient {
 			"resin_depot_variants", "resin_depot_interior",
 			"fungus_garden_variants", "fungus_garden_interior",
 			"venom_press_variants", "venom_press_interior",
-			"watch_post_variants", "watch_post_guard_interior", "watch_post_lookout_interior"
+			"watch_post_variants", "watch_post_guard_interior", "watch_post_lookout_interior",
+			"great_mound_growth", "great_mound_crown_interior",
+			"great_mound_larder_interior", "great_mound_workshop_interior"
 	};
 	private static final String[] SCENES = selectScenes();
 	private static final int WAIT_FOR_WORLD_TICKS = Integer.getInteger("formic.visualQa.worldWaitTicks", 600);
@@ -90,6 +92,13 @@ public final class VisualQaClient {
 	}
 
 	private static String[] selectScenes() {
+		String requestedScenes = System.getProperty("formic.visualQa.scenes", "").trim();
+		if (!requestedScenes.isEmpty()) {
+			return java.util.Arrays.stream(requestedScenes.split(","))
+					.map(String::trim)
+					.filter(scene -> !scene.isEmpty())
+					.toArray(String[]::new);
+		}
 		return switch (System.getProperty("formic.visualQa.scope", "full").toLowerCase(java.util.Locale.ROOT)) {
 			case "structure" -> STRUCTURE_SCENES;
 			case "world" -> WORLD_SCENES;
@@ -216,6 +225,9 @@ public final class VisualQaClient {
 					Math.max(COMMAND_TO_SCREENSHOT_TICKS, 120);
 			case "settlement_scale", "diplomacy_scene", "endgame_project" ->
 					Math.max(COMMAND_TO_SCREENSHOT_TICKS, 120);
+			case "great_mound_growth", "great_mound_crown_interior",
+					"great_mound_larder_interior", "great_mound_workshop_interior" ->
+					Math.max(COMMAND_TO_SCREENSHOT_TICKS, 240);
 			case "colony_ground", "culture_styles", "construction_stage", "repair_scene", "progression_scene" ->
 					Math.max(COMMAND_TO_SCREENSHOT_TICKS, 90);
 			default -> COMMAND_TO_SCREENSHOT_TICKS;

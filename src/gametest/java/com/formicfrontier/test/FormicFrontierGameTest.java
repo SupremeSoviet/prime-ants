@@ -110,6 +110,25 @@ public final class FormicFrontierGameTest {
 	}
 
 	@GameTest
+	public void greatMoundUpgradeAddsFurnishedAnnexesAndAConnectedCrownFloor(GameTestHelper helper) {
+		BlockPos origin = new BlockPos(2, 3, 2);
+		prepareCampusArea(helper, origin, 48);
+		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(origin), BuildingType.QUEEN_CHAMBER,
+				BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(origin), BuildingType.GREAT_MOUND,
+				BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+
+		assertGreatMoundProfile(helper, origin, ModBlocks.NEST_MOUND, "direct Great Mound upgrade");
+		if (!VisualQaScenes.scenes().contains(VisualQaScenes.GREAT_MOUND_GROWTH)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.GREAT_MOUND_LARDER_INTERIOR)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.GREAT_MOUND_WORKSHOP_INTERIOR)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.GREAT_MOUND_CROWN_INTERIOR)) {
+			helper.fail("Visual QA should expose stage growth and every new Great Mound room role.");
+		}
+		helper.succeed();
+	}
+
+	@GameTest
 
 	public void culturesShareTheOrganicQueenAndFoodBuildingLanguage(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
@@ -1778,8 +1797,10 @@ public final class FormicFrontierGameTest {
 		if (greatMound == null) {
 			helper.fail("Citadel colony should start the great mound endgame project.");
 		}
-		if (!VisualQaScenes.scenes().contains(VisualQaScenes.ENDGAME_PROJECT)) {
-			helper.fail("Visual QA should expose an endgame_project scene.");
+		if (!VisualQaScenes.scenes().contains(VisualQaScenes.ENDGAME_PROJECT)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.GREAT_MOUND_GROWTH)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.GREAT_MOUND_CROWN_INTERIOR)) {
+			helper.fail("Visual QA should expose the endgame campus and focused Great Mound scenes.");
 		}
 		for (int i = 0; i < 4 && !greatMound.complete(); i++) {
 			ColonyBuilder.tick(helper.getLevel(), colony);
@@ -1787,7 +1808,7 @@ public final class FormicFrontierGameTest {
 		if (!greatMound.complete()) {
 			helper.fail("Great mound should complete from the prepared endgame resources, got " + greatMound.constructionProgress() + "%.");
 		}
-		assertTieredMoundProfile(helper, origin, ModBlocks.NEST_MOUND, "great mound");
+		assertGreatMoundProfile(helper, origin, ModBlocks.NEST_MOUND, "great mound");
 		if (colony.progress().eventsView().stream().noneMatch(event -> event.message().contains("great_mound"))) {
 			helper.fail("Great mound project should leave a colony event for the player.");
 		}
@@ -1828,7 +1849,7 @@ public final class FormicFrontierGameTest {
 		if (!vault.complete()) {
 			helper.fail("Queen vault should complete from prepared endgame resources, got " + vault.constructionProgress() + "%.");
 		}
-		assertTieredMoundProfile(helper, origin, ModBlocks.NEST_CORE, "queen vault");
+		assertGreatMoundProfile(helper, origin, ModBlocks.NEST_CORE, "queen vault shell");
 		if (colony.progress().eventsView().stream().noneMatch(event -> event.message().contains("queen_vault"))) {
 			helper.fail("Queen vault project should leave a colony event for the player.");
 		}
@@ -2794,6 +2815,93 @@ public final class FormicFrontierGameTest {
 				|| !(base > second && second > third && third > crown)) {
 			helper.fail(label + " should form a compact four-tier taper, got layer masses "
 					+ base + "/" + second + "/" + third + "/" + crown);
+		}
+	}
+
+	private static void assertGreatMoundProfile(GameTestHelper helper, BlockPos center,
+			net.minecraft.world.level.block.Block expectedCenter, String label) {
+		helper.assertBlockPresent(expectedCenter, center);
+		helper.assertBlockPresent(ModBlocks.NEST_CORE, center.below());
+		if (!isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 32, 1))).getBlock())) {
+			helper.fail(label + " should reach the authored 33-block organic crown.");
+		}
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 33, 1))).isAir()) {
+			helper.fail(label + " should stop above its declared 33-block height.");
+		}
+
+		for (BlockPos opening : List.of(
+				center.offset(0, 2, -7),
+				center.offset(-7, 2, 0),
+				center.offset(6, 2, 0),
+				center.offset(-2, 9, -4),
+				center.offset(2, 15, -3),
+				center.offset(-1, 22, -2),
+				center.offset(0, 2, 2),
+				center.offset(-7, 2, 4),
+				center.offset(6, 2, 5),
+				center.offset(-2, 9, 1),
+				center.offset(2, 15, 2),
+				center.offset(-1, 22, 1))) {
+			if (!helper.getLevel().getBlockState(helper.absolutePos(opening)).isAir()) {
+				helper.fail(label + " should retain six facade mouths and six carved rooms; blocked at " + opening.toShortString());
+			}
+		}
+
+		// Inherited rooms remain inhabited after the in-place upgrade.
+		helper.assertBlockPresent(Blocks.CHEST, center.offset(-4, 1, 2));
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(4, 1, 2));
+		helper.assertBlockPresent(Blocks.CRAFTING_TABLE, center.offset(3, 1, 5));
+		helper.assertBlockPresent(ModBlocks.CHITIN_BED, center.offset(0, 1, 5));
+		helper.assertBlockPresent(Blocks.CHEST, center.offset(-5, 8, 1));
+		helper.assertBlockPresent(Blocks.COMPOSTER, center.offset(1, 8, 3));
+		helper.assertBlockPresent(ModBlocks.PHEROMONE_ARCHIVE, center.offset(2, 14, 3));
+		helper.assertBlockPresent(Blocks.BELL, center.offset(4, 14, 2));
+
+		// The two new ground annexes have different work identities and clear aisles.
+		helper.assertBlockPresent(Blocks.CHEST, center.offset(-9, 1, 4));
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(-5, 1, 4));
+		helper.assertBlockPresent(Blocks.HAY_BLOCK, center.offset(-9, 1, 6));
+		helper.assertBlockPresent(Blocks.COMPOSTER, center.offset(-5, 1, 6));
+		helper.assertBlockPresent(ModBlocks.FOOD_NODE, center.offset(-7, 1, 6));
+		helper.assertBlockPresent(Blocks.CRAFTING_TABLE, center.offset(4, 1, 7));
+		helper.assertBlockPresent(Blocks.SMITHING_TABLE, center.offset(6, 1, 7));
+		helper.assertBlockPresent(Blocks.GRINDSTONE, center.offset(8, 1, 7));
+		helper.assertBlockPresent(Blocks.OCHRE_FROGLIGHT, center.offset(8, 2, 5));
+
+		// The crown is an observation/map room, not a copy of the lower storage floor.
+		helper.assertBlockPresent(Blocks.CARTOGRAPHY_TABLE, center.offset(-3, 21, 2));
+		helper.assertBlockPresent(Blocks.LECTERN, center.offset(1, 21, 2));
+		helper.assertBlockPresent(Blocks.AMETHYST_BLOCK, center.offset(-2, 21, 3));
+		helper.assertBlockPresent(Blocks.CUT_COPPER, center.offset(0, 21, 3));
+		helper.assertBlockPresent(ModBlocks.PHEROMONE_ARCHIVE, center.offset(-1, 21, 3));
+		helper.assertBlockPresent(Blocks.LIGHTNING_ROD, center.offset(-1, 22, 3));
+
+		for (BlockPos stair : List.of(
+				center.offset(4, 0, 3), center.offset(-2, 6, 3),
+				center.offset(-4, 7, 0), center.offset(1, 12, 0),
+				center.offset(4, 13, 1), center.offset(-2, 19, 1))) {
+			helper.assertBlockPresent(Blocks.MUD_BRICK_STAIRS, stair);
+			if (!helper.getLevel().getBlockState(helper.absolutePos(stair.above())).isAir()
+					|| !helper.getLevel().getBlockState(helper.absolutePos(stair.above(2))).isAir()) {
+				helper.fail(label + " internal stair must retain two blocks of headroom at " + stair.toShortString());
+			}
+		}
+		BlockPos crownLanding = center.offset(-3, 20, 1);
+		if (!helper.getLevel().getBlockState(helper.absolutePos(crownLanding.above())).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(crownLanding.above(2))).isAir()) {
+			helper.fail(label + " crown landing must open into the map room with full headroom.");
+		}
+
+		int base = countMoundLayer(helper, center, 1, 16);
+		int second = countMoundLayer(helper, center, 8, 13);
+		int third = countMoundLayer(helper, center, 15, 10);
+		int fourth = countMoundLayer(helper, center, 22, 8);
+		int crown = countMoundLayer(helper, center, 28, 6);
+		int peak = countMoundLayer(helper, center, 32, 3);
+		if (base < 140 || second < 90 || third < 50 || fourth < 20 || crown < 8 || peak < 1
+				|| !(base > second && second > third && third > fourth && fourth > crown && crown > peak)) {
+			helper.fail(label + " should form a steep six-step taper with annex mass, got layer masses "
+					+ base + "/" + second + "/" + third + "/" + fourth + "/" + crown + "/" + peak);
 		}
 	}
 

@@ -166,9 +166,7 @@ public final class StructurePlacer {
 	}
 
 	public static void placeGreatMoundProject(ServerLevel level, BlockPos center, ColonyCulture culture) {
-		// Stage two will extend the same blueprint vocabulary upward and outward.
-		// Until that slice is authored, the endgame project preserves stage one.
-		TieredMoundPlacer.placeQueenStageOne(level, center);
+		TieredMoundPlacer.placeQueenStageTwo(level, center);
 	}
 
 	public static void placeQueenVault(ServerLevel level, BlockPos center, ColonyCulture culture) {

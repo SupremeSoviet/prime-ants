@@ -67,6 +67,10 @@ STRUCTURE_EXPECTED = [
     "watch_post_variants.png",
     "watch_post_guard_interior.png",
     "watch_post_lookout_interior.png",
+    "great_mound_growth.png",
+    "great_mound_larder_interior.png",
+    "great_mound_workshop_interior.png",
+    "great_mound_crown_interior.png",
 ]
 EXPECTED_BY_SCOPE = {
     "full": FULL_EXPECTED,
@@ -118,8 +122,12 @@ def main() -> int:
         if not path.exists():
             errors.append(f"Missing screenshot: {path}")
             continue
-        if path.stat().st_size < 1024:
-            errors.append(f"Screenshot is too small to be useful: {path}")
+        minimum_bytes = 100_000 if name.startswith("tablet_") else 200_000
+        if path.stat().st_size < minimum_bytes:
+            errors.append(
+                f"Screenshot is suspiciously small and likely blank: {path} "
+                f"({path.stat().st_size} bytes; expected at least {minimum_bytes})"
+            )
             continue
         try:
             width, height = png_size(path)

@@ -187,6 +187,22 @@ furnished floors in all three variants. Focused Structure QA accepts all 33
 structure scenes at original resolution, with the interior camera following
 each variant's offset lookout rather than assuming a fixed room position.
 
+`queen_mound_stage_2.json` implements `GREAT_MOUND` as an in-place evolution of
+the existing centre rather than a second building. It retains the queen hall,
+storage floor, lookout and their first two stairs, grows the landmark from 24
+to 33 occupied blocks, adds a fourth crown room and connects it with a third
+internal stair. Two unequal ground-level hillocks overlap the queen hall so
+their larder and workshop are physically connected annexes with their own
+facade mouths, not detached pods. The six rooms keep distinct identities:
+royal living, food logistics, fabrication, storage, lookout and crown mapping/
+signalling. The reinforced earth palette adds restrained mud brick, tuff,
+copper and amethyst accents while preserving the nest-mound base material.
+Unit tests enforce connected mass, taller-than-wide proportions, meaningful
+growth over stage one, annex overlap and stair topology; GameTests exercise the
+live in-place upgrade, furnishings and clear headroom. Focused Structure QA
+accepts all 37 scenes at original resolution, including a direct stage-one/
+stage-two comparison and the three added room roles.
+
 Every enclosed role chamber has a discrete rear-shell invariant in addition to
 whole-mound connectivity. For each vaulted ceiling layer, the first block behind
 the carved ellipse must remain solid. This prevents a geometrically connected
@@ -215,4 +231,8 @@ During structure iteration, run `scripts/gui-smoke.cmd -Scope Structure`. It
 captures only focused exteriors/interiors for the queen mound and implemented
 role-building families; no UI screens are opened. The legacy full baseline
 remains available with `-Scope Full` when a whole-mod release review is
-explicitly needed.
+explicitly needed. After a complete Structure run, a single changed scene can
+be refreshed with `-Scenes <scene_id>`; existing screenshots are preserved and
+the full Structure manifest is still revalidated. Structure runs reuse the
+already loaded QA area to avoid fresh-chunk capture races, and the report gate
+rejects suspiciously small sky-only PNGs.

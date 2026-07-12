@@ -5,6 +5,7 @@ param(
     [int]$Height = 900,
     [ValidateSet("Full", "World", "Structure")]
     [string]$Scope = "Full",
+    [string]$Scenes = "",
     [switch]$SkipWorldPrepare,
     [switch]$NoLaunch
 )
@@ -76,7 +77,10 @@ try {
     if (-not $resolvedQa.StartsWith($resolvedRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
         throw "Refusing to write visual QA outside workspace: $resolvedQa"
     }
-    if ((-not $NoLaunch) -and (Test-Path -LiteralPath $VisualQaDir)) {
+    if ($Scenes -and $Scenes -notmatch '^[a-z0-9_,]+$') {
+        throw "Scenes must be a comma-separated list of lowercase QA scene ids."
+    }
+    if ((-not $NoLaunch) -and (-not $Scenes) -and (Test-Path -LiteralPath $VisualQaDir)) {
         Remove-Item -LiteralPath $VisualQaDir -Recurse -Force
     }
     New-Item -ItemType Directory -Force -Path $VisualQaDir | Out-Null
@@ -99,14 +103,20 @@ try {
             "-Dformic.visualQa.dir=$VisualQaDir",
             "-Dformic.visualQa.exit=true",
             "-Dformic.visualQa.world=$QuickPlayWorld",
-            "-Dformic.visualQa.scope=$ScopeId",
+            "-Dformic.visualQa.scope=$ScopeId"
+        )
+        if ($Scenes) {
+            $gradleArgs += "-Dformic.visualQa.scenes=$Scenes"
+        }
+        $gradleArgs += @(
             "runClient",
             "`"--args=$quickPlayArgs`""
         )
         $gradleCommand = ($gradleArgs | ForEach-Object { $_ }) -join " "
         $gradleCommand = ".\gradlew.bat $gradleCommand"
 
-        Write-Host "Launching visual QA client. World: $QuickPlayWorld; scope: $ScopeId"
+        $sceneSuffix = if ($Scenes) { "; scenes: $Scenes" } else { "" }
+        Write-Host "Launching visual QA client. World: $QuickPlayWorld; scope: $ScopeId$sceneSuffix"
         $process = Start-Process -FilePath "cmd.exe" -ArgumentList @("/d", "/c", $gradleCommand) -WorkingDirectory $RepoRoot -PassThru -NoNewWindow -RedirectStandardOutput $ClientLog -RedirectStandardError $ClientErr
         $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
         while (-not $process.HasExited -and (Get-Date) -lt $deadline) {
