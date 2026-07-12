@@ -114,7 +114,10 @@ accepted as two heavy single-storey variants with a narrow defended entrance,
 a connected forge hall and side weapon vault, and fully enclosed chamber
 shells. The diplomacy shrine is implemented and accepted as two open ritual
 rings with asymmetrical three-horn crowns, intimate entrances and furnished
-amber sanctums under the sky. The next implementation slice is the resin depot.
+amber sanctums under the sky. The resin depot is implemented and accepted as
+two low asymmetrical cistern mounds with a controlled entrance, connected resin
+workshop and sealed side vault, warm wood/amber accents, and clear storage
+aisles. The next implementation slice is the fungus garden.
 
 Slice R3: Colony Tablet 2.0.
 

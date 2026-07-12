@@ -136,6 +136,18 @@ structure stays an earthwork first. Unit tests require a connected ground ring,
 all three elevated horn regions and an uninterrupted sky column; GameTests
 verify the live furnishings and the two spaced variants.
 
+The resin depot turns the same-floor overlap pattern into a low organic
+cistern. `resin_depot_a.json` and `resin_depot_b.json` combine a broad workshop
+shell with two offset storage lobes and a compact sealed crown. Their narrow
+mouth leads past barrels, a chest, cauldron and workbench into an overlapping
+side vault stocked with honey, honeycomb and warm task lighting. Sparse stripped
+mangrove, copper and amber surface accents distinguish resin engineering from
+the armory's dark mineral shell without covering the underlying earthwork.
+Tests require a fully enclosed workshop and vault, a walkable shared throat,
+distinct footprints and more than 42 blocks between repeat sites. Focused
+Structure QA verifies both silhouettes and the furnished interior without
+opening UI scenes.
+
 Every enclosed role chamber has a discrete rear-shell invariant in addition to
 whole-mound connectivity. For each vaulted ceiling layer, the first block behind
 the carved ellipse must remain solid. This prevents a geometrically connected

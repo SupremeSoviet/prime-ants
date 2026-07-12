@@ -288,6 +288,27 @@ public final class FormicFrontierGameTest {
 	}
 
 	@GameTest
+	public void resinDepotCompilesToConnectedWorkshopAndSealedVaultVariants(GameTestHelper helper) {
+		BlockPos origin = new BlockPos(2, 3, 2);
+		prepareCampusArea(helper, origin, 64);
+		BlockPos first = origin.offset(-18, 0, 0);
+		BlockPos second = origin.offset(18, 0, 1);
+
+		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(first), BuildingType.RESIN_DEPOT,
+				BuildingVisualStage.COMPLETE, ColonyCulture.CARPENTER);
+		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(second), BuildingType.RESIN_DEPOT,
+				BuildingVisualStage.COMPLETE, ColonyCulture.CARPENTER);
+
+		assertResinDepotProfile(helper, first, "first resin depot variant");
+		assertResinDepotProfile(helper, second, "second resin depot variant");
+		if (!VisualQaScenes.scenes().contains(VisualQaScenes.RESIN_DEPOT_VARIANTS)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.RESIN_DEPOT_INTERIOR)) {
+			helper.fail("Visual QA should expose resin cistern silhouettes and its connected workshop.");
+		}
+		helper.succeed();
+	}
+
+	@GameTest
 
 	public void buildingVisualStagesUseBlueprintsOnlyWhenOperational(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
@@ -2396,6 +2417,55 @@ public final class FormicFrontierGameTest {
 		}
 	}
 
+	private static void assertResinDepotProfile(GameTestHelper helper, BlockPos center, String label) {
+		helper.assertBlockPresent(ModBlocks.RESIN_DEPOT, center);
+		int workshopCenterX;
+		if (helper.getLevel().getBlockState(helper.absolutePos(center.offset(-1, 1, 4))).is(ModBlocks.RESIN_DEPOT)) {
+			workshopCenterX = -1;
+		} else if (helper.getLevel().getBlockState(helper.absolutePos(center.offset(1, 1, 4))).is(ModBlocks.RESIN_DEPOT)) {
+			workshopCenterX = 1;
+		} else {
+			helper.fail(label + " should contain a furnished resin workshop.");
+			return;
+		}
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(workshopCenterX, 2, -6))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(workshopCenterX, 2, 1))).isAir()) {
+			helper.fail(label + " should expose a controlled mouth connected to the workshop.");
+		}
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(workshopCenterX - 4, 1, 1));
+		helper.assertBlockPresent(Blocks.CHEST, center.offset(workshopCenterX + 4, 1, 1));
+		helper.assertBlockPresent(Blocks.CAULDRON, center.offset(workshopCenterX - 3, 1, 4));
+		helper.assertBlockPresent(Blocks.CRAFTING_TABLE, center.offset(workshopCenterX + 3, 1, 4));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(workshopCenterX - 4, 2, 1));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(workshopCenterX + 4, 2, 1));
+
+		int vaultCenterX = workshopCenterX < 0 ? 4 : -4;
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(vaultCenterX - 2, 1, 3));
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(vaultCenterX + 2, 1, 3));
+		helper.assertBlockPresent(Blocks.HONEY_BLOCK, center.offset(vaultCenterX - 1, 1, 5));
+		helper.assertBlockPresent(Blocks.HONEYCOMB_BLOCK, center.offset(vaultCenterX + 1, 1, 5));
+		helper.assertBlockPresent(Blocks.OCHRE_FROGLIGHT, center.offset(vaultCenterX, 2, 4));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(vaultCenterX, 2, 2));
+		int passageX = workshopCenterX < 0 ? 1 : -1;
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(passageX, 1, 2))).isAir()) {
+			helper.fail(label + " workshop and sealed vault should share a walkable throat.");
+		}
+
+		if (!isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(-8, 2, 3))).getBlock())
+				|| !isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(8, 2, 3))).getBlock())
+				|| !isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 7, 2))).getBlock())
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 8, 2))).isAir()) {
+			helper.fail(label + " should retain twin storage shoulders and a sealed seven-block crown.");
+		}
+		int base = countMoundLayer(helper, center, 0, 14);
+		int shoulder = countMoundLayer(helper, center, 5, 13);
+		int crown = countMoundLayer(helper, center, 7, 10);
+		if (base < 190 || shoulder < 38 || crown < 12 || !(base > shoulder && shoulder > crown)) {
+			helper.fail(label + " should read as a low twin-pod cistern, got layer masses "
+					+ base + "/" + shoulder + "/" + crown);
+		}
+	}
+
 	private static void assertNurseryProfile(GameTestHelper helper, BlockPos center, String label) {
 		helper.assertBlockPresent(ModBlocks.NURSERY_CHAMBER, center);
 		if (helper.getLevel().getBlockState(helper.absolutePos(center.below())).is(ModBlocks.NEST_CORE)) {
@@ -2448,6 +2518,7 @@ public final class FormicFrontierGameTest {
 				|| block == Blocks.POLISHED_DEEPSLATE
 				|| block == Blocks.BLACKSTONE
 				|| block == Blocks.DEEPSLATE_IRON_ORE
+				|| block == Blocks.STRIPPED_MANGROVE_WOOD
 				|| block == Blocks.GOLD_BLOCK;
 	}
 

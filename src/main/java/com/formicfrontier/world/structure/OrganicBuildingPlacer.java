@@ -38,6 +38,8 @@ public final class OrganicBuildingPlacer {
 	public static final String ARMORY_B_RESOURCE = "formic_blueprints/armory_b.json";
 	public static final String DIPLOMACY_SHRINE_A_RESOURCE = "formic_blueprints/diplomacy_shrine_a.json";
 	public static final String DIPLOMACY_SHRINE_B_RESOURCE = "formic_blueprints/diplomacy_shrine_b.json";
+	public static final String RESIN_DEPOT_A_RESOURCE = "formic_blueprints/resin_depot_a.json";
+	public static final String RESIN_DEPOT_B_RESOURCE = "formic_blueprints/resin_depot_b.json";
 
 	private static final Map<BuildingType, Family> FAMILIES = Map.of(
 			BuildingType.FOOD_STORE,
@@ -85,6 +87,11 @@ public final class OrganicBuildingPlacer {
 			new Family(List.of(
 					TieredMoundBlueprint.load(DIPLOMACY_SHRINE_A_RESOURCE),
 					TieredMoundBlueprint.load(DIPLOMACY_SHRINE_B_RESOURCE)
+			)),
+			BuildingType.RESIN_DEPOT,
+			new Family(List.of(
+					TieredMoundBlueprint.load(RESIN_DEPOT_A_RESOURCE),
+					TieredMoundBlueprint.load(RESIN_DEPOT_B_RESOURCE)
 			))
 	);
 
@@ -137,6 +144,7 @@ public final class OrganicBuildingPlacer {
 			case PHEROMONE_ARCHIVE -> ModBlocks.PHEROMONE_ARCHIVE;
 			case ARMORY -> ModBlocks.ARMORY;
 			case DIPLOMACY_SHRINE -> ModBlocks.DIPLOMACY_SHRINE;
+			case RESIN_DEPOT -> ModBlocks.RESIN_DEPOT;
 			default -> throw new IllegalArgumentException("No functional block registered for " + type);
 		};
 	}

@@ -365,6 +365,58 @@ final class OrganicBuildingBlueprintTest {
 	}
 
 	@Test
+	void resinDepotsAreLowTwinPodCisternsWithConnectedWorkshopAndVault() {
+		var variants = OrganicBuildingPlacer.variants(BuildingType.RESIN_DEPOT);
+		Assertions.assertEquals(Set.of("resin_depot_a", "resin_depot_b"), variants.stream()
+				.map(TieredMoundBlueprint::name).collect(Collectors.toSet()));
+		Set<Set<FootprintCell>> footprints = new HashSet<>();
+		for (TieredMoundBlueprint blueprint : variants) {
+			Assertions.assertEquals("resin_depot", blueprint.palette());
+			Assertions.assertEquals(7, blueprint.maxY(), "resin depot should stay low and tank-like");
+			Assertions.assertEquals(2, blueprint.chambers().size());
+			TieredMoundBlueprint.Chamber workshop = blueprint.chambers().stream()
+					.filter(chamber -> chamber.id().equals("workshop")).findFirst().orElseThrow();
+			TieredMoundBlueprint.Chamber vault = blueprint.chambers().stream()
+					.filter(chamber -> chamber.id().equals("sealed_vault")).findFirst().orElseThrow();
+			Assertions.assertEquals("resin_workshop", workshop.purpose());
+			Assertions.assertEquals("resin_vault", vault.purpose());
+			Assertions.assertEquals(0, workshop.floorY());
+			Assertions.assertEquals(0, vault.floorY());
+			Assertions.assertFalse(workshop.openToSky());
+			Assertions.assertFalse(vault.openToSky());
+			Assertions.assertTrue(blueprint.pits().isEmpty());
+			Assertions.assertTrue(blueprint.connections().isEmpty(), "same-floor resin rooms should meet directly");
+			Assertions.assertEquals(3, blueprint.mouths().getFirst().width(), "resin stores need a controlled narrow mouth");
+
+			boolean roomsOverlap = false;
+			for (int x = blueprint.minX(); x <= blueprint.maxX() && !roomsOverlap; x++) {
+				for (int z = blueprint.minZ(); z <= blueprint.maxZ(); z++) {
+					if (workshop.carves(x, 1, z) && vault.carves(x, 1, z)) {
+						roomsOverlap = true;
+						break;
+					}
+				}
+			}
+			Assertions.assertTrue(roomsOverlap, "workshop and resin vault need a walkable shared throat");
+			assertRearShell(blueprint, workshop);
+			assertRearShell(blueprint, vault);
+			assertEnclosedExceptMouths(blueprint, workshop);
+			assertEnclosedExceptMouths(blueprint, vault);
+
+			Set<Cell> solid = solidCells(blueprint);
+			assertConnected(blueprint, solid, "resin cistern mound");
+			Set<FootprintCell> footprint = footprint(solid);
+			Assertions.assertTrue(footprint.size() >= 200, "resin depot needs two substantial grounded storage pods");
+			Assertions.assertTrue(footprint.stream().anyMatch(cell -> cell.x <= -9), "resin depot needs a left cistern lobe");
+			Assertions.assertTrue(footprint.stream().anyMatch(cell -> cell.x >= 9), "resin depot needs a right cistern lobe");
+			long capMass = solid.stream().filter(cell -> cell.y >= 6).count();
+			Assertions.assertTrue(capMass >= 18, "resin depot needs a readable sealed crown");
+			footprints.add(footprint);
+		}
+		Assertions.assertEquals(2, footprints.size(), "resin depot variants need distinct asymmetric tanks");
+	}
+
+	@Test
 	void repeatedRoleSitesSelectEveryAuthoredVariant() {
 		BlockPos origin = new BlockPos(11, 0, -7);
 		Set<String> mineVariants = new HashSet<>();
@@ -423,6 +475,17 @@ final class OrganicBuildingBlueprintTest {
 		BlockPos secondShrine = ColonyBuilder.siteFor(origin, BuildingType.DIPLOMACY_SHRINE, 1);
 		Assertions.assertTrue(firstShrine.distSqr(secondShrine) >= 42 * 42,
 				"repeated shrines need quiet open ground around their ritual crowns");
+
+		Set<String> resinVariants = new HashSet<>();
+		for (int existing = 0; existing < 2; existing++) {
+			BlockPos site = ColonyBuilder.siteFor(origin, BuildingType.RESIN_DEPOT, existing);
+			resinVariants.add(OrganicBuildingPlacer.blueprintFor(BuildingType.RESIN_DEPOT, site).name());
+		}
+		Assertions.assertEquals(Set.of("resin_depot_a", "resin_depot_b"), resinVariants);
+		BlockPos firstResinDepot = ColonyBuilder.siteFor(origin, BuildingType.RESIN_DEPOT, 0);
+		BlockPos secondResinDepot = ColonyBuilder.siteFor(origin, BuildingType.RESIN_DEPOT, 1);
+		Assertions.assertTrue(firstResinDepot.distSqr(secondResinDepot) >= 42 * 42,
+				"repeated resin depots need open working ground around their storage pods");
 	}
 
 	private static void assertConnected(TieredMoundBlueprint blueprint, Set<Cell> solid, String label) {
