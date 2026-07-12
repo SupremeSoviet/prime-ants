@@ -125,6 +125,17 @@ authored mouth. This caught and removed a rear-side sky hole before visual
 acceptance. Repeated sites alternate mirrored layouts and stay in a separate
 outer district away from the barracks.
 
+The diplomacy shrine proves that an open-air role does not have to repeat the
+market. `diplomacy_shrine_a.json` and `diplomacy_shrine_b.json` carve a compact
+sanctum all the way through a taller mound mass, leaving three uneven ritual
+horns around the sky opening. A narrow entrance replaces the market's broad
+public mouth, while chiseled-tuff lamp plinths, paired gold/honey offerings,
+candles, a shrine block and bell form a centered altar rather than trading
+stalls. Copper, amethyst and amber accents remain deliberately sparse so the
+structure stays an earthwork first. Unit tests require a connected ground ring,
+all three elevated horn regions and an uninterrupted sky column; GameTests
+verify the live furnishings and the two spaced variants.
+
 Every enclosed role chamber has a discrete rear-shell invariant in addition to
 whole-mound connectivity. For each vaulted ceiling layer, the first block behind
 the carved ellipse must remain solid. This prevents a geometrically connected

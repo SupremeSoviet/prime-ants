@@ -54,7 +54,8 @@ public final class VisualQaClient {
 			"barracks_variants", "barracks_interior",
 			"market_variants", "market_courtyard",
 			"archive_variants", "archive_hall_interior", "archive_loft_interior",
-			"armory_variants", "armory_interior"
+			"armory_variants", "armory_interior",
+			"shrine_variants", "shrine_sanctum"
 	};
 	private static final String[] SCENES = selectScenes();
 	private static final int WAIT_FOR_WORLD_TICKS = Integer.getInteger("formic.visualQa.worldWaitTicks", 600);
@@ -207,7 +208,7 @@ public final class VisualQaClient {
 			case "colony_overview" -> Math.max(COMMAND_TO_SCREENSHOT_TICKS, 220);
 			case "structure_preview_front", "structure_preview_3q", "food_store_variants", "nursery_variants",
 					"mine_variants", "chitin_farm_variants", "barracks_variants", "market_variants", "archive_variants",
-					"armory_variants" ->
+					"armory_variants", "shrine_variants" ->
 					Math.max(COMMAND_TO_SCREENSHOT_TICKS, 120);
 			case "settlement_scale", "diplomacy_scene", "endgame_project" ->
 					Math.max(COMMAND_TO_SCREENSHOT_TICKS, 120);

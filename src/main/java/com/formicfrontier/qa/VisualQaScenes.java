@@ -92,6 +92,8 @@ public final class VisualQaScenes {
 	public static final String ARCHIVE_LOFT_INTERIOR = "archive_loft_interior";
 	public static final String ARMORY_VARIANTS = "armory_variants";
 	public static final String ARMORY_INTERIOR = "armory_interior";
+	public static final String SHRINE_VARIANTS = "shrine_variants";
+	public static final String SHRINE_SANCTUM = "shrine_sanctum";
 	private static final List<String> SCENES = List.of(
 			COLONY_OVERVIEW,
 			COLONY_GROUND,
@@ -133,7 +135,9 @@ public final class VisualQaScenes {
 			ARCHIVE_HALL_INTERIOR,
 			ARCHIVE_LOFT_INTERIOR,
 			ARMORY_VARIANTS,
-			ARMORY_INTERIOR
+			ARMORY_INTERIOR,
+			SHRINE_VARIANTS,
+			SHRINE_SANCTUM
 	);
 	private static final List<AntCaste> ANT_LINEUP_CASTES = List.of(
 			AntCaste.QUEEN,
@@ -235,8 +239,9 @@ public final class VisualQaScenes {
 		boolean archiveFocused = normalized.equals(ARCHIVE_VARIANTS)
 				|| normalized.equals(ARCHIVE_HALL_INTERIOR) || normalized.equals(ARCHIVE_LOFT_INTERIOR);
 		boolean armoryFocused = normalized.equals(ARMORY_VARIANTS) || normalized.equals(ARMORY_INTERIOR);
+		boolean shrineFocused = normalized.equals(SHRINE_VARIANTS) || normalized.equals(SHRINE_SANCTUM);
 		boolean roleBuildingFocused = foodFocused || nurseryFocused || mineFocused || chitinFarmFocused
-				|| barracksFocused || marketFocused || archiveFocused || armoryFocused;
+				|| barracksFocused || marketFocused || archiveFocused || armoryFocused || shrineFocused;
 		boolean interiorFocused = moundInteriorFocused || normalized.equals(FOOD_STORE_INTERIOR)
 				|| normalized.equals(NURSERY_INTERIOR) || normalized.equals(MINE_INTERIOR)
 				|| normalized.equals(CHITIN_FARM_INTERIOR) || normalized.equals(BARRACKS_INTERIOR)
@@ -326,6 +331,14 @@ public final class VisualQaScenes {
 						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
 			} else if (normalized.equals(ARMORY_INTERIOR)) {
 				StructurePlacer.placeBuilding(level, origin, BuildingType.ARMORY,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+			} else if (normalized.equals(SHRINE_VARIANTS)) {
+				StructurePlacer.placeBuilding(level, origin.offset(-18, 0, 0), BuildingType.DIPLOMACY_SHRINE,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+				StructurePlacer.placeBuilding(level, origin.offset(18, 0, 1), BuildingType.DIPLOMACY_SHRINE,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+			} else if (normalized.equals(SHRINE_SANCTUM)) {
+				StructurePlacer.placeBuilding(level, origin, BuildingType.DIPLOMACY_SHRINE,
 						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
 			} else {
 				ColonyService.createColony(level, origin, true);
@@ -1160,6 +1173,8 @@ public final class VisualQaScenes {
 			case ARCHIVE_LOFT_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 6.5, 2.5);
 			case ARMORY_VARIANTS -> Vec3.atCenterOf(origin).add(0.0, 4.2, 1.0);
 			case ARMORY_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 1.8, 3.0);
+			case SHRINE_VARIANTS -> Vec3.atCenterOf(origin).add(0.0, 4.0, 1.0);
+			case SHRINE_SANCTUM -> Vec3.atCenterOf(origin).add(0.0, 1.8, 3.0);
 			default -> Vec3.atCenterOf(origin).add(0.0, 2.0, 0.0);
 		};
 		Vec3 camera = switch (sceneName) {
@@ -1197,6 +1212,8 @@ public final class VisualQaScenes {
 			case ARCHIVE_LOFT_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 6.3, origin.getZ() - 1.8);
 			case ARMORY_VARIANTS -> new Vec3(origin.getX() + 0.5, origin.getY() + 14.0, origin.getZ() - 43.0);
 			case ARMORY_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.3, origin.getZ() - 3.2);
+			case SHRINE_VARIANTS -> new Vec3(origin.getX() + 0.5, origin.getY() + 14.0, origin.getZ() - 43.0);
+			case SHRINE_SANCTUM -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.3, origin.getZ() - 2.8);
 			default -> new Vec3(origin.getX() + 28.0, origin.getY() + 18.0, origin.getZ() - 32.0);
 		};
 		player.teleportTo(camera.x, camera.y, camera.z);

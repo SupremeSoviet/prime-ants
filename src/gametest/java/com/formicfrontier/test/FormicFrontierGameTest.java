@@ -138,7 +138,7 @@ public final class FormicFrontierGameTest {
 		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(leafcutterSignature), BuildingType.FUNGUS_GARDEN, BuildingVisualStage.COMPLETE, ColonyCulture.LEAFCUTTER);
 		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(fireSignature), BuildingType.WATCH_POST, BuildingVisualStage.COMPLETE, ColonyCulture.FIRE);
 		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(carpenterSignature), BuildingType.RESIN_DEPOT, BuildingVisualStage.COMPLETE, ColonyCulture.CARPENTER);
-		assertMinimalBuildingMarker(helper, amberSignature, ModBlocks.DIPLOMACY_SHRINE, "amber signature");
+		assertDiplomacyShrineProfile(helper, amberSignature, "amber signature");
 		assertMinimalBuildingMarker(helper, leafcutterSignature, ModBlocks.FUNGUS_GARDEN, "leafcutter signature");
 		assertMinimalBuildingMarker(helper, fireSignature, ModBlocks.WATCH_POST, "fire signature");
 		assertMinimalBuildingMarker(helper, carpenterSignature, ModBlocks.RESIN_DEPOT, "carpenter signature");
@@ -262,6 +262,27 @@ public final class FormicFrontierGameTest {
 		if (!VisualQaScenes.scenes().contains(VisualQaScenes.ARMORY_VARIANTS)
 				|| !VisualQaScenes.scenes().contains(VisualQaScenes.ARMORY_INTERIOR)) {
 			helper.fail("Visual QA should expose armory silhouettes and its connected interior.");
+		}
+		helper.succeed();
+	}
+
+	@GameTest
+	public void diplomacyShrineCompilesToOpenFurnishedSanctumVariants(GameTestHelper helper) {
+		BlockPos origin = new BlockPos(2, 3, 2);
+		prepareCampusArea(helper, origin, 64);
+		BlockPos first = origin.offset(-18, 0, 0);
+		BlockPos second = origin.offset(18, 0, 1);
+
+		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(first), BuildingType.DIPLOMACY_SHRINE,
+				BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(second), BuildingType.DIPLOMACY_SHRINE,
+				BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+
+		assertDiplomacyShrineProfile(helper, first, "first diplomacy shrine variant");
+		assertDiplomacyShrineProfile(helper, second, "second diplomacy shrine variant");
+		if (!VisualQaScenes.scenes().contains(VisualQaScenes.SHRINE_VARIANTS)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.SHRINE_SANCTUM)) {
+			helper.fail("Visual QA should expose diplomacy shrine crowns and its open sanctum.");
 		}
 		helper.succeed();
 	}
@@ -2341,6 +2362,40 @@ public final class FormicFrontierGameTest {
 		}
 	}
 
+	private static void assertDiplomacyShrineProfile(GameTestHelper helper, BlockPos center, String label) {
+		helper.assertBlockPresent(ModBlocks.DIPLOMACY_SHRINE, center);
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 2, -6))).isAir()) {
+			helper.fail(label + " should expose a narrow ceremonial entrance.");
+		}
+		for (int y = 1; y <= 8; y++) {
+			if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, y, 1))).isAir()) {
+				helper.fail(label + " sanctum should remain open to the sky at y=" + y + ".");
+			}
+		}
+		helper.assertBlockPresent(Blocks.CHISELED_TUFF, center.offset(-3, 1, 1));
+		helper.assertBlockPresent(Blocks.CHISELED_TUFF, center.offset(3, 1, 1));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(-3, 2, 1));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(3, 2, 1));
+		helper.assertBlockPresent(Blocks.HONEYCOMB_BLOCK, center.offset(-2, 1, 3));
+		helper.assertBlockPresent(Blocks.GOLD_BLOCK, center.offset(2, 1, 3));
+		helper.assertBlockPresent(Blocks.CANDLE, center.offset(-2, 2, 3));
+		helper.assertBlockPresent(Blocks.CANDLE, center.offset(2, 2, 3));
+		helper.assertBlockPresent(ModBlocks.DIPLOMACY_SHRINE, center.offset(0, 1, 3));
+		helper.assertBlockPresent(Blocks.BELL, center.offset(0, 1, 4));
+		if (!isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(-6, 2, 1))).getBlock())
+				|| !isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(6, 2, 1))).getBlock())
+				|| !isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 4, 6))).getBlock())) {
+			helper.fail(label + " should retain two side horns and a rear ritual horn around the open court.");
+		}
+		int base = countMoundLayer(helper, center, 0, 13);
+		int upper = countMoundLayer(helper, center, 6, 12);
+		int crown = countMoundLayer(helper, center, 7, 11);
+		if (base < 170 || upper < 12 || crown < 4 || !(base > upper && upper >= crown)) {
+			helper.fail(label + " should read as a grounded open ring with a broken horn crown, got layer masses "
+					+ base + "/" + upper + "/" + crown);
+		}
+	}
+
 	private static void assertNurseryProfile(GameTestHelper helper, BlockPos center, String label) {
 		helper.assertBlockPresent(ModBlocks.NURSERY_CHAMBER, center);
 		if (helper.getLevel().getBlockState(helper.absolutePos(center.below())).is(ModBlocks.NEST_CORE)) {
@@ -2392,7 +2447,8 @@ public final class FormicFrontierGameTest {
 				|| block == Blocks.TUFF
 				|| block == Blocks.POLISHED_DEEPSLATE
 				|| block == Blocks.BLACKSTONE
-				|| block == Blocks.DEEPSLATE_IRON_ORE;
+				|| block == Blocks.DEEPSLATE_IRON_ORE
+				|| block == Blocks.GOLD_BLOCK;
 	}
 
 	private static void assertTieredMoundProfile(GameTestHelper helper, BlockPos center,

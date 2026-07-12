@@ -36,11 +36,11 @@ public record TieredMoundBlueprint(
 	private static final int MAX_HEIGHT = 48;
 	private static final Set<String> SUPPORTED_PALETTES = Set.of(
 			"earth", "food_store", "nursery", "mine", "chitin_farm", "barracks", "market",
-			"pheromone_archive", "armory"
+			"pheromone_archive", "armory", "diplomacy_shrine"
 	);
 	private static final Set<String> SUPPORTED_CHAMBER_PURPOSES = Set.of(
 			"queen_hall", "storage", "lookout", "food_store", "nursery", "mine", "chitin_farm", "barracks", "market",
-			"archive_hall", "archive_loft", "armory_forge", "armory_vault"
+			"archive_hall", "archive_loft", "armory_forge", "armory_vault", "diplomacy_shrine"
 	);
 
 	public TieredMoundBlueprint {

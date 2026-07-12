@@ -326,6 +326,45 @@ final class OrganicBuildingBlueprintTest {
 	}
 
 	@Test
+	void diplomacyShrinesAreOpenThreeHornSanctumsWithDistinctSilhouettes() {
+		var variants = OrganicBuildingPlacer.variants(BuildingType.DIPLOMACY_SHRINE);
+		Assertions.assertEquals(Set.of("diplomacy_shrine_a", "diplomacy_shrine_b"), variants.stream()
+				.map(TieredMoundBlueprint::name).collect(Collectors.toSet()));
+		Set<Set<FootprintCell>> footprints = new HashSet<>();
+		for (TieredMoundBlueprint blueprint : variants) {
+			Assertions.assertEquals("diplomacy_shrine", blueprint.palette());
+			Assertions.assertEquals(7, blueprint.maxY());
+			Assertions.assertEquals(1, blueprint.chambers().size());
+			TieredMoundBlueprint.Chamber sanctum = blueprint.chambers().getFirst();
+			Assertions.assertEquals("diplomacy_shrine", sanctum.purpose());
+			Assertions.assertTrue(sanctum.openToSky(), "diplomacy sanctum should remain open under the horn crown");
+			Assertions.assertEquals(blueprint.maxY(), sanctum.topY());
+			Assertions.assertTrue(blueprint.pits().isEmpty());
+			Assertions.assertTrue(blueprint.connections().isEmpty());
+			Assertions.assertEquals(3, blueprint.mouths().getFirst().width(), "sanctum needs an intimate ceremonial entrance");
+			for (int y = 1; y <= blueprint.maxY(); y++) {
+				Assertions.assertFalse(blueprint.isSolid(sanctum.x(), y, sanctum.z()),
+						"open sanctum must reach the sky at y=" + y);
+			}
+
+			Set<Cell> solid = solidCells(blueprint);
+			assertConnected(blueprint, solid, "diplomacy shrine ring");
+			Assertions.assertTrue(solid.stream().anyMatch(cell -> cell.y >= 6 && cell.x <= -5),
+					"shrine needs a tall left ritual horn");
+			Assertions.assertTrue(solid.stream().anyMatch(cell -> cell.y >= 6 && cell.x >= 5),
+					"shrine needs a tall right ritual horn");
+			Assertions.assertTrue(solid.stream().anyMatch(cell -> cell.y >= 6 && cell.z >= 6),
+					"shrine needs a tall rear ritual horn");
+			long crownMass = solid.stream().filter(cell -> cell.y >= 6).count();
+			Assertions.assertTrue(crownMass >= 12, "open sanctum still needs a readable three-part crown");
+			Set<FootprintCell> footprint = footprint(solid);
+			Assertions.assertTrue(footprint.size() >= 190, "shrine needs a grounded ceremonial ring");
+			footprints.add(footprint);
+		}
+		Assertions.assertEquals(2, footprints.size(), "shrine variants need mirrored but non-identical rings");
+	}
+
+	@Test
 	void repeatedRoleSitesSelectEveryAuthoredVariant() {
 		BlockPos origin = new BlockPos(11, 0, -7);
 		Set<String> mineVariants = new HashSet<>();
@@ -373,6 +412,17 @@ final class OrganicBuildingBlueprintTest {
 		BlockPos secondArmory = ColonyBuilder.siteFor(origin, BuildingType.ARMORY, 1);
 		Assertions.assertTrue(firstArmory.distSqr(secondArmory) >= 34 * 34,
 				"repeated armories need open ground around their heavy shells");
+
+		Set<String> shrineVariants = new HashSet<>();
+		for (int existing = 0; existing < 2; existing++) {
+			BlockPos site = ColonyBuilder.siteFor(origin, BuildingType.DIPLOMACY_SHRINE, existing);
+			shrineVariants.add(OrganicBuildingPlacer.blueprintFor(BuildingType.DIPLOMACY_SHRINE, site).name());
+		}
+		Assertions.assertEquals(Set.of("diplomacy_shrine_a", "diplomacy_shrine_b"), shrineVariants);
+		BlockPos firstShrine = ColonyBuilder.siteFor(origin, BuildingType.DIPLOMACY_SHRINE, 0);
+		BlockPos secondShrine = ColonyBuilder.siteFor(origin, BuildingType.DIPLOMACY_SHRINE, 1);
+		Assertions.assertTrue(firstShrine.distSqr(secondShrine) >= 42 * 42,
+				"repeated shrines need quiet open ground around their ritual crowns");
 	}
 
 	private static void assertConnected(TieredMoundBlueprint blueprint, Set<Cell> solid, String label) {

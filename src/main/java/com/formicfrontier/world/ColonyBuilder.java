@@ -312,7 +312,9 @@ public final class ColonyBuilder {
 			case MARKET -> existing == 0
 					? origin.offset(34, 0, -34)
 					: origin.offset(66 + (existing - 1) * 31, 0, -57 - (existing - 1) * 28);
-			case DIPLOMACY_SHRINE -> origin.offset(-34 - existing * 18, 0, -34 - existing * 14);
+			case DIPLOMACY_SHRINE -> existing == 0
+					? origin.offset(-36, 0, -42)
+					: origin.offset(-70 - (existing - 1) * 32, 0, -75 - (existing - 1) * 28);
 			case WATCH_POST -> origin.offset(56 + existing * 14, 0, -46);
 			case RESIN_DEPOT -> origin.offset(50 + existing * 18, 0, 28);
 			case PHEROMONE_ARCHIVE -> existing == 0

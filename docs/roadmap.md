@@ -112,7 +112,9 @@ two-storey variants with separate hall and loft interiors, an internal stair,
 and different furnishings on each floor. The armory is implemented and
 accepted as two heavy single-storey variants with a narrow defended entrance,
 a connected forge hall and side weapon vault, and fully enclosed chamber
-shells. The next implementation slice is the diplomacy shrine.
+shells. The diplomacy shrine is implemented and accepted as two open ritual
+rings with asymmetrical three-horn crowns, intimate entrances and furnished
+amber sanctums under the sky. The next implementation slice is the resin depot.
 
 Slice R3: Colony Tablet 2.0.
 

@@ -294,6 +294,18 @@ public final class TieredMoundPlacer {
 				placeDecoration(level, center, chamber, 0, 2, 1, Blocks.IRON_BARS);
 				placeDecoration(level, center, chamber, 0, 2, -1, Blocks.LANTERN);
 			}
+			case "diplomacy_shrine" -> {
+				placeDecoration(level, center, chamber, -3, 1, 0, Blocks.CHISELED_TUFF);
+				placeDecoration(level, center, chamber, 3, 1, 0, Blocks.CHISELED_TUFF);
+				placeDecoration(level, center, chamber, -3, 2, 0, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, 3, 2, 0, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, -2, 1, 2, Blocks.HONEYCOMB_BLOCK);
+				placeDecoration(level, center, chamber, 2, 1, 2, Blocks.GOLD_BLOCK);
+				placeDecoration(level, center, chamber, -2, 2, 2, Blocks.CANDLE);
+				placeDecoration(level, center, chamber, 2, 2, 2, Blocks.CANDLE);
+				placeDecoration(level, center, chamber, 0, 1, 2, ModBlocks.DIPLOMACY_SHRINE);
+				placeDecoration(level, center, chamber, 0, 1, 3, Blocks.BELL);
+			}
 			default -> throw new IllegalArgumentException("Unsupported chamber purpose " + chamber.purpose());
 		}
 	}
@@ -384,6 +396,16 @@ public final class TieredMoundPlacer {
 				if (roll < 90) yield Blocks.POLISHED_DEEPSLATE;
 				if (roll < 96) yield Blocks.BLACKSTONE;
 				yield Blocks.DEEPSLATE_IRON_ORE;
+			}
+			case "diplomacy_shrine" -> {
+				if (roll < 53) yield ModBlocks.NEST_MOUND;
+				if (roll < 67) yield Blocks.ROOTED_DIRT;
+				if (roll < 78) yield Blocks.MUD_BRICKS;
+				if (roll < 92) yield Blocks.CHISELED_TUFF;
+				if (roll < 96) yield Blocks.CUT_COPPER;
+				if (roll < 98) yield Blocks.HONEYCOMB_BLOCK;
+				if (roll < 99) yield Blocks.AMETHYST_BLOCK;
+				yield Blocks.GOLD_BLOCK;
 			}
 			default -> throw new IllegalArgumentException("Unsupported material palette " + blueprint.palette());
 		};
