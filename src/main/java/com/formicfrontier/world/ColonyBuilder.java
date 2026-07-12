@@ -298,8 +298,14 @@ public final class ColonyBuilder {
 			case NURSERY -> existing == 0
 					? origin.offset(-38, 0, 0)
 					: origin.offset(-66 - (existing - 1) * 28, 0, -21 - (existing - 1) * 24);
-			case MINE -> origin.offset(0, 0, 38 + existing * 20);
-			case CHITIN_FARM -> origin.offset(-38 - existing * 18, 0, 34 + existing * 12);
+			case MINE -> existing == 0
+					? origin.offset(0, 0, 38)
+					: origin.offset(21 + (existing - 1) * 28, 0, 66 + (existing - 1) * 28);
+			case CHITIN_FARM -> switch (existing) {
+				case 0 -> origin.offset(-38, 0, 34);
+				case 1 -> origin.offset(-67, 0, 58);
+				default -> origin.offset(-91 - (existing - 2) * 30, 0, 30 - (existing - 2) * 26);
+			};
 			case BARRACKS -> origin.offset(0, 0, -38 - existing * 20);
 			case MARKET -> origin.offset(34 + existing * 18, 0, -34 - existing * 14);
 			case DIPLOMACY_SHRINE -> origin.offset(-34 - existing * 18, 0, -34 - existing * 14);

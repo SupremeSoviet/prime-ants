@@ -47,6 +47,9 @@ public final class TieredMoundPlacer {
 		for (TieredMoundBlueprint.Chamber chamber : blueprint.chambers()) {
 			carveChamber(level, center, blueprint, chamber);
 		}
+		for (TieredMoundBlueprint.Pit pit : blueprint.pits()) {
+			carvePit(level, center, blueprint, pit);
+		}
 		for (TieredMoundBlueprint.Connection connection : blueprint.connections()) {
 			placeConnection(level, center, blueprint, connection);
 		}
@@ -139,11 +142,36 @@ public final class TieredMoundPlacer {
 		}
 		for (int x = minX; x <= maxX; x++) {
 			for (int z = minZ; z <= maxZ; z++) {
-				if (chamber.containsFloor(x, z) && blueprint.contains(x, chamber.floorY(), z)) {
+				if (chamber.containsFloor(x, z) && blueprint.isSolid(x, chamber.floorY(), z)) {
 					StructurePlacer.safeSet(level, center.offset(x, chamber.floorY(), z), Blocks.PACKED_MUD);
 				}
 			}
 		}
+	}
+
+	private static void carvePit(ServerLevel level, BlockPos center, TieredMoundBlueprint blueprint,
+			TieredMoundBlueprint.Pit pit) {
+		TieredMoundBlueprint.Chamber owner = chamber(blueprint, pit.chamber());
+		int minX = (int) Math.floor(pit.x() - pit.radiusX());
+		int maxX = (int) Math.ceil(pit.x() + pit.radiusX());
+		int minZ = (int) Math.floor(pit.z() - pit.radiusZ());
+		int maxZ = (int) Math.ceil(pit.z() + pit.radiusZ());
+		for (int x = minX; x <= maxX; x++) {
+			for (int z = minZ; z <= maxZ; z++) {
+				int depth = pit.depthAt(x, z);
+				if (depth == 0) {
+					continue;
+				}
+				for (int y = owner.floorY(); y > owner.floorY() - depth; y--) {
+					StructurePlacer.safeSet(level, center.offset(x, y, z), Blocks.AIR);
+				}
+				int bottomY = pit.bottomY(x, z, owner);
+				int roll = Math.floorMod(x * 31 + z * 17 + blueprint.seed(), 7);
+				StructurePlacer.safeSet(level, center.offset(x, bottomY, z),
+						roll == 0 ? Blocks.IRON_ORE : Blocks.COBBLED_DEEPSLATE);
+			}
+		}
+		StructurePlacer.safeSet(level, center.offset(pit.x(), owner.floorY() - pit.depth(), pit.z()), ModBlocks.ORE_NODE);
 	}
 
 	private static void decorateChamber(ServerLevel level, BlockPos center, TieredMoundBlueprint.Chamber chamber) {
@@ -192,6 +220,24 @@ public final class TieredMoundPlacer {
 				placeDecoration(level, center, chamber, -4, 2, 0, Blocks.LANTERN);
 				placeDecoration(level, center, chamber, 4, 2, 0, Blocks.LANTERN);
 			}
+			case "mine" -> {
+				placeDecoration(level, center, chamber, -4, 1, 0, Blocks.CHEST);
+				placeDecoration(level, center, chamber, 4, 1, 0, Blocks.BARREL);
+				placeDecoration(level, center, chamber, -3, 1, 3, Blocks.COBBLED_DEEPSLATE_WALL);
+				placeDecoration(level, center, chamber, 3, 1, 3, Blocks.IRON_ORE);
+				placeDecoration(level, center, chamber, -2, 2, 3, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, 2, 2, 3, Blocks.LANTERN);
+			}
+			case "chitin_farm" -> {
+				placeDecoration(level, center, chamber, -4, 1, 0, ModBlocks.CHITIN_BED);
+				placeDecoration(level, center, chamber, 4, 1, 0, ModBlocks.CHITIN_BED);
+				placeDecoration(level, center, chamber, -3, 1, 2, Blocks.BONE_BLOCK);
+				placeDecoration(level, center, chamber, 3, 1, 2, Blocks.HONEYCOMB_BLOCK);
+				placeDecoration(level, center, chamber, -1, 1, 3, ModBlocks.CHITIN_NODE);
+				placeDecoration(level, center, chamber, 1, 1, 3, Blocks.COMPOSTER);
+				placeDecoration(level, center, chamber, -4, 2, 0, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, 4, 2, 0, Blocks.LANTERN);
+			}
 			default -> throw new IllegalArgumentException("Unsupported chamber purpose " + chamber.purpose());
 		}
 	}
@@ -231,6 +277,22 @@ public final class TieredMoundPlacer {
 				if (roll < 78) yield Blocks.ROOTED_DIRT;
 				if (roll < 89) yield Blocks.PACKED_MUD;
 				if (roll < 97) yield Blocks.MUD;
+				yield Blocks.MANGROVE_ROOTS;
+			}
+			case "mine" -> {
+				if (roll < 50) yield ModBlocks.NEST_MOUND;
+				if (roll < 65) yield Blocks.ROOTED_DIRT;
+				if (roll < 78) yield Blocks.STONE;
+				if (roll < 89) yield Blocks.COBBLED_DEEPSLATE;
+				if (roll < 97) yield Blocks.DEEPSLATE;
+				yield Blocks.IRON_ORE;
+			}
+			case "chitin_farm" -> {
+				if (roll < 60) yield ModBlocks.NEST_MOUND;
+				if (roll < 75) yield Blocks.ROOTED_DIRT;
+				if (roll < 86) yield Blocks.PACKED_MUD;
+				if (roll < 94) yield Blocks.BONE_BLOCK;
+				if (roll < 98) yield Blocks.HONEYCOMB_BLOCK;
 				yield Blocks.MANGROVE_ROOTS;
 			}
 			default -> throw new IllegalArgumentException("Unsupported material palette " + blueprint.palette());

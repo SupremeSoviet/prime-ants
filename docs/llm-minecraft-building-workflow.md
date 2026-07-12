@@ -45,6 +45,10 @@ block placement and carving. A blueprint uses a few semantic primitives:
 - `chambers`: vaulted rooms with stable ids and purposes. The compiler selects
   furnishing sets, so `queen_hall`, `storage` and `lookout` do not become copies
   of one generic room.
+- `pits`: optional shallow stepped excavations owned by a chamber. Their
+  ellipsoid footprint and bounded depth are validated against the room, the
+  chamber floor is not refilled over the opening, and the compiler lines each
+  step before placing any role-specific node at the bottom.
 - `connections`: validated stair passages between chamber ids. The compiler
   derives the rise from the two floor heights, carves two blocks of headroom and
   orients every stair in the declared cardinal direction.
@@ -75,6 +79,14 @@ nurseries move diagonally away from the first site, and diplomacy caches are
 offset from the colony-to-colony axis so the enlarged role mound cannot swallow
 them.
 
+The remaining starter-economy pair deliberately shares a low mound language
+without sharing topology. `mine_a.json` / `mine_b.json` contain a two-block-deep
+stepped ore pit, mineral-streaked shell palettes, storage and work lights. The
+three `chitin_farm_*.json` variants keep a continuous packed-mud cultivation
+floor and instead use chitin beds, bone, honeycomb and a composter. Unit tests
+verify connected shells and distinct footprints; GameTests verify the compiled
+pit depth, furnishings, crowns and repeat-site spacing.
+
 ## Iteration order
 
 1. Establish the shared blueprint vocabulary with the main mound.
@@ -90,6 +102,7 @@ based on the rendered silhouette and entrances, not on how plausible the source
 code looks.
 
 During structure iteration, run `scripts/gui-smoke.cmd -Scope Structure`. It
-captures only focused building exteriors/interiors (currently the queen mound
-and food-store family); no UI screens are opened. The legacy full baseline remains available with
-`-Scope Full` when a whole-mod release review is explicitly needed.
+captures only focused exteriors/interiors for the queen mound and implemented
+role-building families; no UI screens are opened. The legacy full baseline
+remains available with `-Scope Full` when a whole-mod release review is
+explicitly needed.

@@ -23,6 +23,11 @@ public final class OrganicBuildingPlacer {
 	public static final String FOOD_STORE_B_RESOURCE = "formic_blueprints/food_store_b.json";
 	public static final String NURSERY_A_RESOURCE = "formic_blueprints/nursery_a.json";
 	public static final String NURSERY_B_RESOURCE = "formic_blueprints/nursery_b.json";
+	public static final String MINE_A_RESOURCE = "formic_blueprints/mine_a.json";
+	public static final String MINE_B_RESOURCE = "formic_blueprints/mine_b.json";
+	public static final String CHITIN_FARM_A_RESOURCE = "formic_blueprints/chitin_farm_a.json";
+	public static final String CHITIN_FARM_B_RESOURCE = "formic_blueprints/chitin_farm_b.json";
+	public static final String CHITIN_FARM_C_RESOURCE = "formic_blueprints/chitin_farm_c.json";
 
 	private static final Map<BuildingType, Family> FAMILIES = Map.of(
 			BuildingType.FOOD_STORE,
@@ -34,6 +39,17 @@ public final class OrganicBuildingPlacer {
 			new Family(List.of(
 					TieredMoundBlueprint.load(NURSERY_A_RESOURCE),
 					TieredMoundBlueprint.load(NURSERY_B_RESOURCE)
+			)),
+			BuildingType.MINE,
+			new Family(List.of(
+					TieredMoundBlueprint.load(MINE_A_RESOURCE),
+					TieredMoundBlueprint.load(MINE_B_RESOURCE)
+			)),
+			BuildingType.CHITIN_FARM,
+			new Family(List.of(
+					TieredMoundBlueprint.load(CHITIN_FARM_A_RESOURCE),
+					TieredMoundBlueprint.load(CHITIN_FARM_B_RESOURCE),
+					TieredMoundBlueprint.load(CHITIN_FARM_C_RESOURCE)
 			))
 	);
 
@@ -79,6 +95,8 @@ public final class OrganicBuildingPlacer {
 		return switch (type) {
 			case FOOD_STORE -> ModBlocks.FOOD_CHAMBER;
 			case NURSERY -> ModBlocks.NURSERY_CHAMBER;
+			case MINE -> ModBlocks.MINE_CHAMBER;
+			case CHITIN_FARM -> ModBlocks.CHITIN_BED;
 			default -> throw new IllegalArgumentException("No functional block registered for " + type);
 		};
 	}

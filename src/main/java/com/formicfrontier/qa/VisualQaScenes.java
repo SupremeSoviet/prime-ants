@@ -79,6 +79,10 @@ public final class VisualQaScenes {
 	public static final String FOOD_STORE_INTERIOR = "food_store_interior";
 	public static final String NURSERY_VARIANTS = "nursery_variants";
 	public static final String NURSERY_INTERIOR = "nursery_interior";
+	public static final String MINE_VARIANTS = "mine_variants";
+	public static final String MINE_INTERIOR = "mine_interior";
+	public static final String CHITIN_FARM_VARIANTS = "chitin_farm_variants";
+	public static final String CHITIN_FARM_INTERIOR = "chitin_farm_interior";
 	private static final List<String> SCENES = List.of(
 			COLONY_OVERVIEW,
 			COLONY_GROUND,
@@ -107,7 +111,11 @@ public final class VisualQaScenes {
 			FOOD_STORE_VARIANTS,
 			FOOD_STORE_INTERIOR,
 			NURSERY_VARIANTS,
-			NURSERY_INTERIOR
+			NURSERY_INTERIOR,
+			MINE_VARIANTS,
+			MINE_INTERIOR,
+			CHITIN_FARM_VARIANTS,
+			CHITIN_FARM_INTERIOR
 	);
 	private static final List<AntCaste> ANT_LINEUP_CASTES = List.of(
 			AntCaste.QUEEN,
@@ -202,9 +210,12 @@ public final class VisualQaScenes {
 				|| normalized.equals(MOUND_STORAGE_INTERIOR) || normalized.equals(MOUND_LOOKOUT_INTERIOR);
 		boolean foodFocused = normalized.equals(FOOD_STORE_VARIANTS) || normalized.equals(FOOD_STORE_INTERIOR);
 		boolean nurseryFocused = normalized.equals(NURSERY_VARIANTS) || normalized.equals(NURSERY_INTERIOR);
-		boolean roleBuildingFocused = foodFocused || nurseryFocused;
+		boolean mineFocused = normalized.equals(MINE_VARIANTS) || normalized.equals(MINE_INTERIOR);
+		boolean chitinFarmFocused = normalized.equals(CHITIN_FARM_VARIANTS) || normalized.equals(CHITIN_FARM_INTERIOR);
+		boolean roleBuildingFocused = foodFocused || nurseryFocused || mineFocused || chitinFarmFocused;
 		boolean interiorFocused = moundInteriorFocused || normalized.equals(FOOD_STORE_INTERIOR)
-				|| normalized.equals(NURSERY_INTERIOR);
+				|| normalized.equals(NURSERY_INTERIOR) || normalized.equals(MINE_INTERIOR)
+				|| normalized.equals(CHITIN_FARM_INTERIOR);
 		boolean structureFocused = normalized.equals(STRUCTURE_PREVIEW_3Q)
 				|| normalized.equals(STRUCTURE_PREVIEW_FRONT) || interiorFocused || roleBuildingFocused;
 		if (structureFocused && structureQaOrigin == null) {
@@ -222,8 +233,8 @@ public final class VisualQaScenes {
 		savedState.clearColonies();
 		if (structureFocused) {
 			// PREVIEW = GAME: focused scenes call the same public placement paths as
-			// live colonies. Food scenes omit the queen mound only to keep the new
-			// single-storey family large and legible in the frame.
+			// live colonies. Role-family scenes omit the queen mound only to keep the
+			// single-storey subject large and legible in the frame.
 			if (normalized.equals(FOOD_STORE_VARIANTS)) {
 				StructurePlacer.placeBuilding(level, origin.offset(-16, 0, 0), BuildingType.FOOD_STORE,
 						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
@@ -239,6 +250,24 @@ public final class VisualQaScenes {
 						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
 			} else if (normalized.equals(NURSERY_INTERIOR)) {
 				StructurePlacer.placeBuilding(level, origin, BuildingType.NURSERY,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+			} else if (normalized.equals(MINE_VARIANTS)) {
+				StructurePlacer.placeBuilding(level, origin.offset(-16, 0, 0), BuildingType.MINE,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+				StructurePlacer.placeBuilding(level, origin.offset(16, 0, 1), BuildingType.MINE,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+			} else if (normalized.equals(MINE_INTERIOR)) {
+				StructurePlacer.placeBuilding(level, origin, BuildingType.MINE,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+			} else if (normalized.equals(CHITIN_FARM_VARIANTS)) {
+				StructurePlacer.placeBuilding(level, origin.offset(-26, 0, 0), BuildingType.CHITIN_FARM,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+				StructurePlacer.placeBuilding(level, origin.offset(0, 0, 1), BuildingType.CHITIN_FARM,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+				StructurePlacer.placeBuilding(level, origin.offset(26, 0, 2), BuildingType.CHITIN_FARM,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+			} else if (normalized.equals(CHITIN_FARM_INTERIOR)) {
+				StructurePlacer.placeBuilding(level, origin, BuildingType.CHITIN_FARM,
 						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
 			} else {
 				ColonyService.createColony(level, origin, true);
@@ -1060,6 +1089,10 @@ public final class VisualQaScenes {
 			case FOOD_STORE_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 1.5, 3.4);
 			case NURSERY_VARIANTS -> Vec3.atCenterOf(origin).add(0.0, 3.2, 1.5);
 			case NURSERY_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 1.5, 4.0);
+			case MINE_VARIANTS -> Vec3.atCenterOf(origin).add(0.0, 3.0, 1.5);
+			case MINE_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 0.2, origin.getZ() + 3.3);
+			case CHITIN_FARM_VARIANTS -> Vec3.atCenterOf(origin).add(0.0, 2.8, 1.5);
+			case CHITIN_FARM_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 1.3, 3.0);
 			default -> Vec3.atCenterOf(origin).add(0.0, 2.0, 0.0);
 		};
 		Vec3 camera = switch (sceneName) {
@@ -1084,6 +1117,10 @@ public final class VisualQaScenes {
 			case FOOD_STORE_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.1, origin.getZ() - 1.8);
 			case NURSERY_VARIANTS -> new Vec3(origin.getX() + 0.5, origin.getY() + 11.0, origin.getZ() - 38.0);
 			case NURSERY_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.1, origin.getZ() - 1.8);
+			case MINE_VARIANTS -> new Vec3(origin.getX() + 0.5, origin.getY() + 11.0, origin.getZ() - 38.0);
+			case MINE_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.4, origin.getZ() - 3.0);
+			case CHITIN_FARM_VARIANTS -> new Vec3(origin.getX() + 0.5, origin.getY() + 12.5, origin.getZ() - 48.0);
+			case CHITIN_FARM_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.1, origin.getZ() - 3.0);
 			default -> new Vec3(origin.getX() + 28.0, origin.getY() + 18.0, origin.getZ() - 32.0);
 		};
 		player.teleportTo(camera.x, camera.y, camera.z);

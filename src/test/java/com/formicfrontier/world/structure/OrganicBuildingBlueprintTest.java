@@ -1,6 +1,7 @@
 package com.formicfrontier.world.structure;
 
 import com.formicfrontier.sim.BuildingType;
+import com.formicfrontier.world.ColonyBuilder;
 import net.minecraft.core.BlockPos;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -99,6 +100,99 @@ final class OrganicBuildingBlueprintTest {
 			selected.add(first);
 		}
 		Assertions.assertEquals(Set.of("nursery_a", "nursery_b"), selected);
+	}
+
+	@Test
+	void minesAreLowRoundedMoundsWithAValidatedSteppedPit() {
+		var variants = OrganicBuildingPlacer.variants(BuildingType.MINE);
+		Assertions.assertEquals(Set.of("mine_a", "mine_b"), variants.stream()
+				.map(TieredMoundBlueprint::name).collect(Collectors.toSet()));
+		Set<Set<FootprintCell>> footprints = new HashSet<>();
+		for (TieredMoundBlueprint blueprint : variants) {
+			Assertions.assertEquals("mine", blueprint.palette());
+			Assertions.assertTrue(blueprint.maxY() <= 6, "mine should remain a low rounded mound");
+			TieredMoundBlueprint.Chamber chamber = blueprint.chambers().getFirst();
+			Assertions.assertEquals("mine", chamber.purpose());
+			Assertions.assertEquals(1, blueprint.pits().size(), "every mine variant must declare its excavation");
+			TieredMoundBlueprint.Pit pit = blueprint.pits().getFirst();
+			Assertions.assertEquals(2, pit.depth());
+			Assertions.assertEquals(2, pit.depthAt(pit.x(), pit.z()), "pit center should reach the full shallow depth");
+			Assertions.assertEquals(-2, blueprint.minY());
+			Assertions.assertFalse(blueprint.isSolid(pit.x(), chamber.floorY(), pit.z()),
+					"mine chamber floor must open into the pit");
+			assertRearShell(blueprint, chamber);
+			Set<Cell> solid = solidCells(blueprint);
+			assertConnected(blueprint, solid, "mine mound");
+			Set<FootprintCell> footprint = footprint(solid);
+			Assertions.assertTrue(footprint.size() >= 130, "mine needs a substantial rounded footprint");
+			footprints.add(footprint);
+		}
+		Assertions.assertEquals(2, footprints.size(), "mine variants need distinct footprints");
+	}
+
+	@Test
+	void chitinFarmsReuseTheLowMoundLanguageWithoutAnyPit() {
+		var variants = OrganicBuildingPlacer.variants(BuildingType.CHITIN_FARM);
+		Assertions.assertEquals(Set.of("chitin_farm_a", "chitin_farm_b", "chitin_farm_c"), variants.stream()
+				.map(TieredMoundBlueprint::name).collect(Collectors.toSet()));
+		Set<Set<FootprintCell>> footprints = new HashSet<>();
+		for (TieredMoundBlueprint blueprint : variants) {
+			Assertions.assertEquals("chitin_farm", blueprint.palette());
+			Assertions.assertTrue(blueprint.maxY() <= 5, "chitin farm should stay lower than the nursery");
+			TieredMoundBlueprint.Chamber chamber = blueprint.chambers().getFirst();
+			Assertions.assertEquals("chitin_farm", chamber.purpose());
+			Assertions.assertTrue(blueprint.pits().isEmpty(), "chitin farm must explicitly remain pit-free");
+			Assertions.assertEquals(0, blueprint.minY());
+			Assertions.assertTrue(blueprint.isSolid(0, 0, 4), "farm cultivation floor must remain continuous");
+			assertRearShell(blueprint, chamber);
+			Set<Cell> solid = solidCells(blueprint);
+			assertConnected(blueprint, solid, "chitin farm mound");
+			Set<FootprintCell> footprint = footprint(solid);
+			Assertions.assertTrue(footprint.size() >= 150, "chitin farm should be a broad cultivation chamber");
+			footprints.add(footprint);
+		}
+		Assertions.assertEquals(3, footprints.size(), "all three farm sites need distinct authored footprints");
+	}
+
+	@Test
+	void repeatedMineAndFarmSitesSelectEveryAuthoredVariant() {
+		BlockPos origin = new BlockPos(11, 0, -7);
+		Set<String> mineVariants = new HashSet<>();
+		for (int existing = 0; existing < 2; existing++) {
+			BlockPos site = ColonyBuilder.siteFor(origin, BuildingType.MINE, existing);
+			mineVariants.add(OrganicBuildingPlacer.blueprintFor(BuildingType.MINE, site).name());
+		}
+		Assertions.assertEquals(Set.of("mine_a", "mine_b"), mineVariants);
+
+		Set<String> farmVariants = new HashSet<>();
+		for (int existing = 0; existing < 3; existing++) {
+			BlockPos site = ColonyBuilder.siteFor(origin, BuildingType.CHITIN_FARM, existing);
+			farmVariants.add(OrganicBuildingPlacer.blueprintFor(BuildingType.CHITIN_FARM, site).name());
+		}
+		Assertions.assertEquals(Set.of("chitin_farm_a", "chitin_farm_b", "chitin_farm_c"), farmVariants);
+	}
+
+	private static void assertConnected(TieredMoundBlueprint blueprint, Set<Cell> solid, String label) {
+		Assertions.assertFalse(solid.isEmpty());
+		Set<Cell> connected = connectedCells(solid);
+		Set<Cell> disconnected = new HashSet<>(solid);
+		disconnected.removeAll(connected);
+		Assertions.assertEquals(solid.size(), connected.size(),
+				blueprint.name() + " must be one connected " + label + "; disconnected cells: " + disconnected);
+	}
+
+	private static void assertRearShell(TieredMoundBlueprint blueprint, TieredMoundBlueprint.Chamber chamber) {
+		for (int y = chamber.floorY() + 1; y <= chamber.topY(); y++) {
+			double scale = y == chamber.topY() ? 0.72 : y == chamber.topY() - 1 ? 0.9 : 1.0;
+			int wallZ = (int) Math.floor(chamber.z() + chamber.radiusZ() * scale) + 1;
+			Assertions.assertTrue(blueprint.isSolid(chamber.x(), y, wallZ),
+					blueprint.name() + " must retain a rear shell at y=" + y + ", z=" + wallZ);
+		}
+	}
+
+	private static Set<FootprintCell> footprint(Set<Cell> solid) {
+		return solid.stream().filter(cell -> cell.y == 0)
+				.map(cell -> new FootprintCell(cell.x, cell.z)).collect(Collectors.toSet());
 	}
 
 	private static Set<Cell> solidCells(TieredMoundBlueprint blueprint) {

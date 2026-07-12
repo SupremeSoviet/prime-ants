@@ -49,7 +49,7 @@ public final class FormicFrontierGameTest {
 		assertTieredMoundProfile(helper, origin, ModBlocks.NEST_MOUND, "queen chamber");
 		assertFoodStoreProfile(helper, ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0), "food store");
 		assertNurseryProfile(helper, ColonyBuilder.siteFor(origin, BuildingType.NURSERY, 0), "nursery");
-		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.MINE, 0), ModBlocks.MINE_CHAMBER, "mine");
+		assertMineProfile(helper, ColonyBuilder.siteFor(origin, BuildingType.MINE, 0), "mine");
 		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.BARRACKS, 0), ModBlocks.BARRACKS_CHAMBER, "barracks");
 		helper.assertBlockPresent(ModBlocks.FOOD_NODE, origin.offset(54, 0, 8));
 		helper.assertBlockPresent(ModBlocks.ORE_NODE, origin.offset(8, 0, 54));
@@ -161,21 +161,42 @@ public final class FormicFrontierGameTest {
 
 	@GameTest
 
-	public void starterFoodStoreAndNurseryAreOrganicWhilePendingFamiliesRemainMarkers(GameTestHelper helper) {
+	public void starterEconomyUsesOrganicBlueprintsWhilePendingBarracksRemainAMarker(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
 		prepareCampusArea(helper, origin);
 		ColonyService.createColony(helper.getLevel(), helper.absolutePos(origin));
 
 		assertFoodStoreProfile(helper, ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0), "food store");
 		assertNurseryProfile(helper, ColonyBuilder.siteFor(origin, BuildingType.NURSERY, 0), "nursery");
-		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.MINE, 0), ModBlocks.MINE_CHAMBER, "mine");
+		assertMineProfile(helper, ColonyBuilder.siteFor(origin, BuildingType.MINE, 0), "mine");
 		assertMinimalBuildingMarker(helper, ColonyBuilder.siteFor(origin, BuildingType.BARRACKS, 0), ModBlocks.BARRACKS_CHAMBER, "barracks");
 		if (!VisualQaScenes.scenes().contains(VisualQaScenes.FOOD_STORE_VARIANTS)
 				|| !VisualQaScenes.scenes().contains(VisualQaScenes.FOOD_STORE_INTERIOR)
 				|| !VisualQaScenes.scenes().contains(VisualQaScenes.NURSERY_VARIANTS)
-				|| !VisualQaScenes.scenes().contains(VisualQaScenes.NURSERY_INTERIOR)) {
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.NURSERY_INTERIOR)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.MINE_VARIANTS)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.MINE_INTERIOR)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.CHITIN_FARM_VARIANTS)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.CHITIN_FARM_INTERIOR)) {
 			helper.fail("Visual QA should expose the organic starter families and their inhabited interiors.");
 		}
+		helper.succeed();
+	}
+
+	@GameTest
+	public void mineAndChitinFarmCompileToDistinctInhabitedMounds(GameTestHelper helper) {
+		BlockPos origin = new BlockPos(2, 3, 2);
+		prepareCampusArea(helper, origin, 64);
+		BlockPos mine = origin.offset(-22, 0, 0);
+		BlockPos farm = origin.offset(22, 0, 0);
+
+		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(mine), BuildingType.MINE,
+				BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(farm), BuildingType.CHITIN_FARM,
+				BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+
+		assertMineProfile(helper, mine, "focused mine");
+		assertChitinFarmProfile(helper, farm, "focused chitin farm");
 		helper.succeed();
 	}
 
@@ -753,6 +774,11 @@ public final class FormicFrontierGameTest {
 		BlockPos secondFood = ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 1);
 		BlockPos nursery = ColonyBuilder.siteFor(origin, BuildingType.NURSERY, 0);
 		BlockPos secondNursery = ColonyBuilder.siteFor(origin, BuildingType.NURSERY, 1);
+		BlockPos mine = ColonyBuilder.siteFor(origin, BuildingType.MINE, 0);
+		BlockPos secondMine = ColonyBuilder.siteFor(origin, BuildingType.MINE, 1);
+		BlockPos farm = ColonyBuilder.siteFor(origin, BuildingType.CHITIN_FARM, 0);
+		BlockPos secondFarm = ColonyBuilder.siteFor(origin, BuildingType.CHITIN_FARM, 1);
+		BlockPos thirdFarm = ColonyBuilder.siteFor(origin, BuildingType.CHITIN_FARM, 2);
 		BlockPos market = ColonyBuilder.siteFor(origin, BuildingType.MARKET, 0);
 		BlockPos watch = ColonyBuilder.siteFor(origin, BuildingType.WATCH_POST, 0);
 		if (Math.abs(food.getX() - origin.getX()) < 36 || Math.abs(nursery.getX() - origin.getX()) < 36) {
@@ -763,6 +789,14 @@ public final class FormicFrontierGameTest {
 		}
 		if (horizontalDistanceSquared(nursery, secondNursery) < 28 * 28) {
 			helper.fail("Repeated nurseries need enough open ground for distinct brood domes.");
+		}
+		if (horizontalDistanceSquared(mine, secondMine) < 28 * 28) {
+			helper.fail("Repeated mines need enough open ground for separate excavation mounds.");
+		}
+		if (horizontalDistanceSquared(farm, secondFarm) < 28 * 28
+				|| horizontalDistanceSquared(farm, thirdFarm) < 28 * 28
+				|| horizontalDistanceSquared(secondFarm, thirdFarm) < 28 * 28) {
+			helper.fail("All three chitin farms need enough open ground for distinct cultivation mounds.");
 		}
 		if (Math.max(Math.abs(market.getX() - origin.getX()), Math.abs(market.getZ() - origin.getZ())) < 34) {
 			helper.fail("Market should live in the larger diagonal village district.");
@@ -818,6 +852,7 @@ public final class FormicFrontierGameTest {
 		assertTieredMoundProfile(helper, origin, ModBlocks.NEST_MOUND, "renovated queen chamber");
 		assertFoodStoreProfile(helper, ColonyBuilder.siteFor(origin, BuildingType.FOOD_STORE, 0), "renovated food store");
 		assertNurseryProfile(helper, ColonyBuilder.siteFor(origin, BuildingType.NURSERY, 0), "renovated nursery");
+		assertMineProfile(helper, ColonyBuilder.siteFor(origin, BuildingType.MINE, 0), "renovated mine");
 		helper.succeed();
 	}
 
@@ -1990,6 +2025,68 @@ public final class FormicFrontierGameTest {
 		}
 	}
 
+	private static void assertMineProfile(GameTestHelper helper, BlockPos center, String label) {
+		helper.assertBlockPresent(ModBlocks.MINE_CHAMBER, center);
+		if (helper.getLevel().getBlockState(helper.absolutePos(center.below())).is(ModBlocks.NEST_CORE)) {
+			helper.fail(label + " should be a separate excavation mound, not another queen core.");
+		}
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 2, -5))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 2, 1))).isAir()) {
+			helper.fail(label + " should expose a south-facing mouth connected to its work room.");
+		}
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 0, 3))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, -1, 3))).isAir()) {
+			helper.fail(label + " should cut a visible two-step pit through the chamber floor.");
+		}
+		helper.assertBlockPresent(ModBlocks.ORE_NODE, center.offset(0, -2, 3));
+		helper.assertBlockPresent(Blocks.COBBLED_DEEPSLATE, center.offset(-2, -1, 3));
+		helper.assertBlockPresent(Blocks.CHEST, center.offset(-4, 1, 1));
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(4, 1, 1));
+		helper.assertBlockPresent(Blocks.COBBLED_DEEPSLATE_WALL, center.offset(-3, 1, 4));
+		helper.assertBlockPresent(Blocks.IRON_ORE, center.offset(3, 1, 4));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(-2, 2, 4));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(2, 2, 4));
+		if (!isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 6, 1))).getBlock())) {
+			helper.fail(label + " should have a low mineral-streaked crown at y=6.");
+		}
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 7, 1))).isAir()) {
+			helper.fail(label + " should end after one seven-block storey.");
+		}
+		int base = countMoundLayer(helper, center, 0, 12);
+		int shoulder = countMoundLayer(helper, center, 4, 12);
+		if (base < 100 || shoulder < 20 || base <= shoulder) {
+			helper.fail(label + " should be a substantial low excavation mound, got layer masses " + base + "/" + shoulder);
+		}
+	}
+
+	private static void assertChitinFarmProfile(GameTestHelper helper, BlockPos center, String label) {
+		helper.assertBlockPresent(ModBlocks.CHITIN_BED, center);
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 2, -5))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 2, 1))).isAir()) {
+			helper.fail(label + " should expose a south-facing mouth connected to its cultivation room.");
+		}
+		helper.assertBlockPresent(Blocks.PACKED_MUD, center.offset(0, 0, 4));
+		helper.assertBlockPresent(ModBlocks.CHITIN_BED, center.offset(-4, 1, 1));
+		helper.assertBlockPresent(ModBlocks.CHITIN_BED, center.offset(4, 1, 1));
+		helper.assertBlockPresent(Blocks.BONE_BLOCK, center.offset(-3, 1, 3));
+		helper.assertBlockPresent(Blocks.HONEYCOMB_BLOCK, center.offset(3, 1, 3));
+		helper.assertBlockPresent(ModBlocks.CHITIN_NODE, center.offset(-1, 1, 4));
+		helper.assertBlockPresent(Blocks.COMPOSTER, center.offset(1, 1, 4));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(-4, 2, 1));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(4, 2, 1));
+		if (!isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 5, 1))).getBlock())) {
+			helper.fail(label + " should have a broad low cultivation crown at y=5.");
+		}
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 6, 1))).isAir()) {
+			helper.fail(label + " should remain a six-block single-storey mound.");
+		}
+		int base = countMoundLayer(helper, center, 0, 13);
+		int shoulder = countMoundLayer(helper, center, 4, 13);
+		if (base < 120 || shoulder < 20 || base <= shoulder) {
+			helper.fail(label + " should be a broad pit-free cultivation mound, got layer masses " + base + "/" + shoulder);
+		}
+	}
+
 	private static void assertNurseryProfile(GameTestHelper helper, BlockPos center, String label) {
 		helper.assertBlockPresent(ModBlocks.NURSERY_CHAMBER, center);
 		if (helper.getLevel().getBlockState(helper.absolutePos(center.below())).is(ModBlocks.NEST_CORE)) {
@@ -2027,7 +2124,13 @@ public final class FormicFrontierGameTest {
 				|| block == Blocks.MUD
 				|| block == Blocks.PACKED_MUD
 				|| block == Blocks.MOSS_BLOCK
-				|| block == Blocks.MANGROVE_ROOTS;
+				|| block == Blocks.MANGROVE_ROOTS
+				|| block == Blocks.STONE
+				|| block == Blocks.COBBLED_DEEPSLATE
+				|| block == Blocks.DEEPSLATE
+				|| block == Blocks.IRON_ORE
+				|| block == Blocks.BONE_BLOCK
+				|| block == Blocks.HONEYCOMB_BLOCK;
 	}
 
 	private static void assertTieredMoundProfile(GameTestHelper helper, BlockPos center,
@@ -2078,7 +2181,10 @@ public final class FormicFrontierGameTest {
 				if (state.is(ModBlocks.NEST_MOUND) || state.is(ModBlocks.NEST_CORE)
 						|| state.is(Blocks.ROOTED_DIRT) || state.is(Blocks.COARSE_DIRT)
 						|| state.is(Blocks.MUD) || state.is(Blocks.PACKED_MUD)
-						|| state.is(Blocks.MOSS_BLOCK) || state.is(Blocks.MANGROVE_ROOTS)) {
+						|| state.is(Blocks.MOSS_BLOCK) || state.is(Blocks.MANGROVE_ROOTS)
+						|| state.is(Blocks.STONE) || state.is(Blocks.COBBLED_DEEPSLATE)
+						|| state.is(Blocks.DEEPSLATE) || state.is(Blocks.IRON_ORE)
+						|| state.is(Blocks.BONE_BLOCK) || state.is(Blocks.HONEYCOMB_BLOCK)) {
 					count++;
 				}
 			}

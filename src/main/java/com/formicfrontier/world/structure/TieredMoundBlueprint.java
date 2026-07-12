@@ -27,24 +27,28 @@ public record TieredMoundBlueprint(
 		List<Tier> tiers,
 		List<Terrace> terraces,
 		List<Chamber> chambers,
+		List<Pit> pits,
 		List<Connection> connections,
 		List<Mouth> mouths
 ) {
 	public static final int SUPPORTED_SCHEMA_VERSION = 1;
 	private static final int MAX_RADIUS = 24;
 	private static final int MAX_HEIGHT = 48;
-	private static final Set<String> SUPPORTED_PALETTES = Set.of("earth", "food_store", "nursery");
+	private static final Set<String> SUPPORTED_PALETTES = Set.of(
+			"earth", "food_store", "nursery", "mine", "chitin_farm"
+	);
 	private static final Set<String> SUPPORTED_CHAMBER_PURPOSES = Set.of(
-			"queen_hall", "storage", "lookout", "food_store", "nursery"
+			"queen_hall", "storage", "lookout", "food_store", "nursery", "mine", "chitin_farm"
 	);
 
 	public TieredMoundBlueprint {
 		tiers = List.copyOf(tiers);
 		terraces = List.copyOf(terraces);
 		chambers = List.copyOf(chambers);
+		pits = List.copyOf(pits);
 		connections = List.copyOf(connections);
 		mouths = List.copyOf(mouths);
-		validate(schemaVersion, name, palette, tiers, terraces, chambers, connections, mouths);
+		validate(schemaVersion, name, palette, tiers, terraces, chambers, pits, connections, mouths);
 	}
 
 	public static TieredMoundBlueprint load(String resourcePath) {
@@ -94,6 +98,19 @@ public record TieredMoundBlueprint(
 				));
 			}
 			List<Connection> connections = new ArrayList<>();
+			List<Pit> pits = new ArrayList<>();
+			for (JsonElement element : optionalArray(root, "pits")) {
+				JsonObject pit = element.getAsJsonObject();
+				pits.add(new Pit(
+						requiredString(pit, "id"),
+						requiredString(pit, "chamber"),
+						requiredInt(pit, "x"),
+						requiredInt(pit, "z"),
+						requiredDouble(pit, "radiusX"),
+						requiredDouble(pit, "radiusZ"),
+						requiredInt(pit, "depth")
+				));
+			}
 			for (JsonElement element : requiredArray(root, "connections")) {
 				JsonObject connection = element.getAsJsonObject();
 				connections.add(new Connection(
@@ -126,6 +143,7 @@ public record TieredMoundBlueprint(
 					tiers,
 					terraces,
 					chambers,
+					pits,
 					connections,
 					mouths
 			);
@@ -164,6 +182,13 @@ public record TieredMoundBlueprint(
 		return tiers.stream().mapToInt(Tier::topY).max().orElse(0);
 	}
 
+	public int minY() {
+		return pits.stream().mapToInt(pit -> {
+			Chamber chamber = chamberById(chambers, pit.chamber());
+			return chamber.floorY() - pit.depth();
+		}).min().orElse(0);
+	}
+
 	public boolean contains(int x, int y, int z) {
 		if (terraces.stream().anyMatch(terrace -> terrace.contains(x, y, z))) {
 			return true;
@@ -193,11 +218,12 @@ public record TieredMoundBlueprint(
 		return contains(x, y, z)
 				&& mouths.stream().noneMatch(mouth -> mouth.carves(x, y, z))
 				&& chambers.stream().noneMatch(chamber -> chamber.carves(x, y, z))
+				&& pits.stream().noneMatch(pit -> pit.carves(x, y, z, chamberById(chambers, pit.chamber())))
 				&& connections.stream().noneMatch(connection -> connection.carves(x, y, z, chambers));
 	}
 
 	private static void validate(int schemaVersion, String name, String palette, List<Tier> tiers, List<Terrace> terraces,
-			List<Chamber> chambers, List<Connection> connections, List<Mouth> mouths) {
+			List<Chamber> chambers, List<Pit> pits, List<Connection> connections, List<Mouth> mouths) {
 		if (schemaVersion != SUPPORTED_SCHEMA_VERSION) {
 			throw new IllegalArgumentException("Unsupported schemaVersion " + schemaVersion);
 		}
@@ -279,6 +305,26 @@ public record TieredMoundBlueprint(
 					&& tierDistance(tier, chamber.x(), chamber.floorY() + 1, chamber.z()) <= 0.82);
 			if (!enclosed) {
 				throw new IllegalArgumentException("Chamber " + index + " must begin inside a stable tier core");
+			}
+		}
+		if (pits.stream().map(Pit::id).distinct().count() != pits.size()) {
+			throw new IllegalArgumentException("Pit ids must be unique");
+		}
+		for (int index = 0; index < pits.size(); index++) {
+			Pit pit = pits.get(index);
+			if (pit.id() == null || pit.id().isBlank() || pit.depth() < 1 || pit.depth() > 4) {
+				throw new IllegalArgumentException("Pit " + index + " has invalid identity or depth");
+			}
+			if (!Double.isFinite(pit.radiusX()) || !Double.isFinite(pit.radiusZ())
+					|| pit.radiusX() < 1.0 || pit.radiusZ() < 1.0
+					|| pit.radiusX() > 4.0 || pit.radiusZ() > 4.0) {
+				throw new IllegalArgumentException("Pit " + index + " exceeds the supported footprint");
+			}
+			Chamber chamber = chamberById(chambers, pit.chamber());
+			if (!chamber.containsFloor(pit.x(), pit.z())
+					|| Math.abs(pit.x() - chamber.x()) + pit.radiusX() > chamber.radiusX() - 0.25
+					|| Math.abs(pit.z() - chamber.z()) + pit.radiusZ() > chamber.radiusZ() - 0.25) {
+				throw new IllegalArgumentException("Pit " + index + " must fit inside chamber " + chamber.id());
 			}
 		}
 		if (connections.stream().map(Connection::id).distinct().count() != connections.size()) {
@@ -367,6 +413,16 @@ public record TieredMoundBlueprint(
 		return object.getAsJsonArray(key);
 	}
 
+	private static JsonArray optionalArray(JsonObject object, String key) {
+		if (!object.has(key)) {
+			return new JsonArray();
+		}
+		if (!object.get(key).isJsonArray()) {
+			throw new IllegalArgumentException("Expected array '" + key + "'");
+		}
+		return object.getAsJsonArray(key);
+	}
+
 	private static int requiredInt(JsonObject object, String key) {
 		if (!object.has(key)) {
 			throw new IllegalArgumentException("Missing integer '" + key + "'");
@@ -444,6 +500,29 @@ public record TieredMoundBlueprint(
 			double nx = (px - x) / radiusX;
 			double nz = (pz - z) / radiusZ;
 			return nx * nx + nz * nz <= 1.0;
+		}
+	}
+
+	/** A shallow stepped excavation cut through one chamber floor. */
+	public record Pit(String id, String chamber, int x, int z,
+			double radiusX, double radiusZ, int depth) {
+		public int depthAt(int px, int pz) {
+			double nx = (px - x) / radiusX;
+			double nz = (pz - z) / radiusZ;
+			double distance = nx * nx + nz * nz;
+			if (distance > 1.0) {
+				return 0;
+			}
+			return distance <= 0.36 ? depth : Math.max(1, depth - 1);
+		}
+
+		public boolean carves(int px, int py, int pz, Chamber owner) {
+			int localDepth = depthAt(px, pz);
+			return localDepth > 0 && py <= owner.floorY() && py > owner.floorY() - localDepth;
+		}
+
+		public int bottomY(int px, int pz, Chamber owner) {
+			return owner.floorY() - depthAt(px, pz);
 		}
 	}
 
