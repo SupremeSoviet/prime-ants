@@ -107,7 +107,10 @@ Structure-QA: food store, nursery, low rounded mine with a shallow pit, and the
 pit-free chitin farm. The elongated barracks family is also implemented and
 accepted with two wide fortified variants. The market is implemented and
 accepted as two low, open-to-sky courtyard variants with furnished trading
-yards. The next implementation slice is the pheromone archive.
+yards. The pheromone archive is implemented and accepted as two compact
+two-storey variants with separate hall and loft interiors, an internal stair,
+and different furnishings on each floor. The next implementation slice is the
+armory.
 
 Slice R3: Colony Tablet 2.0.
 

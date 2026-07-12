@@ -260,6 +260,23 @@ public final class TieredMoundPlacer {
 				placeDecoration(level, center, chamber, 3, 1, -2, Blocks.OAK_FENCE);
 				placeDecoration(level, center, chamber, 3, 2, -2, Blocks.LANTERN);
 			}
+			case "archive_hall" -> {
+				placeDecoration(level, center, chamber, -4, 1, 0, Blocks.CHEST);
+				placeDecoration(level, center, chamber, 4, 1, 0, Blocks.BARREL);
+				placeDecoration(level, center, chamber, -3, 1, 3, Blocks.CHISELED_BOOKSHELF);
+				placeDecoration(level, center, chamber, 3, 1, 3, Blocks.LECTERN);
+				placeDecoration(level, center, chamber, 0, 1, 3, ModBlocks.PHEROMONE_ARCHIVE);
+				placeDecoration(level, center, chamber, -4, 2, 0, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, 4, 2, 0, Blocks.LANTERN);
+			}
+			case "archive_loft" -> {
+				placeDecoration(level, center, chamber, -2, 1, 0, Blocks.BOOKSHELF);
+				placeDecoration(level, center, chamber, 2, 1, 0, Blocks.CHISELED_BOOKSHELF);
+				placeDecoration(level, center, chamber, -1, 1, 2, Blocks.AMETHYST_BLOCK);
+				placeDecoration(level, center, chamber, 1, 1, 2, ModBlocks.PHEROMONE_ARCHIVE);
+				placeDecoration(level, center, chamber, -2, 2, 0, Blocks.LANTERN);
+				placeDecoration(level, center, chamber, 2, 2, 0, Blocks.LANTERN);
+			}
 			default -> throw new IllegalArgumentException("Unsupported chamber purpose " + chamber.purpose());
 		}
 	}
@@ -331,6 +348,15 @@ public final class TieredMoundPlacer {
 				if (roll < 82) yield Blocks.COARSE_DIRT;
 				if (roll < 90) yield Blocks.MOSS_BLOCK;
 				if (roll < 96) yield Blocks.CUT_COPPER;
+				yield Blocks.HONEYCOMB_BLOCK;
+			}
+			case "pheromone_archive" -> {
+				if (roll < 52) yield ModBlocks.NEST_MOUND;
+				if (roll < 66) yield Blocks.ROOTED_DIRT;
+				if (roll < 78) yield Blocks.MUD_BRICKS;
+				if (roll < 87) yield Blocks.TUFF;
+				if (roll < 94) yield Blocks.CHISELED_TUFF;
+				if (roll < 98) yield Blocks.AMETHYST_BLOCK;
 				yield Blocks.HONEYCOMB_BLOCK;
 			}
 			default -> throw new IllegalArgumentException("Unsupported material palette " + blueprint.palette());

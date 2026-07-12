@@ -224,6 +224,28 @@ public final class FormicFrontierGameTest {
 	}
 
 	@GameTest
+	public void pheromoneArchiveCompilesToConnectedTwoFloorVariants(GameTestHelper helper) {
+		BlockPos origin = new BlockPos(2, 3, 2);
+		prepareCampusArea(helper, origin, 64);
+		BlockPos first = origin.offset(-18, 0, 0);
+		BlockPos second = origin.offset(18, 0, 1);
+
+		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(first), BuildingType.PHEROMONE_ARCHIVE,
+				BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+		StructurePlacer.placeBuilding(helper.getLevel(), helper.absolutePos(second), BuildingType.PHEROMONE_ARCHIVE,
+				BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+
+		assertPheromoneArchiveProfile(helper, first, "first archive variant");
+		assertPheromoneArchiveProfile(helper, second, "second archive variant");
+		if (!VisualQaScenes.scenes().contains(VisualQaScenes.ARCHIVE_VARIANTS)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.ARCHIVE_HALL_INTERIOR)
+				|| !VisualQaScenes.scenes().contains(VisualQaScenes.ARCHIVE_LOFT_INTERIOR)) {
+			helper.fail("Visual QA should expose both archive floors and its variant silhouettes.");
+		}
+		helper.succeed();
+	}
+
+	@GameTest
 
 	public void buildingVisualStagesUseBlueprintsOnlyWhenOperational(GameTestHelper helper) {
 		BlockPos origin = new BlockPos(2, 3, 2);
@@ -2192,6 +2214,56 @@ public final class FormicFrontierGameTest {
 		}
 	}
 
+	private static void assertPheromoneArchiveProfile(GameTestHelper helper, BlockPos center, String label) {
+		helper.assertBlockPresent(ModBlocks.PHEROMONE_ARCHIVE, center);
+		if (!helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 2, -5))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 2, 1))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 7, -3))).isAir()
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 7, 1))).isAir()) {
+			helper.fail(label + " should expose connected facade openings and rooms on both floors.");
+		}
+		helper.assertBlockPresent(Blocks.CHEST, center.offset(-4, 1, 1));
+		helper.assertBlockPresent(Blocks.BARREL, center.offset(4, 1, 1));
+		helper.assertBlockPresent(Blocks.CHISELED_BOOKSHELF, center.offset(-3, 1, 4));
+		helper.assertBlockPresent(Blocks.LECTERN, center.offset(3, 1, 4));
+		helper.assertBlockPresent(ModBlocks.PHEROMONE_ARCHIVE, center.offset(0, 1, 4));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(-4, 2, 1));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(4, 2, 1));
+
+		int upperCenterX;
+		if (helper.getLevel().getBlockState(helper.absolutePos(center.offset(2, 6, 3))).is(ModBlocks.PHEROMONE_ARCHIVE)) {
+			upperCenterX = 1;
+		} else if (helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 6, 3))).is(ModBlocks.PHEROMONE_ARCHIVE)) {
+			upperCenterX = -1;
+		} else {
+			helper.fail(label + " should furnish a distinct upper catalog loft.");
+			return;
+		}
+		helper.assertBlockPresent(Blocks.BOOKSHELF, center.offset(upperCenterX - 2, 6, 1));
+		helper.assertBlockPresent(Blocks.CHISELED_BOOKSHELF, center.offset(upperCenterX + 2, 6, 1));
+		helper.assertBlockPresent(Blocks.AMETHYST_BLOCK, center.offset(upperCenterX - 1, 6, 3));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(upperCenterX - 2, 7, 1));
+		helper.assertBlockPresent(Blocks.LANTERN, center.offset(upperCenterX + 2, 7, 1));
+
+		int stairStartX = upperCenterX > 0 ? -3 : 3;
+		int stairTopX = upperCenterX > 0 ? 1 : -1;
+		helper.assertBlockPresent(Blocks.MUD_BRICK_STAIRS, center.offset(stairStartX, 0, 2));
+		helper.assertBlockPresent(Blocks.MUD_BRICK_STAIRS, center.offset(stairTopX, 4, 2));
+		if (!isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(-6, 3, 1))).getBlock())
+				|| !isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(6, 3, 1))).getBlock())
+				|| !isOrganicMoundShell(helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 10, 1))).getBlock())
+				|| !helper.getLevel().getBlockState(helper.absolutePos(center.offset(0, 11, 1))).isAir()) {
+			helper.fail(label + " should retain a grounded lower hall and compact ten-block catalog crown.");
+		}
+		int base = countMoundLayer(helper, center, 0, 13);
+		int secondFloor = countMoundLayer(helper, center, 5, 11);
+		int upper = countMoundLayer(helper, center, 8, 9);
+		if (base < 140 || secondFloor < 55 || upper < 15 || !(base > secondFloor && secondFloor > upper)) {
+			helper.fail(label + " should read as a compact two-storey taper, got layer masses "
+					+ base + "/" + secondFloor + "/" + upper);
+		}
+	}
+
 	private static void assertNurseryProfile(GameTestHelper helper, BlockPos center, String label) {
 		helper.assertBlockPresent(ModBlocks.NURSERY_CHAMBER, center);
 		if (helper.getLevel().getBlockState(helper.absolutePos(center.below())).is(ModBlocks.NEST_CORE)) {
@@ -2238,6 +2310,8 @@ public final class FormicFrontierGameTest {
 				|| block == Blocks.HONEYCOMB_BLOCK
 				|| block == Blocks.MUD_BRICKS
 				|| block == Blocks.CUT_COPPER
+				|| block == Blocks.CHISELED_TUFF
+				|| block == Blocks.AMETHYST_BLOCK
 				|| block == Blocks.TUFF;
 	}
 
@@ -2294,6 +2368,7 @@ public final class FormicFrontierGameTest {
 						|| state.is(Blocks.DEEPSLATE) || state.is(Blocks.IRON_ORE)
 						|| state.is(Blocks.BONE_BLOCK) || state.is(Blocks.HONEYCOMB_BLOCK)
 						|| state.is(Blocks.MUD_BRICKS) || state.is(Blocks.CUT_COPPER)
+						|| state.is(Blocks.CHISELED_TUFF) || state.is(Blocks.AMETHYST_BLOCK)
 						|| state.is(Blocks.TUFF)) {
 					count++;
 				}

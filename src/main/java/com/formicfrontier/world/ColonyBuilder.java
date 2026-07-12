@@ -315,7 +315,9 @@ public final class ColonyBuilder {
 			case DIPLOMACY_SHRINE -> origin.offset(-34 - existing * 18, 0, -34 - existing * 14);
 			case WATCH_POST -> origin.offset(56 + existing * 14, 0, -46);
 			case RESIN_DEPOT -> origin.offset(50 + existing * 18, 0, 28);
-			case PHEROMONE_ARCHIVE -> origin.offset(-50 - existing * 18, 0, -8);
+			case PHEROMONE_ARCHIVE -> existing == 0
+					? origin.offset(-58, 0, -18)
+					: origin.offset(-88 - (existing - 1) * 30, 0, -43 - (existing - 1) * 26);
 			case FUNGUS_GARDEN -> origin.offset(-50 - existing * 18, 0, 34);
 			case VENOM_PRESS -> origin.offset(50 + existing * 18, 0, -8);
 			case ARMORY -> origin.offset(6, 0, -56 - existing * 18);

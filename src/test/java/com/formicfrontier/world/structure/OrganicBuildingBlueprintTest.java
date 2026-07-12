@@ -224,6 +224,57 @@ final class OrganicBuildingBlueprintTest {
 	}
 
 	@Test
+	void pheromoneArchivesHaveTwoDistinctFloorsJoinedByAnInternalStair() {
+		var variants = OrganicBuildingPlacer.variants(BuildingType.PHEROMONE_ARCHIVE);
+		Assertions.assertEquals(Set.of("pheromone_archive_a", "pheromone_archive_b"), variants.stream()
+				.map(TieredMoundBlueprint::name).collect(Collectors.toSet()));
+		Set<Set<FootprintCell>> footprints = new HashSet<>();
+		Set<String> stairDirections = new HashSet<>();
+		for (TieredMoundBlueprint blueprint : variants) {
+			Assertions.assertEquals("pheromone_archive", blueprint.palette());
+			Assertions.assertEquals(10, blueprint.maxY(), "archive should rise above single-storey economy mounds");
+			Assertions.assertEquals(2, blueprint.chambers().size());
+			TieredMoundBlueprint.Chamber hall = blueprint.chambers().stream()
+					.filter(chamber -> chamber.id().equals("reading_hall")).findFirst().orElseThrow();
+			TieredMoundBlueprint.Chamber loft = blueprint.chambers().stream()
+					.filter(chamber -> chamber.id().equals("catalog_loft")).findFirst().orElseThrow();
+			Assertions.assertEquals("archive_hall", hall.purpose());
+			Assertions.assertEquals("archive_loft", loft.purpose());
+			Assertions.assertEquals(0, hall.floorY());
+			Assertions.assertEquals(5, loft.floorY());
+			Assertions.assertFalse(hall.openToSky());
+			Assertions.assertFalse(loft.openToSky());
+			Assertions.assertEquals(2, blueprint.mouths().size(), "both archive floors need a readable facade opening");
+			Assertions.assertEquals(1, blueprint.connections().size(), "archive floors need one authored stair passage");
+			TieredMoundBlueprint.Connection stair = blueprint.connections().getFirst();
+			Assertions.assertEquals(hall.id(), stair.from());
+			Assertions.assertEquals(loft.id(), stair.to());
+			Assertions.assertEquals(1, stair.width());
+			stairDirections.add(stair.direction());
+			int rise = loft.floorY() - hall.floorY();
+			for (int step = 0; step < rise; step++) {
+				int x = stair.startX() + stair.dx() * step;
+				int z = stair.startZ() + stair.dz() * step;
+				Assertions.assertFalse(blueprint.isSolid(x, hall.floorY() + step + 1, z),
+						"archive stair must carve headroom at step " + step);
+			}
+			assertRearShell(blueprint, hall);
+			assertRearShell(blueprint, loft);
+
+			Set<Cell> solid = solidCells(blueprint);
+			assertConnected(blueprint, solid, "two-storey archive mound");
+			Set<FootprintCell> footprint = footprint(solid);
+			Assertions.assertTrue(footprint.size() >= 170, "archive needs a substantial grounded reading hall");
+			long upperMass = solid.stream().filter(cell -> cell.y == loft.floorY()).count();
+			Assertions.assertTrue(upperMass >= 45, "archive catalog floor needs visible upper-storey mass");
+			footprints.add(footprint);
+		}
+		Assertions.assertEquals(Set.of("east", "west"), stairDirections,
+				"archive variants should mirror neither silhouette nor stair circulation");
+		Assertions.assertEquals(2, footprints.size(), "archive variants need distinct asymmetrical footprints");
+	}
+
+	@Test
 	void repeatedRoleSitesSelectEveryAuthoredVariant() {
 		BlockPos origin = new BlockPos(11, 0, -7);
 		Set<String> mineVariants = new HashSet<>();
@@ -253,6 +304,13 @@ final class OrganicBuildingBlueprintTest {
 			marketVariants.add(OrganicBuildingPlacer.blueprintFor(BuildingType.MARKET, site).name());
 		}
 		Assertions.assertEquals(Set.of("market_a", "market_b"), marketVariants);
+
+		Set<String> archiveVariants = new HashSet<>();
+		for (int existing = 0; existing < 2; existing++) {
+			BlockPos site = ColonyBuilder.siteFor(origin, BuildingType.PHEROMONE_ARCHIVE, existing);
+			archiveVariants.add(OrganicBuildingPlacer.blueprintFor(BuildingType.PHEROMONE_ARCHIVE, site).name());
+		}
+		Assertions.assertEquals(Set.of("pheromone_archive_a", "pheromone_archive_b"), archiveVariants);
 	}
 
 	private static void assertConnected(TieredMoundBlueprint blueprint, Set<Cell> solid, String label) {

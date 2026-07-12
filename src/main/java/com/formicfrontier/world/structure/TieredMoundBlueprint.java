@@ -35,10 +35,12 @@ public record TieredMoundBlueprint(
 	private static final int MAX_RADIUS = 24;
 	private static final int MAX_HEIGHT = 48;
 	private static final Set<String> SUPPORTED_PALETTES = Set.of(
-			"earth", "food_store", "nursery", "mine", "chitin_farm", "barracks", "market"
+			"earth", "food_store", "nursery", "mine", "chitin_farm", "barracks", "market",
+			"pheromone_archive"
 	);
 	private static final Set<String> SUPPORTED_CHAMBER_PURPOSES = Set.of(
-			"queen_hall", "storage", "lookout", "food_store", "nursery", "mine", "chitin_farm", "barracks", "market"
+			"queen_hall", "storage", "lookout", "food_store", "nursery", "mine", "chitin_farm", "barracks", "market",
+			"archive_hall", "archive_loft"
 	);
 
 	public TieredMoundBlueprint {

@@ -103,6 +103,16 @@ produce, a bell and paired lantern posts. Copper and honeycomb accents make the
 role readable without turning it into a conventional roofed house. Repeat sites
 alternate both footprints and remain more than 31 blocks apart.
 
+The pheromone archive extends the same data-first grammar vertically.
+`pheromone_archive_a.json` and `pheromone_archive_b.json` describe compact
+two-storey mounds with independent `archive_hall` and `archive_loft` chambers,
+separate facade mouths and mirrored internal mud-brick stairs. The lower hall
+uses storage, a lectern and catalog blocks; the upper loft uses bookshelves,
+amethyst memory accents and quieter lighting. Tests treat the stair as a
+traversable contract instead of decoration and verify that both floors remain
+enclosed, connected and differently furnished. Repeated archives alternate the
+two silhouettes and retain open ground around neighboring colony buildings.
+
 Every enclosed role chamber has a discrete rear-shell invariant in addition to
 whole-mound connectivity. For each vaulted ceiling layer, the first block behind
 the carved ellipse must remain solid. This prevents a geometrically connected
@@ -112,8 +122,10 @@ opts into its opening deliberately and validates that it reaches the mound top.
 ## Iteration order
 
 1. Establish the shared blueprint vocabulary with the main mound.
-2. Add one single-storey role-building family at a time, including its palette,
-   chamber purpose, furnishings, repeated-site variation and spacing contract.
+2. Add one role-building family at a time, including its palette, chamber
+   purpose, furnishings, repeated-site variation and spacing contract. When a
+   role needs multiple floors, encode the rooms and their traversable connection
+   explicitly in the blueprint rather than stacking disconnected shells.
 3. Finish the starter economy in order: food store, nursery, mine, chitin farm.
 4. Continue through infrastructure, research and defense families.
 5. Return to the central mound for `GREAT_MOUND` height/lobes and the underground

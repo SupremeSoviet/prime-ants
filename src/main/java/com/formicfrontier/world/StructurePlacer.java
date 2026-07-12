@@ -109,6 +109,7 @@ public final class StructurePlacer {
 				|| block == Blocks.MUDDY_MANGROVE_ROOTS
 				|| block == Blocks.MANGROVE_PLANKS
 				|| block == Blocks.CUT_COPPER
+				|| block == Blocks.TUFF
 				|| block == Blocks.CHISELED_TUFF
 				|| block == Blocks.RED_TERRACOTTA
 				|| block == Blocks.BLACKSTONE

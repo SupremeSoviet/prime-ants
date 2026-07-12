@@ -87,6 +87,9 @@ public final class VisualQaScenes {
 	public static final String BARRACKS_INTERIOR = "barracks_interior";
 	public static final String MARKET_VARIANTS = "market_variants";
 	public static final String MARKET_COURTYARD = "market_courtyard";
+	public static final String ARCHIVE_VARIANTS = "archive_variants";
+	public static final String ARCHIVE_HALL_INTERIOR = "archive_hall_interior";
+	public static final String ARCHIVE_LOFT_INTERIOR = "archive_loft_interior";
 	private static final List<String> SCENES = List.of(
 			COLONY_OVERVIEW,
 			COLONY_GROUND,
@@ -123,7 +126,10 @@ public final class VisualQaScenes {
 			BARRACKS_VARIANTS,
 			BARRACKS_INTERIOR,
 			MARKET_VARIANTS,
-			MARKET_COURTYARD
+			MARKET_COURTYARD,
+			ARCHIVE_VARIANTS,
+			ARCHIVE_HALL_INTERIOR,
+			ARCHIVE_LOFT_INTERIOR
 	);
 	private static final List<AntCaste> ANT_LINEUP_CASTES = List.of(
 			AntCaste.QUEEN,
@@ -222,11 +228,14 @@ public final class VisualQaScenes {
 		boolean chitinFarmFocused = normalized.equals(CHITIN_FARM_VARIANTS) || normalized.equals(CHITIN_FARM_INTERIOR);
 		boolean barracksFocused = normalized.equals(BARRACKS_VARIANTS) || normalized.equals(BARRACKS_INTERIOR);
 		boolean marketFocused = normalized.equals(MARKET_VARIANTS) || normalized.equals(MARKET_COURTYARD);
+		boolean archiveFocused = normalized.equals(ARCHIVE_VARIANTS)
+				|| normalized.equals(ARCHIVE_HALL_INTERIOR) || normalized.equals(ARCHIVE_LOFT_INTERIOR);
 		boolean roleBuildingFocused = foodFocused || nurseryFocused || mineFocused || chitinFarmFocused
-				|| barracksFocused || marketFocused;
+				|| barracksFocused || marketFocused || archiveFocused;
 		boolean interiorFocused = moundInteriorFocused || normalized.equals(FOOD_STORE_INTERIOR)
 				|| normalized.equals(NURSERY_INTERIOR) || normalized.equals(MINE_INTERIOR)
-				|| normalized.equals(CHITIN_FARM_INTERIOR) || normalized.equals(BARRACKS_INTERIOR);
+				|| normalized.equals(CHITIN_FARM_INTERIOR) || normalized.equals(BARRACKS_INTERIOR)
+				|| normalized.equals(ARCHIVE_HALL_INTERIOR) || normalized.equals(ARCHIVE_LOFT_INTERIOR);
 		boolean structureFocused = normalized.equals(STRUCTURE_PREVIEW_3Q)
 				|| normalized.equals(STRUCTURE_PREVIEW_FRONT) || interiorFocused || roleBuildingFocused;
 		if (structureFocused && structureQaOrigin == null) {
@@ -295,6 +304,14 @@ public final class VisualQaScenes {
 						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
 			} else if (normalized.equals(MARKET_COURTYARD)) {
 				StructurePlacer.placeBuilding(level, origin, BuildingType.MARKET,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+			} else if (normalized.equals(ARCHIVE_VARIANTS)) {
+				StructurePlacer.placeBuilding(level, origin.offset(-18, 0, 0), BuildingType.PHEROMONE_ARCHIVE,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+				StructurePlacer.placeBuilding(level, origin.offset(18, 0, 1), BuildingType.PHEROMONE_ARCHIVE,
+						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
+			} else if (normalized.equals(ARCHIVE_HALL_INTERIOR) || normalized.equals(ARCHIVE_LOFT_INTERIOR)) {
+				StructurePlacer.placeBuilding(level, origin, BuildingType.PHEROMONE_ARCHIVE,
 						BuildingVisualStage.COMPLETE, ColonyCulture.AMBER);
 			} else {
 				ColonyService.createColony(level, origin, true);
@@ -1124,6 +1141,9 @@ public final class VisualQaScenes {
 			case BARRACKS_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 2.0, 4.0);
 			case MARKET_VARIANTS -> Vec3.atCenterOf(origin).add(0.0, 2.2, 1.2);
 			case MARKET_COURTYARD -> Vec3.atCenterOf(origin).add(0.0, 0.9, 2.5);
+			case ARCHIVE_VARIANTS -> Vec3.atCenterOf(origin).add(0.0, 5.0, 1.0);
+			case ARCHIVE_HALL_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 2.0, 3.0);
+			case ARCHIVE_LOFT_INTERIOR -> Vec3.atCenterOf(origin).add(0.0, 6.5, 2.5);
 			default -> Vec3.atCenterOf(origin).add(0.0, 2.0, 0.0);
 		};
 		Vec3 camera = switch (sceneName) {
@@ -1156,6 +1176,9 @@ public final class VisualQaScenes {
 			case BARRACKS_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.3, origin.getZ() - 3.0);
 			case MARKET_VARIANTS -> new Vec3(origin.getX() + 0.5, origin.getY() + 15.0, origin.getZ() - 37.0);
 			case MARKET_COURTYARD -> new Vec3(origin.getX() + 9.0, origin.getY() + 11.0, origin.getZ() - 11.0);
+			case ARCHIVE_VARIANTS -> new Vec3(origin.getX() + 0.5, origin.getY() + 16.0, origin.getZ() - 43.0);
+			case ARCHIVE_HALL_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 1.3, origin.getZ() - 2.8);
+			case ARCHIVE_LOFT_INTERIOR -> new Vec3(origin.getX() + 0.5, origin.getY() + 6.3, origin.getZ() - 1.8);
 			default -> new Vec3(origin.getX() + 28.0, origin.getY() + 18.0, origin.getZ() - 32.0);
 		};
 		player.teleportTo(camera.x, camera.y, camera.z);
