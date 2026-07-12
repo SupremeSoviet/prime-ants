@@ -28,11 +28,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Colony tablet UI, redrawn from scratch as a cohesive amber-chitin "field
- * tablet". A persistent section rail separates navigation from the workspace;
- * research lives on a pannable prerequisite canvas and trade offers are acted
- * on directly. The remaining tabs share the same restrained amber, chitin and
- * dark-soil visual language instead of falling back to vanilla grey widgets.
+ * Modern translucent colony workspace. A persistent section rail separates
+ * navigation from the content without hiding the world behind an opaque slab;
+ * research remains a pannable prerequisite canvas and trade offers are acted
+ * on directly. Warm chitin amber is reserved for focus and colony identity,
+ * while quiet graphite glass carries the information hierarchy.
  */
 public final class ColonyStatusScreen extends Screen {
 	private static final Tab[] TABS = {
@@ -47,35 +47,34 @@ public final class ColonyStatusScreen extends Screen {
 	};
 
 	// --- Palette -----------------------------------------------------------
-	private static final int SCRIM_TOP = 0x96100D0A;
-	private static final int SCRIM_BOTTOM = 0xC6070504;
-	private static final int PANEL_TOP = 0xF5332618;
-	private static final int PANEL_BOTTOM = 0xF514100A;
-	private static final int PANEL_BORDER = 0xFF0C0805;
-	private static final int PANEL_GLOW = 0x82E0B264;
-	private static final int HEADER_TOP = 0xFF45331E;
-	private static final int HEADER_BOTTOM = 0xFF221810;
-	private static final int ACCENT = 0xFFE0B05A;
-	private static final int ACCENT_DIM = 0xFF8C6A38;
-	private static final int CARD_TOP = 0xF0352815;
-	private static final int CARD_BOTTOM = 0xF01D150C;
-	private static final int CARD_EDGE = 0xFF6E5131;
-	private static final int CHIP_TOP = 0xFF31251A;
-	private static final int CHIP_BOTTOM = 0xFF1A130C;
-	private static final int CHIP_EDGE = 0xFF503B23;
-	private static final int ROW_TOP = 0xFF2C2116;
-	private static final int ROW_BOTTOM = 0xFF1B140D;
-	private static final int BEVEL_HI = 0x3EFFE7B2;
-	private static final int BEVEL_LO = 0x52000000;
-	private static final int TRACK_BG = 0xFF120D09;
-	private static final int TEXT_MAIN = 0xFFFFE7B4;
-	private static final int TEXT_SOFT = 0xFFF1E2C0;
-	private static final int TEXT_MUTED = 0xFFD9B574;
-	private static final int TEXT_FAINT = 0xFF9C8054;
-	private static final int NAV_TOP = 0xF02B2117;
-	private static final int NAV_BOTTOM = 0xF015100B;
-	private static final int VIEWPORT_TOP = 0xF018140F;
-	private static final int VIEWPORT_BOTTOM = 0xF00D0A08;
+	private static final int SCRIM_TOP = 0x34060A0C;
+	private static final int SCRIM_BOTTOM = 0x50030709;
+	private static final int PANEL_TOP = 0xB51A2022;
+	private static final int PANEL_BOTTOM = 0xC00D1214;
+	private static final int PANEL_BORDER = 0xA56F817C;
+	private static final int PANEL_GLOW = 0x3286CDBB;
+	private static final int HEADER_TOP = 0x8C2B3436;
+	private static final int HEADER_BOTTOM = 0x781A2022;
+	private static final int ACCENT = 0xFFFFC56B;
+	private static final int ACCENT_DIM = 0xFF9D7845;
+	private static final int CARD_TOP = 0xB72B3335;
+	private static final int CARD_BOTTOM = 0xC0181E20;
+	private static final int CARD_EDGE = 0x82798A85;
+	private static final int CHIP_TOP = 0x9E30383A;
+	private static final int CHIP_BOTTOM = 0xA91B2224;
+	private static final int CHIP_EDGE = 0x72748480;
+	private static final int ROW_TOP = 0x9F2A3133;
+	private static final int ROW_BOTTOM = 0xAD191F21;
+	private static final int BEVEL_HI = 0x20FFFFFF;
+	private static final int TRACK_BG = 0xA80B1012;
+	private static final int TEXT_MAIN = 0xFFF7EBD8;
+	private static final int TEXT_SOFT = 0xFFE1D8C8;
+	private static final int TEXT_MUTED = 0xFFC1AE8D;
+	private static final int TEXT_FAINT = 0xFF8E9893;
+	private static final int NAV_TOP = 0x66283133;
+	private static final int NAV_BOTTOM = 0x761A2022;
+	private static final int VIEWPORT_TOP = 0xA312191B;
+	private static final int VIEWPORT_BOTTOM = 0xB40A0F11;
 	private static final int RESEARCH_CANVAS_HEIGHT = 292;
 
 	private final ColonyUiSnapshot snapshot;
@@ -115,7 +114,7 @@ public final class ColonyStatusScreen extends Screen {
 		int pw = panelWidth();
 		int tabW = navigationWidth() - 14;
 		int tabX = px + 7;
-		int tabY = py + 55;
+		int tabY = py + 62;
 		for (Tab tab : TABS) {
 			boolean isActive = tab.id().equals(selectedTab);
 			String navigationKey = "Research".equals(tab.id())
@@ -134,7 +133,7 @@ public final class ColonyStatusScreen extends Screen {
 			tabY += 24;
 		}
 
-		addRenderableWidget(new FormicButton(px + pw - 29, py + 7, 20, 18,
+		addRenderableWidget(new FormicButton(px + pw - 30, py + 8, 20, 18,
 				Component.literal("X"), () -> onClose(), ButtonStyle.ACTION));
 
 		switch (selectedTab) {
@@ -166,49 +165,53 @@ public final class ColonyStatusScreen extends Screen {
 		int x = mainContentX();
 		int innerW = mainContentWidth();
 
-		// Panel body: drop shadow, warm gradient, dark outer + glowing inner frame.
-		g.fill(px + 7, py + 9, px + pw + 7, py + ph + 9, 0x59000000);
-		g.fill(px + 3, py + 4, px + pw + 4, py + ph + 5, 0x40000000);
-		g.fillGradient(px, py, px + pw, py + ph, PANEL_TOP, PANEL_BOTTOM);
-		g.fill(px + 1, py + 1, px + pw - 1, py + 2, BEVEL_HI);
-		g.renderOutline(px, py, pw, ph, PANEL_BORDER);
-		g.renderOutline(px + 1, py + 1, pw - 2, ph - 2, PANEL_GLOW);
+		// One soft shadow and a cut-corner glass surface leave the world legible.
+		fillCutRect(g, px + 6, py + 8, pw, ph, 0x3D000000);
+		fillCutGradient(g, px, py, pw, ph, PANEL_TOP, PANEL_BOTTOM);
+		outlineCutRect(g, px, py, pw, ph, PANEL_BORDER);
+		outlineCutRect(g, px + 1, py + 1, pw - 2, ph - 2, PANEL_GLOW);
+		g.fill(px + 4, py + 1, px + pw - 4, py + 2, BEVEL_HI);
 
-		// Header band with an amber colony insignia and identity.
-		g.fillGradient(px + 2, py + 2, px + pw - 2, py + 29, HEADER_TOP, HEADER_BOTTOM);
-		g.fill(px + 2, py + 29, px + pw - 2, py + 31, ACCENT);
-		g.fill(px + 2, py + 31, px + pw - 2, py + 32, 0x4D000000);
-		g.fill(px + 10, py + 8, px + 22, py + 21, 0xFF7A521F);
-		g.renderOutline(px + 9, py + 7, 14, 15, ACCENT);
-		g.fill(px + 14, py + 4, px + 18, py + 25, 0xA8E0B05A);
-		g.drawString(font, ellipsize(snapshot.title(), Math.max(120, pw - 360)), px + 29, py + 10, TEXT_MAIN, true);
+		// Compact identity bar: a small colony mark, title and one quiet meta pill.
+		fillCutGradient(g, px + 3, py + 3, pw - 6, 30, HEADER_TOP, HEADER_BOTTOM);
+		g.fill(px + 4, py + 32, px + pw - 4, py + 33, 0x4AFFFFFF);
+		fillCutRect(g, px + 10, py + 8, 18, 18, 0x8A8B5B29);
+		outlineCutRect(g, px + 10, py + 8, 18, 18, 0xB8FFC56B);
+		g.fill(px + 18, py + 11, px + 20, py + 23, ACCENT);
+		g.fill(px + 14, py + 14, px + 24, py + 16, ACCENT);
+		g.fill(px + 15, py + 20, px + 23, py + 22, 0xFFC68B3E);
+		g.drawString(font, ellipsize(snapshot.title(), Math.max(120, pw - 390)), px + 36, py + 12, TEXT_MAIN, true);
 		String meta = translated(snapshot.cultureKey()) + "  ·  " + translated(snapshot.relationshipKey());
-		int metaW = font.width(meta);
-		g.drawString(font, ellipsize(meta, 210), Math.max(px + pw / 2, px + pw - 40 - metaW), py + 11, TEXT_MUTED, false);
+		String shownMeta = ellipsize(meta, 204);
+		int metaW = font.width(shownMeta);
+		int metaX = Math.max(px + pw / 2, px + pw - 42 - metaW - 14);
+		fillCutRect(g, metaX, py + 9, metaW + 12, 16, 0x682E3839);
+		outlineCutRect(g, metaX, py + 9, metaW + 12, 16, 0x547F918B);
+		g.drawString(font, shownMeta, metaX + 6, py + 13, TEXT_MUTED, false);
 
 		int footerY = py + ph - 22;
 		int navX = px + 5;
-		int navY = py + 38;
+		int navY = py + 41;
 		int navW = navigationWidth() - 10;
-		g.fillGradient(navX, navY, navX + navW, footerY - 7, NAV_TOP, NAV_BOTTOM);
-		g.renderOutline(navX, navY, navW, footerY - 7 - navY, CHIP_EDGE);
+		fillCutGradient(g, navX, navY, navW, footerY - 7 - navY, NAV_TOP, NAV_BOTTOM);
+		outlineCutRect(g, navX, navY, navW, footerY - 7 - navY, 0x50748480);
 		g.drawString(font, translated("formic_frontier.ui.navigation").toUpperCase(java.util.Locale.ROOT), navX + 6, navY + 7, TEXT_FAINT, false);
-		g.fill(navX + 6, navY + 18, navX + navW - 6, navY + 19, 0x548C6A38);
+		g.fill(navX + 6, navY + 18, navX + navW - 6, navY + 19, 0x457F918B);
 
 		// Context-heavy workspaces keep their own focused information instead of
 		// repeating the global stock ledger above every interaction.
-		int cursorY = py + 39;
+		int cursorY = py + 42;
 		if (showsResourceStrip()) {
 			cursorY = drawResourceStrip(g, x, cursorY, innerW) + 6;
 		} else {
-			cursorY = py + 42;
+			cursorY = py + 45;
 		}
 
 		// Section heading, then the content body.
 		boolean rail = hasActionRail();
 		int contentBottom = rail ? actionRailY() - 8 : footerY - 8;
-		g.drawString(font, tabLabel(selectedTab).toUpperCase(java.util.Locale.ROOT), x, cursorY, ACCENT, false);
-		g.fill(x, cursorY + 11, x + Math.min(innerW, 56), cursorY + 12, ACCENT_DIM);
+		g.drawString(font, tabLabel(selectedTab), x, cursorY, TEXT_MAIN, true);
+		g.fill(x, cursorY + 12, x + Math.min(innerW, 38), cursorY + 13, ACCENT);
 		int contentTop = cursorY + 18;
 		contentViewportX = x;
 		contentViewportY = contentTop;
@@ -325,10 +328,8 @@ public final class ColonyStatusScreen extends Screen {
 			ColonyUiSnapshot.Metric m = res.get(i);
 			int cx = x + (i % columns) * (chipW + gap);
 			int cy = y + (i / columns) * (rowH + 3);
-			g.fillGradient(cx, cy, cx + chipW, cy + rowH, CHIP_TOP, CHIP_BOTTOM);
-			g.fill(cx, cy, cx + chipW, cy + 1, BEVEL_HI);
-			g.fill(cx, cy + rowH - 1, cx + chipW, cy + rowH, BEVEL_LO);
-			g.renderOutline(cx, cy, chipW, rowH, CHIP_EDGE);
+			fillCutGradient(g, cx, cy, chipW, rowH, CHIP_TOP, CHIP_BOTTOM);
+			outlineCutRect(g, cx, cy, chipW, rowH, CHIP_EDGE);
 			drawItemIcon(g, itemForResourceId(m.id()), cx + 3, cy + 2);
 			int barX = cx + 22;
 			g.fill(barX, cy + 3, barX + 2, cy + rowH - 3, 0xFF000000 | m.color());
@@ -361,10 +362,8 @@ public final class ColonyStatusScreen extends Screen {
 	private void drawOverview(GuiGraphics g, int x, int y, int width, int height) {
 		// Identity banner.
 		int relColor = 0xFF000000 | snapshot.relationshipColor();
-		g.fillGradient(x, y, x + width, y + 38, ROW_TOP, ROW_BOTTOM);
-		g.fill(x, y, x + width, y + 1, BEVEL_HI);
-		g.fill(x, y + 37, x + width, y + 38, BEVEL_LO);
-		g.renderOutline(x, y, width, 38, CARD_EDGE);
+		fillCutGradient(g, x, y, width, 38, ROW_TOP, ROW_BOTTOM);
+		outlineCutRect(g, x, y, width, 38, CARD_EDGE);
 		g.fill(x, y, x + 3, y + 38, relColor);
 		int mid = Math.max(150, width / 2);
 		g.drawString(font, translated("formic_frontier.ui.personality"), x + 9, y + 5, TEXT_MUTED, false);
@@ -390,10 +389,9 @@ public final class ColonyStatusScreen extends Screen {
 				ColonyUiSnapshot.Metric m = snapshot.population().get(i);
 				int cx = x + i * (chipW + gap);
 				int cy = popY + 12;
-				g.fillGradient(cx, cy, cx + chipW, cy + 16, CHIP_TOP, CHIP_BOTTOM);
-				g.fill(cx, cy, cx + chipW, cy + 1, BEVEL_HI);
+				fillCutGradient(g, cx, cy, chipW, 16, CHIP_TOP, CHIP_BOTTOM);
 				g.fill(cx, cy, cx + 3, cy + 16, 0xFF000000 | m.color());
-				g.renderOutline(cx, cy, chipW, 16, CHIP_EDGE);
+				outlineCutRect(g, cx, cy, chipW, 16, CHIP_EDGE);
 				g.drawString(font, ellipsize(shortName(m.labelKey()) + " " + m.value(), chipW - 10), cx + 7, cy + 4, TEXT_SOFT, false);
 			}
 		}
@@ -454,8 +452,8 @@ public final class ColonyStatusScreen extends Screen {
 			g.drawString(font, ellipsize(translated("formic_frontier.ui.request.reward", e.rewardTokens(), e.reputationDelta(), e.priority()), cardW - 106), cx + 32, cy + 33, TEXT_MUTED, false);
 			int pillW = 58;
 			int pillX = cx + cardW - pillW - 9;
-			g.fillGradient(pillX, cy + 31, pillX + pillW, cy + 45, 0xFF4B3B1E, 0xFF2D2112);
-			g.renderOutline(pillX, cy + 31, pillW, 14, hovered ? ACCENT : 0xFF8E6B33);
+			fillCutGradient(g, pillX, cy + 31, pillW, 14, 0xA94B3B1E, 0xB52D2112);
+			outlineCutRect(g, pillX, cy + 31, pillW, 14, hovered ? ACCENT : 0xA58E6B33);
 			g.drawCenteredString(font, translated("formic_frontier.ui.request.help_action"), pillX + pillW / 2, cy + 34, hovered ? 0xFFFFF0C6 : TEXT_MAIN);
 			drawWideProgress(g, cx + 9, cy + cardH - 8, cardW - 18, percent(e.fulfilled(), e.needed()), color);
 		}
@@ -468,8 +466,8 @@ public final class ColonyStatusScreen extends Screen {
 		int viewH = height;
 		clampResearchPan(viewW, viewH);
 
-		g.fillGradient(viewX, viewY, viewX + viewW, viewY + viewH, VIEWPORT_TOP, VIEWPORT_BOTTOM);
-		g.renderOutline(viewX, viewY, viewW, viewH, CHIP_EDGE);
+		fillCutGradient(g, viewX, viewY, viewW, viewH, VIEWPORT_TOP, VIEWPORT_BOTTOM);
+		outlineCutRect(g, viewX, viewY, viewW, viewH, CHIP_EDGE);
 		g.enableScissor(viewX + 1, viewY + 1, viewX + viewW - 1, viewY + viewH - 1);
 
 		// A sparse pheromone-grid gives the graph a sense of navigable space without
@@ -525,16 +523,14 @@ public final class ColonyStatusScreen extends Screen {
 			ColonyUiSnapshot.ResearchEntry entry, boolean hovered) {
 		int progress = entry.complete() ? 100 : percent(entry.progress(), entry.duration());
 		int color = entry.complete() ? 0x6DD08E : entry.active() ? 0xB58BFF : entry.startable() ? 0xE0B05A : 0x6C5A43;
-		int top = hovered ? 0xF04A3822 : entry.active() ? 0xF0352749 : 0xF02E2418;
-		int bottom = hovered ? 0xF0251B10 : entry.active() ? 0xF019122C : 0xF016100B;
-		g.fillGradient(x, y, x + width, y + height, top, bottom);
-		g.fill(x, y, x + width, y + 1, BEVEL_HI);
-		g.fill(x, y + height - 1, x + width, y + height, BEVEL_LO);
-		g.renderOutline(x, y, width, height, hovered || entry.startable() || entry.active() ? brighten(color) : CARD_EDGE);
-		g.fill(x, y, x + 4, y + height, 0xFF000000 | color);
+		int top = hovered ? 0xC84A4238 : entry.active() ? 0xC538304B : 0xB72B3234;
+		int bottom = hovered ? 0xCE252A28 : entry.active() ? 0xCF1A202E : 0xC4181E20;
+		fillCutGradient(g, x, y, width, height, top, bottom);
+		outlineCutRect(g, x, y, width, height, hovered || entry.startable() || entry.active() ? brighten(color) : CARD_EDGE);
+		g.fill(x + 1, y + 3, x + 3, y + height - 3, 0xFF000000 | color);
 
-		g.fillGradient(x + 10, y + 8, x + 36, y + 34, 0xFF3A2C1E, 0xFF17110C);
-		g.renderOutline(x + 9, y + 7, 28, 28, hovered ? ACCENT : CHIP_EDGE);
+		fillCutGradient(g, x + 10, y + 8, 26, 26, 0xA83A3430, 0xBB171D1E);
+		outlineCutRect(g, x + 9, y + 7, 28, 28, hovered ? ACCENT : CHIP_EDGE);
 		drawItemIcon(g, itemForResearch(entry.nodeId()), x + 15, y + 13);
 		g.drawString(font, ellipsize(researchLabel(entry), width - 54), x + 44, y + 9, TEXT_MAIN, false);
 		g.drawString(font, ellipsize(researchState(entry), width - 58), x + 44, y + 22, entry.startable() ? 0xFFFFD780 : TEXT_MUTED, false);
@@ -546,9 +542,9 @@ public final class ColonyStatusScreen extends Screen {
 
 	private void drawResearchInspector(GuiGraphics g, int x, int y, int width,
 			ColonyUiSnapshot.ResearchEntry entry) {
-		g.fillGradient(x, y, x + width, y + 45, 0xF13A2B1B, 0xF115100A);
-		g.fill(x, y, x + width, y + 2, entry == null ? ACCENT_DIM : ACCENT);
-		g.renderOutline(x, y, width, 45, entry == null ? CHIP_EDGE : 0xFF9C743A);
+		fillCutGradient(g, x, y, width, 45, 0xC13A3F3E, 0xCE151B1D);
+		g.fill(x + 3, y + 1, x + width - 3, y + 2, entry == null ? ACCENT_DIM : ACCENT);
+		outlineCutRect(g, x, y, width, 45, entry == null ? CHIP_EDGE : 0xB99C743A);
 		if (entry == null) {
 			drawItemIcon(g, ModItems.PHEROMONE_DUST, x + 8, y + 8);
 			g.drawString(font, ellipsize(translated("formic_frontier.ui.research.pan_hint"), width - 38), x + 31, y + 8, TEXT_MAIN, false);
@@ -571,8 +567,8 @@ public final class ColonyStatusScreen extends Screen {
 	}
 
 	private void drawTradeExchange(GuiGraphics g, int x, int y, int width, int height) {
-		g.fillGradient(x, y, x + width, y + height, VIEWPORT_TOP, VIEWPORT_BOTTOM);
-		g.renderOutline(x, y, width, height, CHIP_EDGE);
+		fillCutGradient(g, x, y, width, height, VIEWPORT_TOP, VIEWPORT_BOTTOM);
+		outlineCutRect(g, x, y, width, height, CHIP_EDGE);
 		int rowY = y + 7;
 		int bannerY = rowY;
 		drawTradeContextBanner(g, x + 7, bannerY, width - 14, null);
@@ -616,8 +612,8 @@ public final class ColonyStatusScreen extends Screen {
 
 	private void drawTradeContextBanner(GuiGraphics g, int x, int y, int width,
 			ColonyUiSnapshot.TradeEntry entry) {
-		g.fillGradient(x, y, x + width, y + 25, 0xF02C2340, 0xF0181224);
-		g.renderOutline(x, y, width, 25, entry == null ? 0xFF70558F : 0xFF8E72B5);
+		fillCutGradient(g, x, y, width, 25, 0xBB343044, 0xC6191B27);
+		outlineCutRect(g, x, y, width, 25, entry == null ? 0xB0706387 : 0xC18E72B5);
 		drawItemIcon(g, entry == null ? ModItems.PHEROMONE_TOKEN : itemForKey(entry.outputKey()), x + 6, y + 4);
 		if (entry == null) {
 			String activity = snapshot.tradeActivity().isBlank()
@@ -667,8 +663,8 @@ public final class ColonyStatusScreen extends Screen {
 		g.drawString(font, state, textX, y + 29, entry.available() ? 0xFF9BE7AD : TEXT_FAINT, false);
 		int pillW = Math.min(46, Math.max(34, width / 5));
 		int pillX = x + width - pillW - 7;
-		g.fillGradient(pillX, y + 27, pillX + pillW, y + 39, entry.available() ? 0xFF315337 : 0xFF241B13, entry.available() ? 0xFF1D3824 : 0xFF17110C);
-		g.renderOutline(pillX, y + 27, pillW, 12, entry.available() ? 0xFF72C884 : CHIP_EDGE);
+		fillCutGradient(g, pillX, y + 27, pillW, 12, entry.available() ? 0xB3315337 : 0xA8242422, entry.available() ? 0xC41D3824 : 0xB1171B1C);
+		outlineCutRect(g, pillX, y + 27, pillW, 12, entry.available() ? 0xD072C884 : CHIP_EDGE);
 		g.drawCenteredString(font, translated("formic_frontier.ui.trade.action"), pillX + pillW / 2, y + 29, entry.available() ? 0xFFD9F7DF : TEXT_FAINT);
 	}
 
@@ -691,8 +687,7 @@ public final class ColonyStatusScreen extends Screen {
 			ColonyUiSnapshot.GuideEntry e = rows.get(i);
 			int color = e.unlocked() ? e.color() : 0x8A6D47;
 			int cy = y + i * rowH;
-			g.fillGradient(x, cy, x + width, cy + rowH - 2, ROW_TOP, ROW_BOTTOM);
-			g.fill(x, cy, x + width, cy + 1, BEVEL_HI);
+			fillCutGradient(g, x, cy, width, rowH - 2, ROW_TOP, ROW_BOTTOM);
 			g.fill(x, cy, x + 3, cy + rowH - 2, 0xFF000000 | color);
 			int titleW = Math.max(96, Math.min(150, width * 30 / 100));
 			int stateW = 64;
@@ -701,7 +696,7 @@ public final class ColonyStatusScreen extends Screen {
 			String state = translated(e.unlocked() ? "formic_frontier.guide.state.open" : "formic_frontier.guide.state.locked");
 			int pillColor = e.unlocked() ? 0xFF2E4A28 : 0xFF2A2017;
 			g.fill(x + width - stateW, cy + 3, x + width - 4, cy + rowH - 5, pillColor);
-			g.renderOutline(x + width - stateW, cy + 3, stateW - 4, rowH - 8, e.unlocked() ? 0xFF6DD08E : CHIP_EDGE);
+			outlineCutRect(g, x + width - stateW, cy + 3, stateW - 4, rowH - 8, e.unlocked() ? 0xD06DD08E : CHIP_EDGE);
 			g.drawString(font, ellipsize(state, stateW - 12), x + width - stateW + 5, cy + 5, e.unlocked() ? 0xFFBFF0C7 : TEXT_MUTED, false);
 		}
 	}
@@ -757,9 +752,7 @@ public final class ColonyStatusScreen extends Screen {
 	}
 
 	private void drawStatRow(GuiGraphics g, int x, int y, int width, String title, String detail, int progress, int color) {
-		g.fillGradient(x, y, x + width, y + 19, ROW_TOP, ROW_BOTTOM);
-		g.fill(x, y, x + width, y + 1, BEVEL_HI);
-		g.fill(x, y + 18, x + width, y + 19, BEVEL_LO);
+		fillCutGradient(g, x, y, width, 19, ROW_TOP, ROW_BOTTOM);
 		g.fill(x, y, x + 3, y + 19, 0xFF000000 | color);
 		g.fill(x, y, x + 3, y + 2, 0x6BFFFFFF);
 		int titleW = Math.max(90, Math.min(170, width * 38 / 100));
@@ -792,23 +785,58 @@ public final class ColonyStatusScreen extends Screen {
 	}
 
 	private void drawCardSurface(GuiGraphics g, int x, int y, int width, int height, int accent, int edge) {
-		g.fillGradient(x, y, x + width, y + height, CARD_TOP, CARD_BOTTOM);
-		g.fill(x, y, x + width, y + 1, BEVEL_HI);
-		g.fill(x, y, x + 1, y + height, BEVEL_HI);
-		g.fill(x, y + height - 1, x + width, y + height, BEVEL_LO);
-		g.fill(x + width - 1, y, x + width, y + height, BEVEL_LO);
-		g.renderOutline(x, y, width, height, edge);
-		g.fill(x, y, x + 4, y + height, 0xFF000000 | accent);
-		g.fill(x + 1, y, x + 4, y + Math.min(height, 3), 0x73FFFFFF);
+		fillCutGradient(g, x, y, width, height, CARD_TOP, CARD_BOTTOM);
+		outlineCutRect(g, x, y, width, height, edge);
+		g.fill(x + 1, y + 3, x + 3, y + height - 3, 0xFF000000 | accent);
+		g.fill(x + 3, y + 1, x + width - 3, y + 2, 0x16FFFFFF);
 	}
 
 	private void drawActionRailFrame(GuiGraphics g, int x, int y, int width, int height) {
 		if (height <= 0) {
 			return;
 		}
-		g.fillGradient(x, y, x + width, y + height, 0xF0241A10, 0xF0130D07);
-		g.fill(x, y, x + width, y + 1, 0x3EE0B05A);
-		g.renderOutline(x, y, width, height, 0xFF503B23);
+		fillCutGradient(g, x, y, width, height, 0x8F2B3233, 0xA3171D1F);
+		g.fill(x + 3, y + 1, x + width - 3, y + 2, 0x32FFC56B);
+		outlineCutRect(g, x, y, width, height, 0x675F6F6A);
+	}
+
+	private static void fillCutRect(GuiGraphics g, int x, int y, int width, int height, int color) {
+		if (width <= 0 || height <= 0) {
+			return;
+		}
+		if (width < 5 || height < 5) {
+			g.fill(x, y, x + width, y + height, color);
+			return;
+		}
+		g.fill(x + 2, y, x + width - 2, y + height, color);
+		g.fill(x, y + 2, x + width, y + height - 2, color);
+	}
+
+	private static void fillCutGradient(GuiGraphics g, int x, int y, int width, int height, int top, int bottom) {
+		if (width <= 0 || height <= 0) {
+			return;
+		}
+		if (width < 5 || height < 5) {
+			g.fillGradient(x, y, x + width, y + height, top, bottom);
+			return;
+		}
+		g.fillGradient(x + 2, y, x + width - 2, y + height, top, bottom);
+		g.fillGradient(x, y + 2, x + width, y + height - 2, top, bottom);
+	}
+
+	private static void outlineCutRect(GuiGraphics g, int x, int y, int width, int height, int color) {
+		if (width < 5 || height < 5) {
+			g.renderOutline(x, y, width, height, color);
+			return;
+		}
+		g.fill(x + 2, y, x + width - 2, y + 1, color);
+		g.fill(x + 2, y + height - 1, x + width - 2, y + height, color);
+		g.fill(x, y + 2, x + 1, y + height - 2, color);
+		g.fill(x + width - 1, y + 2, x + width, y + height - 2, color);
+		g.fill(x + 1, y + 1, x + 2, y + 2, color);
+		g.fill(x + width - 2, y + 1, x + width - 1, y + 2, color);
+		g.fill(x + 1, y + height - 2, x + 2, y + height - 1, color);
+		g.fill(x + width - 2, y + height - 2, x + width - 1, y + height - 1, color);
 	}
 
 	private void drawFooter(GuiGraphics g, int x, int y, int width) {
@@ -920,38 +948,39 @@ public final class ColonyStatusScreen extends Screen {
 			int border;
 			int textColor;
 			if (selected) {
-				top = 0xFF7A521F;
-				bottom = 0xFF49300F;
+				top = 0xB85F4C31;
+				bottom = 0xC3353028;
 				border = ACCENT;
-				textColor = 0xFFFFF3DA;
+				textColor = 0xFFFFF7EA;
 			} else if (!active) {
-				top = 0xFF231A12;
-				bottom = 0xFF170F09;
-				border = 0xFF38291A;
+				top = 0x7E242A2B;
+				bottom = 0x8E171C1E;
+				border = 0x4A59645F;
 				textColor = TEXT_FAINT;
 			} else if (hovered) {
-				top = 0xFF4E3923;
-				bottom = 0xFF2C2014;
-				border = 0xFFF1C674;
-				textColor = 0xFFFFF3DA;
+				top = 0xA5444640;
+				bottom = 0xB3242A2A;
+				border = 0xD5F1C674;
+				textColor = 0xFFFFF7EA;
 			} else {
-				top = 0xFF3A2A1A;
-				bottom = 0xFF241A10;
-				border = 0xFF5E4528;
+				top = 0x702F3637;
+				bottom = 0x861D2325;
+				border = 0x506B7873;
 				textColor = TEXT_MAIN;
 			}
-			g.fillGradient(x, y, x + w, y + h, top, bottom);
-			g.fill(x, y, x + w, y + 1, BEVEL_HI);
-			g.fill(x, y + h - 1, x + w, y + h, BEVEL_LO);
-			g.renderOutline(x, y, w, h, border);
+			fillCutGradient(g, x, y, w, h, top, bottom);
+			outlineCutRect(g, x, y, w, h, border);
 			if (selected && style == ButtonStyle.TAB) {
-				g.fill(x + 1, y + 2, x + 4, y + h - 2, 0xFF000000 | accent);
-				g.fill(x + 4, y + 2, x + 5, y + h - 2, 0x42FFFFFF);
+				g.fill(x + 1, y + 3, x + 3, y + h - 3, 0xFF000000 | accent);
 			} else if (style == ButtonStyle.TAB) {
-				g.fill(x + 1, y + 4, x + 3, y + h - 4, 0xB0000000 | accent);
+				g.fill(x + 1, y + 5, x + 2, y + h - 5, 0xA0000000 | accent);
 			}
-			String label = ellipsize(getMessage().getString(), w - 8);
-			g.drawCenteredString(font, label, x + w / 2, y + (h - 8) / 2, textColor);
+			String label = ellipsize(getMessage().getString(), w - (style == ButtonStyle.TAB ? 14 : 8));
+			if (style == ButtonStyle.TAB) {
+				g.drawString(font, label, x + 8, y + (h - 8) / 2, textColor, false);
+			} else {
+				g.drawCenteredString(font, label, x + w / 2, y + (h - 8) / 2, textColor);
+			}
 		}
 	}
 
@@ -1208,12 +1237,12 @@ public final class ColonyStatusScreen extends Screen {
 
 	private int panelWidth() {
 		int available = Math.max(320, width - 12);
-		return Math.min(available, Math.max(640, (int) (width * 0.94f)));
+		return Math.min(available, Math.max(640, (int) (width * 0.92f)));
 	}
 
 	private int panelHeight() {
 		int available = Math.max(180, height - 12);
-		return Math.min(available, Math.max(300, (int) (height * 0.94f)));
+		return Math.min(available, Math.max(300, (int) (height * 0.90f)));
 	}
 
 	private int panelX() {
@@ -1225,7 +1254,7 @@ public final class ColonyStatusScreen extends Screen {
 	}
 
 	private int navigationWidth() {
-		return panelWidth() >= 560 ? 112 : 92;
+		return panelWidth() >= 560 ? 118 : 92;
 	}
 
 	private int mainContentX() {
