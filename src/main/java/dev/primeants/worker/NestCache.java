@@ -27,6 +27,7 @@ public final class NestCache extends BlockEntity {
     private final List<ItemStack> contents = new ArrayList<>();
     private UUID colony;
     private NestPlan plan;
+    private UUID releaseId=UUID.randomUUID();
     public NestCache(BlockPos p, BlockState s) { super(NurseryBlocks.CACHE_TYPE,p,s); }
     public List<ItemStack> contents() { return contents.stream().map(ItemStack::copy).toList(); }
     public int size() { return contents.size(); }
@@ -55,18 +56,24 @@ public final class NestCache extends BlockEntity {
     }
     @Override public void preRemoveSideEffects(BlockPos pos, BlockState state) {
         if (level instanceof ServerLevel l) {
-            for (ItemStack stack : contents) { var item=new ItemEntity(l,pos.getX()+0.5,pos.getY()+0.15,pos.getZ()+0.5,stack.copy()); item.setUnlimitedLifetime(); l.addFreshEntity(item); }
-            contents.clear(); setChanged();
+            int slot=0;
+            while(!contents.isEmpty()) {
+                UUID id=UUID.nameUUIDFromBytes((releaseId+":"+slot++).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                TransferCustody.get(l).take(id,"cache:"+releaseId+":"+pos,Vec3.atBottomCenterOf(pos).add(0,0.15,0),contents.getFirst());
+                contents.removeFirst();setChanged();
+                TransferCustody.get(l).retry(l);
+            }
         }
         super.preRemoveSideEffects(pos,state);
     }
     @Override protected void saveAdditional(ValueOutput out) {
-        super.saveAdditional(out); if(colony==null || plan==null)return;
+        super.saveAdditional(out);out.putString("ReleaseId",releaseId.toString()); if(colony==null || plan==null)return;
         out.putString("Colony",colony.toString()); out.store("Entrance",BlockPos.CODEC,plan.entrance());out.putString("Direction",plan.direction().getName());
         out.store("Contents",ItemStack.CODEC.listOf(),contents);
     }
     @Override protected void loadAdditional(ValueInput in) {
         super.loadAdditional(in); contents.clear();colony=null;plan=null;
+        releaseId=in.getString("ReleaseId").map(UUID::fromString).orElseGet(UUID::randomUUID);
         if(in.getString("Colony").isEmpty())return;
         colony=UUID.fromString(in.getStringOr("Colony",""));Direction d=Direction.byName(in.getStringOr("Direction",""));
         if(d==null || d.getAxis().isVertical())throw new IllegalArgumentException("Invalid cache direction");

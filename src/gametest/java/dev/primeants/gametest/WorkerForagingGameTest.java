@@ -58,10 +58,10 @@ public final class WorkerForagingGameTest {
         c.assertTrue(egg.useOn(new net.minecraft.world.item.context.UseOnContext(c.getLevel(),player,net.minecraft.world.InteractionHand.MAIN_HAND,egg,new net.minecraft.world.phys.BlockHitResult(Vec3.atCenterOf(p).add(0,0.5,0),net.minecraft.core.Direction.UP,p,false))).consumesAction(),"Authorized ordinary queen egg");
         return c.getLevel().getEntitiesOfClass(LasiusNigerEntity.class,new AABB(p).inflate(1),a->a.form()==AntForm.QUEEN).getFirst();
     }
-    private LasiusNigerEntity start(GameTestHelper c) { var f=new QueenFoundingGameTest();f.terrain(c,Blocks.DIRT.defaultBlockState(),true,true);return f.egg(c); }
-    private List<LasiusNigerEntity> workers(GameTestHelper c,LasiusNigerEntity q) { return c.getLevel().getEntitiesOfClass(LasiusNigerEntity.class,c.getBounds().inflate(8),w->w.isAlive()&&q.getUUID().equals(w.queenId())); }
-    private NestCache cache(GameTestHelper c,LasiusNigerEntity q) { return q.founding().plan()!=null&&c.getLevel().getBlockEntity(q.founding().plan().cache()) instanceof NestCache n?n:null; }
-    private ItemEntity drop(GameTestHelper c,BlockPos p,ItemStack stack) { var v=Vec3.atBottomCenterOf(p);var i=new ItemEntity(c.getLevel(),v.x,v.y+0.1,v.z,stack,0,0,0);i.setUnlimitedLifetime();c.assertTrue(c.getLevel().addFreshEntity(i),"Real supported dropped stack insertion");return i; }
+    LasiusNigerEntity start(GameTestHelper c) { var f=new QueenFoundingGameTest();f.terrain(c,Blocks.DIRT.defaultBlockState(),true,true);return f.egg(c); }
+    List<LasiusNigerEntity> workers(GameTestHelper c,LasiusNigerEntity q) { return c.getLevel().getEntitiesOfClass(LasiusNigerEntity.class,c.getBounds().inflate(8),w->w.isAlive()&&q.getUUID().equals(w.queenId())); }
+    NestCache cache(GameTestHelper c,LasiusNigerEntity q) { return q.founding().plan()!=null&&c.getLevel().getBlockEntity(q.founding().plan().cache()) instanceof NestCache n?n:null; }
+    ItemEntity drop(GameTestHelper c,BlockPos p,ItemStack stack) { var v=Vec3.atBottomCenterOf(p);var i=new ItemEntity(c.getLevel(),v.x,v.y+0.1,v.z,stack,0,0,0);i.setUnlimitedLifetime();c.assertTrue(c.getLevel().addFreshEntity(i),"Real supported dropped stack insertion");return i; }
     private int foodTotal(GameTestHelper c,LasiusNigerEntity q) {
         int world=c.getLevel().getEntitiesOfClass(ItemEntity.class,c.getBounds().inflate(8),i->i.isAlive()&&WorkerTasks.food(i.getItem())).stream().mapToInt(i->i.getItem().getCount()).sum();
         int held=workers(c,q).stream().filter(w->WorkerTasks.food(w.getMainHandItem())).mapToInt(w->w.getMainHandItem().getCount()).sum();

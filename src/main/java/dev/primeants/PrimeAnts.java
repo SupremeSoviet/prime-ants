@@ -15,6 +15,7 @@ public final class PrimeAnts implements ModInitializer {
         AntEntities.initialize();
         dev.primeants.brood.NurseryBlocks.initialize();
         AntItems.initialize();
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_LEVEL_TICK.register(dev.primeants.worker.TransferCustody::tick);
         LOGGER.info("Prime Ants initialized: protected physical founding and bounded claustral first clutch; no external feeding or foraging.");
     }
 }

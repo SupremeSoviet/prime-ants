@@ -1,0 +1,25 @@
+// Development dedicated server only. Never changes ordinary GameTest run directories.
+def restartAttempt=providers.gradleProperty('primeAntsRestartAttempt').getOrElse('unset')
+def restartPhase=providers.gradleProperty('primeAntsRestartPhase').getOrElse('probe')
+loom.runs.register('restartServer') {
+    server()
+    sourceSet.set('gametest')
+    runDirectory.set(layout.buildDirectory.dir('run/t09-restart/'+restartAttempt))
+    programArguments.addAll('--nogui','--world','world')
+    systemProperties.put('prime_ants.restartPhase',restartPhase)
+    systemProperties.put('prime_ants.restartEvidence',providers.gradleProperty('primeAntsRestartEvidence').getOrElse(file('build/restart-evidence').absolutePath))
+    systemProperties.put('prime_ants.broodMultiplier','100')
+    systemProperties.put('prime_ants.foundingWorkMultiplier','20')
+}
+tasks.named('runRestartServer') {
+    doFirst {
+        if(!(restartAttempt ==~ /[a-z0-9][a-z0-9-]*/) || restartAttempt=='unset' || !(restartPhase in ['probe','A','B'])) throw new GradleException('Explicit owned restart attempt and phase required')
+        if(!file("build/run/t09-restart/${restartAttempt}/world/level.dat").exists())throw new GradleException('Restart harness requires the unedited copied T08 A4 world')
+    }
+}
+tasks.register('probeSoilDecode',JavaExec) {
+    dependsOn tasks.named('gametestClasses')
+    classpath=sourceSets.gametest.runtimeClasspath
+    mainClass='dev.primeants.gametest.SoilDecodeProbe'
+    args providers.gradleProperty('primeAntsSoilFile').getOrElse('missing')
+}

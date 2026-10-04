@@ -53,6 +53,7 @@ loom.runs.named('gameTest') {
     if (providers.gradleProperty('primeAntsIdleSeed').isPresent()) systemProperties.put('prime_ants.idleSeed', providers.gradleProperty('primeAntsIdleSeed').get())
 }
 apply from: 'gradle/client-evidence.gradle'
+apply from: 'gradle/restart-evidence.gradle'
 def capturePrefix = providers.gradleProperty('primeAntsCapturePrefix').getOrElse('t05-' + java.util.UUID.randomUUID().toString())
 def captureRunId = java.util.UUID.randomUUID().toString()
 def captureStart = System.currentTimeMillis()
@@ -189,6 +190,11 @@ tasks.named('runGameTest') {
         if (workerNames.size() != 11) throw new GradleException('Worker foraging discovery incomplete')
         workerNames.each { name ->
             if (!cases.any { it.@name.text() == "prime_ants_test:worker_foraging_game_test_${name}" }) throw new GradleException("Missing worker test: ${name}")
+        }
+        def transferNames = (file('src/gametest/java/dev/primeants/gametest/TransferGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect { it[1].replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase() }
+        if (transferNames.size() != 4) throw new GradleException('Transfer refusal discovery incomplete')
+        transferNames.each { name ->
+            if (!cases.any { it.@name.text() == "prime_ants_test:transfer_game_test_${name}" }) throw new GradleException("Missing transfer test: ${name}")
         }
         if (report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] }) {
             throw new GradleException('Server GameTest report contains a failure or skipped test')

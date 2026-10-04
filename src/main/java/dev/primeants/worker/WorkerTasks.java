@@ -173,8 +173,10 @@ public final class WorkerTasks {
     public void die(ServerLevel l) {
         if(phase==Phase.DEAD)return;worker.getNavigation().stop();
         if(!worker.getMainHandItem().isEmpty()) {
-            var drop=worker.spawnAtLocation(l,worker.getMainHandItem().copy());
-            if(drop!=null) {drop.setUnlimitedLifetime();worker.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);}
+            var transfer=UUID.nameUUIDFromBytes(("worker-cargo:"+worker.getUUID()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            TransferCustody.get(l).take(transfer,"worker:"+worker.getUUID(),worker.position(),worker.getMainHandItem());
+            worker.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);
+            TransferCustody.get(l).retry(l);
         }
         var q=queen(l);if(q!=null)q.founding().releaseWorker(worker);
         source=null;next(Phase.DEAD,"worker_dead_no_replacement");

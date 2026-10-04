@@ -299,11 +299,14 @@ public final class QueenFounding {
         }
     }
     public void die(ServerLevel level) {
+        if(phase==Phase.DEAD)return;
         queen.getNavigation().stop();
         int count = carried();
         if (count > 0) {
-            ItemEntity item = queen.spawnAtLocation(level, new ItemStack(Items.DIRT, count));
-            if (item != null) { item.setUnlimitedLifetime(); released += count; carry(0); }
+            var transfer=java.util.UUID.nameUUIDFromBytes(("queen-soil:"+queen.getUUID()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            dev.primeants.worker.TransferCustody.get(level).take(transfer,"queen:"+queen.getUUID(),queen.position(),queen.getMainHandItem());
+            released += count;carry(0);
+            dev.primeants.worker.TransferCustody.get(level).retry(level);
         }
         phase = Phase.DEAD; reason = "queen_died_unfinished_terrain_retained";
     }

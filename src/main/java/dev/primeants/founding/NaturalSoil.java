@@ -19,8 +19,16 @@ import net.minecraft.world.level.saveddata.SavedDataType;
 
 /** Positive generation observations only. Absent/revoked records are NEVER inferred from loading soil. */
 public final class NaturalSoil extends SavedData {
-    public static final Codec<NaturalSoil> CODEC = Codec.unboundedMap(Codec.STRING, Codec.STRING)
-            .xmap(NaturalSoil::new, data -> Map.copyOf(data.observed));
+    // DFU BaseMapCodec uses Object2ObjectArrayMap.putIfAbsent: quadratic for a real saved world's
+    // positive observations. Keep the identical string-map schema, decode into hash storage.
+    public static final Codec<NaturalSoil> CODEC = Codec.PASSTHROUGH.xmap(dynamic -> {
+        Map<String,String> values=new HashMap<>();
+        dynamic.getMapValues().getOrThrow().forEach((k,v)->values.put(k.asString().getOrThrow(),v.asString().getOrThrow()));
+        return new NaturalSoil(values);
+    }, data -> {
+        var object=new com.google.gson.JsonObject();data.observed.forEach(object::addProperty);
+        return new com.mojang.serialization.Dynamic<>(com.mojang.serialization.JsonOps.INSTANCE,object);
+    });
     public static final SavedDataType<NaturalSoil> TYPE = new SavedDataType<>(
             Identifier.fromNamespaceAndPath("prime_ants", "natural_soil"), NaturalSoil::new, CODEC, DataFixTypes.LEVEL);
     private final Map<String, String> observed;
