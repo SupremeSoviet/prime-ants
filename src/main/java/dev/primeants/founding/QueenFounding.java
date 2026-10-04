@@ -40,10 +40,39 @@ public final class QueenFounding {
     public int plugged() { return plugged; }
     public int carried() { return queen.getMainHandItem().is(Items.DIRT) ? queen.getMainHandItem().getCount() : 0; }
     public long loadedTicks() { return loadedTicks; }
-    public String reason() { return reason; }
-    public boolean sealed() { return phase == Phase.SETTLED && plugged == 2 && plan != null
-            && queen.level() instanceof ServerLevel level && plan.enclosedChamber(level)
-            && plan.plugs().stream().allMatch(p -> level.getBlockState(p).is(Blocks.DIRT)); }
+    public String reason() {
+        if (phase == Phase.SETTLED && queen.level() instanceof ServerLevel level) return settledReason(level);
+        return reason;
+    }
+    /** SETTLED records historical completion; readiness always describes the live enclosure. */
+    public boolean sealed() { return phase == Phase.SETTLED && queen.level() instanceof ServerLevel level
+            && enclosureProblem(level) == null; }
+    /** Phase-independent physical predicate, shared by completion and readiness. Placement counters are history. */
+    private String enclosureProblem(ServerLevel level) {
+        if (plan == null) return "enclosure_plan_missing";
+        // Never request generation/loading to prove an enclosure whose blocks are unavailable.
+        for (int f : new int[]{2, 6}) for (int s : new int[]{-2, 2}) {
+            BlockPos p = plan.at(f, s, -3);
+            if (level.getChunkSource().getChunk(p.getX() >> 4, p.getZ() >> 4,
+                    net.minecraft.world.level.chunk.status.ChunkStatus.FULL, false) == null) return "enclosure_chunk_unavailable";
+        }
+        if (plan.plugs().stream().anyMatch(p -> !level.getBlockState(p).is(Blocks.DIRT))) return "enclosure_plug_missing";
+        if (!plan.enclosedChamber(level)) return "enclosure_shell_open";
+        for (int f = 3; f <= 5; f++) for (int s = -1; s <= 1; s++)
+            if (!NestPlan.walkable(level, plan.at(f, s, -2))) return "enclosure_chamber_obstructed";
+        BlockPos a = plan.at(3, -1, -2), b = plan.at(5, 1, -1);
+        AABB interior = new AABB(Math.min(a.getX(), b.getX()), a.getY(), Math.min(a.getZ(), b.getZ()),
+                Math.max(a.getX(), b.getX()) + 1, b.getY() + 1, Math.max(a.getZ(), b.getZ()) + 1);
+        AABB body = queen.getBoundingBox();
+        if (!queen.isAlive() || queen.isRemoved() || !queen.onGround() || queen.isInWater()
+                || !interior.contains(body.getMinPosition()) || !interior.contains(body.getMaxPosition())
+                || !level.noCollision(queen, body.deflate(0.001))) return "enclosure_queen_not_inside";
+        return null;
+    }
+    private String settledReason(ServerLevel level) {
+        String problem = enclosureProblem(level);
+        return problem == null ? "settled_throat_sealed" : "settled_not_ready_" + problem;
+    }
     public boolean ownsMovement() { return phase != Phase.NONE && phase != Phase.FAILED && phase != Phase.DEAD; }
     public void request() { if (phase == Phase.NONE) { phase = Phase.SEEKING; reason = "seeking_verified_natural_soil"; } }
     private void phase(Phase value) { phase = value; stalled = 0; queen.getNavigation().stop(); }
@@ -54,7 +83,15 @@ public final class QueenFounding {
     private void carry(int count) { queen.setItemSlot(EquipmentSlot.MAINHAND, count == 0 ? ItemStack.EMPTY : new ItemStack(Items.DIRT, count)); }
     public void tick(ServerLevel level) {
         if (!queen.isAlive() || !ownsMovement()) return;
-        if (phase == Phase.SETTLED) { queen.getNavigation().stop(); return; }
+        if (phase == Phase.SETTLED) {
+            queen.getNavigation().stop();
+            String current = settledReason(level);
+            if (!current.equals(reason)) {
+                reason = current;
+                PrimeAnts.LOGGER.info("Founding readiness queen={} phase={} reason={}", queen.getUUID(), phase, reason);
+            }
+            return;
+        }
         loadedTicks++;
         if (queen.isInWater()) { fail("fluid_at_queen"); return; }
         if (phase == Phase.SEEKING) {
@@ -163,7 +200,12 @@ public final class QueenFounding {
             carry(carried() - 1); plugged++; cooldown = cadence(); stalled = 0;
             return;
         }
+        String problem = enclosureProblem(level);
+        if (problem != null) { fail(problem); return; }
         if (arrive(level, plan.chamber()) && cooldown == 0) {
+            // Revalidate at the actual final transition, independently of the future phase.
+            problem = enclosureProblem(level);
+            if (problem != null) { fail(problem); return; }
             reason = "settled_throat_sealed"; phase(Phase.SETTLED);
             PrimeAnts.LOGGER.info("Founding settled queen={} ticks={} multiplier={} soil: removed={} carried={} deposited={} released={} plugged={}",
                     queen.getUUID(), loadedTicks, multiplier(), progress, carried(), deposited, released, plugged);
@@ -179,7 +221,7 @@ public final class QueenFounding {
         phase = Phase.DEAD; reason = "queen_died_unfinished_terrain_retained";
     }
     public void save(ValueOutput out) {
-        out.putString("Phase", phase.name()); out.putString("Reason", reason);
+        out.putString("Phase", phase.name()); out.putString("Reason", reason());
         out.putInt("Progress", progress); out.putInt("Deposited", deposited); out.putInt("Released", released); out.putInt("Plugged", plugged);
         out.putInt("Cooldown", cooldown); out.putInt("Stalled", stalled); out.putLong("LoadedTicks", loadedTicks);
         if (plan != null) {

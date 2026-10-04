@@ -42,6 +42,9 @@ gradle.taskGraph.whenReady { graph ->
     }
 }
 loom.runs.named('gameTest') {
+    // Loom's deleteGameTestRunDir clears the CLIENT directory only. Preserve prior
+    // server worlds as evidence; each invocation gets genuinely new generation.
+    runDirectory.set(layout.buildDirectory.dir('run/serverGameTest/' + java.util.UUID.randomUUID().toString()))
     systemProperties.put('prime_ants.foundingWorkMultiplier', providers.gradleProperty('primeAntsFoundingMultiplier').getOrElse('20'))
     if (providers.gradleProperty('primeAntsOriginDiagnostics').isPresent()) systemProperties.put('prime_ants.originDiagnostics', 'true')
     systemProperties.put('fabric-api.gametest.report-file', gameTestReport.get().asFile.absolutePath)
@@ -103,7 +106,10 @@ tasks.named('runClientGameTest') {
 // Loom connects runGameTest to check. Also reject a vacuous or stale report.
 tasks.named('runGameTest') {
     mustRunAfter tasks.named('test')
-    doFirst { delete gameTestReport }
+    doFirst {
+        delete gameTestReport
+        logger.lifecycle("Fresh server GameTest directory: ${loom.runs.named('gameTest').get().runDirectory.get().asFile}")
+    }
     doLast {
         def report = new groovy.xml.XmlSlurper().parse(gameTestReport.get().asFile)
         def cases = report.depthFirst().findAll { it.name() == 'testcase' }
@@ -134,7 +140,15 @@ tasks.named('runGameTest') {
                 throw new GradleException("Expected ant GameTest was not executed: ${name}")
             }
         }
-        ['founding_excavates_transports_walks_and_seals_over_real_ticks','unknown_origin_soil_remains_untouched','pre_queen_player_placed_matching_soil_remains_untouched','unsuitable_substrates_remain_untouched','ordinary_player_replacement_invalidates_planned_task','genuine_generation_and_chunk_reload_cannot_grant_unknown_origin','interrupted_founding_and_protection_persist_through_save_load','queen_death_releases_carried_soil_once_and_stops_work'].each { name ->
+        ['founding_excavates_transports_walks_and_seals_over_real_ticks',
+         'side_wall_opened_during_sealing_prevents_settlement','placed_plug_removed_before_settlement_prevents_settlement',
+         'chamber_obstructed_during_sealing_prevents_settlement','invalid_settled_enclosure_stays_unready_through_save_load',
+         'settled_readiness_requires_queen_inside',
+         'genuine_native_soil_generation_records_and_revokes_origin',
+         'unknown_origin_soil_remains_untouched','pre_queen_player_placed_matching_soil_remains_untouched',
+         'unsuitable_substrates_remain_untouched','ordinary_player_replacement_invalidates_planned_task',
+         'genuine_generation_and_chunk_reload_cannot_grant_unknown_origin','interrupted_founding_and_protection_persist_through_save_load',
+         'queen_death_releases_carried_soil_once_and_stops_work'].each { name ->
             if (!cases.any { it.@name.text() == "prime_ants_test:queen_founding_game_test_${name}" }) throw new GradleException("Missing founding test: ${name}")
         }
         if (report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] }) {

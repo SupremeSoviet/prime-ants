@@ -113,6 +113,167 @@ public final class QueenFoundingGameTest {
             PrimeAnts.LOGGER.info("T05 SUCCESS uuid={} duration={} cadence={} multiplier={} movedTicks={} soil=24/0/3/19/2", queen.getUUID(), f.loadedTicks(), QueenFounding.cadence(), QueenFounding.multiplier(), moving[0]);
         });
     }
+    @GameTest(maxTicks=30000, structure="prime_ants_test:idle_ground")
+    public void sideWallOpenedDuringSealingPreventsSettlement(GameTestHelper c) { sealingIntervention(c, false); }
+    @GameTest(maxTicks=30000, structure="prime_ants_test:idle_ground")
+    public void placedPlugRemovedBeforeSettlementPreventsSettlement(GameTestHelper c) { sealingIntervention(c, true); }
+    private void sealingIntervention(GameTestHelper c, boolean removePlug) {
+        terrain(c, Blocks.DIRT.defaultBlockState(), true); var queen = egg(c);
+        boolean[] edited = {false}, checked = {false}; BlockPos[] breach = {null};
+        c.onEachTick(() -> {
+            var f = queen.founding();
+            if (!edited[0] && f.phase() == QueenFounding.Phase.SEALING && f.plugged() == (removePlug ? 2 : 1)) {
+                edited[0] = true; breach[0] = removePlug ? f.plan().plugs().getFirst() : f.plan().at(4, 2, -2);
+                c.assertTrue(c.getLevel().getBlockState(breach[0]).is(Blocks.DIRT), "Intervene on an existing physical block");
+                c.getLevel().setBlock(breach[0], Blocks.AIR.defaultBlockState(), 3);
+                PrimeAnts.LOGGER.info("T06 intervention kind={} tick={} phase={} removed={} placedPlugs={} breach={} queen={}",
+                        removePlug ? "plug" : "side_wall", c.getTick(), f.phase(), f.removed(), f.plugged(), breach[0], queen.getUUID());
+            }
+            if (edited[0] && f.phase() == QueenFounding.Phase.SETTLED) {
+                PrimeAnts.LOGGER.error("T06 FALSE SETTLEMENT kind={} tick={} phase={} reason={} sealed={} livePlugs={} shell={}",
+                        removePlug ? "plug" : "side_wall", c.getTick(), f.phase(), f.reason(), f.sealed(),
+                        f.plan().plugs().stream().filter(p -> c.getLevel().getBlockState(p).is(Blocks.DIRT)).count(), f.plan().enclosedChamber(c.getLevel()));
+            }
+            c.assertTrue(f.phase() != QueenFounding.Phase.SETTLED, "Breached enclosure must not announce successful settlement: " + f.reason());
+            if (!checked[0] && f.phase() == QueenFounding.Phase.FAILED) {
+                checked[0] = true;
+                c.assertTrue(edited[0] && f.reason().equals(removePlug ? "enclosure_plug_missing" : "enclosure_shell_open"), "Explicit breach diagnostic: " + f.reason());
+                var frozen = snapshot(c); int removed = f.removed(), carried = f.carried(), placed = f.plugged();
+                c.runAfterDelay(80, () -> {
+                    c.assertTrue(!f.sealed() && f.phase() == QueenFounding.Phase.FAILED, "Failed enclosure remains unready");
+                    c.assertTrue(f.removed() == removed && f.carried() == carried && f.plugged() == placed && frozen.equals(snapshot(c)), "Failure must not excavate, refund soil or repair external edits");
+                    balance(c, queen);
+                    long livePlugs = f.plan().plugs().stream().filter(p -> c.getLevel().getBlockState(p).is(Blocks.DIRT)).count();
+                    int externallyRemoved = removePlug ? 1 : 0;
+                    c.assertTrue(f.removed() == 24 && f.deposited() == 3 && f.released() == 19 && f.carried() == 0 && f.plugged() == 2
+                            && livePlugs == 2 - externallyRemoved && 24 == 3 + 19 + livePlugs + externallyRemoved,
+                            "Physical accounting: historical placements are not live blocks; one externally removed plug belongs to external actor");
+                    c.assertTrue(c.getLevel().getBlockState(breach[0]).isAir(), "External breach stays open");
+                    PrimeAnts.LOGGER.info("T06 intervention prevented kind={} reason={} soil=24/0/3/19 placed={} live={} externallyRemoved={} unchangedTicks=80",
+                            removePlug ? "plug" : "side_wall", f.reason(), placed, livePlugs, externallyRemoved); c.succeed();
+                });
+            }
+        });
+    }
+    @GameTest(maxTicks=30000, structure="prime_ants_test:idle_ground")
+    public void chamberObstructedDuringSealingPreventsSettlement(GameTestHelper c) {
+        terrain(c, Blocks.DIRT.defaultBlockState(), true); var queen = egg(c); boolean[] edited = {false}, checked = {false};
+        c.onEachTick(() -> {
+            var f = queen.founding();
+            if (!edited[0] && f.phase() == QueenFounding.Phase.SEALING && f.plugged() == 2) {
+                edited[0] = true; c.getLevel().setBlock(f.plan().at(5, 1, -1), Blocks.STONE.defaultBlockState(), 3);
+            }
+            c.assertTrue(f.phase() != QueenFounding.Phase.SETTLED, "Obstructed chamber must not complete");
+            if (!checked[0] && f.phase() == QueenFounding.Phase.FAILED) {
+                checked[0] = true; c.assertTrue(edited[0] && f.reason().equals("enclosure_chamber_obstructed"), "Explicit chamber diagnostic: " + f.reason());
+                var frozen = snapshot(c);
+                c.runAfterDelay(80, () -> {
+                    c.assertTrue(!f.sealed() && f.removed() == 24 && frozen.equals(snapshot(c)), "No obstruction repair or further excavation");
+                    balance(c, queen); PrimeAnts.LOGGER.info("T06 obstructed completion prevented reason={} unchangedTicks=80", f.reason()); c.succeed();
+                });
+            }
+        });
+    }
+    @GameTest(maxTicks=30000, structure="prime_ants_test:idle_ground")
+    public void invalidSettledEnclosureStaysUnreadyThroughSaveLoad(GameTestHelper c) {
+        terrain(c, Blocks.DIRT.defaultBlockState(), true); LasiusNigerEntity[] queen = {egg(c)}; boolean[] restored = {false};
+        c.onEachTick(() -> {
+            var f = queen[0].founding();
+            c.assertTrue(f.phase() != QueenFounding.Phase.FAILED, "Intact founding must complete before intervention: " + f.reason());
+            if (!restored[0] && f.sealed()) {
+                restored[0] = true; var level = c.getLevel(); BlockPos obstruction = f.plan().at(5, 1, -1);
+                level.setBlock(obstruction, Blocks.STONE.defaultBlockState(), 3);
+                c.assertTrue(f.phase() == QueenFounding.Phase.SETTLED && !f.sealed()
+                        && f.reason().equals("settled_not_ready_enclosure_chamber_obstructed"), "Historical SETTLED must immediately stop exposing readiness");
+                var chunk = level.getChunkAt(obstruction);
+                var serial = net.minecraft.world.level.chunk.storage.SerializableChunkData.copyOf(level, chunk);
+                var parsed = net.minecraft.world.level.chunk.storage.SerializableChunkData.parse(level, level.palettedContainerFactory(), serial.write());
+                var reloadedChunk = parsed.read(level, level.getPoiManager(), new net.minecraft.world.level.chunk.storage.RegionStorageInfo("test", level.dimension(), "chunk"), chunk.getPos());
+                c.assertTrue(reloadedChunk.getBlockState(obstruction).is(Blocks.STONE), "FULL chunk serialization retains actual obstruction");
+                level.getDataStorage().saveAndJoin();
+                try (var disk = new net.minecraft.world.level.storage.SavedDataStorage(
+                        net.minecraft.world.level.dimension.DimensionType.getStorageFolder(level.dimension(), level.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT)).resolve("data"),
+                        net.minecraft.util.datafix.DataFixers.getDataFixer(), level.registryAccess())) {
+                    var loaded = disk.get(NaturalSoil.TYPE);
+                    c.assertTrue(loaded != null && !loaded.eligible(level, f.plan().plugs().getFirst()), "Disk reload must not mint plug origin");
+                    level.getDataStorage().set(NaturalSoil.TYPE, loaded);
+                }
+                TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, level.registryAccess());
+                c.assertTrue(queen[0].save(output), "Serialize settled queen through vanilla path");
+                CompoundTag tag = output.buildResult(); UUID id = queen[0].getUUID(); queen[0].discard();
+                queen[0] = (LasiusNigerEntity)EntityType.loadEntityRecursive(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), tag), level, EntitySpawnReason.LOAD, e -> e);
+                c.assertTrue(queen[0] != null && queen[0].getUUID().equals(id) && queen[0].founding().phase() == QueenFounding.Phase.SETTLED
+                        && !queen[0].founding().sealed() && queen[0].founding().reason().equals("settled_not_ready_enclosure_chamber_obstructed"), "Restored historical completion cannot grant current readiness");
+                c.assertTrue(level.tryAddFreshEntityWithPassengers(queen[0]), "Restore exactly one settled queen");
+                var frozen = snapshot(c);
+                c.runAfterDelay(80, () -> {
+                    var loaded = queen[0].founding();
+                    c.assertTrue(loaded.phase() == QueenFounding.Phase.SETTLED && !loaded.sealed()
+                            && loaded.reason().equals("settled_not_ready_enclosure_chamber_obstructed"), "Live ticks preserve historical phase and explicit present diagnostic");
+                    c.assertTrue(loaded.removed() == 24 && loaded.plugged() == 2 && frozen.equals(snapshot(c)), "No post-load work, duplication or automatic repair");
+                    balance(c, queen[0]);
+                    // A second external edit also revokes readiness; placement history stays two.
+                    level.setBlock(loaded.plan().plugs().getFirst(), Blocks.AIR.defaultBlockState(), 3);
+                    c.assertTrue(!loaded.sealed() && loaded.reason().equals("settled_not_ready_enclosure_plug_missing"), "Historical plug counter cannot prove a live seal");
+                    PrimeAnts.LOGGER.info("T06 invalid SETTLED entity/chunk serialization + SavedData disk reload: phase={} reason={} unchangedTicks=80; no process restart", loaded.phase(), loaded.reason()); c.succeed();
+                });
+            }
+        });
+    }
+    @GameTest(maxTicks=30000, structure="prime_ants_test:idle_ground")
+    public void settledReadinessRequiresQueenInside(GameTestHelper c) {
+        terrain(c, Blocks.DIRT.defaultBlockState(), true); var queen = egg(c); boolean[] displaced = {false};
+        c.onEachTick(() -> {
+            var f = queen.founding(); c.assertTrue(f.phase() != QueenFounding.Phase.FAILED, "Queen must first found entirely through real ticks: " + f.reason());
+            if (!displaced[0] && f.sealed()) {
+                displaced[0] = true; var frozen = snapshot(c); Vec3 outside = Vec3.atBottomCenterOf(f.plan().outside());
+                // External displacement AFTER genuine completion; never a shortcut to excavation, entry or settlement.
+                queen.teleportTo(outside.x, outside.y, outside.z);
+                c.assertTrue(f.phase() == QueenFounding.Phase.SETTLED && !f.sealed()
+                        && f.reason().equals("settled_not_ready_enclosure_queen_not_inside"), "An intact nest without its queen inside is not currently ready");
+                c.runAfterDelay(80, () -> {
+                    c.assertTrue(!f.sealed() && f.phase() == QueenFounding.Phase.SETTLED && frozen.equals(snapshot(c)), "Historical settlement does not move the queen back or repair terrain");
+                    balance(c, queen);
+                    PrimeAnts.LOGGER.info("T06 externally displaced settled queen remains unready reason={} unchangedTicks=80", f.reason()); c.succeed();
+                });
+            }
+        });
+    }
+    @GameTest(maxTicks=60)
+    public void genuineNativeSoilGenerationRecordsAndRevokesOrigin(GameTestHelper c) {
+        var dimension = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION,
+                net.minecraft.resources.Identifier.fromNamespaceAndPath("prime_ants_test", "native_soil"));
+        var level = c.getLevel().getServer().getLevel(dimension);
+        c.assertTrue(level != null, "Development-only native-soil dimension must be declared by resolved test-world preset");
+        c.assertTrue(level.getChunkSource().getGenerator() instanceof net.minecraft.world.level.levelgen.FlatLevelSource, "Declared vanilla flat generator");
+        var generator = (net.minecraft.world.level.levelgen.FlatLevelSource)level.getChunkSource().getGenerator();
+        var layers = generator.settings().getLayers();
+        c.assertTrue(layers.size() == 8 && layers.getFirst().is(Blocks.BEDROCK) && layers.getLast().is(Blocks.GRASS_BLOCK)
+                && layers.subList(1, 7).stream().allMatch(s -> s.is(Blocks.DIRT)), "Resolved settings: bedrock 1, dirt 6, grass 1; no assumed default surface");
+        BlockPos far = new BlockPos(4096, level.getMinY() + 7, 4096);
+        var region = net.minecraft.world.level.dimension.DimensionType.getStorageFolder(dimension,
+                level.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT)).resolve("region/r.8.8.mca");
+        PrimeAnts.LOGGER.info("T06 positive fixture dimension={} newRegion={} exists={}", dimension.identifier(), region.toAbsolutePath(), java.nio.file.Files.exists(region));
+        c.assertTrue(!java.nio.file.Files.exists(region)
+                && level.getChunkSource().getChunk(256, 256, net.minecraft.world.level.chunk.status.ChunkStatus.FULL, false) == null,
+                "Request must begin with genuinely new terrain, absent on disk and in live FULL cache");
+        var chunk = (net.minecraft.world.level.chunk.LevelChunk)level.getChunkSource().getChunk(256, 256, net.minecraft.world.level.chunk.status.ChunkStatus.FULL, true);
+        var soil = NaturalSoil.get(level);
+        c.assertTrue(level.getBlockState(far).is(Blocks.GRASS_BLOCK) && soil.eligible(level, far)
+                && level.getBlockState(far.below()).is(Blocks.DIRT) && soil.eligible(level, far.below()), "Positive native grass AND dirt must be recorded by unmodified generation witness/observer");
+        int recorded = 0;
+        for (int x = 4096; x < 4112; x++) for (int z = 4096; z < 4112; z++) for (int y = level.getMinY() + 1; y <= far.getY(); y++)
+            if (soil.eligible(level, new BlockPos(x, y, z))) recorded++;
+        c.assertTrue(recorded == 1792, "All 7 supported layers of this new FULL chunk must have positive origin");
+        level.setBlock(far, Blocks.AIR.defaultBlockState(), 3); level.setBlock(far, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+        c.assertTrue(!soil.eligible(level, far) && soil.eligible(level, far.below()), "Mutation revokes only edited origin");
+        var serial = net.minecraft.world.level.chunk.storage.SerializableChunkData.copyOf(level, chunk);
+        var parsed = net.minecraft.world.level.chunk.storage.SerializableChunkData.parse(level, level.palettedContainerFactory(), serial.write());
+        var reloaded = parsed.read(level, level.getPoiManager(), new net.minecraft.world.level.chunk.storage.RegionStorageInfo("test", dimension, "chunk"), chunk.getPos());
+        c.assertTrue(reloaded.getBlockState(far).is(Blocks.GRASS_BLOCK) && !soil.eligible(level, far) && soil.eligible(level, far.below()), "Ordinary FULL chunk loading cannot regrant revoked permission");
+        PrimeAnts.LOGGER.info("T06 POSITIVE genuine generation dimension={} chunk={} layers=bedrock1/dirt6/grass1 recorded={} grass=true dirt=true mutated=false ordinaryReload=false", dimension.identifier(), chunk.getPos(), recorded);
+        c.succeed();
+    }
     @GameTest(maxTicks=50, structure="prime_ants_test:idle_ground") public void unknownOriginSoilRemainsUntouched(GameTestHelper c) { protectedSite(c, false, false); }
     @GameTest(maxTicks=50, structure="prime_ants_test:idle_ground") public void preQueenPlayerPlacedMatchingSoilRemainsUntouched(GameTestHelper c) { protectedSite(c, true, false); }
     @GameTest(maxTicks=50, structure="prime_ants_test:idle_ground") public void unsuitableSubstratesRemainUntouched(GameTestHelper c) { protectedSite(c, true, true); }
