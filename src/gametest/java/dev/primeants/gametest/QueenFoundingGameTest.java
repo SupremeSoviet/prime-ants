@@ -40,9 +40,12 @@ import com.mojang.authlib.GameProfile;
 /** Controlled origin fixtures only here. No manual ticks, entity movement, plan completion or mutation shortcuts. */
 public final class QueenFoundingGameTest {
     private static final BlockPos ENTRANCE = new BlockPos(7, 4, 4);
-    private void terrain(GameTestHelper c, BlockState material, boolean observed) {
+    void terrain(GameTestHelper c, BlockState material, boolean observed) {
+        terrain(c, material, observed, false);
+    }
+    void terrain(GameTestHelper c, BlockState material, boolean observed, boolean wide) {
         JsonObject records = NaturalSoil.CODEC.encodeStart(JsonOps.INSTANCE, NaturalSoil.get(c.getLevel())).getOrThrow().getAsJsonObject();
-        for (int x = 2; x <= 12; x++) for (int z = 1; z <= 12; z++) for (int y = 1; y <= 4; y++) {
+        for (int x = wide ? 1 : 2; x <= (wide ? 14 : 12); x++) for (int z = 1; z <= (wide ? 14 : 12); z++) for (int y = 1; y <= 4; y++) {
             c.setBlock(x, y, z, material);
             if (observed) records.addProperty(Long.toString(c.absolutePos(new BlockPos(x,y,z)).asLong()), BuiltInRegistries.BLOCK.getKey(material.getBlock()).toString());
         }
@@ -55,7 +58,7 @@ public final class QueenFoundingGameTest {
             public PermissionSet permissions() { return PermissionSet.ALL_PERMISSIONS; }
         };
     }
-    private LasiusNigerEntity egg(GameTestHelper c) {
+    LasiusNigerEntity egg(GameTestHelper c) {
         BlockPos p = c.absolutePos(ENTRANCE); BlockState before = c.getLevel().getBlockState(p); Player player = player(c);
         ItemStack egg = new ItemStack(AntItems.DEBUG_QUEEN_EGG); player.setItemInHand(InteractionHand.MAIN_HAND, egg);
         c.assertTrue(egg.useOn(new UseOnContext(c.getLevel(), player, InteractionHand.MAIN_HAND, egg,
@@ -78,7 +81,7 @@ public final class QueenFoundingGameTest {
         c.assertTrue(f.removed() == f.carried() + f.deposited() + f.released() + f.plugged(), "Every removed soil unit must have a physical owner");
         int blocks = 0;
         if (f.plan() != null) {
-            for (BlockPos p : f.plan().deposits()) if (c.getLevel().getBlockState(p).is(Blocks.DIRT)) blocks++;
+            for (BlockPos p : f.plan().deposits()) if (c.getLevel().getBlockState(p).is(dev.primeants.brood.NurseryBlocks.NEST_SOIL)) blocks++;
             c.assertTrue(blocks == f.deposited(), "Recorded deposits must be real blocks");
             for (BlockPos p : f.plan().plugs().subList(0, f.plugged())) if (c.getLevel().getBlockState(p).is(Blocks.DIRT))
                 c.assertTrue(!NaturalSoil.get(c.getLevel()).eligible(c.getLevel(), p), "Plugged recovered soil must remain non-natural");
@@ -102,15 +105,18 @@ public final class QueenFoundingGameTest {
             if (c.getTick() % 200 == 0) PrimeAnts.LOGGER.info("T05 founding trace tick={} phase={} progress={} pos={} reason={}", c.getTick(), f.phase(), f.removed(), queen.position(), f.reason());
             balance(c, queen);
             for (var entry : before.entrySet()) if (!entry.getValue().equals(c.getLevel().getBlockState(entry.getKey()))) {
-                var p = f.plan(); c.assertTrue(p != null && (p.tasks().contains(entry.getKey()) || p.deposits().contains(entry.getKey()) || p.plugs().contains(entry.getKey())), "No edit beyond declared areas: " + entry.getKey());
+                var p = f.plan(); c.assertTrue(p != null && (p.tasks().contains(entry.getKey()) || p.deposits().contains(entry.getKey()) || p.plugs().contains(entry.getKey())
+                        || p.undergroundSurfaces().contains(entry.getKey()) && c.getLevel().getBlockState(entry.getKey()).is(dev.primeants.brood.NurseryBlocks.NEST_SOIL)), "No edit beyond declared areas: " + entry.getKey());
             }
         });
         c.succeedWhen(() -> {
             var f = queen.founding(); c.assertTrue(f.sealed(), "Queen must settle after two recovered-soil plug actions");
             c.assertTrue(open[0] && carrying[0] && moving[0] > 20, "Observe complete open route/headroom before intentional sealing, carrying and real movement");
-            c.assertTrue(f.removed() == 24 && f.deposited() == 3 && f.plugged() == 2 && f.released() == 19 && f.carried() == 0, "24 = 3 deposited + 19 released + 2 plug");
+            c.assertTrue(f.removed() == 24 && f.deposited() == 22 && f.plugged() == 2 && f.released() == 0 && f.carried() == 0, "24 = 22 deposited + 0 released + 2 plugs");
             c.assertTrue(queen.position().distanceToSqr(Vec3.atBottomCenterOf(f.plan().chamber())) < 0.1, "Queen must navigate into chamber center");
-            PrimeAnts.LOGGER.info("T05 SUCCESS uuid={} duration={} cadence={} multiplier={} movedTicks={} soil=24/0/3/19/2", queen.getUUID(), f.loadedTicks(), QueenFounding.cadence(), QueenFounding.multiplier(), moving[0]);
+            for(int forward=3;forward<=5;forward++)for(int side=-1;side<=1;side++)
+                c.assertTrue(c.getLevel().getBlockState(f.plan().at(forward,side,-3)).is(dev.primeants.brood.NurseryBlocks.NEST_SOIL),"Native dirt floor must be prepared before grass can spread into it");
+            PrimeAnts.LOGGER.info("T05 SUCCESS uuid={} duration={} cadence={} multiplier={} movedTicks={} soil=24/0/22/0/2", queen.getUUID(), f.loadedTicks(), QueenFounding.cadence(), QueenFounding.multiplier(), moving[0]);
         });
     }
     @GameTest(maxTicks=30000, structure="prime_ants_test:idle_ground")
@@ -124,7 +130,8 @@ public final class QueenFoundingGameTest {
             var f = queen.founding();
             if (!edited[0] && f.phase() == QueenFounding.Phase.SEALING && f.plugged() == (removePlug ? 2 : 1)) {
                 edited[0] = true; breach[0] = removePlug ? f.plan().plugs().getFirst() : f.plan().at(4, 2, -2);
-                c.assertTrue(c.getLevel().getBlockState(breach[0]).is(Blocks.DIRT), "Intervene on an existing physical block");
+                c.assertTrue(c.getLevel().getBlockState(breach[0]).is(Blocks.DIRT)
+                        || !removePlug && c.getLevel().getBlockState(breach[0]).is(dev.primeants.brood.NurseryBlocks.NEST_SOIL), "Intervene on an existing physical soil block (plugs remain dirt)");
                 c.getLevel().setBlock(breach[0], Blocks.AIR.defaultBlockState(), 3);
                 PrimeAnts.LOGGER.info("T06 intervention kind={} tick={} phase={} removed={} placedPlugs={} breach={} queen={}",
                         removePlug ? "plug" : "side_wall", c.getTick(), f.phase(), f.removed(), f.plugged(), breach[0], queen.getUUID());
@@ -145,11 +152,11 @@ public final class QueenFoundingGameTest {
                     balance(c, queen);
                     long livePlugs = f.plan().plugs().stream().filter(p -> c.getLevel().getBlockState(p).is(Blocks.DIRT)).count();
                     int externallyRemoved = removePlug ? 1 : 0;
-                    c.assertTrue(f.removed() == 24 && f.deposited() == 3 && f.released() == 19 && f.carried() == 0 && f.plugged() == 2
-                            && livePlugs == 2 - externallyRemoved && 24 == 3 + 19 + livePlugs + externallyRemoved,
+                    c.assertTrue(f.removed() == 24 && f.deposited() == 22 && f.released() == 0 && f.carried() == 0 && f.plugged() == 2
+                            && livePlugs == 2 - externallyRemoved && 24 == 22 + 0 + livePlugs + externallyRemoved,
                             "Physical accounting: historical placements are not live blocks; one externally removed plug belongs to external actor");
                     c.assertTrue(c.getLevel().getBlockState(breach[0]).isAir(), "External breach stays open");
-                    PrimeAnts.LOGGER.info("T06 intervention prevented kind={} reason={} soil=24/0/3/19 placed={} live={} externallyRemoved={} unchangedTicks=80",
+                    PrimeAnts.LOGGER.info("T06 intervention prevented kind={} reason={} soil=24/0/22/0 placed={} live={} externallyRemoved={} unchangedTicks=80",
                             removePlug ? "plug" : "side_wall", f.reason(), placed, livePlugs, externallyRemoved); c.succeed();
                 });
             }

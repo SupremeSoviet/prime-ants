@@ -2,6 +2,14 @@
   "required": true,
   "package": "dev.primeants.gametest.mixin",
   "compatibilityLevel": "JAVA_25",
-  "mixins": ["IdleStrollTraceMixin", "IdleLandTraceMixin", "IdlePathTraceMixin", "IdleControlsAccessor"],
-  "injectors": { "defaultRequire": 1 }
+  "mixins": [
+    "IdleStrollTraceMixin",
+    "IdleLandTraceMixin",
+    "IdlePathTraceMixin",
+    "IdleControlsAccessor",
+    "EmergenceInsertionMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
 }

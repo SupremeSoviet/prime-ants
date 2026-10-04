@@ -1,0 +1,2239 @@
+{
+  "caption": "T07 one debug egg queen physically founds, cares for brood and raises her first real workers",
+  "run_id": "3233f882-9bdc-4d88-ad08-fa736e33487b",
+  "capture_prefix": "t07-a4",
+  "entrypoint": "dev.primeants.gametest.AntCaptureTest",
+  "status": "success",
+  "seed": 2026100402,
+  "started_utc": "2026-10-04T18:55:46.899662300Z",
+  "observations": [
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 61,
+      "founding_ticks": 8,
+      "elapsed_age_ticks": 8,
+      "position": [
+        59.5,
+        80.0,
+        -40.65317351202292
+      ],
+      "removed": 0,
+      "carried": 0,
+      "deposited": 0,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 0,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 0,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 261,
+      "founding_ticks": 208,
+      "elapsed_age_ticks": 208,
+      "position": [
+        59.508101294521936,
+        80.0,
+        -40.3050340495608
+      ],
+      "removed": 4,
+      "carried": 4,
+      "deposited": 0,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 4,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 0,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 461,
+      "founding_ticks": 408,
+      "elapsed_age_ticks": 408,
+      "position": [
+        56.621846232702126,
+        80.0,
+        -35.520474743703694
+      ],
+      "removed": 4,
+      "carried": 3,
+      "deposited": 1,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 4,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 1,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 661,
+      "founding_ticks": 608,
+      "elapsed_age_ticks": 608,
+      "position": [
+        62.92649271736389,
+        80.0,
+        -35.50008909145538
+      ],
+      "removed": 4,
+      "carried": 3,
+      "deposited": 1,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 4,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 1,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 861,
+      "founding_ticks": 808,
+      "elapsed_age_ticks": 808,
+      "position": [
+        60.91565168199196,
+        80.0,
+        -35.51291537854556
+      ],
+      "removed": 4,
+      "carried": 2,
+      "deposited": 2,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 4,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 2,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 1061,
+      "founding_ticks": 1008,
+      "elapsed_age_ticks": 1008,
+      "position": [
+        57.689924382637535,
+        80.0,
+        -36.53035545623356
+      ],
+      "removed": 4,
+      "carried": 1,
+      "deposited": 3,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 4,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 3,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 1261,
+      "founding_ticks": 1208,
+      "elapsed_age_ticks": 1208,
+      "position": [
+        60.495714516140275,
+        80.0,
+        -38.75338753026616
+      ],
+      "removed": 4,
+      "carried": 0,
+      "deposited": 4,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 4,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 4,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 1461,
+      "founding_ticks": 1408,
+      "elapsed_age_ticks": 1408,
+      "position": [
+        59.48750240546304,
+        78.0,
+        -41.735502875556286
+      ],
+      "removed": 8,
+      "carried": 4,
+      "deposited": 4,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 10,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 4,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 1661,
+      "founding_ticks": 1608,
+      "elapsed_age_ticks": 1608,
+      "position": [
+        59.09722032092606,
+        80.0,
+        -36.14896862595034
+      ],
+      "removed": 8,
+      "carried": 4,
+      "deposited": 4,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 10,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 4,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 1861,
+      "founding_ticks": 1808,
+      "elapsed_age_ticks": 1808,
+      "position": [
+        59.09339481955248,
+        80.0,
+        -34.47215043439154
+      ],
+      "removed": 8,
+      "carried": 2,
+      "deposited": 6,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 10,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 6,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 2061,
+      "founding_ticks": 2008,
+      "elapsed_age_ticks": 2008,
+      "position": [
+        57.493488614275535,
+        81.0,
+        -36.492917333071055
+      ],
+      "removed": 8,
+      "carried": 1,
+      "deposited": 7,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 10,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 7,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 2261,
+      "founding_ticks": 2208,
+      "elapsed_age_ticks": 2208,
+      "position": [
+        61.21712797994696,
+        80.0,
+        -38.69857411986218
+      ],
+      "removed": 8,
+      "carried": 0,
+      "deposited": 8,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 10,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 8,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 2461,
+      "founding_ticks": 2408,
+      "elapsed_age_ticks": 2408,
+      "position": [
+        59.49945195652676,
+        77.0,
+        -43.83970498567371
+      ],
+      "removed": 10,
+      "carried": 2,
+      "deposited": 8,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 11,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 8,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 2661,
+      "founding_ticks": 2608,
+      "elapsed_age_ticks": 2608,
+      "position": [
+        59.50041361635771,
+        80.0,
+        -39.92541977436757
+      ],
+      "removed": 12,
+      "carried": 4,
+      "deposited": 8,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 12,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 8,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 2861,
+      "founding_ticks": 2808,
+      "elapsed_age_ticks": 2808,
+      "position": [
+        59.013855359265726,
+        80.0,
+        -36.935554043078895
+      ],
+      "removed": 12,
+      "carried": 2,
+      "deposited": 10,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 12,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 10,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 3061,
+      "founding_ticks": 3008,
+      "elapsed_age_ticks": 3008,
+      "position": [
+        57.306569258336026,
+        80.0,
+        -38.51901542100853
+      ],
+      "removed": 12,
+      "carried": 1,
+      "deposited": 11,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 12,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 11,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 3261,
+      "founding_ticks": 3208,
+      "elapsed_age_ticks": 3208,
+      "position": [
+        61.91921197723788,
+        80.0,
+        -39.1115216992427
+      ],
+      "removed": 12,
+      "carried": 0,
+      "deposited": 12,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 12,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 12,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 3461,
+      "founding_ticks": 3408,
+      "elapsed_age_ticks": 3408,
+      "position": [
+        59.474999994039536,
+        77.0,
+        -43.42553859353049
+      ],
+      "removed": 14,
+      "carried": 2,
+      "deposited": 12,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 14,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 12,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 3661,
+      "founding_ticks": 3608,
+      "elapsed_age_ticks": 3608,
+      "position": [
+        59.45737293979497,
+        77.0,
+        -43.474999994039536
+      ],
+      "removed": 16,
+      "carried": 4,
+      "deposited": 12,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 18,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 12,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 3861,
+      "founding_ticks": 3808,
+      "elapsed_age_ticks": 3808,
+      "position": [
+        59.22747429374266,
+        80.0,
+        -39.30052784475404
+      ],
+      "removed": 16,
+      "carried": 4,
+      "deposited": 12,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 18,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 12,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 4061,
+      "founding_ticks": 4008,
+      "elapsed_age_ticks": 4008,
+      "position": [
+        59.97740008524568,
+        80.0,
+        -38.56637886437264
+      ],
+      "removed": 16,
+      "carried": 1,
+      "deposited": 15,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 18,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 15,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 4261,
+      "founding_ticks": 4208,
+      "elapsed_age_ticks": 4208,
+      "position": [
+        56.31056702410124,
+        80.0,
+        -40.32880895303074
+      ],
+      "removed": 16,
+      "carried": 0,
+      "deposited": 16,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 18,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 16,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 4461,
+      "founding_ticks": 4408,
+      "elapsed_age_ticks": 4408,
+      "position": [
+        58.777316425956805,
+        77.0,
+        -44.21111574093209
+      ],
+      "removed": 16,
+      "carried": 0,
+      "deposited": 16,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 18,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 16,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 4661,
+      "founding_ticks": 4608,
+      "elapsed_age_ticks": 4608,
+      "position": [
+        59.49088262698797,
+        78.00133597911214,
+        -42.47260010014772
+      ],
+      "removed": 20,
+      "carried": 4,
+      "deposited": 16,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 22,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 16,
+      "underground_grass": 0,
+      "on_ground": false,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 4861,
+      "founding_ticks": 4808,
+      "elapsed_age_ticks": 4808,
+      "position": [
+        62.085269521412776,
+        80.0,
+        -38.49524475617405
+      ],
+      "removed": 20,
+      "carried": 3,
+      "deposited": 17,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 22,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 17,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 5061,
+      "founding_ticks": 5008,
+      "elapsed_age_ticks": 5008,
+      "position": [
+        60.420532466937836,
+        80.0,
+        -38.843162749419065
+      ],
+      "removed": 20,
+      "carried": 0,
+      "deposited": 20,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 22,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 20,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 5261,
+      "founding_ticks": 5208,
+      "elapsed_age_ticks": 5208,
+      "position": [
+        59.525000005960464,
+        77.0,
+        -43.45413381850168
+      ],
+      "removed": 20,
+      "carried": 0,
+      "deposited": 20,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 22,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 20,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 5461,
+      "founding_ticks": 5408,
+      "elapsed_age_ticks": 5408,
+      "position": [
+        59.526141620421754,
+        77.0,
+        -43.474999994039536
+      ],
+      "removed": 22,
+      "carried": 2,
+      "deposited": 20,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 27,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 20,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 5661,
+      "founding_ticks": 5608,
+      "elapsed_age_ticks": 5608,
+      "position": [
+        58.54918938514369,
+        80.0,
+        -39.60323784147066
+      ],
+      "removed": 22,
+      "carried": 1,
+      "deposited": 21,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 27,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 21,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 5861,
+      "founding_ticks": 5808,
+      "elapsed_age_ticks": 5808,
+      "position": [
+        59.51846137102867,
+        77.0,
+        -43.040749129799295
+      ],
+      "removed": 22,
+      "carried": 0,
+      "deposited": 22,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "body_reserve": 39000,
+      "converted": 27,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 22,
+      "underground_grass": 0,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "SETTLED",
+      "reason": "settled_throat_sealed",
+      "server_game_time": 5996,
+      "founding_ticks": 5940,
+      "elapsed_age_ticks": 5943,
+      "position": [
+        59.55242757530653,
+        77.0,
+        -44.26679812430732
+      ],
+      "removed": 24,
+      "carried": 0,
+      "deposited": 22,
+      "released": 0,
+      "plugged": 2,
+      "sealed": true,
+      "body_reserve": 36000,
+      "converted": 29,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 22,
+      "underground_grass": 0,
+      "nursery_ticks": 3,
+      "nursery_condition": "cared",
+      "brood": [
+        {
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "nourishment": 0,
+          "id": "206dad3f-2d54-4771-8969-47a55b87273e",
+          "progress": 3,
+          "stage": "EGG"
+        },
+        {
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "nourishment": 0,
+          "id": "e503aa7b-c85e-4cc6-9d1f-8f1f0c705590",
+          "progress": 3,
+          "stage": "EGG"
+        },
+        {
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "nourishment": 0,
+          "id": "4164e364-c065-4956-a229-ef24d7406ff0",
+          "progress": 3,
+          "stage": "EGG"
+        }
+      ],
+      "consumed_brood_ids": [],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "event": "brood_frame",
+      "stage": "eggs",
+      "run_id": "3233f882-9bdc-4d88-ad08-fa736e33487b",
+      "work_multiplier": 20.0,
+      "capture_started_utc": "2026-10-04T19:00:51.160212600Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t07-a4-eggs.png",
+      "capture_completed_utc": "2026-10-04T19:00:51.318554800Z",
+      "screenshot_render_extractions": [
+        {
+          "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "form": "queen",
+          "callow_visual": 1000,
+          "render_extraction_utc": "2026-10-04T19:00:51.168537900Z",
+          "render_entity_tick": 5942,
+          "render_position": [
+            59.552490234375,
+            77.0,
+            -44.2353515625
+          ],
+          "body_yaw": 168.75,
+          "walk_animation_position": 634.7382,
+          "walk_animation_speed": 0.12555268,
+          "visual_age_ticks": 5943.0,
+          "moving": true,
+          "carried_soil_rendered": false,
+          "client_carried_soil_units": 0,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.464375,
+              1.4787135,
+              -0.6246759
+            ],
+            [
+              0.545625,
+              1.5,
+              -0.15657403
+            ],
+            [
+              0.464375,
+              1.4787136,
+              0.06282402
+            ],
+            [
+              -0.46437502,
+              1.5000001,
+              -0.500324
+            ],
+            [
+              -0.5456251,
+              1.4787135,
+              -0.280926
+            ],
+            [
+              -0.46437496,
+              1.5,
+              0.18717594
+            ]
+          ],
+          "support_legs": [
+            1,
+            3,
+            5
+          ],
+          "support_tripod": "B"
+        }
+      ],
+      "width": 1600,
+      "height": 1000,
+      "modified_epoch_ms": 1791140451315,
+      "sha256": "57f062ff044ee984f27a6d3a6138836f74c9e335c817e02fc6f863f4275bf8b6"
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "SETTLED",
+      "reason": "settled_throat_sealed",
+      "server_game_time": 5997,
+      "founding_ticks": 5940,
+      "elapsed_age_ticks": 5944,
+      "position": [
+        59.55242757530653,
+        77.0,
+        -44.26679812430732
+      ],
+      "removed": 24,
+      "carried": 0,
+      "deposited": 22,
+      "released": 0,
+      "plugged": 2,
+      "sealed": true,
+      "body_reserve": 36000,
+      "converted": 29,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 22,
+      "underground_grass": 0,
+      "nursery_ticks": 4,
+      "nursery_condition": "cared",
+      "brood": [
+        {
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "nourishment": 0,
+          "id": "206dad3f-2d54-4771-8969-47a55b87273e",
+          "progress": 4,
+          "stage": "EGG"
+        },
+        {
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "nourishment": 0,
+          "id": "e503aa7b-c85e-4cc6-9d1f-8f1f0c705590",
+          "progress": 4,
+          "stage": "EGG"
+        },
+        {
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "nourishment": 0,
+          "id": "4164e364-c065-4956-a229-ef24d7406ff0",
+          "progress": 4,
+          "stage": "EGG"
+        }
+      ],
+      "consumed_brood_ids": [],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "SETTLED",
+      "reason": "settled_throat_sealed",
+      "server_game_time": 6116,
+      "founding_ticks": 5940,
+      "elapsed_age_ticks": 6063,
+      "position": [
+        59.55242757530653,
+        77.0,
+        -44.26679812430732
+      ],
+      "removed": 24,
+      "carried": 0,
+      "deposited": 22,
+      "released": 0,
+      "plugged": 2,
+      "sealed": true,
+      "body_reserve": 35100,
+      "converted": 29,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 22,
+      "underground_grass": 0,
+      "nursery_ticks": 123,
+      "nursery_condition": "cared",
+      "brood": [
+        {
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "nourishment": 300,
+          "id": "206dad3f-2d54-4771-8969-47a55b87273e",
+          "progress": 3,
+          "stage": "LARVA"
+        },
+        {
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "nourishment": 300,
+          "id": "e503aa7b-c85e-4cc6-9d1f-8f1f0c705590",
+          "progress": 3,
+          "stage": "LARVA"
+        },
+        {
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "nourishment": 300,
+          "id": "4164e364-c065-4956-a229-ef24d7406ff0",
+          "progress": 3,
+          "stage": "LARVA"
+        }
+      ],
+      "consumed_brood_ids": [],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "event": "brood_frame",
+      "stage": "larvae",
+      "run_id": "3233f882-9bdc-4d88-ad08-fa736e33487b",
+      "work_multiplier": 20.0,
+      "capture_started_utc": "2026-10-04T19:00:57.366280300Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t07-a4-larvae.png",
+      "capture_completed_utc": "2026-10-04T19:00:57.511422300Z",
+      "screenshot_render_extractions": [
+        {
+          "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "form": "queen",
+          "callow_visual": 1000,
+          "render_extraction_utc": "2026-10-04T19:00:57.368285200Z",
+          "render_entity_tick": 6062,
+          "render_position": [
+            59.552490234375,
+            77.0,
+            -44.266845703125
+          ],
+          "body_yaw": 168.75,
+          "walk_animation_position": 635.0524,
+          "walk_animation_speed": 6.447854E-28,
+          "visual_age_ticks": 6063.0,
+          "moving": false,
+          "carried_soil_rendered": false,
+          "client_carried_soil_units": 0,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.464375,
+              1.5000001,
+              -0.5625
+            ],
+            [
+              0.54562503,
+              1.4999999,
+              -0.21875
+            ],
+            [
+              0.464375,
+              1.5000001,
+              0.125
+            ],
+            [
+              -0.464375,
+              1.5000001,
+              -0.5625
+            ],
+            [
+              -0.54562503,
+              1.4999999,
+              -0.21875
+            ],
+            [
+              -0.464375,
+              1.5000001,
+              0.125
+            ]
+          ],
+          "support_legs": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "support_tripod": "boundary"
+        }
+      ],
+      "width": 1600,
+      "height": 1000,
+      "modified_epoch_ms": 1791140457507,
+      "sha256": "c0e14b32edb9126738bc0333bf9d31745153138a52d455ae1f2306d4f8485840"
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "SETTLED",
+      "reason": "settled_throat_sealed",
+      "server_game_time": 6117,
+      "founding_ticks": 5940,
+      "elapsed_age_ticks": 6064,
+      "position": [
+        59.55242757530653,
+        77.0,
+        -44.26679812430732
+      ],
+      "removed": 24,
+      "carried": 0,
+      "deposited": 22,
+      "released": 0,
+      "plugged": 2,
+      "sealed": true,
+      "body_reserve": 34800,
+      "converted": 29,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 22,
+      "underground_grass": 0,
+      "nursery_ticks": 124,
+      "nursery_condition": "cared",
+      "brood": [
+        {
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "nourishment": 400,
+          "id": "206dad3f-2d54-4771-8969-47a55b87273e",
+          "progress": 4,
+          "stage": "LARVA"
+        },
+        {
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "nourishment": 400,
+          "id": "e503aa7b-c85e-4cc6-9d1f-8f1f0c705590",
+          "progress": 4,
+          "stage": "LARVA"
+        },
+        {
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "nourishment": 400,
+          "id": "4164e364-c065-4956-a229-ef24d7406ff0",
+          "progress": 4,
+          "stage": "LARVA"
+        }
+      ],
+      "consumed_brood_ids": [],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "SETTLED",
+      "reason": "settled_throat_sealed",
+      "server_game_time": 6236,
+      "founding_ticks": 5940,
+      "elapsed_age_ticks": 6183,
+      "position": [
+        59.55242757530653,
+        77.0,
+        -44.26679812430732
+      ],
+      "removed": 24,
+      "carried": 0,
+      "deposited": 22,
+      "released": 0,
+      "plugged": 2,
+      "sealed": true,
+      "body_reserve": 0,
+      "converted": 29,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 22,
+      "underground_grass": 0,
+      "nursery_ticks": 243,
+      "nursery_condition": "cared",
+      "brood": [
+        {
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "nourishment": 12000,
+          "id": "206dad3f-2d54-4771-8969-47a55b87273e",
+          "progress": 3,
+          "stage": "COCOON"
+        },
+        {
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "nourishment": 12000,
+          "id": "e503aa7b-c85e-4cc6-9d1f-8f1f0c705590",
+          "progress": 3,
+          "stage": "COCOON"
+        },
+        {
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "nourishment": 12000,
+          "id": "4164e364-c065-4956-a229-ef24d7406ff0",
+          "progress": 3,
+          "stage": "COCOON"
+        }
+      ],
+      "consumed_brood_ids": [],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "event": "brood_frame",
+      "stage": "cocoons",
+      "run_id": "3233f882-9bdc-4d88-ad08-fa736e33487b",
+      "work_multiplier": 20.0,
+      "capture_started_utc": "2026-10-04T19:01:03.485316800Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t07-a4-cocoons.png",
+      "capture_completed_utc": "2026-10-04T19:01:03.635693200Z",
+      "screenshot_render_extractions": [
+        {
+          "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "form": "queen",
+          "callow_visual": 1000,
+          "render_extraction_utc": "2026-10-04T19:01:03.488116Z",
+          "render_entity_tick": 6182,
+          "render_position": [
+            59.552490234375,
+            77.0,
+            -44.266845703125
+          ],
+          "body_yaw": 168.75,
+          "walk_animation_position": 635.0524,
+          "walk_animation_speed": 1.4E-45,
+          "visual_age_ticks": 6183.0,
+          "moving": false,
+          "carried_soil_rendered": false,
+          "client_carried_soil_units": 0,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.464375,
+              1.5000001,
+              -0.5625
+            ],
+            [
+              0.54562503,
+              1.4999999,
+              -0.21875
+            ],
+            [
+              0.464375,
+              1.5000001,
+              0.125
+            ],
+            [
+              -0.464375,
+              1.5000001,
+              -0.5625
+            ],
+            [
+              -0.54562503,
+              1.4999999,
+              -0.21875
+            ],
+            [
+              -0.464375,
+              1.5000001,
+              0.125
+            ]
+          ],
+          "support_legs": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "support_tripod": "boundary"
+        }
+      ],
+      "width": 1600,
+      "height": 1000,
+      "modified_epoch_ms": 1791140463631,
+      "sha256": "8aa2f532538d8d117d3cde147d742654fcfa67c028e7f474f6ce86eb153c9a16"
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "SETTLED",
+      "reason": "settled_throat_sealed",
+      "server_game_time": 6238,
+      "founding_ticks": 5940,
+      "elapsed_age_ticks": 6185,
+      "position": [
+        59.55242757530653,
+        77.0,
+        -44.26679812430732
+      ],
+      "removed": 24,
+      "carried": 0,
+      "deposited": 22,
+      "released": 0,
+      "plugged": 2,
+      "sealed": true,
+      "body_reserve": 0,
+      "converted": 29,
+      "brood_multiplier": 100.0,
+      "workers": [],
+      "live_worker_count": 0,
+      "live_adult_count": 1,
+      "mound_blocks": 22,
+      "underground_grass": 0,
+      "nursery_ticks": 245,
+      "nursery_condition": "cared",
+      "brood": [
+        {
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "nourishment": 12000,
+          "id": "206dad3f-2d54-4771-8969-47a55b87273e",
+          "progress": 5,
+          "stage": "COCOON"
+        },
+        {
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "nourishment": 12000,
+          "id": "e503aa7b-c85e-4cc6-9d1f-8f1f0c705590",
+          "progress": 5,
+          "stage": "COCOON"
+        },
+        {
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "nourishment": 12000,
+          "id": "4164e364-c065-4956-a229-ef24d7406ff0",
+          "progress": 5,
+          "stage": "COCOON"
+        }
+      ],
+      "consumed_brood_ids": [],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "SETTLED",
+      "reason": "settled_throat_sealed",
+      "server_game_time": 6356,
+      "founding_ticks": 5940,
+      "elapsed_age_ticks": 6303,
+      "position": [
+        59.55242757530653,
+        77.0,
+        -44.26679812430732
+      ],
+      "removed": 24,
+      "carried": 0,
+      "deposited": 22,
+      "released": 0,
+      "plugged": 2,
+      "sealed": true,
+      "body_reserve": 0,
+      "converted": 29,
+      "brood_multiplier": 100.0,
+      "workers": [
+        {
+          "callow_visual": 62,
+          "uuid": "eab4e9dc-47b6-3cba-8448-95d6f635881a",
+          "callow_ticks": 3,
+          "brood_id": "206dad3f-2d54-4771-8969-47a55b87273e",
+          "alive": true,
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb"
+        },
+        {
+          "callow_visual": 62,
+          "uuid": "943c56aa-7fc2-3260-8c05-18393a7587a0",
+          "callow_ticks": 3,
+          "brood_id": "e503aa7b-c85e-4cc6-9d1f-8f1f0c705590",
+          "alive": true,
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb"
+        },
+        {
+          "callow_visual": 62,
+          "uuid": "2bf4abd0-2f6a-3f28-8379-9caf123c6d36",
+          "callow_ticks": 3,
+          "brood_id": "4164e364-c065-4956-a229-ef24d7406ff0",
+          "alive": true,
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb"
+        }
+      ],
+      "live_worker_count": 3,
+      "live_adult_count": 4,
+      "mound_blocks": 22,
+      "underground_grass": 0,
+      "nursery_ticks": 363,
+      "nursery_condition": "cared",
+      "brood": [],
+      "consumed_brood_ids": [
+        "206dad3f-2d54-4771-8969-47a55b87273e",
+        "4164e364-c065-4956-a229-ef24d7406ff0",
+        "e503aa7b-c85e-4cc6-9d1f-8f1f0c705590"
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "event": "brood_frame",
+      "stage": "callows",
+      "run_id": "3233f882-9bdc-4d88-ad08-fa736e33487b",
+      "work_multiplier": 20.0,
+      "capture_started_utc": "2026-10-04T19:01:09.513967900Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t07-a4-callows.png",
+      "capture_completed_utc": "2026-10-04T19:01:09.671209600Z",
+      "screenshot_render_extractions": [
+        {
+          "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "form": "queen",
+          "callow_visual": 1000,
+          "render_extraction_utc": "2026-10-04T19:01:09.514965900Z",
+          "render_entity_tick": 6302,
+          "render_position": [
+            59.552490234375,
+            77.0,
+            -44.266845703125
+          ],
+          "body_yaw": 168.75,
+          "walk_animation_position": 635.0524,
+          "walk_animation_speed": 1.4E-45,
+          "visual_age_ticks": 6303.0,
+          "moving": false,
+          "carried_soil_rendered": false,
+          "client_carried_soil_units": 0,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.464375,
+              1.5000001,
+              -0.5625
+            ],
+            [
+              0.54562503,
+              1.4999999,
+              -0.21875
+            ],
+            [
+              0.464375,
+              1.5000001,
+              0.125
+            ],
+            [
+              -0.464375,
+              1.5000001,
+              -0.5625
+            ],
+            [
+              -0.54562503,
+              1.4999999,
+              -0.21875
+            ],
+            [
+              -0.464375,
+              1.5000001,
+              0.125
+            ]
+          ],
+          "support_legs": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "support_tripod": "boundary"
+        },
+        {
+          "uuid": "eab4e9dc-47b6-3cba-8448-95d6f635881a",
+          "form": "worker",
+          "callow_visual": 41,
+          "render_extraction_utc": "2026-10-04T19:01:09.514965900Z",
+          "render_entity_tick": 3,
+          "render_position": [
+            58.5,
+            77.0,
+            -45.5
+          ],
+          "body_yaw": 4.21875,
+          "walk_animation_position": 0.0,
+          "walk_animation_speed": 0.0,
+          "visual_age_ticks": 4.0,
+          "moving": false,
+          "carried_soil_rendered": false,
+          "client_carried_soil_units": 0,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.26875,
+              1.5,
+              -0.265625
+            ],
+            [
+              0.29999998,
+              1.5,
+              -0.0625
+            ],
+            [
+              0.26875,
+              1.5,
+              0.140625
+            ],
+            [
+              -0.26875,
+              1.5,
+              -0.265625
+            ],
+            [
+              -0.29999998,
+              1.5,
+              -0.0625
+            ],
+            [
+              -0.26875,
+              1.5,
+              0.140625
+            ]
+          ],
+          "support_legs": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "support_tripod": "boundary"
+        },
+        {
+          "uuid": "943c56aa-7fc2-3260-8c05-18393a7587a0",
+          "form": "worker",
+          "callow_visual": 41,
+          "render_extraction_utc": "2026-10-04T19:01:09.514965900Z",
+          "render_entity_tick": 3,
+          "render_position": [
+            59.5,
+            77.0,
+            -45.5
+          ],
+          "body_yaw": 1.40625,
+          "walk_animation_position": 0.0,
+          "walk_animation_speed": 0.0,
+          "visual_age_ticks": 4.0,
+          "moving": false,
+          "carried_soil_rendered": false,
+          "client_carried_soil_units": 0,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.26875,
+              1.5,
+              -0.265625
+            ],
+            [
+              0.29999998,
+              1.5,
+              -0.0625
+            ],
+            [
+              0.26875,
+              1.5,
+              0.140625
+            ],
+            [
+              -0.26875,
+              1.5,
+              -0.265625
+            ],
+            [
+              -0.29999998,
+              1.5,
+              -0.0625
+            ],
+            [
+              -0.26875,
+              1.5,
+              0.140625
+            ]
+          ],
+          "support_legs": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "support_tripod": "boundary"
+        },
+        {
+          "uuid": "2bf4abd0-2f6a-3f28-8379-9caf123c6d36",
+          "form": "worker",
+          "callow_visual": 41,
+          "render_extraction_utc": "2026-10-04T19:01:09.514965900Z",
+          "render_entity_tick": 3,
+          "render_position": [
+            60.5,
+            77.0,
+            -45.5
+          ],
+          "body_yaw": 0.0,
+          "walk_animation_position": 0.0,
+          "walk_animation_speed": 0.0,
+          "visual_age_ticks": 4.0,
+          "moving": false,
+          "carried_soil_rendered": false,
+          "client_carried_soil_units": 0,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.26875,
+              1.5,
+              -0.265625
+            ],
+            [
+              0.29999998,
+              1.5,
+              -0.0625
+            ],
+            [
+              0.26875,
+              1.5,
+              0.140625
+            ],
+            [
+              -0.26875,
+              1.5,
+              -0.265625
+            ],
+            [
+              -0.29999998,
+              1.5,
+              -0.0625
+            ],
+            [
+              -0.26875,
+              1.5,
+              0.140625
+            ]
+          ],
+          "support_legs": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "support_tripod": "boundary"
+        }
+      ],
+      "width": 1600,
+      "height": 1000,
+      "modified_epoch_ms": 1791140469667,
+      "sha256": "16ac27d92d10ac0fb9275828ae66e1efcbaafe9e4da3b71cac869f84cf7f570e"
+    },
+    {
+      "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+      "form": "queen",
+      "phase": "SETTLED",
+      "reason": "settled_throat_sealed",
+      "server_game_time": 6357,
+      "founding_ticks": 5940,
+      "elapsed_age_ticks": 6304,
+      "position": [
+        59.55242757530653,
+        77.0,
+        -44.26679812430732
+      ],
+      "removed": 24,
+      "carried": 0,
+      "deposited": 22,
+      "released": 0,
+      "plugged": 2,
+      "sealed": true,
+      "body_reserve": 0,
+      "converted": 29,
+      "brood_multiplier": 100.0,
+      "workers": [
+        {
+          "callow_visual": 83,
+          "uuid": "eab4e9dc-47b6-3cba-8448-95d6f635881a",
+          "callow_ticks": 4,
+          "brood_id": "206dad3f-2d54-4771-8969-47a55b87273e",
+          "alive": true,
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb"
+        },
+        {
+          "callow_visual": 83,
+          "uuid": "943c56aa-7fc2-3260-8c05-18393a7587a0",
+          "callow_ticks": 4,
+          "brood_id": "e503aa7b-c85e-4cc6-9d1f-8f1f0c705590",
+          "alive": true,
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb"
+        },
+        {
+          "callow_visual": 83,
+          "uuid": "2bf4abd0-2f6a-3f28-8379-9caf123c6d36",
+          "callow_ticks": 4,
+          "brood_id": "4164e364-c065-4956-a229-ef24d7406ff0",
+          "alive": true,
+          "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb"
+        }
+      ],
+      "live_worker_count": 3,
+      "live_adult_count": 4,
+      "mound_blocks": 22,
+      "underground_grass": 0,
+      "nursery_ticks": 364,
+      "nursery_condition": "cared",
+      "brood": [],
+      "consumed_brood_ids": [
+        "206dad3f-2d54-4771-8969-47a55b87273e",
+        "4164e364-c065-4956-a229-ef24d7406ff0",
+        "e503aa7b-c85e-4cc6-9d1f-8f1f0c705590"
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "event": "brood_frame",
+      "stage": "mound",
+      "run_id": "3233f882-9bdc-4d88-ad08-fa736e33487b",
+      "work_multiplier": 20.0,
+      "capture_started_utc": "2026-10-04T19:01:09.701767700Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t07-a4-mound.png",
+      "capture_completed_utc": "2026-10-04T19:01:09.853845900Z",
+      "screenshot_render_extractions": [
+        {
+          "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+          "form": "queen",
+          "callow_visual": 1000,
+          "render_extraction_utc": "2026-10-04T19:01:09.702771600Z",
+          "render_entity_tick": 6303,
+          "render_position": [
+            59.552490234375,
+            77.0,
+            -44.266845703125
+          ],
+          "body_yaw": 168.75,
+          "walk_animation_position": 635.0524,
+          "walk_animation_speed": 1.4E-45,
+          "visual_age_ticks": 6304.0,
+          "moving": false,
+          "carried_soil_rendered": false,
+          "client_carried_soil_units": 0,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.464375,
+              1.5000001,
+              -0.5625
+            ],
+            [
+              0.54562503,
+              1.4999999,
+              -0.21875
+            ],
+            [
+              0.464375,
+              1.5000001,
+              0.125
+            ],
+            [
+              -0.464375,
+              1.5000001,
+              -0.5625
+            ],
+            [
+              -0.54562503,
+              1.4999999,
+              -0.21875
+            ],
+            [
+              -0.464375,
+              1.5000001,
+              0.125
+            ]
+          ],
+          "support_legs": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "support_tripod": "boundary"
+        },
+        {
+          "uuid": "eab4e9dc-47b6-3cba-8448-95d6f635881a",
+          "form": "worker",
+          "callow_visual": 62,
+          "render_extraction_utc": "2026-10-04T19:01:09.702771600Z",
+          "render_entity_tick": 4,
+          "render_position": [
+            58.5,
+            77.0,
+            -45.5
+          ],
+          "body_yaw": 4.21875,
+          "walk_animation_position": 0.0,
+          "walk_animation_speed": 0.0,
+          "visual_age_ticks": 5.0,
+          "moving": false,
+          "carried_soil_rendered": false,
+          "client_carried_soil_units": 0,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.26875,
+              1.5,
+              -0.265625
+            ],
+            [
+              0.29999998,
+              1.5,
+              -0.0625
+            ],
+            [
+              0.26875,
+              1.5,
+              0.140625
+            ],
+            [
+              -0.26875,
+              1.5,
+              -0.265625
+            ],
+            [
+              -0.29999998,
+              1.5,
+              -0.0625
+            ],
+            [
+              -0.26875,
+              1.5,
+              0.140625
+            ]
+          ],
+          "support_legs": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "support_tripod": "boundary"
+        },
+        {
+          "uuid": "943c56aa-7fc2-3260-8c05-18393a7587a0",
+          "form": "worker",
+          "callow_visual": 62,
+          "render_extraction_utc": "2026-10-04T19:01:09.702771600Z",
+          "render_entity_tick": 4,
+          "render_position": [
+            59.5,
+            77.0,
+            -45.5
+          ],
+          "body_yaw": 1.40625,
+          "walk_animation_position": 0.0,
+          "walk_animation_speed": 0.0,
+          "visual_age_ticks": 5.0,
+          "moving": false,
+          "carried_soil_rendered": false,
+          "client_carried_soil_units": 0,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.26875,
+              1.5,
+              -0.265625
+            ],
+            [
+              0.29999998,
+              1.5,
+              -0.0625
+            ],
+            [
+              0.26875,
+              1.5,
+              0.140625
+            ],
+            [
+              -0.26875,
+              1.5,
+              -0.265625
+            ],
+            [
+              -0.29999998,
+              1.5,
+              -0.0625
+            ],
+            [
+              -0.26875,
+              1.5,
+              0.140625
+            ]
+          ],
+          "support_legs": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "support_tripod": "boundary"
+        },
+        {
+          "uuid": "2bf4abd0-2f6a-3f28-8379-9caf123c6d36",
+          "form": "worker",
+          "callow_visual": 62,
+          "render_extraction_utc": "2026-10-04T19:01:09.702771600Z",
+          "render_entity_tick": 4,
+          "render_position": [
+            60.5,
+            77.0,
+            -45.5
+          ],
+          "body_yaw": 0.0,
+          "walk_animation_position": 0.0,
+          "walk_animation_speed": 0.0,
+          "visual_age_ticks": 5.0,
+          "moving": false,
+          "carried_soil_rendered": false,
+          "client_carried_soil_units": 0,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.26875,
+              1.5,
+              -0.265625
+            ],
+            [
+              0.29999998,
+              1.5,
+              -0.0625
+            ],
+            [
+              0.26875,
+              1.5,
+              0.140625
+            ],
+            [
+              -0.26875,
+              1.5,
+              -0.265625
+            ],
+            [
+              -0.29999998,
+              1.5,
+              -0.0625
+            ],
+            [
+              -0.26875,
+              1.5,
+              0.140625
+            ]
+          ],
+          "support_legs": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "support_tripod": "boundary"
+        }
+      ],
+      "width": 1600,
+      "height": 1000,
+      "modified_epoch_ms": 1791140469849,
+      "sha256": "2ac485abc220af1352e39de9c2c1e018ac2fa06ae872076780a848f035338851"
+    }
+  ],
+  "staged_terrain_edits": 0,
+  "ant_teleports": 0,
+  "ai_disabled": false,
+  "animation_poses_forced": false,
+  "work_multiplier": 20.0,
+  "cadence_ticks": 10,
+  "brood_multiplier": 100.0,
+  "stage_ticks": 120,
+  "callow_ticks": 48,
+  "initial_body_reserve": 39000,
+  "egg_cost": 1000,
+  "larva_cost": 12000,
+  "injected_brood": 0,
+  "injected_food": 0,
+  "summoned_workers": 0,
+  "reserve_edits": 0,
+  "observer_effect": "vanilla /effect give @p minecraft:night_vision 99999 0 true; spectator only",
+  "selected_existing_ground": [
+    59,
+    79,
+    -41
+  ],
+  "origin_evidence": "Production TERRAIN completion witness -\u003e ProtoChunk FULL conversion -\u003e persistent NaturalSoil record. No fixture origin path.",
+  "queen_uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+  "entrance": [
+    59,
+    79,
+    -41
+  ],
+  "direction": "north",
+  "final": {
+    "uuid": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb",
+    "form": "queen",
+    "phase": "SETTLED",
+    "reason": "settled_throat_sealed",
+    "server_game_time": 6359,
+    "founding_ticks": 5940,
+    "elapsed_age_ticks": 6306,
+    "position": [
+      59.55242757530653,
+      77.0,
+      -44.26679812430732
+    ],
+    "removed": 24,
+    "carried": 0,
+    "deposited": 22,
+    "released": 0,
+    "plugged": 2,
+    "sealed": true,
+    "body_reserve": 0,
+    "converted": 29,
+    "brood_multiplier": 100.0,
+    "workers": [
+      {
+        "callow_visual": 125,
+        "uuid": "eab4e9dc-47b6-3cba-8448-95d6f635881a",
+        "callow_ticks": 6,
+        "brood_id": "206dad3f-2d54-4771-8969-47a55b87273e",
+        "alive": true,
+        "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb"
+      },
+      {
+        "callow_visual": 125,
+        "uuid": "943c56aa-7fc2-3260-8c05-18393a7587a0",
+        "callow_ticks": 6,
+        "brood_id": "e503aa7b-c85e-4cc6-9d1f-8f1f0c705590",
+        "alive": true,
+        "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb"
+      },
+      {
+        "callow_visual": 125,
+        "uuid": "2bf4abd0-2f6a-3f28-8379-9caf123c6d36",
+        "callow_ticks": 6,
+        "brood_id": "4164e364-c065-4956-a229-ef24d7406ff0",
+        "alive": true,
+        "queen_id": "b2e1460f-c367-47e8-9b0f-8125e4df8ffb"
+      }
+    ],
+    "live_worker_count": 3,
+    "live_adult_count": 4,
+    "mound_blocks": 22,
+    "underground_grass": 0,
+    "nursery_ticks": 366,
+    "nursery_condition": "cared",
+    "brood": [],
+    "consumed_brood_ids": [
+      "206dad3f-2d54-4771-8969-47a55b87273e",
+      "4164e364-c065-4956-a229-ef24d7406ff0",
+      "e503aa7b-c85e-4cc6-9d1f-8f1f0c705590"
+    ],
+    "on_ground": true,
+    "ai_enabled": true,
+    "normal_physics": true
+  },
+  "completed_utc": "2026-10-04T19:01:09.881439800Z"
+}

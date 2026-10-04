@@ -3,7 +3,7 @@
   "id": "prime_ants",
   "version": "${version}",
   "name": "Prime Ants",
-  "description": "Physical ant adults and protected queen founding. Brood unimplemented.",
+  "description": "Physical queen founding and a visible first clutch raised from finite bodily reserves into real workers.",
   "environment": "*",
   "entrypoints": {
     "main": ["dev.primeants.PrimeAnts"],

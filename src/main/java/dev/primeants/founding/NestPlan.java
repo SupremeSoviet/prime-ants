@@ -17,7 +17,21 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
     }
     public BlockPos chamber() { return at(4, 0, -2); }
     public BlockPos outside() { return at(-2, 0, 1); }
-    public List<BlockPos> deposits() { return List.of(at(-3, 0, 1), at(-2, -1, 1), at(-2, 1, 1)); }
+    /** Bounded 40-cell area for 22 units: five exterior rows, four cells to either side; central route stays clear. */
+    public List<BlockPos> deposits() {
+        List<BlockPos> result = new ArrayList<>();
+        for (int f = -5; f <= -1; f++) for (int s : new int[]{-4, 4, -3, 3, -2, 2, -1, 1}) result.add(at(f, s, 1));
+        return List.copyOf(result);
+    }
+    public BlockPos nursery() { return at(4, 1, -2); }
+    public List<BlockPos> undergroundSurfaces() {
+        LinkedHashSet<BlockPos> result = new LinkedHashSet<>();
+        for (BlockPos p : tasks) for (Direction d : Direction.values()) {
+            BlockPos n = p.relative(d);
+            if (n.getY() < entrance.getY() && !tasks.contains(n)) result.add(n);
+        }
+        return List.copyOf(result);
+    }
     public List<BlockPos> plugs() { return List.of(at(2, 0, -2), at(2, 0, -1)); }
     public static NestPlan candidate(ServerLevel level, BlockPos entrance, Direction direction) {
         NestPlan geometry = geometry(entrance, direction);
@@ -39,6 +53,7 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
             BlockPos p = geometry.at(f, s, 1);
             if (!soil.eligible(level, p.below()) || !walkable(level, p)) return null;
         }
+        if (geometry.deposits().stream().filter(p -> soil.eligible(level, p.below()) && walkable(level, p)).count() < HARD_CAP - 2) return null;
         // Avoid leaking into pre-existing cavities or liquid adjacent to the envelope.
         for (BlockPos p : geometry.tasks) for (Direction d : Direction.values()) {
             BlockPos n = p.relative(d);
@@ -76,5 +91,24 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
         for (int f = 0; f < 3; f++) if (!walkable(level, at(f, 0, -f))) return false;
         for (int f = 3; f <= 5; f++) for (int s = -1; s <= 1; s++) if (!walkable(level, at(f, s, -2))) return false;
         return true;
+    }
+    /** Live habitat checks shared by founding and brood, even when the queen is absent. */
+    public String nurseryProblem(ServerLevel level, java.util.UUID owner) {
+        for (int f : new int[]{2, 6}) for (int s : new int[]{-2, 2}) {
+            BlockPos p = at(f, s, -3);
+            if (level.getChunkSource().getChunk(p.getX() >> 4, p.getZ() >> 4,
+                    net.minecraft.world.level.chunk.status.ChunkStatus.FULL, false) == null) return "enclosure_chunk_unavailable";
+        }
+        if (plugs().stream().anyMatch(p -> !level.getBlockState(p).is(net.minecraft.world.level.block.Blocks.DIRT))) return "enclosure_plug_missing";
+        if (!enclosedChamber(level)) return "enclosure_shell_open";
+        for (int f = 3; f <= 5; f++) for (int s = -1; s <= 1; s++) {
+            BlockPos p = at(f, s, -2);
+            boolean owned = p.equals(nursery()) && level.getBlockEntity(p) instanceof dev.primeants.brood.BroodPile pile
+                    && pile.ownedBy(owner, this);
+            if ((!level.getBlockState(p).isAir() && !owned) || !level.getBlockState(p.above()).isAir()
+                    || !level.getBlockState(p.below()).isSolidRender() || !level.getFluidState(p).isEmpty()
+                    || !level.getFluidState(p.below()).isEmpty()) return "enclosure_chamber_obstructed";
+        }
+        return null;
     }
 }

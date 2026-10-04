@@ -45,6 +45,7 @@ loom.runs.named('gameTest') {
     // Loom's deleteGameTestRunDir clears the CLIENT directory only. Preserve prior
     // server worlds as evidence; each invocation gets genuinely new generation.
     runDirectory.set(layout.buildDirectory.dir('run/serverGameTest/' + java.util.UUID.randomUUID().toString()))
+    systemProperties.put('prime_ants.broodMultiplier', providers.gradleProperty('primeAntsBroodMultiplier').getOrElse('100'))
     systemProperties.put('prime_ants.foundingWorkMultiplier', providers.gradleProperty('primeAntsFoundingMultiplier').getOrElse('20'))
     if (providers.gradleProperty('primeAntsOriginDiagnostics').isPresent()) systemProperties.put('prime_ants.originDiagnostics', 'true')
     systemProperties.put('fabric-api.gametest.report-file', gameTestReport.get().asFile.absolutePath)
@@ -57,11 +58,12 @@ def captureRunId = java.util.UUID.randomUUID().toString()
 def captureStart = System.currentTimeMillis()
 def currentModelReport = file("build/test-results/client-model/${capturePrefix}-model.xml")
 def captureRequest = [run_id:captureRunId, capture_prefix:capturePrefix, started_epoch_ms:captureStart,
-                      scenario:'founding', capture_directory:file('docs/screenshots').absolutePath,
+                      scenario:'brood', capture_directory:file('docs/screenshots').absolutePath,
                       model_report:currentModelReport.absolutePath,
                       provenance:file("docs/screenshots/${capturePrefix}-provenance.json").absolutePath]
 loom.runs.named('clientGameTest') {
-    systemProperties.put('prime_ants.foundingWorkMultiplier', '20')
+    systemProperties.put('prime_ants.foundingWorkMultiplier', providers.gradleProperty('primeAntsFoundingMultiplier').getOrElse('20'))
+    systemProperties.put('prime_ants.broodMultiplier', providers.gradleProperty('primeAntsBroodMultiplier').getOrElse('1'))
     systemProperties.put('prime_ants.captureDir', file('docs/screenshots').absolutePath)
     systemProperties.put('prime_ants.capturePrefix', capturePrefix)
     systemProperties.put('prime_ants.runId', captureRunId)
@@ -150,6 +152,11 @@ tasks.named('runGameTest') {
          'genuine_generation_and_chunk_reload_cannot_grant_unknown_origin','interrupted_founding_and_protection_persist_through_save_load',
          'queen_death_releases_carried_soil_once_and_stops_work'].each { name ->
             if (!cases.any { it.@name.text() == "prime_ants_test:queen_founding_game_test_${name}" }) throw new GradleException("Missing founding test: ${name}")
+        }
+        def broodNames = (file('src/gametest/java/dev/primeants/gametest/BroodGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect { it[1].replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase() }
+        if (broodNames.size() != 12) throw new GradleException('Brood test discovery incomplete')
+        broodNames.each { name ->
+            if (!cases.any { it.@name.text() == "prime_ants_test:brood_game_test_${name}" }) throw new GradleException("Missing brood test: ${name}")
         }
         if (report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] }) {
             throw new GradleException('Server GameTest report contains a failure or skipped test')

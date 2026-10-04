@@ -1,0 +1,76 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "a": "egg"
+      },
+      "apply": {
+        "model": "prime_ants:block/brood_egg_a"
+      }
+    },
+    {
+      "when": {
+        "a": "larva"
+      },
+      "apply": {
+        "model": "prime_ants:block/brood_larva_a"
+      }
+    },
+    {
+      "when": {
+        "a": "cocoon"
+      },
+      "apply": {
+        "model": "prime_ants:block/brood_cocoon_a"
+      }
+    },
+    {
+      "when": {
+        "b": "egg"
+      },
+      "apply": {
+        "model": "prime_ants:block/brood_egg_b"
+      }
+    },
+    {
+      "when": {
+        "b": "larva"
+      },
+      "apply": {
+        "model": "prime_ants:block/brood_larva_b"
+      }
+    },
+    {
+      "when": {
+        "b": "cocoon"
+      },
+      "apply": {
+        "model": "prime_ants:block/brood_cocoon_b"
+      }
+    },
+    {
+      "when": {
+        "c": "egg"
+      },
+      "apply": {
+        "model": "prime_ants:block/brood_egg_c"
+      }
+    },
+    {
+      "when": {
+        "c": "larva"
+      },
+      "apply": {
+        "model": "prime_ants:block/brood_larva_c"
+      }
+    },
+    {
+      "when": {
+        "c": "cocoon"
+      },
+      "apply": {
+        "model": "prime_ants:block/brood_cocoon_c"
+      }
+    }
+  ]
+}

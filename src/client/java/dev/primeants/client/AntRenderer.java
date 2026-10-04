@@ -12,6 +12,7 @@ public final class AntRenderer extends MobRenderer<LasiusNigerEntity, AntRenderS
     public static final ModelLayerLocation WORKER_LAYER = layer("worker");
     public static final ModelLayerLocation QUEEN_LAYER = layer("queen");
     private final Identifier texture;
+    private static final Identifier CALLOW_TEXTURE = Identifier.fromNamespaceAndPath(PrimeAnts.MOD_ID, "textures/entity/lasius_niger_callow.png");
 
     private static ModelLayerLocation layer(String form) {
         return new ModelLayerLocation(Identifier.fromNamespaceAndPath(PrimeAnts.MOD_ID, "lasius_niger_" + form), "main");
@@ -25,11 +26,18 @@ public final class AntRenderer extends MobRenderer<LasiusNigerEntity, AntRenderS
     }
 
     @Override public AntRenderState createRenderState() { return new AntRenderState(); }
-    @Override public Identifier getTextureLocation(AntRenderState state) { return texture; }
+    @Override public Identifier getTextureLocation(AntRenderState state) { return state.callow < 1000 ? CALLOW_TEXTURE : texture; }
+    @Override protected int getModelTint(AntRenderState state) {
+        if (state.callow >= 1000) return -1;
+        double age = state.callow / 1000.0;
+        int r = (int)(255 - 220 * age), g = (int)(255 - 216 * age), b = (int)(255 - 211 * age);
+        return 0xff000000 | r << 16 | g << 8 | b;
+    }
 
     @Override
     public void extractRenderState(LasiusNigerEntity entity, AntRenderState state, float partialTicks) {
         super.extractRenderState(entity, state, partialTicks);
+        state.callow = entity.callowVisual();
         itemModelResolver.updateForLiving(state.carriedSoil, entity.getMainHandItem(), net.minecraft.world.item.ItemDisplayContext.GROUND, entity);
         double dx = entity.getX() - entity.xo;
         double dz = entity.getZ() - entity.zo;

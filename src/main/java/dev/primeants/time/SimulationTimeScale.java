@@ -3,7 +3,7 @@ package dev.primeants.time;
 /**
  * Converts a duration in game days to elapsed simulation ticks.
  * This has no dependency on world daylight time or commands that change it.
- * No brood development or colony simulation is implemented here.
+ * Founding, brood and callow durations use this conversion independently.
  */
 public record SimulationTimeScale(double multiplier) {
     public static final long TICKS_PER_GAME_DAY = 24_000;

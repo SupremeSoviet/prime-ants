@@ -4,10 +4,27 @@
   "version": "1.0.0",
   "name": "Prime Ants development tests",
   "environment": "*",
-  "mixins": ["prime_ants_test.mixins.json", {"config": "prime_ants_test.client.mixins.json", "environment": "client"}],
+  "mixins": [
+    "prime_ants_test.mixins.json",
+    {
+      "config": "prime_ants_test.client.mixins.json",
+      "environment": "client"
+    }
+  ],
   "entrypoints": {
-    "fabric-gametest": ["dev.primeants.gametest.BootstrapGameTest", "dev.primeants.gametest.AntEntityGameTest", "dev.primeants.gametest.QueenFoundingGameTest"],
-    "fabric-client-gametest": ["dev.primeants.gametest.AntModelGameTest", "dev.primeants.gametest.AntCaptureTest"]
+    "fabric-gametest": [
+      "dev.primeants.gametest.BootstrapGameTest",
+      "dev.primeants.gametest.AntEntityGameTest",
+      "dev.primeants.gametest.QueenFoundingGameTest",
+      "dev.primeants.gametest.BroodGameTest"
+    ],
+    "fabric-client-gametest": [
+      "dev.primeants.gametest.AntModelGameTest",
+      "dev.primeants.gametest.AntCaptureTest"
+    ]
   },
-  "depends": { "prime_ants": "*", "fabric-api": "*" }
+  "depends": {
+    "prime_ants": "*",
+    "fabric-api": "*"
+  }
 }

@@ -165,3 +165,10 @@ Successful dedicated t04-a1, after unfiltered green final build. Run `32eea718-d
 | [worker oblique](t04-a1-worker-oblique-1.png) | 232 / 152 | 0.2752 | `033901967a882257c92c6e45f81fb0c0ba2c9d403c5de07eec4de9454eec0048` |
 
 The T04 contract is one walking frame per form/view; the prior 48-frame/full-cycle presentation is no longer required. Both model forms still execute all 24 named tests. Earlier attempts are preserved. Lifetime client launches: eight; native 5 successes/3 failures, task 4 successes/4 failures. Colony not implemented.
+
+
+## T07 accepted first clutch
+
+`t07-a4` is the accepted current-run sequence: [eggs](t07-a4-eggs.png), [larvae](t07-a4-larvae.png), [cocoons](t07-a4-cocoons.png), [pale workers](t07-a4-callows.png), [mound](t07-a4-mound.png). Brood 100x/founding 20x; spectator with disclosed night vision. Captions/provenance preserve identities, loaded ticks, live counts and hashes. No injection/staging or paused AI. A1 failed site selection; A2 remains preserved rejected evidence for grass floor/foliage view, despite its genuine biological sequence.
+
+A3 is also preserved as a successful earlier revision; A4 follows the final zero-reserve guard.

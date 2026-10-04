@@ -13,7 +13,8 @@ public final class PrimeAnts implements ModInitializer {
     @Override
     public void onInitialize() {
         AntEntities.initialize();
+        dev.primeants.brood.NurseryBlocks.initialize();
         AntItems.initialize();
-        LOGGER.info("Prime Ants adults initialized; egg queens can physically found protected nests. Brood unimplemented.");
+        LOGGER.info("Prime Ants initialized: protected physical founding and bounded claustral first clutch; no external feeding or foraging.");
     }
 }

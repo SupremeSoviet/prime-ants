@@ -36,21 +36,44 @@ ext.validateClientEvidence = { Map request ->
     require(capture.status == 'success' && capture.completed_utc, 'Capture did not complete successfully')
     require(Instant.parse(capture.started_utc).toEpochMilli() >= request.started_epoch_ms, 'Stale capture start')
     long completed = Instant.parse(capture.completed_utc).toEpochMilli()
-    def frames = capture.observations.findAll { it.event == 'founding_frame' }
-    require(request.scenario == 'founding', 'Expected founding capture contract')
-    require(frames.size() == 3 && frames.collect { it.stage }.toSet() == ['transport','entrance-spoil','chamber'].toSet(), 'Missing captures')
+    def frames = capture.observations.findAll { it.event == 'brood_frame' }
+    require(request.scenario == 'brood', 'Expected first-clutch capture contract')
+    require(frames.size() == 5 && frames.collect { it.stage } == ['eggs','larvae','cocoons','callows','mound'], 'Missing captures')
     require(capture.queen_uuid && frames.every { it.uuid == capture.queen_uuid && it.form == 'queen' }, 'Queen identity changed')
-    require(capture.staged_terrain_edits == 0 && capture.ant_teleports == 0 && !capture.ai_disabled && !capture.animation_poses_forced, 'Staged founding evidence')
-    require(capture.final.sealed && capture.final.phase == 'SETTLED' && capture.final.removed == 24 && capture.final.plugged == 2, 'Incomplete claustral seal')
-    require(frames.collect { it.founding_ticks } == frames.collect { it.founding_ticks }.sort(), 'Founding sequence out of order')
+    require(capture.staged_terrain_edits == 0 && capture.ant_teleports == 0 && !capture.ai_disabled && !capture.animation_poses_forced
+            && capture.injected_brood == 0 && capture.injected_food == 0 && capture.summoned_workers == 0 && capture.reserve_edits == 0, 'Staged first-clutch evidence')
+    require(capture.brood_multiplier > 0 && capture.stage_ticks == Math.ceil(12000 / capture.brood_multiplier)
+            && capture.callow_ticks == Math.ceil(4800 / capture.brood_multiplier), 'Wrong production development timing')
+    require(capture.initial_body_reserve == 39000 && capture.egg_cost == 1000 && capture.larva_cost == 12000, 'Wrong care budget')
+    require(capture.final.sealed && capture.final.phase == 'SETTLED' && capture.final.removed == 24 && capture.final.plugged == 2
+            && capture.final.deposited == 22 && capture.final.released == 0 && capture.final.mound_blocks == 22, 'Incomplete claustral seal or mound')
+    require(frames.collect { it.nursery_ticks } == frames.collect { it.nursery_ticks }.sort(), 'Brood sequence out of order')
+    def broodIds = frames[0].brood.collect { it.id }.toSet()
+    require(broodIds.size() == 3, 'First clutch must have three distinct identities')
+    frames.eachWithIndex { frame,n ->
+        require(frame.sealed && frame.phase == 'SETTLED' && frame.brood_multiplier == capture.brood_multiplier
+                && frame.underground_grass == 0 && frame.mound_blocks == 22 && frame.live_adult_count == 1 + frame.live_worker_count, 'Invalid nursery/real population')
+        if(n < 3) {
+            require(frame.live_worker_count == 0 && frame.workers.isEmpty() && frame.brood.size() == 3
+                    && frame.brood.collect { it.id }.toSet() == broodIds, 'Premature worker or changed brood ownership')
+            require(frame.brood.every { it.queen_id == capture.queen_uuid && it.stage == ['EGG','LARVA','COCOON'][n]
+                    && it.progress > 0 && it.progress < capture.stage_ticks }, 'Missing actual brood stage')
+            require(frame.body_reserve == 39000 - 3000 - frame.brood.sum { it.nourishment }, 'Care reserve/nourishment mismatch')
+            if(n == 2) require(frame.brood.every { it.nourishment == 12000 }, 'Unnourished cocoon')
+        } else {
+            require(frame.live_worker_count == 3 && frame.workers.size() == 3 && frame.workers.collect { it.uuid }.toSet().size() == 3
+                    && frame.workers.collect { it.brood_id }.toSet() == broodIds && frame.workers.every { it.queen_id == capture.queen_uuid && it.alive }
+                    && frame.brood.isEmpty() && frame.consumed_brood_ids.toSet() == broodIds && frame.body_reserve == 0, 'Emergence ownership mismatch')
+        }
+    }
     def images = []
     frames.each { frame ->
         require(frame.run_id == request.run_id, 'Mismatched frame run ID')
         require(frame.ai_enabled && frame.normal_physics && frame.work_multiplier == capture.work_multiplier, 'Missing production state/timing')
         require(frame.removed == frame.carried + frame.deposited + frame.released + frame.plugged, 'Soil balance mismatch')
-        if (frame.stage == 'transport') require(frame.carried > 0 && frame.phase == 'TRANSPORTING' && frame.screenshot_render_extractions.any { it.carried_soil_rendered && it.moving }, 'Missing moving mandible soil render')
-        if (frame.stage == 'entrance-spoil') require(frame.deposited == 3, 'Missing physical external spoil')
-        if (frame.stage == 'chamber') require(frame.sealed && frame.phase == 'SETTLED' && frame.screenshot_render_extractions, 'Missing rendered settled queen')
+        if (frame.stage != 'mound') require(frame.screenshot_render_extractions.any { it.uuid == capture.queen_uuid && it.form == 'queen' }, 'Missing production queen render')
+        if (frame.stage == 'callows') require(frame.workers.every { it.callow_visual < 1000 }
+                && frame.screenshot_render_extractions.findAll { it.form == 'worker' && it.callow_visual < 1000 }.collect { it.uuid }.toSet() == frame.workers.collect { it.uuid }.toSet(), 'Missing pale worker renders')
         File png = file(frame.image)
         File expectedPng = new File(request.capture_directory, "${request.capture_prefix}-${frame.stage}.png")
         require(png.canonicalPath == expectedPng.canonicalPath, 'Mismatched PNG path')
@@ -74,22 +97,27 @@ tasks.register('testClientEvidenceValidator') {
         dir.mkdirs()
         long started = System.currentTimeMillis() - 5000
         def request = [run_id:'fixture-current', capture_prefix:'fixture', started_epoch_ms:started,
-                       scenario:'founding', capture_directory:dir.absolutePath,
+                       scenario:'brood', capture_directory:dir.absolutePath,
                        model_report:new File(dir,'model.xml').absolutePath, provenance:new File(dir,'capture.json').absolutePath]
         file(request.model_report).text = file('build/test-results/client-model/headless.xml').text.replaceFirst(/name="run_id" value="[^"]*"/, 'name="run_id" value="fixture-current"')
         def capture = [run_id:'fixture-current', capture_prefix:'fixture', entrypoint:'dev.primeants.gametest.AntCaptureTest', status:'success',
                        started_utc:Instant.ofEpochMilli(started).toString(), observations:[], queen_uuid:'fixture-queen', staged_terrain_edits:0, ant_teleports:0,
-                       ai_disabled:false, animation_poses_forced:false, work_multiplier:20, final:[sealed:true,phase:'SETTLED',removed:24,plugged:2]]
-        ['transport','entrance-spoil','chamber'].eachWithIndex { stage,n ->
+                       ai_disabled:false, animation_poses_forced:false, work_multiplier:20, brood_multiplier:100,stage_ticks:120,callow_ticks:48,
+                       injected_brood:0,injected_food:0,summoned_workers:0,reserve_edits:0,initial_body_reserve:39000,egg_cost:1000,larva_cost:12000,
+                       final:[sealed:true,phase:'SETTLED',removed:24,plugged:2,deposited:22,released:0,mound_blocks:22]]
+        ['eggs','larvae','cocoons','callows','mound'].eachWithIndex { stage,n ->
             File png = new File(dir, "fixture-${stage}.png")
             ImageIO.write(new java.awt.image.BufferedImage(1600,1000,java.awt.image.BufferedImage.TYPE_INT_RGB), 'png', png)
-            def state = stage == 'transport' ? [removed:4,carried:4,deposited:0,released:0,plugged:0,phase:'TRANSPORTING',sealed:false] :
-                        stage == 'entrance-spoil' ? [removed:4,carried:1,deposited:3,released:0,plugged:0,phase:'TRANSPORTING',sealed:false] :
-                        [removed:24,carried:0,deposited:3,released:19,plugged:2,phase:'SETTLED',sealed:true]
-            capture.observations.add(state + [event:'founding_frame', form:'queen', uuid:'fixture-queen', stage:stage, founding_ticks:n*500,
+            def brood = n < 3 ? (0..2).collect { [id:"brood-${it}".toString(),queen_id:'fixture-queen',stage:['EGG','LARVA','COCOON'][n],progress:10,nourishment:[0,1000,12000][n]] } : []
+            def workers = n >= 3 ? (0..2).collect { [uuid:"worker-${it}".toString(),brood_id:"brood-${it}".toString(),queen_id:'fixture-queen',alive:true,callow_visual:20] } : []
+            def state = [removed:24,carried:0,deposited:22,released:0,plugged:2,phase:'SETTLED',sealed:true,brood:brood,workers:workers,
+                         live_worker_count:workers.size(),live_adult_count:workers.size()+1,underground_grass:0,mound_blocks:22,brood_multiplier:100,
+                         body_reserve:n<3 ? 36000-brood.sum{it.nourishment} : 0,consumed_brood_ids:n>=3 ? ['brood-0','brood-1','brood-2'] : []]
+            capture.observations.add(state + [event:'brood_frame', form:'queen', uuid:'fixture-queen', stage:stage, nursery_ticks:10+n*120,
                 run_id:request.run_id, ai_enabled:true,normal_physics:true,work_multiplier:20,
                 image:png.absolutePath, modified_epoch_ms:png.lastModified(), capture_started_utc:Instant.ofEpochMilli(started).toString(), width:1600,height:1000,
-                sha256:MessageDigest.getInstance('SHA-256').digest(png.bytes).encodeHex().toString(), screenshot_render_extractions:[[moving:true,carried_soil_rendered:stage=='transport']]])
+                sha256:MessageDigest.getInstance('SHA-256').digest(png.bytes).encodeHex().toString(),
+                screenshot_render_extractions:[[uuid:'fixture-queen',form:'queen',callow_visual:1000]] + workers.collect { [uuid:it.uuid,form:'worker',callow_visual:20] }])
         }
         capture.completed_utc = Instant.now().toString()
         def save = { value -> file(request.provenance).text = JsonOutput.toJson(value) }
@@ -115,9 +143,14 @@ tasks.register('testClientEvidenceValidator') {
         reject('wrong-image-path', request, capture + [observations:capture.observations.collect { it + [image:new File(dir,'old.png').absolutePath] }])
         reject('missing-named-capture-entrypoint', request, capture + [entrypoint:''])
         reject('queen-identity-changed', request, capture + [observations:capture.observations.collect { it + [uuid:'different'] }])
-        reject('missing-carried-render', request, capture + [observations:capture.observations.collect { it + [screenshot_render_extractions:[]] }])
+        reject('missing-production-render', request, capture + [observations:capture.observations.collect { it + [screenshot_render_extractions:[]] }])
         reject('soil-balance-mismatch', request, capture + [observations:capture.observations.collect { it + [removed:999] }])
         reject('incomplete-seal', request, capture + [final:[sealed:false,phase:'ENTERING',removed:24,plugged:0]])
+        reject('injected-worker', request, capture + [summoned_workers:1])
+        reject('foreign-lineage', request, capture + [observations:capture.observations.collect { it + [brood:it.brood.collect { it + [queen_id:'foreign'] }] }])
+        reject('reserve-mismatch', request, capture + [observations:capture.observations.collect { it + [body_reserve:100] }])
+        reject('underground-grass', request, capture + [observations:capture.observations.collect { it + [underground_grass:1] }])
+        reject('missing-mound', request, capture + [observations:capture.observations.collect { it + [mound_blocks:3] }])
         save(capture)
         file(request.model_report).text = file(request.model_report).text.replace('fixture-current','fixture-old')
         reject('mismatched-model-run-id', request, capture)
