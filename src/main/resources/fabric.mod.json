@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "prime_ants",
+  "version": "${version}",
+  "name": "Prime Ants",
+  "description": "Realistic ant ecology. Infrastructure foundation; colony not implemented.",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["dev.primeants.PrimeAnts"],
+    "client": ["dev.primeants.client.PrimeAntsClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "26.3",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

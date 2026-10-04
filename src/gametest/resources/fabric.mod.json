@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "prime_ants_test",
+  "version": "1.0.0",
+  "name": "Prime Ants development tests",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-gametest": ["dev.primeants.gametest.BootstrapGameTest"],
+    "fabric-client-gametest": ["dev.primeants.gametest.InfrastructureCaptureTest"]
+  },
+  "depends": { "prime_ants": "*", "fabric-api": "*" }
+}
