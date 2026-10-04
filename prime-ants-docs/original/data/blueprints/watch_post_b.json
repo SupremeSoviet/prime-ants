@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "name": "watch_post_b",
+  "seed": 51971,
+  "palette": "watch_post",
+  "tiers": [
+    {
+      "baseY": 0,
+      "height": 8,
+      "baseRadiusX": 7.3,
+      "baseRadiusZ": 6.7,
+      "topRadiusX": 5.0,
+      "topRadiusZ": 4.5,
+      "offsetX": 0.3,
+      "offsetZ": 0.9
+    },
+    {
+      "baseY": 0,
+      "height": 7,
+      "baseRadiusX": 4.6,
+      "baseRadiusZ": 4.1,
+      "topRadiusX": 2.2,
+      "topRadiusZ": 1.9,
+      "offsetX": 4.8,
+      "offsetZ": 3.2
+    },
+    {
+      "baseY": 0,
+      "height": 6,
+      "baseRadiusX": 4.1,
+      "baseRadiusZ": 3.7,
+      "topRadiusX": 2.0,
+      "topRadiusZ": 1.7,
+      "offsetX": -4.4,
+      "offsetZ": 0.0
+    },
+    {
+      "baseY": 5,
+      "height": 9,
+      "baseRadiusX": 5.2,
+      "baseRadiusZ": 4.8,
+      "topRadiusX": 2.2,
+      "topRadiusZ": 1.8,
+      "offsetX": -0.8,
+      "offsetZ": 1.3
+    },
+    {
+      "baseY": 7,
+      "height": 7,
+      "baseRadiusX": 3.7,
+      "baseRadiusZ": 3.3,
+      "topRadiusX": 1.7,
+      "topRadiusZ": 1.4,
+      "offsetX": 1.9,
+      "offsetZ": 2.7
+    },
+    {
+      "baseY": 9,
+      "height": 5,
+      "baseRadiusX": 2.4,
+      "baseRadiusZ": 2.1,
+      "topRadiusX": 1.2,
+      "topRadiusZ": 1.0,
+      "offsetX": -3.0,
+      "offsetZ": 1.7
+    }
+  ],
+  "terraces": [
+    {
+      "x": -1,
+      "y": 6,
+      "z": -3,
+      "radiusX": 3.1,
+      "radiusZ": 2.0,
+      "thickness": 1
+    }
+  ],
+  "chambers": [
+    {
+      "id": "guard_room",
+      "purpose": "watch_guard",
+      "x": 0,
+      "floorY": 0,
+      "z": 1,
+      "radiusX": 4.7,
+      "radiusZ": 3.5,
+      "height": 4
+    },
+    {
+      "id": "lookout_loft",
+      "purpose": "watch_lookout",
+      "x": -1,
+      "floorY": 6,
+      "z": 1,
+      "radiusX": 3.2,
+      "radiusZ": 2.5,
+      "height": 4
+    }
+  ],
+  "pits": [],
+  "connections": [
+    {
+      "id": "guard_to_lookout",
+      "from": "guard_room",
+      "to": "lookout_loft",
+      "startX": 3,
+      "startZ": 2,
+      "direction": "west",
+      "width": 1
+    }
+  ],
+  "mouths": [
+    {
+      "x": 0,
+      "y": 1,
+      "frontZ": -6,
+      "width": 3,
+      "height": 4,
+      "depth": 7
+    },
+    {
+      "x": -1,
+      "y": 7,
+      "frontZ": -4,
+      "width": 3,
+      "height": 3,
+      "depth": 5
+    }
+  ]
+}

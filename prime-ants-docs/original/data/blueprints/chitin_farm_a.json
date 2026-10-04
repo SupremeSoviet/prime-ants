@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "name": "chitin_farm_a",
+  "seed": 19139,
+  "palette": "chitin_farm",
+  "tiers": [
+    {
+      "baseY": 0,
+      "height": 6,
+      "baseRadiusX": 8.8,
+      "baseRadiusZ": 7.0,
+      "topRadiusX": 3.5,
+      "topRadiusZ": 2.8,
+      "offsetX": 0.0,
+      "offsetZ": 1.0
+    },
+    {
+      "baseY": 0,
+      "height": 4,
+      "baseRadiusX": 4.8,
+      "baseRadiusZ": 3.8,
+      "topRadiusX": 2.2,
+      "topRadiusZ": 1.7,
+      "offsetX": -5.0,
+      "offsetZ": 3.0
+    },
+    {
+      "baseY": 0,
+      "height": 4,
+      "baseRadiusX": 4.2,
+      "baseRadiusZ": 3.6,
+      "topRadiusX": 1.9,
+      "topRadiusZ": 1.6,
+      "offsetX": 5.0,
+      "offsetZ": 2.0
+    }
+  ],
+  "terraces": [],
+  "chambers": [
+    {
+      "id": "cultivation_room",
+      "purpose": "chitin_farm",
+      "x": 0,
+      "floorY": 0,
+      "z": 1,
+      "radiusX": 5.8,
+      "radiusZ": 3.5,
+      "height": 3
+    }
+  ],
+  "pits": [],
+  "connections": [],
+  "mouths": [
+    {
+      "x": -1,
+      "y": 1,
+      "frontZ": -6,
+      "width": 3,
+      "height": 4,
+      "depth": 7
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "  V",
+    " M ",
+    "S  "
+  ],
+  "key": {
+    "V": "formic_frontier:venom_sac",
+    "M": "formic_frontier:mandible_plate",
+    "S": "minecraft:stick"
+  },
+  "result": {
+    "id": "formic_frontier:venom_spear",
+    "count": 1
+  }
+}

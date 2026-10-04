@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PPP",
+    "R R",
+    "P P"
+  ],
+  "key": {
+    "P": "formic_frontier:mandible_plate",
+    "R": "formic_frontier:resin_glob"
+  },
+  "result": {
+    "id": "formic_frontier:resin_chitin_leggings",
+    "count": 1
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:honeycomb",
+    "formic_frontier:chitin_shard"
+  ],
+  "result": {
+    "id": "formic_frontier:pheromone_dust",
+    "count": 2
+  }
+}

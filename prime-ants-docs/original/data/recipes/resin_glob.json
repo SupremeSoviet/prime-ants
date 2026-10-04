@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:honeycomb",
+    "minecraft:slime_ball",
+    "formic_frontier:pheromone_dust"
+  ],
+  "result": {
+    "id": "formic_frontier:resin_glob",
+    "count": 2
+  }
+}

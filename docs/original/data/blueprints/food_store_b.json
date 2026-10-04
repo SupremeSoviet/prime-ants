@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "name": "food_store_b",
+  "seed": 9341,
+  "palette": "food_store",
+  "tiers": [
+    {
+      "baseY": 0,
+      "height": 7,
+      "baseRadiusX": 7.5,
+      "baseRadiusZ": 6.7,
+      "topRadiusX": 3.2,
+      "topRadiusZ": 3.0,
+      "offsetX": 0.0,
+      "offsetZ": 1.0
+    },
+    {
+      "baseY": 0,
+      "height": 5,
+      "baseRadiusX": 4.7,
+      "baseRadiusZ": 4.2,
+      "topRadiusX": 2.1,
+      "topRadiusZ": 1.9,
+      "offsetX": -5.0,
+      "offsetZ": 2.0
+    },
+    {
+      "baseY": 0,
+      "height": 4,
+      "baseRadiusX": 3.8,
+      "baseRadiusZ": 3.3,
+      "topRadiusX": 1.8,
+      "topRadiusZ": 1.5,
+      "offsetX": 4.0,
+      "offsetZ": 0.0
+    }
+  ],
+  "terraces": [],
+  "chambers": [
+    {
+      "id": "granary",
+      "purpose": "food_store",
+      "x": 0,
+      "floorY": 0,
+      "z": 1,
+      "radiusX": 5.6,
+      "radiusZ": 3.7,
+      "height": 3
+    }
+  ],
+  "connections": [],
+  "mouths": [
+    {
+      "x": 1,
+      "y": 1,
+      "frontZ": -6,
+      "width": 3,
+      "height": 4,
+      "depth": 6
+    }
+  ]
+}

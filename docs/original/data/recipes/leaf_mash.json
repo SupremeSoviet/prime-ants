@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:moss_block",
+    "minecraft:wheat_seeds"
+  ],
+  "result": {
+    "id": "formic_frontier:leaf_mash",
+    "count": 3
+  }
+}

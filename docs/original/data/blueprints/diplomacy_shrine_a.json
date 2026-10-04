@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "name": "diplomacy_shrine_a",
+  "seed": 37139,
+  "palette": "diplomacy_shrine",
+  "tiers": [
+    {
+      "baseY": 0,
+      "height": 8,
+      "baseRadiusX": 8.3,
+      "baseRadiusZ": 7.6,
+      "topRadiusX": 3.6,
+      "topRadiusZ": 3.2,
+      "offsetX": 0.0,
+      "offsetZ": 1.2
+    },
+    {
+      "baseY": 0,
+      "height": 8,
+      "baseRadiusX": 4.5,
+      "baseRadiusZ": 4.6,
+      "topRadiusX": 2.0,
+      "topRadiusZ": 2.0,
+      "offsetX": -5.1,
+      "offsetZ": 2.4
+    },
+    {
+      "baseY": 0,
+      "height": 7,
+      "baseRadiusX": 4.2,
+      "baseRadiusZ": 4.2,
+      "topRadiusX": 1.8,
+      "topRadiusZ": 1.8,
+      "offsetX": 5.2,
+      "offsetZ": 0.3
+    },
+    {
+      "baseY": 0,
+      "height": 8,
+      "baseRadiusX": 4.8,
+      "baseRadiusZ": 4.7,
+      "topRadiusX": 2.1,
+      "topRadiusZ": 2.0,
+      "offsetX": 0.8,
+      "offsetZ": 5.3
+    },
+    {
+      "baseY": 0,
+      "height": 5,
+      "baseRadiusX": 4.2,
+      "baseRadiusZ": 3.8,
+      "topRadiusX": 1.9,
+      "topRadiusZ": 1.7,
+      "offsetX": -3.0,
+      "offsetZ": -2.5
+    }
+  ],
+  "terraces": [],
+  "chambers": [
+    {
+      "id": "open_sanctum",
+      "purpose": "diplomacy_shrine",
+      "x": 0,
+      "floorY": 0,
+      "z": 1,
+      "radiusX": 4.6,
+      "radiusZ": 3.8,
+      "height": 7,
+      "openToSky": true
+    }
+  ],
+  "pits": [],
+  "connections": [],
+  "mouths": [
+    {
+      "x": 0,
+      "y": 1,
+      "frontZ": -7,
+      "width": 3,
+      "height": 4,
+      "depth": 8
+    }
+  ]
+}

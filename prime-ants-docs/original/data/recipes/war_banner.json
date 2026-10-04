@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "CRC",
+    "RBR",
+    " S "
+  ],
+  "key": {
+    "C": "formic_frontier:chitin_plate",
+    "R": "minecraft:red_dye",
+    "B": "minecraft:black_banner",
+    "S": "minecraft:stick"
+  },
+  "result": {
+    "id": "formic_frontier:war_banner"
+  }
+}

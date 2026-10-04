@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "name": "resin_depot_b",
+  "seed": 38971,
+  "palette": "resin_depot",
+  "tiers": [
+    {
+      "baseY": 0,
+      "height": 8,
+      "baseRadiusX": 8.4,
+      "baseRadiusZ": 7.8,
+      "topRadiusX": 3.5,
+      "topRadiusZ": 3.0,
+      "offsetX": 0.7,
+      "offsetZ": 1.1
+    },
+    {
+      "baseY": 0,
+      "height": 6,
+      "baseRadiusX": 4.8,
+      "baseRadiusZ": 4.7,
+      "topRadiusX": 2.4,
+      "topRadiusZ": 2.1,
+      "offsetX": 5.7,
+      "offsetZ": 3.0
+    },
+    {
+      "baseY": 0,
+      "height": 6,
+      "baseRadiusX": 4.8,
+      "baseRadiusZ": 4.6,
+      "topRadiusX": 2.4,
+      "topRadiusZ": 2.1,
+      "offsetX": -5.0,
+      "offsetZ": 2.6
+    },
+    {
+      "baseY": 0,
+      "height": 6,
+      "baseRadiusX": 4.5,
+      "baseRadiusZ": 4.2,
+      "topRadiusX": 2.2,
+      "topRadiusZ": 1.9,
+      "offsetX": -3.2,
+      "offsetZ": 5.1
+    },
+    {
+      "baseY": 3,
+      "height": 5,
+      "baseRadiusX": 5.0,
+      "baseRadiusZ": 4.0,
+      "topRadiusX": 2.3,
+      "topRadiusZ": 1.8,
+      "offsetX": 1.3,
+      "offsetZ": 2.2
+    }
+  ],
+  "terraces": [
+    {
+      "x": 0,
+      "y": 3,
+      "z": -3,
+      "radiusX": 4.4,
+      "radiusZ": 1.7,
+      "thickness": 1
+    }
+  ],
+  "chambers": [
+    {
+      "id": "workshop",
+      "purpose": "resin_workshop",
+      "x": 1,
+      "floorY": 0,
+      "z": 1,
+      "radiusX": 5.3,
+      "radiusZ": 4.5,
+      "height": 4
+    },
+    {
+      "id": "sealed_vault",
+      "purpose": "resin_vault",
+      "x": -4,
+      "floorY": 0,
+      "z": 3,
+      "radiusX": 3.4,
+      "radiusZ": 3.0,
+      "height": 3
+    }
+  ],
+  "pits": [],
+  "connections": [],
+  "mouths": [
+    {
+      "x": 1,
+      "y": 1,
+      "frontZ": -7,
+      "width": 3,
+      "height": 4,
+      "depth": 8
+    }
+  ]
+}

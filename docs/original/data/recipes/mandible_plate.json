@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " C ",
+    "CRC",
+    " B "
+  ],
+  "key": {
+    "C": "formic_frontier:chitin_plate",
+    "R": "formic_frontier:resin_glob",
+    "B": "minecraft:bone"
+  },
+  "result": {
+    "id": "formic_frontier:mandible_plate",
+    "count": 2
+  }
+}

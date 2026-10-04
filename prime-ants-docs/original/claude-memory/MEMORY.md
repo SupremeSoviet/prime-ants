@@ -1,0 +1,4 @@
+- [Schematic building system](schematic-building-system.md) — how buildings are authored as declarative JSON + wired into real gameplay (FOOD_STORE first)
+- [Eval was a phantom](eval-was-a-phantom.md) — the QA scene diverged from real createColony; fix is preview-via-real-placeBuilding
+- [Launching the autonomous loop](launching-the-autonomous-loop.md) — start cmd + which codex.exe actually works (not on PATH; use the VS Code extension's, not .sandbox-bin)
+- [Formic tablet UI](formic-tablet-ui.md) — colony GUI is a custom Screen; beautifying it meant replacing vanilla buttons with a self-drawn AbstractWidget (renderWidget is final on AbstractButton)

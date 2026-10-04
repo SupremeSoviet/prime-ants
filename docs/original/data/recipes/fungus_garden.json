@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "FLF",
+    "LML",
+    "FLF"
+  ],
+  "key": {
+    "F": "formic_frontier:fungus_culture",
+    "L": "formic_frontier:leaf_mash",
+    "M": "minecraft:moss_block"
+  },
+  "result": {
+    "id": "formic_frontier:fungus_garden",
+    "count": 1
+  }
+}

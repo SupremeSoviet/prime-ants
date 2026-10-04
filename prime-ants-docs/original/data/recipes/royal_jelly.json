@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:honey_bottle",
+    "minecraft:sugar",
+    "formic_frontier:resin_glob",
+    "formic_frontier:chitin_fiber"
+  ],
+  "result": {
+    "id": "formic_frontier:royal_jelly"
+  }
+}

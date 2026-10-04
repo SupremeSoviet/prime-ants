@@ -1,0 +1,245 @@
+{
+  "schemaVersion": 1,
+  "name": "queen_mound_stage_2",
+  "seed": 8123,
+  "palette": "great_mound",
+  "tiers": [
+    {
+      "baseY": 0,
+      "height": 10,
+      "baseRadiusX": 11.0,
+      "baseRadiusZ": 9.0,
+      "topRadiusX": 8.2,
+      "topRadiusZ": 6.8,
+      "offsetX": 0.0,
+      "offsetZ": 1.0
+    },
+    {
+      "baseY": 0,
+      "height": 9,
+      "baseRadiusX": 6.0,
+      "baseRadiusZ": 5.4,
+      "topRadiusX": 3.2,
+      "topRadiusZ": 2.8,
+      "offsetX": -7.0,
+      "offsetZ": 4.3
+    },
+    {
+      "baseY": 0,
+      "height": 7,
+      "baseRadiusX": 5.4,
+      "baseRadiusZ": 4.8,
+      "topRadiusX": 2.6,
+      "topRadiusZ": 2.4,
+      "offsetX": 6.5,
+      "offsetZ": 5.0
+    },
+    {
+      "baseY": 7,
+      "height": 10,
+      "baseRadiusX": 8.8,
+      "baseRadiusZ": 6.8,
+      "topRadiusX": 6.4,
+      "topRadiusZ": 5.0,
+      "offsetX": -1.2,
+      "offsetZ": 1.2
+    },
+    {
+      "baseY": 14,
+      "height": 9,
+      "baseRadiusX": 6.8,
+      "baseRadiusZ": 5.4,
+      "topRadiusX": 4.8,
+      "topRadiusZ": 3.8,
+      "offsetX": 1.0,
+      "offsetZ": 1.0
+    },
+    {
+      "baseY": 21,
+      "height": 8,
+      "baseRadiusX": 5.2,
+      "baseRadiusZ": 4.2,
+      "topRadiusX": 3.4,
+      "topRadiusZ": 2.7,
+      "offsetX": -0.8,
+      "offsetZ": 1.0
+    },
+    {
+      "baseY": 27,
+      "height": 6,
+      "baseRadiusX": 3.8,
+      "baseRadiusZ": 3.1,
+      "topRadiusX": 1.3,
+      "topRadiusZ": 1.2,
+      "offsetX": 0.5,
+      "offsetZ": 1.0
+    }
+  ],
+  "terraces": [
+    {
+      "x": -2,
+      "y": 7,
+      "z": -4,
+      "radiusX": 4.0,
+      "radiusZ": 3.0,
+      "thickness": 1
+    },
+    {
+      "x": 2,
+      "y": 13,
+      "z": -3,
+      "radiusX": 3.5,
+      "radiusZ": 2.4,
+      "thickness": 1
+    },
+    {
+      "x": -1,
+      "y": 20,
+      "z": -2,
+      "radiusX": 3.4,
+      "radiusZ": 2.4,
+      "thickness": 1
+    }
+  ],
+  "chambers": [
+    {
+      "id": "queen_hall",
+      "purpose": "queen_hall",
+      "x": 0,
+      "floorY": 0,
+      "z": 2,
+      "radiusX": 5.5,
+      "radiusZ": 4.5,
+      "height": 5
+    },
+    {
+      "id": "left_larder",
+      "purpose": "great_larder",
+      "x": -7,
+      "floorY": 0,
+      "z": 4,
+      "radiusX": 3.5,
+      "radiusZ": 3.2,
+      "height": 4
+    },
+    {
+      "id": "right_workshop",
+      "purpose": "great_workshop",
+      "x": 6,
+      "floorY": 0,
+      "z": 5,
+      "radiusX": 3.2,
+      "radiusZ": 2.9,
+      "height": 4
+    },
+    {
+      "id": "middle_store",
+      "purpose": "storage",
+      "x": -2,
+      "floorY": 7,
+      "z": 1,
+      "radiusX": 4.3,
+      "radiusZ": 3.5,
+      "height": 4
+    },
+    {
+      "id": "upper_nook",
+      "purpose": "lookout",
+      "x": 2,
+      "floorY": 13,
+      "z": 1,
+      "radiusX": 3.2,
+      "radiusZ": 2.8,
+      "height": 3
+    },
+    {
+      "id": "crown_chamber",
+      "purpose": "great_crown",
+      "x": -1,
+      "floorY": 20,
+      "z": 1,
+      "radiusX": 3.0,
+      "radiusZ": 2.5,
+      "height": 4
+    }
+  ],
+  "connections": [
+    {
+      "id": "hall_to_store",
+      "from": "queen_hall",
+      "to": "middle_store",
+      "startX": 4,
+      "startZ": 3,
+      "direction": "west",
+      "width": 1
+    },
+    {
+      "id": "store_to_lookout",
+      "from": "middle_store",
+      "to": "upper_nook",
+      "startX": -4,
+      "startZ": 0,
+      "direction": "east",
+      "width": 1
+    },
+    {
+      "id": "lookout_to_crown",
+      "from": "upper_nook",
+      "to": "crown_chamber",
+      "startX": 4,
+      "startZ": 1,
+      "direction": "west",
+      "width": 1
+    }
+  ],
+  "mouths": [
+    {
+      "x": 0,
+      "y": 1,
+      "frontZ": -8,
+      "width": 5,
+      "height": 5,
+      "depth": 7
+    },
+    {
+      "x": -7,
+      "y": 1,
+      "frontZ": -1,
+      "width": 3,
+      "height": 3,
+      "depth": 5
+    },
+    {
+      "x": 6,
+      "y": 1,
+      "frontZ": -1,
+      "width": 3,
+      "height": 3,
+      "depth": 6
+    },
+    {
+      "x": -2,
+      "y": 8,
+      "frontZ": -5,
+      "width": 5,
+      "height": 4,
+      "depth": 4
+    },
+    {
+      "x": 2,
+      "y": 14,
+      "frontZ": -4,
+      "width": 3,
+      "height": 3,
+      "depth": 4
+    },
+    {
+      "x": -1,
+      "y": 21,
+      "frontZ": -3,
+      "width": 3,
+      "height": 4,
+      "depth": 4
+    }
+  ]
+}

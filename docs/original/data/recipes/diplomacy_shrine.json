@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ASA",
+    "CPC",
+    "RDR"
+  ],
+  "key": {
+    "A": "minecraft:amethyst_shard",
+    "S": "formic_frontier:colony_seal",
+    "C": "formic_frontier:chitin_plate",
+    "P": "formic_frontier:pheromone_dust",
+    "R": "formic_frontier:resin_glob",
+    "D": "minecraft:rooted_dirt"
+  },
+  "result": {
+    "id": "formic_frontier:diplomacy_shrine"
+  }
+}
