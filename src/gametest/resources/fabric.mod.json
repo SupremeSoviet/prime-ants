@@ -5,8 +5,8 @@
   "name": "Prime Ants development tests",
   "environment": "*",
   "entrypoints": {
-    "fabric-gametest": ["dev.primeants.gametest.BootstrapGameTest"],
-    "fabric-client-gametest": ["dev.primeants.gametest.InfrastructureCaptureTest"]
+    "fabric-gametest": ["dev.primeants.gametest.BootstrapGameTest", "dev.primeants.gametest.AntEntityGameTest"],
+    "fabric-client-gametest": ["dev.primeants.gametest.AntModelGameTest", "dev.primeants.gametest.AntCaptureTest"]
   },
   "depends": { "prime_ants": "*", "fabric-api": "*" }
 }

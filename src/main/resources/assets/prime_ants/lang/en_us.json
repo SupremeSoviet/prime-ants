@@ -1,1 +1,6 @@
-{}
+{
+  "entity.prime_ants.lasius_niger_worker": "Lasius niger worker (debug specimen)",
+  "entity.prime_ants.lasius_niger_queen": "Lasius niger queen (debug specimen)",
+  "item.prime_ants.debug_lasius_niger_queen_egg": "Debug Lasius niger queen spawn egg",
+  "message.prime_ants.debug_egg_restricted": "Debug specimens require creative mode or operator permission."
+}

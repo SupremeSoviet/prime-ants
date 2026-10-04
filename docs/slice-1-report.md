@@ -1,3 +1,165 @@
+# Report T02
+
+## What was done
+
+Delivered production registered Lasius niger worker and queen adults, one restricted debug queen spawn egg, production models/atlases/EN-RU strings, real-tick behavior tests, model tests, and fresh generated-world captures. The colony remains unimplemented. Debug adults are the actual living entities; there is no population counter, automatic replacement, worker egg, test-only adult factory or queen-produced worker.
+
+Baseline: clean `master` at `c7fe3127e9920a410986a7aee2459e0106375eb7`. Commit: recorded after commit in external `commit-evidence.json` (this document does not try to embed its own commit hash). Minecraft 26.3, Java 25, Gradle 9.7.1, Loader 0.19.5, API 0.161.0+26.3 and Loom 1.18.2 are unchanged. No old implementation was imported or owner world edited.
+
+`LasiusNigerEntity` is a persistent `PathfinderMob`; immutable form comes from registered type. It uses ground pathfinding, collision, gravity, health/damage and the normal death sequence. `AntGroundNavigation` waits within 0.15 blocks of each waypoint to avoid prematurely cutting the queen into corners. Stroll chooses safe land positions at modest speed and does not permanently stop at 100 idle ticks. Wandering is not founding or foraging.
+
+Only the living server entity advances `AntElapsedAgeTicks`, once per inherited real tick; renderer state cannot mutate biological state. Vanilla saves UUID and entity type, additional fields save form/age, loading validates registered form and never inserts another entity. Normal server UUID insertion rejects a duplicate. Age freezes outside loaded ticking; no offline catch-up or lifespan is implemented.
+
+The queen egg uses the real spawn-egg item interaction after checking creative mode or operator level 2+ (`Permissions.COMMANDS_GAMEMASTER`), fixed queen type and absence of a spawner block entity. Dispenser behavior is `NOOP`; no recipe or loot exists. Authorized use creates one queen and no workers/nest. Worker diagnostics use vanilla's operator `/summon`. `/give @s prime_ants:debug_lasius_niger_queen_egg` obtains the diagnostic item; no custom command is added.
+
+## Commands run (with exit codes)
+
+All Gradle commands used the existing evidence helper in the workspace, Temurin Java 25, separate invocations, immediate `$LASTEXITCODE` checking, and unchanged time/memory settings. Each evidence ID has full `.json` timing/command metadata and native `.log` output under T02. Native logs were decoded according to BOM before parsing.
+
+| Evidence ID | Actual command | Exit | Seconds |
+| --- | --- | --- | --- |
+| `06-compile-production` | `.\gradlew.bat compileJava compileClientJava --console=plain` | 1 | 1.715 |
+| `07-compile-production-recovery` | `.\gradlew.bat compileJava compileClientJava --console=plain` | 0 | 2.061 |
+| `08-compile-tests` | `.\gradlew.bat compileGametestJava --console=plain` | 1 | 2.055 |
+| `10-server-targeted` | `.\gradlew.bat runGameTest --console=plain` | 1 | 11.546 |
+| `11-navigation-diagnosis` | `.\gradlew.bat runGameTest --console=plain` | 1 | 11.913 |
+| `14-navigation-recovery` | `.\gradlew.bat runGameTest --console=plain` | 0 | 12.448 |
+| `16-compile-client-tests` | `.\gradlew.bat compileGametestJava --console=plain` | 0 | 2.103 |
+| `t02-build-final` | `.\gradlew.bat build --console=plain --rerun-tasks` | 0 | 14.145 |
+| `t02-build-final-assets-corrected` | `.\gradlew.bat build --console=plain --rerun-tasks` | 0 | 14.807 |
+| `18-client-capture-attempt-2` | `.\gradlew.bat runClientGameTest --console=plain` | 0 | 29.886 |
+| `t02-build-final-capture-separated` | `.\gradlew.bat build --console=plain --rerun-tasks` | 0 | 14.475 |
+| `20-client-capture-attempt-3` | `.\gradlew.bat runClientGameTest --console=plain` | 1 | 43.397 |
+| `21-idle-cutoff-reproducer` | `.\gradlew.bat runGameTest --console=plain` | 1 | 11.422 |
+| `23-idle-goal-recovery` | `.\gradlew.bat runGameTest --console=plain` | 0 | 12.615 |
+| `t02-build-final-idle-fixed` | `.\gradlew.bat build --console=plain --rerun-tasks` | 0 | 14.680 |
+| `24-client-capture-attempt-4` | `.\gradlew.bat runClientGameTest --console=plain` | 0 | 26.189 |
+
+The **last** full build was `t02-build-final-idle-fixed`, a fresh `build --console=plain --rerun-tasks`, exit 0; it executed 15 unit and 16 server cases. The next dedicated client command was `24-client-capture-attempt-4`, exit 0; it executed two client entrypoints, 14 model cases and six walking captures. Documentation/artifact checks followed without more source changes.
+
+Other commands: Git baseline/status/history reads exit 0; source extraction batches exit 0 (missing names recorded, then resolved or identified as old API names); matching rendering/object-builder source downloads via `curl.exe -fL`, both exit 0; `python scripts/generate-ant-textures.py`, exit 0; artifact verifier first exit 1 due RU JSON decoding, targeted recovery exit 0 (`26-artifact-verification-recovery.log`); `git diff --check`, exit 0. One early source-excerpt query ended with `StopIteration` because `Model` was not yet extracted; it was subsequently extracted/read. Initial Russian document output used the wrong PowerShell encoding and was reread as UTF-8 before design work.
+
+## Artifacts (paths)
+
+Evidence root: `C:\Users\user\Documents\turnloop\directions\prime-ants-slice1\turns\T02`.
+
+- Full external handoff: `T02/report.md`; final commit hash and exact changed files: `T02/commit-evidence.json`.
+- Source readings: `01-api`, `02-test-api`, `03-matching-api`, `04-registration`, `05-fixture`, `09-clock-camera`, `12-camera`, `13-path-navigation`, `15-capture-api`, `22-land-goal` reading logs/manifests; full extracted files under `inspected-sources/`; extraction command in `inspect_sources.py`.
+- Final copied XML: `final-test-results/test/TEST-dev.primeants.time.SimulationTimeScaleTest.xml`, `final-test-results/gametest/server.xml`, `final-test-results/client-model/model.xml`.
+- Failed server XML: `10-server-failed.xml`, `11-navigation-failed.xml`, `21-idle-cutoff-failed.xml`. Earlier client model XML and capture provenance retained per attempt.
+- `artifact-verification.json`: command ledger, testcase names, XML hashes, complete jar entry lists, PNG hashes/freshness, source creation timestamps and final capture provenance. `verify_artifacts.py` is reproducible verification.
+- Production code under `src/main/java/dev/primeants/entity`, `.../item`, and `src/client/java/dev/primeants/client`; tests only under `src/gametest`; texture generator under `scripts`.
+- Documentation: `docs/dev-notes.md`, current and accepted historical results in `docs/slice-1-report.md`, and one caption per PNG in `docs/screenshots/README.md`.
+- Final frames: `docs/screenshots/t02-a4-worker-walking-{1,2,3}.png` and `t02-a4-queen-walking-{1,2,3}.png`. Nine earlier T02 PNGs are retained with their run limitations. T01 PNG unchanged.
+
+Production archives inspected after the final build:
+
+- `C:\Users\user\Documents\prime-ants\build\libs\prime_ants-0.1.0-sources.jar`: 59908 bytes, SHA-256 `f1bbb208f6426f36ea778a82f1b82bc40947cfd80388b782ee41c70a065c5d24`; no development entries.
+- `C:\Users\user\Documents\prime-ants\build\libs\prime_ants-0.1.0.jar`: 70731 bytes, SHA-256 `944f2d475ae37cfe3a927c10327d3d0cfecf73087702b1b05241e8102f5a1813`; no development entries.
+
+## Claims and their evidence
+
+### API sources and chronology
+
+`01-api-read.log` started `2026-10-04T10:42:59Z`, before new entity/item files were created at `10:47:14Z`. Client model files were created at `10:49:51Z`. `artifact-verification.json` preserves Windows creation timestamps. Logs embed the exact extraction command, start/end, archive entries and source SHA-256 hashes; later numbered reads precede corrective edits. Relevant sources include Mob/EntityType/SpawnEggItem/GroundPathNavigation/SynchedEntityData/ValueInput/ValueOutput/PigRenderer/PigRenderState/PigModel, model builders and both registry APIs. The initial broad cache scan also read old Fabric jars, so inspection was narrowed and replayed against exact pinned sources in `03-matching-api-read.log`. Original logs/manifests remain; use matching replay for overwritten API extracts.
+
+Resolved source archives: the common/client 26.3 generated jars given in the brief; matching API/Loom jars in `C:\Users\user\.gradle\caches\prime-ants-source-inspection`. Rendering sources `27.0.14+901a437c5d` and object builder sources `24.1.9+3434d6d95d` were retrieved from `https://maven.fabricmc.net/net/fabricmc/fabric-api/` with hashes in `03-source-downloads.json`. No version pins were changed. Applied API differences are documented in dev notes.
+
+### Executed tests
+
+Retained **15 unit cases**, `SimulationTimeScaleTest` (4 basic durations, 6 invalid multiplier cases, 5 invalid duration cases). No accepted unit assertion or bootstrap assertion changed. `failOnNoDiscoveredTests` and T01 failure propagation/discovery guards remain. Build verifies every ant server test by name alongside bootstrap, and rejects failed/skipped reports.
+
+**16 server GameTests**, no failures/skips:
+
+- `prime_ants_test:ant_entity_game_test_creative_egg_creates_exactly_one_queen`
+- `prime_ants_test:ant_entity_game_test_debug_egg_cannot_configure_spawner`
+- `prime_ants_test:ant_entity_game_test_operator_survival_egg_creates_exactly_one_queen`
+- `prime_ants_test:ant_entity_game_test_survival_egg_creates_nothing`
+- `prime_ants_test:ant_entity_game_test_null_player_egg_cannot_spawn`
+- `prime_ants_test:bootstrap_game_test_food_item_lifecycle`
+- `prime_ants_test:ant_entity_game_test_dispenser_cannot_bypass_egg_restriction`
+- `prime_ants_test:ant_entity_game_test_queen_age_ignores_daylight_changes`
+- `prime_ants_test:ant_entity_game_test_worker_age_ignores_daylight_changes`
+- `prime_ants_test:ant_entity_game_test_queen_entity_serialization_preserves_identity`
+- `prime_ants_test:ant_entity_game_test_worker_entity_serialization_preserves_identity`
+- `prime_ants_test:ant_entity_game_test_queen_lethal_damage_has_no_replacement`
+- `prime_ants_test:ant_entity_game_test_worker_lethal_damage_has_no_replacement`
+- `prime_ants_test:ant_entity_game_test_queen_wanders_after_long_idle`
+- `prime_ants_test:ant_entity_game_test_worker_navigates_ground_around_wall`
+- `prime_ants_test:ant_entity_game_test_queen_navigates_ground_around_wall`
+
+Navigation observes actual movement over multiple real ticks, detouring around a three-high wall and checking collision every tick. Age compares exactly 12 elapsed server ticks across daylight jumps to 9,000,000 and back to zero. Normal lethal damage removes both forms from living queries, then UUID lookup after the vanilla death sequence, without replacement. Entity serialization/restoration round-trips UUID/type/form/age, does not insert during deserialization, rejects a second identical UUID, and resumes age through real ticks. Egg tests exercise production `ItemStack.useOn`; allowed creative and survival operator create exactly one queen; unauthorized survival/null/spawner use creates none. An actual powered dispenser retains the egg and creates none. The long-idle queen test reproduced the goal failure before production correction and passed afterward.
+
+**14 client model cases**, 7 per form, using isolated baked instances of the exact factory registered for the renderer: `sixArticulatedLegsOnMesosoma`, `elbowedAntennaeMandiblesAndEyes`, `onePetioleAndBodySegments`, `tripodsAlternateInActualSetupAnim`, `stationaryLegsStopWhileAntennaeAnimate`, `bakedUvDensityIs32TexelsPerWorldBlock`, `renderedBodyDimensionsMatchForm`. These inspect geometry-bearing hierarchy/UV polygons and execute the real `AntModel.setupAnim`; no parallel anatomy checklist is used. Capture uses registered `AntRenderer` and never sets ant poses. Client suite guard requires 14 passing model cases and six capture records.
+
+No GameTest calls entity or simulation `tick()` manually. Fixture blocks and navigation destinations are controlled only in server tests. Serialization is **an entity serialization test in a running server, not a full world-restart test**.
+
+### Dimensions, UV scale and gait
+
+| Form | Rendered axial body length (jaws/acidopore included; antenna/leg reach excluded) | Body thickness | Collision width × height |
+| --- | --- | --- | --- |
+| Worker | 1.025142 blocks | 0.226563 | 0.60 × 0.40 |
+| Queen | 2.271376 blocks | 0.437500 | 0.95 × 0.70 |
+
+Resting ground-to-body-top is approximately 0.36 / 0.61 blocks. The queen has a larger mesosoma and four wing-scar details. Both forms have elbowed antennae, mandibles, compound-eye surface pixels/geometry, head, mesosoma, one petiole, gaster, acidopore and six articulated femur/tibia/tarsus legs. Visible appendages and the long queen body extend beyond compact axis-aligned collision footprints. Both fit vertically under future two-block-high passages; full passage routing and visual clearance around bends are untested.
+
+The ant subtree scales raw geometry 0.5; vertex conversion divides by 16. Thus `w` raw model/UV units cover `w/32` world blocks and `w` texels, **32 texels per world block**, twice vanilla's 16. Both atlases are 256×128; atlas size alone is not the claim. Client cases measure baked UV texels divided by transformed world-edge lengths and assert 32. Item texture is 16×16.
+
+Tripod A: left front/hind + right middle (0,2,4); B: left middle + right front/hind (1,3,5). Actual walk distance/speed drives phase/amplitude; observed horizontal displacement gates locomotion. Stationary legs return to rest immediately while antennae continue visual animation. Shape cases check both opposing phases and stationary reset. Rendering neither owns nor increments elapsed biological age.
+
+### Capture provenance
+
+Caption for every new PNG: **T02 debug entity specimens; colony not implemented**. Final attempt 4 freshly generated normal terrain, seed `2026100402`, creative operator for debug use, then spectator observer. Queen birth used the normal client item-use packet; worker birth used the ordinary permission-checked player summon command. Existing ground selected without edits; specimens never teleported or had AI/physics disabled. No decoration, forced poses, weather/time adjustment or alternative spawning/rendering occurs. Observer position/HUD/FOV changed; Fabric's disclosed default render distance/cloud/music settings remain.
+
+- **Worker** UUID `b6dbc54f-b790-40fb-856a-d998af428dd1`; creation route: `ordinary operator /summon prime_ants:lasius_niger_worker -14.50 69.00 6.50`. Created at server game tick 61, elapsed age 1. Walking frames at server ticks 96, 102, 108 / ages 36, 42, 48. From first to third frame, horizontal displacement 0.8424 blocks in 12 ticks. Positions [-14.399417238711827, 69.0, 6.600574659240077] → [-13.803730328901468, 69.0, 7.196259994981051]. AI, ground contact and normal physics observed active in all frames.
+- **Queen** UUID `f428e324-bddc-48cf-95c1-cc2bb00a9ec5`; creation route: `production queen egg: client useItemOn -> packet -> ItemStack.useOn -> SpawnEggItem`. Created at server game tick 59, elapsed age 1. Walking frames at server ticks 116, 122, 128 / ages 58, 64, 70. From first to third frame, horizontal displacement 0.3739 blocks in 12 ticks. Positions [-9.560473028457066, 73.0, -12.490382755233302] → [-9.934329113352671, 73.0, -12.492358325157618]. AI, ground contact and normal physics observed active in all frames.
+
+Final capture times lie between `2026-10-04T11:15:39.634352Z` and `11:15:41.489134500Z`. All six latest PNG mtimes are later than attempt 4 launch. Files were opened and observed to contain separate adult meshes, actual natural terrain, no HUD, and changing appendage positions. Dark chitin/terrain lighting and cuboid silhouettes remain visible; aesthetic/anatomical acceptance is left to independent review. These are not brood-produced population, nest, foraging, or completed colony-close-up evidence.
+
+| Final PNG | SHA-256 |
+| --- | --- |
+| `t02-a4-queen-walking-1.png` | `bccda1bf50ba5e20a5769cb5ccfea42d96c45eacaa183f2d1735fa430923f6b8` |
+| `t02-a4-queen-walking-2.png` | `993a592f7038afd5e1e149b64c93e50263d6cc0e6c11c8d0a3272ce95ea3f910` |
+| `t02-a4-queen-walking-3.png` | `1a95272854dde5d6486b8e94498264ca1e55c6d1174d3c0c4b0b2ab94950a8f3` |
+| `t02-a4-worker-walking-1.png` | `c3e9ce3629dcdd0183a3edf4ed0b96cd673140275c76691836ed4ce3951d8b13` |
+| `t02-a4-worker-walking-2.png` | `d8445053fdfc0821128d14654ea66a5abf3dfe607dac060e8175adcad6d2d8fb` |
+| `t02-a4-worker-walking-3.png` | `fe91c302d9df5989298e52648a63b0ae27f9b31f1c80c36a5dfc83cb62bafd15` |
+
+T01 PNG SHA-256 remains `0a8a35b2fece3dd9dcbf5142dba3c3ea4e037ff2cd75097ca35d3f49b9508609`. The old T01 infrastructure capture class remains unregistered development source, so neither T02 launch invoked it or overwrote the image.
+
+## Deviations, relaxations, skipped steps
+
+- No definition-of-done assertion was intentionally skipped. Visual acceptance remains pending the independent reviewer.
+- Two compile errors exposed removed API names: `displayClientMessage` (06, recovered 07) and `setDayTime` (08, corrected using 09 readings). They are preserved, not classified as infrastructure resets.
+- Initial source scan mixed old Fabric cache archives with the exact versions. Matching-source replay corrected this before corresponding implementation; full initial logs remain. One excerpt query stopped on a not-yet-extracted Model. UTF-8 reread corrected initial document display.
+- Two navigation tests failed (10). Diagnostic 11 showed corner sticking and default reach-range stopping. Production waypoint precision and exact fixture destination request recovered 14. Timeout allowances: original 220, diagnostic recovery 420, final worker 220 and queen 600 after a queen route took 417 ticks. This widens queen duration, not movement/collision requirements. No assertion was weakened or test disabled.
+- Generic spawn-egg model resource was missing in 26.3; caught by archive inspection (17) before launch. Dedicated model/texture correction required another fresh build, not another unchanged client launch.
+- Client attempt 2 exit 0 produced real mixed adult frames but partly occluded the worker; kept as diagnostic images. The next launch selected separate existing ground rather than moving ants into composition.
+- Client attempt 3 exit 1, 43.397 s: worker captures succeeded, queen did not resume walking during 300 observation ticks. Full log, model XML, partial PNGs and provenance retained. A smaller server reproducer (21) failed at the same idle cutoff; the production goal correction passed (23) before the final full build/client resumed. No timeout/memory increase was used as recovery.
+- Client attempt 4 exit 0, 26.189 s, after that targeted recovery. Cumulative launch history: **4 attempts, 3 process successes, 1 failure** including accepted T01. T02 adds 3 launches, 2 process successes, 1 failure. Attempt 2's composition limitation is explicit and is not independent visual acceptance. Two failed launches/captures did not occur, so screenshot stop criterion was not reached.
+- Artifact verifier first failed decoding RU JSON through Windows cp1252 (25); fixed explicit UTF-8 and only reran verifier (26 exit 0). Native Gradle logs were BOM-detected. T01's parameter dependency failure remains resolved by `junit-jupiter-params:5.10.0` and its targeted-test success; retry log-decoding recovery is carried forward.
+- OSHI/Perflib, missing empty resource directory, anisotropic-filter test default, Realms development token, Gradle/API deprecation messages persisted as non-blockers. Attempt 3 passenger-update warnings were preserved; its explicit blocker was autonomous-walking assertion. No global settings/VPN/authentication changes, installations, supervision edits, owner-world changes, destructive cleanup, push or history rewrite occurred.
+- **Not tested/implemented:** full world restart, unloaded/offline catch-up, biological lifespan, brood replacement, founding, nests/digging, food collection/storage, full tunnel navigation, colony premise and performance at 20+ ants. No entity-performance or toolchain kill criterion is supported by these observations.
+
+## Questions for the owner
+
+None required for this authorized turn. The independent reviewer should decide whether the rendered anatomy, dark texture, silhouette and walking frames are visually acceptable before further colony work. Debug adult evidence does not answer the colony premise.
+
+## Self-assessment against the definition of done
+
+1. Production worker/queen entities, shared species logic, normal ground physics/damage/death, autonomous wandering, one server age owner and persisted identity/form/age: implemented and server-tested.
+2. Restricted real queen egg, one queen/no nest/workers, no dispenser/spawner bypass, ordinary worker summon/no worker factory/egg: implemented, server-tested and production capture routes observed.
+3. Production geometry, articulated gait, antenna animation, proportions, 2× measured density and EN/RU strings: implemented and 14 model cases pass. Dimensions documented separately; visual acceptance pending.
+4. Accepted guards retained, real-tick movement/age/death/restoration/authorization tests added, named discovery enforced, latest full rerun build green, final XML preserved and jars exclude development code: verified.
+5. Fresh separate generated-world close-ups and walking frames with UUID/routes/tick observations/hashes, AI/physics active, T01 preserved and old entrypoint disabled: final attempt 4 verified; earlier composition/failure evidence disclosed.
+6. Dev notes, slice report, screenshot captions and full executor handoff updated; descriptive master commit recorded externally after staging/commit. Reviewer decides acceptance.
+
+NEXT: continue - The real adult slice is evidenced; independent visual review and a later brood slice must still test the colony premise.
+
+---
+
+## Accepted T01 historical report
+
 # Report T01
 
 ## What was done

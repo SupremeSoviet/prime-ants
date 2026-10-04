@@ -1,0 +1,4 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": { "layer0": "prime_ants:item/debug_lasius_niger_queen_egg" }
+}

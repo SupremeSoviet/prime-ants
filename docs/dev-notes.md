@@ -1,6 +1,6 @@
-# T01 development notes
+# Development notes
 
-This is a Minecraft Java 26.3 infrastructure foundation. Colony and brood development are unimplemented.
+Minecraft Java 26.3 foundation (T01) and production Lasius niger debug adults (T02). Colony and brood development are unimplemented.
 
 ## Pinned toolchain
 
@@ -82,3 +82,57 @@ From the repository, set `JAVA_HOME` to the Java 25 JDK and prepend its `bin` to
 `runGameTest` is the verified server task. Server XML is `build/test-results/gametest/server.xml`; unit XML is under `build/test-results/test/`, with HTML under `build/reports/tests/test/`. `build` executes both suites and checks that the named bootstrap test appears in a fresh server XML report. Client capture is a separate, dedicated attempt after the final passing build.
 
 The optional `scripts/Invoke-GradleEvidence.ps1` takes `-Name`, `-GradleArgs` and `-EvidenceDirectory`, captures command/start/end/elapsed time/output, reads `$LASTEXITCODE` immediately, and exits with that code.
+
+## T02 production adult slice — 2026-10-04
+
+Worker: `/summon prime_ants:lasius_niger_worker ~ ~ ~` through vanilla's operator-only command. Queen: `/give @s prime_ants:debug_lasius_niger_queen_egg`, then use the egg on existing ground. The egg allows creative players or `Permissions.COMMANDS_GAMEMASTER` (operator level 2+) and creates one queen. It has no recipe, loot source, worker equivalent, spawner configuration, or dispenser use. These are **T02 debug entity specimens; colony not implemented**. Brood replacement remains future work.
+
+`LasiusNigerEntity` extends `PathfinderMob`; registered types carry immutable form. Ground navigation, gravity, collision, health/damage, and the vanilla death sequence remain active. No colony manager or parallel population counter exists. A persistent adult chooses modest random land walks; no founding, excavation, food collection, or foraging occurs.
+
+One owner advances biological age: the living server entity's `tick()` increments `AntElapsedAgeTicks` once after the inherited tick. Client rendering never writes it. Age uses elapsed loaded ticks, with saturation at `Long.MAX_VALUE`, not daylight-clock differences. Vanilla serialization owns UUID/type; additional `ValueOutput` fields save `AntForm` and elapsed age. `ValueInput` validates form against registered type, clamps negative age, and never inserts another entity. Renderer state contains only visual movement/animation state; immutable form is conveyed by registered type, so no custom synchronized biological counter is needed. No offline catch-up or lifespan is implemented.
+
+### Resolved-source chronology
+
+Evidence lives in `C:\Users\user\Documents\turnloop\directions\prime-ants-slice1\turns\T02`. `inspect_sources.py` preserves reading start/end timestamps, its exact arguments, archive/entry paths, file hashes, full output, and extracted sources. `01-api-read.log` began at `2026-10-04T10:42:59Z`; entity/item files were created at `10:47:14Z`; model files at `10:49:51Z` (creation-time inventory in `artifact-verification.json`). Subsequent numbered readings precede navigation, clock, capture, and goal corrections.
+
+The first broad cache probe also encountered old Fabric source jars and overwrote some extracted copies; its immutable full reading log/manifests remain. Inspection was restricted to generated 26.3 game sources and matching API archives; `03-matching-api-read.log` replaces those API readings with correct versions. Current rendering sources: `27.0.14+901a437c5d`; object builder: `24.1.9+3434d6d95d`, downloaded from Fabric Maven with hashes in `03-source-downloads.json`. Earlier stale copies are not implementation evidence. An excerpt query stopped with `StopIteration` on a not-yet-extracted `Model`; the next extraction included it.
+
+| Source | Applied 26.3 behavior |
+| --- | --- |
+| `Mob`, `PathfinderMob`, `GroundPathNavigation`, `PathNavigation` | Vanilla ground physics/navigation; ordinary `moveTo` defaults to reach range 1. Tests request range 0. `AntGroundNavigation` uses 0.15-block waypoint tolerance and waits through corners before advancing, retaining pathfinding/movement/stuck detection. |
+| `EntityType`, `EntityTypes`, `FabricDefaultAttributeRegistry` | Build with registry `ResourceKey`, register both types and their default attributes; no natural spawning or automatic adults. |
+| `SpawnEggItem`, `Item.Properties`, `DispenserBlock` | `spawnEgg(type)` supplies typed `ENTITY_DATA`; vanilla use can configure a spawner and default dispenser behavior recognizes spawn eggs. Guard both item use paths, reject spawners and register dispenser `NOOP`. |
+| `SynchedEntityData`, `ValueInput`, `ValueOutput`, `TagValueInput`, `TagValueOutput` | Use existing entity type/UUID network/storage ownership. Custom elapsed age is server-only and saved as long. Restoration uses normal typed entity deserialization and the world's UUID insertion guard. |
+| `TimeCommand`, `ServerClockManager` | `ServerLevel.setDayTime` is removed; tests jump the dimension's default clock via `clockManager().setTotalTicks`. Age remains independent. |
+| `PigRenderer`, `PigRenderState`, `PigModel`, `EntityModel`, `ModelPart`, `PartPose`, builders | Render-state-based model extraction; geometry/UV baking inspected directly. Layer API is now `ModelLayerRegistry`, not the old `EntityModelLayerRegistry`. |
+| `Player`, `ServerPlayer` | `displayClientMessage` is removed; use translated `sendSystemMessage`. Permission sets replace old integer permission checks. |
+| `RandomStrollGoal`, `WaterAvoidingRandomStrollGoal`, `LandRandomPos` | Default stroll shuts off at 100 idle ticks. Persistent specimens do not reset this counter via despawn proximity. Production uses `RandomStrollGoal(...,40,false)` and water-avoiding land destinations, independently of observer proximity. |
+| `Gui`, `Hud`, `MultiPlayerGameMode`, `ClientPacketListener`, matching client GameTest contexts | `client.gui.hud.toggle()` hides HUD. Egg interaction sends the ordinary use-on packet; worker summon is sent as an ordinary player command. Only the spectator observer is positioned. |
+| Vanilla item resources | `minecraft:item/template_spawn_egg` no longer exists. Custom 16×16 egg texture uses the current generated-item model path. |
+
+### Dimensions and density
+
+| Form | Rendered axial body including jaws/acidopore, excluding antenna/leg reach | Rendered body thickness | Ground-to-body-top at rest | Collision width × height |
+| --- | --- | --- | --- | --- |
+| Worker | 1.0251 blocks | 0.2266 | about 0.36 | 0.60 × 0.40 |
+| Queen | 2.2714 blocks | 0.4375 | about 0.61 | 0.95 × 0.70 |
+
+The queen has a larger mesosoma and four visible wing attachment scars. All six femur/tibia/tarsus chains attach to the mesosoma. Antennae have scape/funiculus elbows; mandibles, eyes, one petiole and gaster are geometry. Visual appendages extend beyond compact square collision footprints. Both forms fit vertically under a future two-block-high ceiling; complete tunnel navigation, visual clearance at bends, and excavation are untested. Height compatibility alone does not prove passage behavior.
+
+Geometry uses **32 raw model units per world block**: the ant subtree is scaled 0.5, while vanilla vertices convert 16 model units to a block. A cube face of raw width `w` spans `w` texture texels and `w/32` world blocks, giving **32 texels/block**, twice vanilla's 16. The atlas is 256×128 for both forms; its size is not the density argument. Client shape tests measure baked polygon UV edges against transformed world edges and assert the ratio 32. Item texture remains 16×16. `scripts/generate-ant-textures.py` reproduces the atlases and item texture.
+
+Tripod A is left front/hind plus right middle (leg indices 0,2,4); tripod B is 1,3,5. The production model uses actual vanilla walk distance/speed and the renderer's observed horizontal displacement. Stationary movement suppresses leg gait immediately; visual antenna activity continues. Shape tests animate isolated baked instances of the same registered factory; capture never forces production poses.
+
+### Verification and preserved failures
+
+Final build: `t02-build-final-idle-fixed.{json,log}`, `build --console=plain --rerun-tasks`, exit 0, 14.680 seconds: **15 retained unit cases and 16 server GameTests** (bootstrap plus 15 ant cases). Named discovery guards reject omission of any ant test. Final client: `24-client-capture-attempt-4.{json,log}`, exit 0, 26.189 seconds: two client entrypoints, **14 model cases**, six walking captures. Client model XML is `build/test-results/client-model/model.xml`; final copies of all suites are under `T02/final-test-results/`. `artifact-verification.json` contains every testcase name, archive entry list/hash, image hash, and source creation timestamp.
+
+No entity/simulation `tick()` is manually called by a GameTest. Serialization tests are entity round trips in a running server, **not a full world restart**. Offline catch-up, lifespan, brood replacement and multi-ant performance are untested/unimplemented. Only two debug adults were observed in the generated capture world.
+
+Failures are retained: production compile on removed `displayClientMessage` (06, recovered 07); test compile on removed `setDayTime` (08, corrected from 09 sources); two navigation cases failed (10, diagnostic 11, recovered 14); missing old egg-model resource detected before client launch (17, corrected build); initial mixed captures partly occluded the worker (attempt 2, exit 0); separated capture failed to observe renewed queen walking (attempt 3, exit 1, 43.397 seconds), reproduced by the long-idle server test (21, exit 1) and recovered by production goal change (23, exit 0). Navigation timeout allowances changed from 220 to 420 during recovery; final worker 220, queen 600, based on observed queen route taking 417 ticks. No movement/collision assertions were relaxed.
+
+Artifact verification initially failed decoding RU JSON with Python's Windows cp1252 default (25); explicit UTF-8 fixed the smaller verifier (26, exit 0), with no build/client restart. T01's resolved `junit-jupiter-params:5.10.0` failure/recovery and retry log BOM-decoding recovery remain carried forward; no infrastructure reset was warranted.
+
+Client history: accepted T01 attempt 1 succeeded; T02 attempt 2 succeeded with a composition concern; attempt 3 failed; attempt 4 succeeded after the server reproducer passed. **Four launches total, three process successes, one failure.** All earlier PNGs/provenance are preserved. The old infrastructure entrypoint remains as unregistered development source and is not invoked. T01's PNG retains SHA-256 `0a8a35b2fece3dd9dcbf5142dba3c3ea4e037ff2cd75097ca35d3f49b9508609`.
+
+Known non-blocking OSHI/Perflib, missing empty client resources, anisotropic-filter default, development-token Realms and Gradle/API deprecation diagnostics remain in logs. Attempt 3 also emitted passenger updates for an unknown entity; the actual blocker was the reported autonomous-walk assertion. No OS, VPN, authentication, timeout or memory workaround was used. Visual acceptance remains the independent reviewer's decision.

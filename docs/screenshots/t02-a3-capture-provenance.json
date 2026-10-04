@@ -1,0 +1,366 @@
+{
+  "caption": "T02 debug entity specimens; colony not implemented",
+  "seed": 2026100402,
+  "started_utc": "2026-10-04T11:09:49.915401500Z",
+  "observations": [
+    {
+      "uuid": "410e6ea4-029e-471e-9863-6f381d0395b3",
+      "form": "queen",
+      "event": "created",
+      "route": "production queen egg: client useItemOn -\u003e packet -\u003e ItemStack.useOn -\u003e SpawnEggItem",
+      "server_game_time": 54,
+      "elapsed_age_ticks": 1,
+      "position": [
+        -9.5,
+        73.0,
+        -12.5
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": false,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "08cd443d-da8b-495e-8dcd-24fde76bc8dd",
+      "form": "worker",
+      "event": "created",
+      "route": "ordinary operator /summon prime_ants:lasius_niger_worker -19.50 77.00 -23.50",
+      "server_game_time": 56,
+      "elapsed_age_ticks": 1,
+      "position": [
+        -19.5,
+        77.0,
+        -23.5
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": false,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "08cd443d-da8b-495e-8dcd-24fde76bc8dd",
+      "form": "worker",
+      "event": "before_observation",
+      "route": "autonomous wandering",
+      "server_game_time": 63,
+      "elapsed_age_ticks": 8,
+      "position": [
+        -19.5,
+        77.0,
+        -23.5
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "08cd443d-da8b-495e-8dcd-24fde76bc8dd",
+      "form": "worker",
+      "event": "waiting_for_walk",
+      "route": "AI and physics active",
+      "server_game_time": 103,
+      "elapsed_age_ticks": 48,
+      "position": [
+        -19.5,
+        77.0,
+        -23.5
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "08cd443d-da8b-495e-8dcd-24fde76bc8dd",
+      "form": "worker",
+      "event": "waiting_for_walk",
+      "route": "AI and physics active",
+      "server_game_time": 143,
+      "elapsed_age_ticks": 88,
+      "position": [
+        -19.5,
+        77.0,
+        -23.5
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "08cd443d-da8b-495e-8dcd-24fde76bc8dd",
+      "form": "worker",
+      "event": "walking_frame_1",
+      "route": "autonomous wandering",
+      "server_game_time": 157,
+      "elapsed_age_ticks": 102,
+      "position": [
+        -19.33676657407745,
+        77.0,
+        -23.602888962388565
+      ],
+      "delta_movement": [
+        0.025305088695612477,
+        -0.0784000015258789,
+        -0.023692446390264615
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "waited_client_ticks": 94,
+      "capture_utc": "2026-10-04T11:10:02.286071700Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t02-a3-worker-walking-1.png"
+    },
+    {
+      "uuid": "08cd443d-da8b-495e-8dcd-24fde76bc8dd",
+      "form": "worker",
+      "event": "walking_frame_2",
+      "route": "autonomous wandering",
+      "server_game_time": 163,
+      "elapsed_age_ticks": 108,
+      "position": [
+        -19.048147802493286,
+        77.0,
+        -23.90638441840468
+      ],
+      "delta_movement": [
+        0.02642373042778913,
+        -0.0784000015258789,
+        -0.028479119296215088
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "waited_client_ticks": 1,
+      "capture_utc": "2026-10-04T11:10:02.691822700Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t02-a3-worker-walking-2.png"
+    },
+    {
+      "uuid": "08cd443d-da8b-495e-8dcd-24fde76bc8dd",
+      "form": "worker",
+      "event": "walking_frame_3",
+      "route": "autonomous wandering",
+      "server_game_time": 169,
+      "elapsed_age_ticks": 114,
+      "position": [
+        -18.75774072438869,
+        77.0,
+        -24.22070925307285
+      ],
+      "delta_movement": [
+        0.02642508262463128,
+        -0.0784000015258789,
+        -0.028632091369100207
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "waited_client_ticks": 1,
+      "capture_utc": "2026-10-04T11:10:03.041828600Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t02-a3-worker-walking-3.png"
+    },
+    {
+      "uuid": "410e6ea4-029e-471e-9863-6f381d0395b3",
+      "form": "queen",
+      "event": "before_observation",
+      "route": "autonomous wandering",
+      "server_game_time": 174,
+      "elapsed_age_ticks": 121,
+      "position": [
+        -7.620435683134158,
+        73.0,
+        -14.37956861785339
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "410e6ea4-029e-471e-9863-6f381d0395b3",
+      "form": "queen",
+      "event": "waiting_for_walk",
+      "route": "AI and physics active",
+      "server_game_time": 214,
+      "elapsed_age_ticks": 161,
+      "position": [
+        -7.620435683134158,
+        73.0,
+        -14.37956861785339
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "410e6ea4-029e-471e-9863-6f381d0395b3",
+      "form": "queen",
+      "event": "waiting_for_walk",
+      "route": "AI and physics active",
+      "server_game_time": 254,
+      "elapsed_age_ticks": 201,
+      "position": [
+        -7.620435683134158,
+        73.0,
+        -14.37956861785339
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "410e6ea4-029e-471e-9863-6f381d0395b3",
+      "form": "queen",
+      "event": "waiting_for_walk",
+      "route": "AI and physics active",
+      "server_game_time": 294,
+      "elapsed_age_ticks": 241,
+      "position": [
+        -7.620435683134158,
+        73.0,
+        -14.37956861785339
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "410e6ea4-029e-471e-9863-6f381d0395b3",
+      "form": "queen",
+      "event": "waiting_for_walk",
+      "route": "AI and physics active",
+      "server_game_time": 334,
+      "elapsed_age_ticks": 281,
+      "position": [
+        -7.620435683134158,
+        73.0,
+        -14.37956861785339
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "410e6ea4-029e-471e-9863-6f381d0395b3",
+      "form": "queen",
+      "event": "waiting_for_walk",
+      "route": "AI and physics active",
+      "server_game_time": 374,
+      "elapsed_age_ticks": 321,
+      "position": [
+        -7.620435683134158,
+        73.0,
+        -14.37956861785339
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "410e6ea4-029e-471e-9863-6f381d0395b3",
+      "form": "queen",
+      "event": "waiting_for_walk",
+      "route": "AI and physics active",
+      "server_game_time": 414,
+      "elapsed_age_ticks": 361,
+      "position": [
+        -7.620435683134158,
+        73.0,
+        -14.37956861785339
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "410e6ea4-029e-471e-9863-6f381d0395b3",
+      "form": "queen",
+      "event": "waiting_for_walk",
+      "route": "AI and physics active",
+      "server_game_time": 454,
+      "elapsed_age_ticks": 401,
+      "position": [
+        -7.620435683134158,
+        73.0,
+        -14.37956861785339
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    }
+  ],
+  "terrain_edits": 0,
+  "ant_teleports": 0,
+  "ai_disabled": false,
+  "animation_poses_forced": false,
+  "selected_existing_ground": [
+    -10,
+    72,
+    -13
+  ],
+  "worker_existing_ground": [
+    -20,
+    76,
+    -24
+  ]
+}

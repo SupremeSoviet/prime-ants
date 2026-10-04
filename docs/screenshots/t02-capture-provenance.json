@@ -1,0 +1,271 @@
+{
+  "caption": "T02 debug entity specimens; colony not implemented",
+  "seed": 2026100402,
+  "started_utc": "2026-10-04T11:15:30.701736200Z",
+  "observations": [
+    {
+      "uuid": "f428e324-bddc-48cf-95c1-cc2bb00a9ec5",
+      "form": "queen",
+      "event": "created",
+      "route": "production queen egg: client useItemOn -\u003e packet -\u003e ItemStack.useOn -\u003e SpawnEggItem",
+      "server_game_time": 59,
+      "elapsed_age_ticks": 1,
+      "position": [
+        -9.5,
+        73.0,
+        -12.5
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": false,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 1,
+      "navigation_done": true
+    },
+    {
+      "uuid": "b6dbc54f-b790-40fb-856a-d998af428dd1",
+      "form": "worker",
+      "event": "created",
+      "route": "ordinary operator /summon prime_ants:lasius_niger_worker -14.50 69.00 6.50",
+      "server_game_time": 61,
+      "elapsed_age_ticks": 1,
+      "position": [
+        -14.5,
+        69.0,
+        6.5
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": false,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 1,
+      "navigation_done": true
+    },
+    {
+      "uuid": "b6dbc54f-b790-40fb-856a-d998af428dd1",
+      "form": "worker",
+      "event": "before_observation",
+      "route": "autonomous wandering",
+      "server_game_time": 68,
+      "elapsed_age_ticks": 8,
+      "position": [
+        -14.5,
+        69.0,
+        6.5
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 8,
+      "navigation_done": true
+    },
+    {
+      "uuid": "b6dbc54f-b790-40fb-856a-d998af428dd1",
+      "form": "worker",
+      "event": "walking_frame_1",
+      "route": "autonomous wandering",
+      "server_game_time": 96,
+      "elapsed_age_ticks": 36,
+      "position": [
+        -14.399417238711827,
+        69.0,
+        6.600574659240077
+      ],
+      "delta_movement": [
+        0.023068413866302172,
+        -0.0784000015258789,
+        0.02306769873690819
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 36,
+      "navigation_done": false,
+      "waited_client_ticks": 28,
+      "capture_utc": "2026-10-04T11:15:39.634352Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t02-a4-worker-walking-1.png"
+    },
+    {
+      "uuid": "b6dbc54f-b790-40fb-856a-d998af428dd1",
+      "form": "worker",
+      "event": "walking_frame_2",
+      "route": "autonomous wandering",
+      "server_game_time": 102,
+      "elapsed_age_ticks": 42,
+      "position": [
+        -14.106254382268892,
+        69.0,
+        6.893735982241434
+      ],
+      "delta_movement": [
+        0.027434062467978398,
+        -0.0784000015258789,
+        0.02743404352096387
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 42,
+      "navigation_done": false,
+      "waited_client_ticks": 1,
+      "capture_utc": "2026-10-04T11:15:39.988244700Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t02-a4-worker-walking-2.png"
+    },
+    {
+      "uuid": "b6dbc54f-b790-40fb-856a-d998af428dd1",
+      "form": "worker",
+      "event": "walking_frame_3",
+      "route": "autonomous wandering",
+      "server_game_time": 108,
+      "elapsed_age_ticks": 48,
+      "position": [
+        -13.803730328901468,
+        69.0,
+        7.196259994981051
+      ],
+      "delta_movement": [
+        0.02754972825961825,
+        -0.0784000015258789,
+        0.027549727757626076
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 48,
+      "navigation_done": false,
+      "waited_client_ticks": 1,
+      "capture_utc": "2026-10-04T11:15:40.337732300Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t02-a4-worker-walking-3.png"
+    },
+    {
+      "uuid": "f428e324-bddc-48cf-95c1-cc2bb00a9ec5",
+      "form": "queen",
+      "event": "before_observation",
+      "route": "autonomous wandering",
+      "server_game_time": 113,
+      "elapsed_age_ticks": 55,
+      "position": [
+        -9.5,
+        73.0,
+        -12.5
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 53,
+      "navigation_done": true
+    },
+    {
+      "uuid": "f428e324-bddc-48cf-95c1-cc2bb00a9ec5",
+      "form": "queen",
+      "event": "walking_frame_1",
+      "route": "autonomous wandering",
+      "server_game_time": 116,
+      "elapsed_age_ticks": 58,
+      "position": [
+        -9.560473028457066,
+        73.0,
+        -12.490382755233302
+      ],
+      "delta_movement": [
+        -0.014256541225205744,
+        -0.0784000015258789,
+        -7.914747713956167E-5
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 56,
+      "navigation_done": false,
+      "waited_client_ticks": 3,
+      "capture_utc": "2026-10-04T11:15:40.785341Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t02-a4-queen-walking-1.png"
+    },
+    {
+      "uuid": "f428e324-bddc-48cf-95c1-cc2bb00a9ec5",
+      "form": "queen",
+      "event": "walking_frame_2",
+      "route": "autonomous wandering",
+      "server_game_time": 122,
+      "elapsed_age_ticks": 64,
+      "position": [
+        -9.744208051109128,
+        73.0,
+        -12.491303586367287
+      ],
+      "delta_movement": [
+        -0.017235937499368303,
+        -0.0784000015258789,
+        -8.819253948735984E-5
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 62,
+      "navigation_done": false,
+      "waited_client_ticks": 1,
+      "capture_utc": "2026-10-04T11:15:41.132599Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t02-a4-queen-walking-2.png"
+    },
+    {
+      "uuid": "f428e324-bddc-48cf-95c1-cc2bb00a9ec5",
+      "form": "queen",
+      "event": "walking_frame_3",
+      "route": "autonomous wandering",
+      "server_game_time": 128,
+      "elapsed_age_ticks": 70,
+      "position": [
+        -9.934329113352671,
+        73.0,
+        -12.492358325157618
+      ],
+      "delta_movement": [
+        -0.017314533259820034,
+        -0.0784000015258789,
+        -1.0251365510731587E-4
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 68,
+      "navigation_done": false,
+      "waited_client_ticks": 1,
+      "capture_utc": "2026-10-04T11:15:41.489134500Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t02-a4-queen-walking-3.png"
+    }
+  ],
+  "terrain_edits": 0,
+  "ant_teleports": 0,
+  "ai_disabled": false,
+  "animation_poses_forced": false,
+  "selected_existing_ground": [
+    -10,
+    72,
+    -13
+  ],
+  "worker_existing_ground": [
+    -15,
+    68,
+    6
+  ],
+  "completed_utc": "2026-10-04T11:15:41.791007800Z",
+  "status": "success"
+}

@@ -37,6 +37,25 @@ loom.runs.named('gameTest') {
 }
 loom.runs.named('clientGameTest') {
     systemProperties.put('prime_ants.captureDir', file('docs/screenshots').absolutePath)
+    systemProperties.put('prime_ants.capturePrefix', 't02-a4')
+    systemProperties.put('prime_ants.modelReport', layout.buildDirectory.file('test-results/client-model/model.xml').get().asFile.absolutePath)
+}
+
+def clientModelReport = layout.buildDirectory.file('test-results/client-model/model.xml')
+tasks.named('runClientGameTest') {
+    doFirst { delete clientModelReport }
+    doLast {
+        def report = new groovy.xml.XmlSlurper().parse(clientModelReport.get().asFile)
+        def cases = report.testcase
+        if (cases.size() != 14 || report.failure.size() > 0 || cases.any { it.failure.size() > 0 }) {
+            throw new GradleException('Expected 14 passing production model cases in client suite')
+        }
+        def capture = new groovy.json.JsonSlurper().parse(file('docs/screenshots/t02-capture-provenance.json'))
+        if (capture.status != 'success' || capture.observations.count { it.event.startsWith('walking_frame_') } != 6) {
+            throw new GradleException('Expected six fresh walking captures and successful production capture provenance')
+        }
+        logger.lifecycle('Verified client suite: 14 model cases and 6 production walking captures')
+    }
 }
 
 // Loom connects runGameTest to check. Also reject a vacuous or stale report.
@@ -48,6 +67,19 @@ tasks.named('runGameTest') {
         def cases = report.depthFirst().findAll { it.name() == 'testcase' }
         if (cases.isEmpty() || !cases.any { it.@name.text() == 'prime_ants_test:bootstrap_game_test_food_item_lifecycle' }) {
             throw new GradleException('Expected bootstrap GameTest was not executed')
+        }
+        def antTests = ['worker_navigates_ground_around_wall', 'queen_navigates_ground_around_wall',
+                        'worker_age_ignores_daylight_changes', 'queen_age_ignores_daylight_changes',
+                        'worker_lethal_damage_has_no_replacement', 'queen_lethal_damage_has_no_replacement',
+                        'worker_entity_serialization_preserves_identity', 'queen_entity_serialization_preserves_identity',
+                        'survival_egg_creates_nothing', 'creative_egg_creates_exactly_one_queen',
+                        'operator_survival_egg_creates_exactly_one_queen', 'null_player_egg_cannot_spawn',
+                        'debug_egg_cannot_configure_spawner', 'dispenser_cannot_bypass_egg_restriction',
+                        'queen_wanders_after_long_idle']
+        antTests.each { name ->
+            if (!cases.any { it.@name.text() == "prime_ants_test:ant_entity_game_test_${name}" }) {
+                throw new GradleException("Expected ant GameTest was not executed: ${name}")
+            }
         }
         if (report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] }) {
             throw new GradleException('Server GameTest report contains a failure or skipped test')

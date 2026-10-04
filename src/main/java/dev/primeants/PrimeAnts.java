@@ -1,6 +1,8 @@
 package dev.primeants;
 
 import net.fabricmc.api.ModInitializer;
+import dev.primeants.entity.AntEntities;
+import dev.primeants.item.AntItems;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,6 +12,8 @@ public final class PrimeAnts implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        LOGGER.info("Prime Ants infrastructure initialized; colony not implemented.");
+        AntEntities.initialize();
+        AntItems.initialize();
+        LOGGER.info("Prime Ants debug adults initialized; colony not implemented.");
     }
 }
