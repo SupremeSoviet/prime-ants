@@ -44,7 +44,7 @@ public final class AntCaptureTest implements FabricClientGameTest {
     private final Map<String,Object> provenance = new LinkedHashMap<>();
     private final String runId = System.getProperty("prime_ants.runId"), prefix = System.getProperty("prime_ants.capturePrefix");
     @Override public void runTest(ClientGameTestContext context) {
-        provenance.put("caption","T07 one debug egg queen physically founds, cares for brood and raises her first real workers");
+        provenance.put("caption","T08 one egg queen raises a mature worker which opens the owned entrance and forages for player-dropped vanilla food");
         provenance.put("run_id",runId); provenance.put("capture_prefix",prefix); provenance.put("entrypoint",getClass().getName());
         provenance.put("status","running"); provenance.put("seed",SEED); provenance.put("started_utc",Instant.now().toString());
         provenance.put("observations",observations); provenance.put("staged_terrain_edits",0); provenance.put("ant_teleports",0);
@@ -58,7 +58,10 @@ public final class AntCaptureTest implements FabricClientGameTest {
             settings.setSeed(Long.toString(SEED)); settings.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE); settings.setAllowCommands(true);
         }).create()) {
             world.getConnection().waitForChunksRender(); context.waitForScreen(null);
-            BlockPos ground=world.getServer().computeOnServer(server->CaptureGround.findFounding(world.getConnection().getServerLevel(),world.getConnection().getServerPlayer().blockPosition()));
+            BlockPos searchOrigin=world.getServer().computeOnServer(server->world.getConnection().getServerLevel().getRespawnData().pos());
+            provenance.put("search_origin",List.of(searchOrigin.getX(),searchOrigin.getY(),searchOrigin.getZ()));
+            provenance.put("search_origin_policy","declared world spawn; bounded radius 60, independent of randomized observer respawn offset");
+            BlockPos ground=world.getServer().computeOnServer(server->CaptureGround.findFounding(world.getConnection().getServerLevel(),searchOrigin));
             provenance.put("selected_existing_ground",List.of(ground.getX(),ground.getY(),ground.getZ()));
             provenance.put("origin_evidence","Production TERRAIN completion witness -> ProtoChunk FULL conversion -> persistent NaturalSoil record. No fixture origin path.");
             world.getServer().runCommand(String.format(Locale.ROOT,"tp @p %.2f %.2f %.2f",ground.getX()+0.5,ground.getY()+1.0,ground.getZ()-2.0));
@@ -77,26 +80,38 @@ public final class AntCaptureTest implements FabricClientGameTest {
             context.runOnClient(client->{if(!client.gui.hud.isHidden())client.gui.hud.toggle();client.options.fov().set(70);});
             NestPlan plan=waitForPlan(context,world,queen);
             provenance.put("entrance",List.of(plan.entrance().getX(),plan.entrance().getY(),plan.entrance().getZ())); provenance.put("direction",plan.direction().getName());
-            for (BroodStage stage : List.of(BroodStage.EGG, BroodStage.LARVA, BroodStage.COCOON)) {
-                String name = stage == BroodStage.EGG ? "eggs" : stage == BroodStage.LARVA ? "larvae" : "cocoons";
-                waitFor(context,world,queen,name,()->world.getServer().computeOnServer(server->{
-                    var be=world.getConnection().getServerLevel().getBlockEntity(plan.nursery());
-                    return be instanceof BroodPile p && p.records().size()==3 && p.records().stream().allMatch(r->r.stage()==stage && r.progress()>=3);
-                }));
-                capture(context,world,queen,plan,name);
-            }
-            waitFor(context,world,queen,"callows",()->world.getServer().computeOnServer(server->liveWorkers(world,plan).size()==3));
+            waitFor(context,world,queen,"entrance traffic",()->world.getServer().computeOnServer(server->
+                    serverAnt(world,queen).founding().lifecycle()==QueenFounding.Lifecycle.OPEN && liveWorkers(world,plan).stream().anyMatch(w->w.getY()>=plan.entrance().getY() && w.workerTasks().phase()==dev.primeants.worker.WorkerTasks.Phase.EXIT)));
             world.getConnection().waitForClientboundEntityUpdates(AntEntities.WORKER);
-            var workerIds=world.getServer().computeOnServer(server->liveWorkers(world,plan).stream().map(LasiusNigerEntity::getUUID).toList());
-            context.waitFor(client->{int n=0;for(Entity e:client.level.entitiesForRendering())if(workerIds.contains(e.getUUID()))n++;return n==3;});
-            capture(context,world,queen,plan,"callows");
-            capture(context,world,queen,plan,"mound");
+            capture(context,world,queen,plan,"traffic");
+            ordinaryDrop(context,world,plan.at(-3,0,1),net.minecraft.world.item.Items.APPLE);
+            waitFor(context,world,queen,"sugary cargo",()->world.getServer().computeOnServer(server->liveWorkers(world,plan).stream().anyMatch(w->w.getMainHandItem().is(net.minecraft.world.item.Items.APPLE) && w.getY()>=plan.entrance().getY())));
+            capture(context,world,queen,plan,"sugar");
+            waitFor(context,world,queen,"first stored food",()->world.getServer().computeOnServer(server->world.getConnection().getServerLevel().getBlockEntity(plan.cache()) instanceof dev.primeants.worker.NestCache n && n.size()==1));
+            ordinaryDrop(context,world,plan.at(-4,0,1),net.minecraft.world.item.Items.CHICKEN);
+            waitFor(context,world,queen,"protein cargo",()->world.getServer().computeOnServer(server->liveWorkers(world,plan).stream().anyMatch(w->w.getMainHandItem().is(net.minecraft.world.item.Items.CHICKEN) && w.getY()>=plan.entrance().getY())));
+            capture(context,world,queen,plan,"protein");
+            waitFor(context,world,queen,"physical stored food",()->world.getServer().computeOnServer(server->world.getConnection().getServerLevel().getBlockEntity(plan.cache()) instanceof dev.primeants.worker.NestCache n && n.size()==2));
+            capture(context,world,queen,plan,"cache");
             provenance.put("final",observe(world,queen)); provenance.put("completed_utc",Instant.now().toString()); provenance.put("status","success");
         } catch(Throwable failure) { provenance.put("status","failed"); provenance.put("failure",failure.toString());provenance.put("failed_utc",Instant.now().toString());throw failure; }
         finally { try {
             Path dir=Path.of(System.getProperty("prime_ants.captureDir"));Files.createDirectories(dir);
             Files.writeString(dir.resolve(prefix+"-provenance.json"),new GsonBuilder().setPrettyPrinting().create().toJson(provenance));
         } catch(Exception e){throw new RuntimeException(e);} }
+    }
+    private void ordinaryDrop(ClientGameTestContext c,TestSingleplayerContext world,BlockPos feet,net.minecraft.world.item.Item item) {
+        world.getServer().runCommand("gamemode creative @p");
+        world.getServer().runCommand(String.format(Locale.ROOT,"tp @p %.3f %.3f %.3f 0 85",feet.getX()+0.5,feet.getY()+0.1,feet.getZ()+0.5));
+        world.getServer().runOnServer(server->{
+            var level=world.getConnection().getServerLevel();require(NestPlan.walkable(level,feet),"Player food drop requires existing supported open trail");
+            world.getConnection().getServerPlayer().setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(item));
+        });
+        world.getConnection().waitForClientboundPackets();c.waitFor(client->client.player.getMainHandItem().is(item));
+        c.runOnClient(client->client.gameMode.dropItem(client.player,false));world.getConnection().waitForServerboundPackets();
+        var drop=world.getServer().computeOnServer(server->{var items=world.getConnection().getServerLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,new AABB(feet).inflate(3),i->i.getItem().is(item));require(items.size()==1&&items.getFirst().getItem().getCount()==1,"One real unit from ordinary player DROP_ITEM packet");var i=items.getFirst();return Map.of("item",net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item).toString(),"source_uuid",i.getUUID().toString(),"count",1,"position",List.of(i.getX(),i.getY(),i.getZ()),"method","creative inventory -> ordinary client DROP_ITEM packet");});
+        observations.add(new LinkedHashMap<>(drop));provenance.put("food_source","two vanilla units from ordinary player item drop packets near existing trail; supplied creative apple and raw chicken");
+        world.getServer().runCommand("gamemode spectator @p");world.getConnection().waitForClientboundPackets();
     }
     private NestPlan waitForPlan(ClientGameTestContext c,TestSingleplayerContext world,UUID id) {
         for(int i=0;i<100;i++) { var p=world.getServer().computeOnServer(server->{var f=serverAnt(world,id).founding();require(f.phase()!=QueenFounding.Phase.FAILED,f.reason());return f.plan();});if(p!=null)return p;c.waitTick(); }
@@ -106,14 +121,16 @@ public final class AntCaptureTest implements FabricClientGameTest {
         for(int i=0;i<18000;i++) {
             var state=observe(world,id);require(!state.get("phase").equals("FAILED"),"Founding failed: "+state);
             if(predicate.getAsBoolean())return;
-            if(i%200==0) { observations.add(state);dev.primeants.PrimeAnts.LOGGER.info("T07 capture waiting {}: {}",stage,state); }
+            if(i%200==0) { observations.add(state);dev.primeants.PrimeAnts.LOGGER.info("T08 capture waiting {}: {}",stage,state); }
             c.waitTick();
         }
         throw new AssertionError("Production founding did not reach "+stage+" in 18000 observed ticks");
     }
     private void capture(ClientGameTestContext c,TestSingleplayerContext world,UUID id,NestPlan plan,String stage) {
-        c.runOnClient(client->camera(client,id,plan,stage));
-        var frame=observe(world,id);frame.put("event","brood_frame");frame.put("stage",stage);frame.put("run_id",runId);
+        UUID subject = world.getServer().computeOnServer(server->serverAnt(world,id).founding().workerClaim());
+        if(stage.equals("sugar") || stage.equals("protein")) c.waitFor(client->clientAnt(client,subject).getMainHandItem().is(stage.equals("sugar")?net.minecraft.world.item.Items.APPLE:net.minecraft.world.item.Items.CHICKEN));
+        c.runOnClient(client->camera(client,id,subject,plan,stage));
+        var frame=observe(world,id);frame.put("event","foraging_frame");frame.put("stage",stage);frame.put("run_id",runId);
         frame.put("work_multiplier",QueenFounding.multiplier());frame.put("capture_started_utc",Instant.now().toString());observations.add(frame);
         var tracked=world.getServer().computeOnServer(server->{java.util.Set<UUID> ids=new java.util.HashSet<>();ids.add(id);liveWorkers(world,plan).forEach(w->ids.add(w.getUUID()));return ids;});
         c.runOnClient(client->AntRenderRecorder.start(tracked));
@@ -121,14 +138,15 @@ public final class AntCaptureTest implements FabricClientGameTest {
                 .withDestinationDir(Path.of(System.getProperty("prime_ants.captureDir"))));
         frame.put("image",png.toAbsolutePath().toString());frame.put("capture_completed_utc",Instant.now().toString());
         var renders=c.computeOnClient(client->AntRenderRecorder.finish());frame.put("screenshot_render_extractions",renders);
-        if(!stage.equals("mound"))require(renders.stream().anyMatch(r->id.toString().equals(r.get("uuid"))),"Settled queen must render in the genuine nursery");
-        if(stage.equals("callows"))require(renders.stream().filter(r->"worker".equals(r.get("form")) && ((Number)r.get("callow_visual")).intValue()<1000).map(r->r.get("uuid")).distinct().count()==3,"All three real pale workers must render");
+        if(stage.equals("cache"))require(renders.stream().anyMatch(r->id.toString().equals(r.get("uuid"))),"Colony queen renders with genuine stored food");
+        else require(renders.stream().anyMatch(r->subject.toString().equals(r.get("uuid"))),"Actual mature forager renders");
+        if(stage.equals("sugar") || stage.equals("protein")) require(renders.stream().anyMatch(r->subject.toString().equals(r.get("uuid")) && Boolean.TRUE.equals(r.get("carried_soil_rendered")) && (stage.equals("sugar")?"minecraft:apple":"minecraft:chicken").equals(r.get("carried_item"))),"Functional production mandible renderer shows correct food");
         try {
             var image=javax.imageio.ImageIO.read(png.toFile());frame.put("width",image.getWidth());frame.put("height",image.getHeight());
             frame.put("modified_epoch_ms",Files.getLastModifiedTime(png).toMillis());frame.put("sha256",HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(png))));
-            Files.writeString(png.resolveSibling(png.getFileName()+".md"),"T07 "+stage+". Run "+runId+"; queen "+id+"; loaded nursery tick "+frame.get("nursery_ticks")+"; brood multiplier "+BroodPile.multiplier()+"; work multiplier "+QueenFounding.multiplier()+"; 1600x1000; SHA-256 "+frame.get("sha256")+".\nProduction egg/founding/care/emergence/rendering. Observer: spectator with vanilla night vision. Brood="+frame.get("brood")+"; real workers="+frame.get("workers")+"; reserve="+frame.get("body_reserve")+". Soil: 24 removed, 22 mound blocks, two plugs, zero released. Underground grass converted="+frame.get("converted")+".\n");
+            Files.writeString(png.resolveSibling(png.getFileName()+".md"),"T08 "+stage+". Run "+runId+"; queen "+id+"; loaded nursery tick "+frame.get("nursery_ticks")+"; brood multiplier "+BroodPile.multiplier()+"; work multiplier "+QueenFounding.multiplier()+"; 1600x1000; SHA-256 "+frame.get("sha256")+".\nProduction egg/founding/care/emergence/rendering. Observer: spectator with vanilla night vision. Brood="+frame.get("brood")+"; real workers="+frame.get("workers")+"; reserve="+frame.get("body_reserve")+". Soil: 24 removed, current physical mound/plug/cargo balance is in provenance. Food supplied through ordinary client player drop packets. Underground grass converted="+frame.get("converted")+".\n");
         } catch(Exception e){throw new RuntimeException(e);}
-        dev.primeants.PrimeAnts.LOGGER.info("T07 fresh capture {}: {}",stage,frame);
+        dev.primeants.PrimeAnts.LOGGER.info("T08 fresh capture {}: {}",stage,frame);
     }
     private static LasiusNigerEntity serverAnt(TestSingleplayerContext world,UUID id) {
         var ant=(LasiusNigerEntity)world.getConnection().getServerLevel().getEntity(id);
@@ -139,11 +157,21 @@ public final class AntCaptureTest implements FabricClientGameTest {
             m.put("uuid",id.toString());m.put("form","queen");m.put("phase",f.phase().name());m.put("reason",f.reason());m.put("server_game_time",ant.level().getGameTime());
             m.put("founding_ticks",f.loadedTicks());m.put("elapsed_age_ticks",ant.elapsedAgeTicks());m.put("position",List.of(ant.getX(),ant.getY(),ant.getZ()));
             m.put("removed",f.removed());m.put("carried",f.carried());m.put("deposited",f.deposited());m.put("released",f.released());m.put("plugged",f.plugged());m.put("sealed",f.sealed());
+            m.put("lifecycle",f.lifecycle().name()); m.put("ready",f.ready());
+            m.put("worker_claim",f.workerClaim()==null?"":f.workerClaim().toString());
             m.put("body_reserve",ant.bodyReserve());m.put("converted",f.converted());m.put("brood_multiplier",BroodPile.multiplier());
             if(f.plan()!=null) {
                 var plan=f.plan();
                 var workers=liveWorkers(world,plan);
-                m.put("workers",workers.stream().map(w->Map.of("uuid",w.getUUID().toString(),"brood_id",w.broodId().toString(),"queen_id",w.queenId().toString(),"callow_ticks",w.callowAgeTicks(),"callow_visual",w.callowVisual(),"alive",w.isAlive())).toList());
+                m.put("workers",workers.stream().map(w->Map.ofEntries(Map.entry("uuid",w.getUUID().toString()),Map.entry("brood_id",w.broodId().toString()),Map.entry("queen_id",w.queenId().toString()),Map.entry("callow_ticks",w.callowAgeTicks()),Map.entry("callow_visual",w.callowVisual()),Map.entry("alive",w.isAlive()),
+                        Map.entry("task",w.workerTasks().phase().name()),Map.entry("opened",w.workerTasks().opened()),Map.entry("placed",w.workerTasks().placed()),Map.entry("cargo_item",net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(w.getMainHandItem().getItem()).toString()),Map.entry("cargo_count",w.getMainHandItem().getCount()),Map.entry("position",List.of(w.getX(),w.getY(),w.getZ())))).toList());
+                m.put("live_plugs",plan.plugs().stream().filter(p->ant.level().getBlockState(p).is(net.minecraft.world.level.block.Blocks.DIRT)).count());
+                m.put("owned_openings",plan.plugs().stream().filter(p->dev.primeants.founding.ColonyPlugs.get((net.minecraft.server.level.ServerLevel)ant.level()).opened((net.minecraft.server.level.ServerLevel)ant.level(),p,id)).count());
+                m.put("world_food",ant.level().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,new AABB(plan.chamber()).inflate(16),i->i.isAlive()&&dev.primeants.worker.WorkerTasks.food(i.getItem())).stream().mapToInt(i->i.getItem().getCount()).sum());
+                m.put("worker_soil",workers.stream().filter(w->w.getMainHandItem().is(net.minecraft.world.item.Items.DIRT)).mapToInt(w->w.getMainHandItem().getCount()).sum());
+                if(ant.level().getBlockEntity(plan.cache()) instanceof dev.primeants.worker.NestCache cache) {
+                    m.put("cache_capacity",cache.CAPACITY);m.put("cache_contents",cache.contents().stream().map(s->Map.of("item",net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(s.getItem()).toString(),"count",s.getCount())).toList());
+                } else {m.put("cache_capacity",6);m.put("cache_contents",List.of());}
                 m.put("live_worker_count",workers.size());m.put("live_adult_count",workers.size()+1);
                 m.put("mound_blocks",plan.deposits().stream().filter(p->ant.level().getBlockState(p).is(NurseryBlocks.NEST_SOIL)).count());
                 m.put("underground_grass",plan.undergroundSurfaces().stream().filter(p->ant.level().getBlockState(p).is(net.minecraft.world.level.block.Blocks.GRASS_BLOCK)).count());
@@ -157,7 +185,7 @@ public final class AntCaptureTest implements FabricClientGameTest {
         });
     }
     private static List<LasiusNigerEntity> liveWorkers(TestSingleplayerContext world,NestPlan plan) {
-        return world.getConnection().getServerLevel().getEntitiesOfClass(LasiusNigerEntity.class,new AABB(plan.chamber()).inflate(5)).stream()
+        return world.getConnection().getServerLevel().getEntitiesOfClass(LasiusNigerEntity.class,new AABB(plan.chamber()).inflate(16)).stream()
                 .filter(w->w.form()==AntForm.WORKER && w.isAlive() && w.broodId()!=null).toList();
     }
     private static LasiusNigerEntity clientAnt(Minecraft client, UUID uuid) {
@@ -168,14 +196,24 @@ public final class AntCaptureTest implements FabricClientGameTest {
     }
 
 
-    private static void camera(Minecraft client,UUID id,NestPlan plan,String stage) {
+    private static void camera(Minecraft client,UUID id,UUID subject,NestPlan plan,String stage) {
         var ant=clientAnt(client,id);Vec3 eye,target;
-        if(stage.equals("mound")) {
+        if(stage.equals("traffic")) {
             // The cleared central route gives an overhead view without placing the observer inside nearby foliage.
             eye=Vec3.atBottomCenterOf(plan.at(-3,0,1)).add(0,4,0);target=Vec3.atCenterOf(plan.at(-3,0,1));client.options.fov().set(90);
+        } else if(stage.equals("sugar") || stage.equals("protein")) {
+            var worker=clientAnt(client,subject);double bodyYaw=Math.toRadians(worker.yBodyRot);
+            Vec3 forward=new Vec3(-Math.sin(bodyYaw),0,Math.cos(bodyYaw)),side=new Vec3(forward.z,0,-forward.x);
+            target=worker.position().add(forward.scale(0.25)).add(0,0.25,0);eye=null;
+            viewSearch: for(double height:new double[]{1.6,2.5,3.5})for(int sign:new int[]{1,-1}) {
+                Vec3 candidate=worker.position().add(forward.scale(1.8)).add(side.scale(sign*1.4)).add(0,height,0);
+                if(client.level.getBlockState(BlockPos.containing(candidate)).isAir()
+                        && client.level.clip(new net.minecraft.world.level.ClipContext(candidate,target,net.minecraft.world.level.ClipContext.Block.COLLIDER,net.minecraft.world.level.ClipContext.Fluid.NONE,client.player)).getType()==net.minecraft.world.phys.HitResult.Type.MISS) {eye=candidate;break viewSearch;}
+            }
+            require(eye!=null,"No unoccluded observer view of naturally carried food");client.options.fov().set(50);
         } else {
-            eye=Vec3.atBottomCenterOf(plan.at(3,-1,-2)).add(-plan.direction().getStepX()*0.2,1.55,-plan.direction().getStepZ()*0.2);
-            target=ant.position().add(0,0.2,0).add(Vec3.atBottomCenterOf(plan.nursery()).subtract(ant.position()).scale(0.35));client.options.fov().set(90);
+            eye=Vec3.atBottomCenterOf(plan.at(5,-1,-2)).add(-plan.direction().getStepX()*0.15,1.55,-plan.direction().getStepZ()*0.15);
+            target=ant.position().add(0,0.2,0).add(Vec3.atBottomCenterOf(plan.cache()).subtract(ant.position()).scale(0.6));client.options.fov().set(90);
         }
         double eyeOffset=client.player.getEyeY()-client.player.getY();client.player.setPos(eye.x,eye.y-eyeOffset,eye.z);
         client.player.lookAt(EntityAnchorArgument.Anchor.EYES,target);

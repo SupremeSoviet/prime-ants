@@ -79,11 +79,13 @@ public final class BroodPile extends BlockEntity {
     void serverTick(ServerLevel server) {
         if (queenId == null || plan == null || !ownedBy(queenId, plan)) return;
         loadedTicks++;
-        String habitat = plan.nurseryProblem(server, queenId);
+        var owner = server.getEntity(queenId);
+        boolean operational = owner instanceof LasiusNigerEntity q && q.founding().lifecycle() != dev.primeants.founding.QueenFounding.Lifecycle.CLAUSTRAL;
+        String habitat = plan.nurseryProblem(server, queenId, operational);
         if (habitat != null) { condition = habitat; setChanged(); return; }
         var actor = server.getEntity(queenId);
         LasiusNigerEntity queen = actor instanceof LasiusNigerEntity q && q.isAlive() && !q.isRemoved() ? q : null;
-        boolean care = queen != null && !queen.isNoAi() && queen.founding().sealed()
+        boolean care = queen != null && !queen.isNoAi() && queen.founding().ready()
                 && queen.position().distanceToSqr(Vec3.atBottomCenterOf(getBlockPos())) <= CARE_REACH_SQUARED;
         condition = care ? "cared" : "caregiver_absent_or_out_of_reach";
         boolean visual = false;

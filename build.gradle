@@ -58,7 +58,7 @@ def captureRunId = java.util.UUID.randomUUID().toString()
 def captureStart = System.currentTimeMillis()
 def currentModelReport = file("build/test-results/client-model/${capturePrefix}-model.xml")
 def captureRequest = [run_id:captureRunId, capture_prefix:capturePrefix, started_epoch_ms:captureStart,
-                      scenario:'brood', capture_directory:file('docs/screenshots').absolutePath,
+                      scenario:'foraging', capture_directory:file('docs/screenshots').absolutePath,
                       model_report:currentModelReport.absolutePath,
                       provenance:file("docs/screenshots/${capturePrefix}-provenance.json").absolutePath]
 loom.runs.named('clientGameTest') {
@@ -90,6 +90,29 @@ tasks.register('inspectAntBaselineProfiles', JavaExec) {
     systemProperty 'prime_ants.runId', 'baseline-profile-inspection'
 }
 tasks.named('check') { dependsOn tasks.named('verifyAntModel'), tasks.named('testClientEvidenceValidator') }
+tasks.register('verifyNestCacheAssets') {
+    doLast {
+        def root=file('src/main/resources/assets')
+        def atlas=new groovy.json.JsonSlurper().parse(new File(root,'minecraft/atlases/blocks.json'))
+        def aliases=atlas.sources.collectEntries{[(it.sprite):it.resource]}
+        if(atlas.sources.size()!=3 || !atlas.sources.every{it.type=='minecraft:single' && it.sprite.startsWith('prime_ants:block/cache_')}) throw new GradleException('Cache block atlas aliases incomplete')
+        def parts=new groovy.json.JsonSlurper().parse(new File(root,'prime_ants/blockstates/nest_cache.json')).multipart
+        if(parts.size()!=18)throw new GradleException('Cache slot projection incomplete')
+        def clientJar=fileTree('.gradle/loom-cache/minecraftMaven/net/minecraft').matching{include 'minecraft-clientOnly-*/26.3/*-26.3.jar'}.singleFile
+        new java.util.zip.ZipFile(clientJar).withCloseable{jar->
+            parts.each{part->
+                def path=part.apply.model.replace('prime_ants:','prime_ants/models/')+'.json'
+                def model=new groovy.json.JsonSlurper().parse(new File(root,path))
+                if(!aliases.containsKey(model.textures.food) || model.textures.particle!=model.textures.food)throw new GradleException('Cache model must resolve food and particles from the block atlas')
+                def png='assets/minecraft/textures/'+aliases[model.textures.food].replace('minecraft:','')+'.png'
+                def entry=jar.getEntry(png);if(entry==null)throw new GradleException('Missing pinned vanilla food sprite '+png)
+                def img=javax.imageio.ImageIO.read(jar.getInputStream(entry));if(img.width!=16 || img.height!=16)throw new GradleException('Cache sprite must be 16x16')
+            }
+        }
+        logger.lifecycle('Verified 18 cache projections, three block-atlas aliases and vanilla 16x16 sprites')
+    }
+}
+tasks.named('check') {dependsOn tasks.named('verifyNestCacheAssets')}
 tasks.named('runClientGameTest') {
     doFirst {
         if (!(capturePrefix ==~ /[a-z0-9][a-z0-9-]*/)) throw new GradleException('Unsafe capture prefix')
@@ -99,6 +122,9 @@ tasks.named('runClientGameTest') {
         file("build/test-results/client-model/${capturePrefix}-run-request.json").text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(captureRequest))
     }
     doLast {
+        def currentLog=file('build/run/clientGameTest/logs/latest.log').getText('UTF-8')
+        if(currentLog.contains('Rejecting block model prime_ants:block/cache_') || currentLog.contains('Missing texture references in model prime_ants:block/cache_'))
+            throw new GradleException('Current cache visuals contain an atlas/model failure')
         def result = validateClientEvidence(captureRequest)
         file("build/test-results/client-model/${capturePrefix}-validation.json").text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(result))
         logger.lifecycle("Verified current run ${captureRunId}: ${result.model_cases} named model cases, ${result.captures} fresh captures")
@@ -143,6 +169,7 @@ tasks.named('runGameTest') {
             }
         }
         ['founding_excavates_transports_walks_and_seals_over_real_ticks',
+         'transport_finishes_vertical_column_before_leaving_exposed_pending_soil',
          'side_wall_opened_during_sealing_prevents_settlement','placed_plug_removed_before_settlement_prevents_settlement',
          'chamber_obstructed_during_sealing_prevents_settlement','invalid_settled_enclosure_stays_unready_through_save_load',
          'settled_readiness_requires_queen_inside',
@@ -157,6 +184,11 @@ tasks.named('runGameTest') {
         if (broodNames.size() != 12) throw new GradleException('Brood test discovery incomplete')
         broodNames.each { name ->
             if (!cases.any { it.@name.text() == "prime_ants_test:brood_game_test_${name}" }) throw new GradleException("Missing brood test: ${name}")
+        }
+        def workerNames = (file('src/gametest/java/dev/primeants/gametest/WorkerForagingGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect { it[1].replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase() }
+        if (workerNames.size() != 11) throw new GradleException('Worker foraging discovery incomplete')
+        workerNames.each { name ->
+            if (!cases.any { it.@name.text() == "prime_ants_test:worker_foraging_game_test_${name}" }) throw new GradleException("Missing worker test: ${name}")
         }
         if (report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] }) {
             throw new GradleException('Server GameTest report contains a failure or skipped test')

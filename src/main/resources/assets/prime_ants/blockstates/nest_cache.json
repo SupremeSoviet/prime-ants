@@ -1,0 +1,148 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "slot0": "1"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_apple_0"
+      }
+    },
+    {
+      "when": {
+        "slot0": "2"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_chicken_0"
+      }
+    },
+    {
+      "when": {
+        "slot0": "3"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_sweet_berries_0"
+      }
+    },
+    {
+      "when": {
+        "slot1": "1"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_apple_1"
+      }
+    },
+    {
+      "when": {
+        "slot1": "2"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_chicken_1"
+      }
+    },
+    {
+      "when": {
+        "slot1": "3"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_sweet_berries_1"
+      }
+    },
+    {
+      "when": {
+        "slot2": "1"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_apple_2"
+      }
+    },
+    {
+      "when": {
+        "slot2": "2"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_chicken_2"
+      }
+    },
+    {
+      "when": {
+        "slot2": "3"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_sweet_berries_2"
+      }
+    },
+    {
+      "when": {
+        "slot3": "1"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_apple_3"
+      }
+    },
+    {
+      "when": {
+        "slot3": "2"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_chicken_3"
+      }
+    },
+    {
+      "when": {
+        "slot3": "3"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_sweet_berries_3"
+      }
+    },
+    {
+      "when": {
+        "slot4": "1"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_apple_4"
+      }
+    },
+    {
+      "when": {
+        "slot4": "2"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_chicken_4"
+      }
+    },
+    {
+      "when": {
+        "slot4": "3"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_sweet_berries_4"
+      }
+    },
+    {
+      "when": {
+        "slot5": "1"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_apple_5"
+      }
+    },
+    {
+      "when": {
+        "slot5": "2"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_chicken_5"
+      }
+    },
+    {
+      "when": {
+        "slot5": "3"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_sweet_berries_5"
+      }
+    }
+  ]
+}

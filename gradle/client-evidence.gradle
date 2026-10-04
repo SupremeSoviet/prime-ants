@@ -36,7 +36,9 @@ ext.validateClientEvidence = { Map request ->
     require(capture.status == 'success' && capture.completed_utc, 'Capture did not complete successfully')
     require(Instant.parse(capture.started_utc).toEpochMilli() >= request.started_epoch_ms, 'Stale capture start')
     long completed = Instant.parse(capture.completed_utc).toEpochMilli()
-    def frames = capture.observations.findAll { it.event == 'brood_frame' }
+    boolean foraging = request.scenario == 'foraging'
+    def frames = capture.observations.findAll { it.event == (foraging ? 'foraging_frame' : 'brood_frame') }
+    if (!foraging) {
     require(request.scenario == 'brood', 'Expected first-clutch capture contract')
     require(frames.size() == 5 && frames.collect { it.stage } == ['eggs','larvae','cocoons','callows','mound'], 'Missing captures')
     require(capture.queen_uuid && frames.every { it.uuid == capture.queen_uuid && it.form == 'queen' }, 'Queen identity changed')
@@ -66,12 +68,44 @@ ext.validateClientEvidence = { Map request ->
                     && frame.brood.isEmpty() && frame.consumed_brood_ids.toSet() == broodIds && frame.body_reserve == 0, 'Emergence ownership mismatch')
         }
     }
+    } else {
+        require(frames.size()==4 && frames.collect{it.stage}==['traffic','sugar','protein','cache'], 'Missing physical foraging captures')
+        require(capture.queen_uuid && capture.food_source && capture.staged_terrain_edits==0 && capture.ant_teleports==0 && !capture.ai_disabled && !capture.animation_poses_forced
+                && capture.injected_brood==0 && capture.injected_food==0 && capture.summoned_workers==0 && capture.reserve_edits==0, 'Staged foraging evidence')
+        require(capture.brood_multiplier>0 && capture.stage_ticks==Math.ceil(12000/capture.brood_multiplier) && capture.callow_ticks==Math.ceil(4800/capture.brood_multiplier)
+                && capture.initial_body_reserve==39000 && capture.egg_cost==1000 && capture.larva_cost==12000, 'Wrong foraging lineage timing or reserve budget')
+        def sources=capture.observations.findAll{it.source_uuid}
+        require(sources.size()==2 && sources.collect{it.source_uuid}.toSet().size()==2 && sources.collect{it.item}.toSet()==['minecraft:apple','minecraft:chicken'].toSet()
+                && sources.every{it.count==1 && it.method=='creative inventory -> ordinary client DROP_ITEM packet'}, 'Food must come from disclosed ordinary player drops')
+        require(capture.final.ready && !capture.final.sealed && capture.final.lifecycle=='OPEN' && capture.final.owned_openings==2
+                && capture.final.live_plugs==0 && capture.final.mound_blocks==24 && capture.final.worker_soil==0 && capture.final.world_food==0
+                && capture.final.cache_contents.size()==2 && capture.final.cache_capacity==6
+                && capture.final.cache_contents.collect{it.item}.toSet()==['minecraft:apple','minecraft:chicken'].toSet()
+                && capture.final.cache_contents.every{it.count==1}, 'Incomplete physical operational nest or food cache')
+        frames.eachWithIndex { frame,n ->
+            require(frame.uuid==capture.queen_uuid && frame.form=='queen' && frame.phase=='SETTLED' && frame.lifecycle=='OPEN' && frame.ready && !frame.sealed
+                    && frame.owned_openings==2 && frame.live_plugs==0 && frame.mound_blocks==24 && frame.worker_soil==0 && frame.underground_grass==0, 'Invalid recorded opening or physical soil balance')
+            require(frame.live_worker_count==3 && frame.workers.size()==3 && frame.live_adult_count==4 && frame.workers.collect{it.uuid}.toSet().size()==3
+                    && frame.consumed_brood_ids.size()==3 && frame.workers.collect{it.brood_id}.toSet()==frame.consumed_brood_ids.toSet()
+                    && frame.workers.every{it.queen_id==capture.queen_uuid && it.alive && it.callow_visual==1000} && frame.brood.isEmpty() && frame.body_reserve==0, 'Forager must belong to actual first generation')
+            require(frame.world_food + frame.workers.findAll{it.cargo_item in ['minecraft:apple','minecraft:sweet_berries','minecraft:chicken']}.sum(0){it.cargo_count}
+                    + frame.cache_contents.sum(0){it.count} == [0,1,2,2][n], 'Actual world/cargo/cache food conservation mismatch')
+            if(n in [1,2]) {
+                def item=n==1?'minecraft:apple':'minecraft:chicken'
+                require(frame.workers.any{it.uuid==frame.worker_claim && it.cargo_item==item && it.cargo_count==1 && it.task=='RETURN'}, 'Missing physical carried food')
+                require(frame.screenshot_render_extractions.any{it.uuid==frame.worker_claim && it.form=='worker' && it.carried_item==item && it.carried_soil_rendered && it.client_carried_soil_units==1}, 'Missing production food render')
+            }
+            if(n==3)require(frame.cache_contents.collect{it.item}.toSet()==['minecraft:apple','minecraft:chicken'].toSet() && frame.cache_contents.every{it.count==1}, 'Missing physical sugary/protein inventory')
+        }
+    }
     def images = []
     frames.each { frame ->
         require(frame.run_id == request.run_id, 'Mismatched frame run ID')
         require(frame.ai_enabled && frame.normal_physics && frame.work_multiplier == capture.work_multiplier, 'Missing production state/timing')
         require(frame.removed == frame.carried + frame.deposited + frame.released + frame.plugged, 'Soil balance mismatch')
-        if (frame.stage != 'mound') require(frame.screenshot_render_extractions.any { it.uuid == capture.queen_uuid && it.form == 'queen' }, 'Missing production queen render')
+        if (foraging) {
+            require(frame.screenshot_render_extractions.any{it.uuid==(frame.stage=='cache'?capture.queen_uuid:frame.worker_claim)}, 'Missing production colony/worker render')
+        } else if (frame.stage != 'mound') require(frame.screenshot_render_extractions.any { it.uuid == capture.queen_uuid && it.form == 'queen' }, 'Missing production queen render')
         if (frame.stage == 'callows') require(frame.workers.every { it.callow_visual < 1000 }
                 && frame.screenshot_render_extractions.findAll { it.form == 'worker' && it.callow_visual < 1000 }.collect { it.uuid }.toSet() == frame.workers.collect { it.uuid }.toSet(), 'Missing pale worker renders')
         File png = file(frame.image)
@@ -159,6 +193,56 @@ tasks.register('testClientEvidenceValidator') {
 }
 
 // Offline diagnosis of a preserved attempt; never launches Minecraft or changes its run ID.
+tasks.register('testForagingEvidenceValidator') {
+    dependsOn tasks.named('testClientEvidenceValidator')
+    doLast {
+        File dir=layout.buildDirectory.dir('foraging-validator-fixtures').get().asFile;dir.mkdirs()
+        long started=System.currentTimeMillis()-5000
+        def request=[run_id:'fixture-foraging',capture_prefix:'fixture',started_epoch_ms:started,scenario:'foraging',capture_directory:dir.absolutePath,
+                     model_report:new File(dir,'model.xml').absolutePath,provenance:new File(dir,'capture.json').absolutePath]
+        file(request.model_report).text=file('build/test-results/client-model/headless.xml').text.replaceFirst(/name="run_id" value="[^"]*"/,'name="run_id" value="fixture-foraging"')
+        def capture=[run_id:request.run_id,capture_prefix:'fixture',entrypoint:'dev.primeants.gametest.AntCaptureTest',status:'success',started_utc:Instant.ofEpochMilli(started).toString(),queen_uuid:'queen',
+                     food_source:'ordinary drops',staged_terrain_edits:0,ant_teleports:0,ai_disabled:false,animation_poses_forced:false,injected_brood:0,injected_food:0,summoned_workers:0,reserve_edits:0,
+                     work_multiplier:20,brood_multiplier:100,stage_ticks:120,callow_ticks:48,initial_body_reserve:39000,egg_cost:1000,larva_cost:12000,observations:[]]
+        ['traffic','sugar','protein','cache'].eachWithIndex {stage,n->
+            File png=new File(dir,"fixture-${stage}.png");ImageIO.write(new java.awt.image.BufferedImage(1600,1000,java.awt.image.BufferedImage.TYPE_INT_RGB),'png',png)
+            def item = n == 1 ? 'minecraft:apple' : (n == 2 ? 'minecraft:chicken' : 'minecraft:air')
+            def workers=(0..2).collect{[uuid:"worker-${it}".toString(),brood_id:"brood-${it}".toString(),queen_id:'queen',alive:true,callow_visual:1000,
+                                       cargo_item:(it == 0 ? item : 'minecraft:air'),cargo_count:(it == 0 && n in [1,2] ? 1 : 0),task:(it == 0 && n in [1,2] ? 'RETURN' : 'NURSERY')]}
+            def contents = n == 2 ? [[item:'minecraft:apple',count:1]] : (n == 3 ? [[item:'minecraft:apple',count:1],[item:'minecraft:chicken',count:1]] : [])
+            def frame=[event:'foraging_frame',stage:stage,uuid:'queen',form:'queen',phase:'SETTLED',lifecycle:'OPEN',ready:true,sealed:false,owned_openings:2,live_plugs:0,mound_blocks:24,worker_soil:0,underground_grass:0,
+                       live_worker_count:3,live_adult_count:4,workers:workers,consumed_brood_ids:['brood-0','brood-1','brood-2'],brood:[],body_reserve:0,world_food:0,cache_capacity:6,cache_contents:contents,worker_claim:'worker-0',
+                       ai_enabled:true,normal_physics:true,work_multiplier:20,removed:24,carried:0,deposited:22,released:0,plugged:2,run_id:request.run_id,
+                       image:png.absolutePath,modified_epoch_ms:png.lastModified(),capture_started_utc:Instant.ofEpochMilli(started).toString(),width:1600,height:1000,
+                       sha256:MessageDigest.getInstance('SHA-256').digest(png.bytes).encodeHex().toString(),screenshot_render_extractions:[[uuid:'queen',form:'queen'],[uuid:'worker-0',form:'worker',carried_item:item,carried_soil_rendered:(n in [1,2]),client_carried_soil_units:(n in [1,2] ? 1 : 0)]]]
+            capture.observations.add(frame)
+        }
+        ['minecraft:apple','minecraft:chicken'].eachWithIndex {item,n->capture.observations.add([source_uuid:"drop-${n}".toString(),item:item,count:1,method:'creative inventory -> ordinary client DROP_ITEM packet'])}
+        capture.final=capture.observations[3];capture.completed_utc=Instant.now().toString()
+        def save={c->file(request.provenance).text=JsonOutput.toJson(c)};save(capture)
+        def results=[[fixture:'valid-foraging',result:validateClientEvidence(request).status]]
+        def reject={name,mutate->
+            def altered=new JsonSlurper().parseText(JsonOutput.toJson(capture));mutate(altered);save(altered)
+            try{validateClientEvidence(request);throw new IllegalStateException("Accepted invalid foraging fixture: ${name}")}
+            catch(GradleException expected){results.add([fixture:name,result:'rejected',reason:expected.message]);logger.lifecycle("Rejected ${name}: ${expected.message}")}
+        }
+        reject('unrecorded-opening'){it.final.owned_openings=0}
+        reject('closed-history-is-not-current-opening'){it.final.lifecycle='CLAUSTRAL'}
+        reject('soil-duplication'){it.final.mound_blocks=26}
+        reject('food-duplication'){it.final.cache_contents.add([item:'minecraft:apple',count:1])}
+        reject('remote-food-stock'){it.observations.removeAll{it.source_uuid}}
+        reject('forager-is-callow'){it.observations[1].workers[0].callow_visual=10}
+        reject('unrendered-food'){it.observations[1].screenshot_render_extractions[1].carried_soil_rendered=false}
+        reject('wrong-rendered-food'){it.observations[2].screenshot_render_extractions[1].carried_item='minecraft:dirt'}
+        reject('foreign-worker'){it.observations[1].workers[0].queen_id='foreign'}
+        reject('missing-protein-cache'){it.final.cache_contents[1].item='minecraft:apple'}
+        reject('injected-cache'){it.injected_food=2}
+        reject('foraging-stale-image'){it.observations[1].modified_epoch_ms=0}
+        new File(dir,'results.json').text=JsonOutput.prettyPrint(JsonOutput.toJson(results))
+    }
+}
+tasks.named('check') {dependsOn tasks.named('testForagingEvidenceValidator')}
+
 tasks.register('validateClientEvidenceFile') {
     doLast {
         def requestFile = file(providers.gradleProperty('primeAntsEvidenceRequest').get())

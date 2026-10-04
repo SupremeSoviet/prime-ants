@@ -122,6 +122,18 @@ public final class QueenFoundingGameTest {
     @GameTest(maxTicks=30000, structure="prime_ants_test:idle_ground")
     public void sideWallOpenedDuringSealingPreventsSettlement(GameTestHelper c) { sealingIntervention(c, false); }
     @GameTest(maxTicks=30000, structure="prime_ants_test:idle_ground")
+    public void transportFinishesVerticalColumnBeforeLeavingExposedPendingSoil(GameTestHelper c) {
+        terrain(c,Blocks.DIRT.defaultBlockState(),true);var queen=egg(c);boolean[] transported={false};
+        c.onEachTick(()->{
+            var f=queen.founding();c.assertTrue(f.phase()!=QueenFounding.Phase.FAILED,"Physical column job: "+f.reason());balance(c,queen);
+            if(f.phase()==QueenFounding.Phase.TRANSPORTING&&f.removed()>0&&f.removed()<f.plan().tasks().size()) {
+                transported[0]=true;var previous=f.plan().tasks().get(f.removed()-1);var next=f.plan().tasks().get(f.removed());
+                c.assertTrue(!(previous.getX()==next.getX()&&previous.getZ()==next.getZ()&&previous.getY()==next.getY()+1),"Do not leave a half-excavated vertical column exposing a pending native target during a long soil trip");
+            }
+            if(f.sealed()) {c.assertTrue(transported[0]&&f.removed()==24&&f.deposited()==22&&f.plugged()==2&&f.released()==0,"Same physical 24=22+2 after complete-column transport");PrimeAnts.LOGGER.info("T08 COLUMN founding loadedTicks={} cadence={} multiplier={} soil=24/22/2",f.loadedTicks(),QueenFounding.cadence(),QueenFounding.multiplier());c.succeed();}
+        });
+    }
+    @GameTest(maxTicks=30000, structure="prime_ants_test:idle_ground")
     public void placedPlugRemovedBeforeSettlementPreventsSettlement(GameTestHelper c) { sealingIntervention(c, true); }
     private void sealingIntervention(GameTestHelper c, boolean removePlug) {
         terrain(c, Blocks.DIRT.defaultBlockState(), true); var queen = egg(c);

@@ -1,0 +1,19 @@
+{
+  "sources": [
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:item/apple",
+      "sprite": "prime_ants:block/cache_apple"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:item/chicken",
+      "sprite": "prime_ants:block/cache_chicken"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:item/sweet_berries",
+      "sprite": "prime_ants:block/cache_sweet_berries"
+    }
+  ]
+}

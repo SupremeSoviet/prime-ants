@@ -35,6 +35,7 @@ public final class AntRenderRecorder {
         frame.put("walk_animation_speed", state.walkAnimationSpeed);
         frame.put("visual_age_ticks", state.ageInTicks);
         frame.put("moving", state.moving);
+        frame.put("carried_item", net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(ant.getMainHandItem().getItem()).toString());
         frame.put("carried_soil_rendered", !state.carriedSoil.isEmpty());
         frame.put("client_carried_soil_units", ant.getMainHandItem().getCount());
         frame.put("partial_ticks", partial);

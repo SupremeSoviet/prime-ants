@@ -29,6 +29,18 @@ public final class QueenFounding {
     private int progress, deposited, released, plugged, cooldown, stalled, converted;
     private long loadedTicks;
     private String reason = "not_requested";
+    public enum Lifecycle { CLAUSTRAL, OPENING, OPEN }
+    private Lifecycle lifecycle = Lifecycle.CLAUSTRAL;
+    private java.util.UUID workerClaim;
+    public Lifecycle lifecycle() { return lifecycle; }
+    public java.util.UUID workerClaim() { return workerClaim; }
+    public boolean ready() { return phase == Phase.SETTLED && queen.level() instanceof ServerLevel level && enclosureProblem(level, lifecycle != Lifecycle.CLAUSTRAL) == null; }
+    public boolean claimedBy(LasiusNigerEntity worker) { return worker.getUUID().equals(workerClaim) && queen.getUUID().equals(worker.queenId()); }
+    public void releaseWorker(LasiusNigerEntity worker) { if (claimedBy(worker)) workerClaim = null; }
+    public void opened() {
+        if (phase == Phase.SETTLED && plan != null && queen.level() instanceof ServerLevel level
+                && plan.plugs().stream().allMatch(p -> ColonyPlugs.get(level).opened(level,p,queen.getUUID()))) lifecycle = Lifecycle.OPEN;
+    }
     public QueenFounding(LasiusNigerEntity queen) { this.queen = queen; }
     public static double multiplier() { return Double.parseDouble(System.getProperty("prime_ants.foundingWorkMultiplier", "1")); }
     public static int cadence() { return (int)Math.max(1, Math.min(Integer.MAX_VALUE, new SimulationTimeScale(multiplier()).ticksForGameDays(BASE_WORK_TICKS / 24000.0))); }
@@ -50,8 +62,12 @@ public final class QueenFounding {
             && enclosureProblem(level) == null; }
     /** Phase-independent physical predicate, shared by completion and readiness. Placement counters are history. */
     private String enclosureProblem(ServerLevel level) {
+        return enclosureProblem(level, false);
+    }
+    private String enclosureProblem(ServerLevel level, boolean operational) {
         if (plan == null) return "enclosure_plan_missing";
-        String habitat = plan.nurseryProblem(level, queen.getUUID());
+        if (operational && lifecycle == Lifecycle.OPEN && plan.plugs().stream().anyMatch(p -> !ColonyPlugs.get(level).opened(level,p,queen.getUUID()))) return "enclosure_operational_opening_incomplete";
+        String habitat = plan.nurseryProblem(level, queen.getUUID(), operational);
         if (habitat != null) return habitat;
         BlockPos a = plan.at(3, -1, -2), b = plan.at(5, 1, -1);
         AABB interior = new AABB(Math.min(a.getX(), b.getX()), a.getY(), Math.min(a.getZ(), b.getZ()),
@@ -63,8 +79,8 @@ public final class QueenFounding {
         return null;
     }
     private String settledReason(ServerLevel level) {
-        String problem = enclosureProblem(level);
-        return problem == null ? "settled_throat_sealed" : "settled_not_ready_" + problem;
+        String problem = enclosureProblem(level, lifecycle != Lifecycle.CLAUSTRAL);
+        return problem == null ? (lifecycle == Lifecycle.CLAUSTRAL ? (reason.startsWith("settled_opening_refused") ? reason : "settled_throat_sealed") : "operational_" + lifecycle.name().toLowerCase()) : "settled_not_ready_" + problem;
     }
     public boolean ownsMovement() { return phase != Phase.NONE && phase != Phase.FAILED && phase != Phase.DEAD; }
     public void request() { if (phase == Phase.NONE) { phase = Phase.SEEKING; reason = "seeking_verified_natural_soil"; } }
@@ -84,6 +100,25 @@ public final class QueenFounding {
                 PrimeAnts.LOGGER.info("Founding readiness queen={} phase={} reason={}", queen.getUUID(), phase, reason);
             }
             if (sealed()) queen.prepareNursery(level, plan);
+            if (workerClaim == null && ready()) {
+                var workers = level.getEntitiesOfClass(LasiusNigerEntity.class, new AABB(plan.chamber()).inflate(4),
+                        w -> w.isAlive() && !w.isRemoved() && !w.isCallow() && !w.isNoAi() && queen.getUUID().equals(w.queenId())
+                                && plan.chamber().equals(w.nurseryHome()));
+                if (!workers.isEmpty()) {
+                    // Prefer a free side-row worker over the central worker boxed in by the two nurses.
+                    // This is a physical assignment choice among living adults, never a replacement spawn.
+                    var worker = workers.stream().min(java.util.Comparator.<LasiusNigerEntity>comparingDouble(w -> {
+                        Vec3 delta = w.position().subtract(Vec3.atBottomCenterOf(plan.chamber()));
+                        Direction side = plan.direction().getClockWise();
+                        return -Math.abs(delta.x * side.getStepX() + delta.z * side.getStepZ());
+                    }).thenComparing(w -> w.getUUID().toString())).orElseThrow();
+                    // Closed legacy nests without placement records fail closed; never infer ownership from dirt.
+                    if (lifecycle != Lifecycle.CLAUSTRAL || plan.plugs().stream().allMatch(p -> ColonyPlugs.get(level).owned(level,p,queen.getUUID()))) {
+                        workerClaim = worker.getUUID(); if (lifecycle == Lifecycle.CLAUSTRAL) lifecycle = Lifecycle.OPENING;
+                        worker.workerTasks().assign(plan);
+                    } else reason = "settled_opening_refused_plug_ownership_missing_or_revoked";
+                }
+            }
             return;
         }
         loadedTicks++;
@@ -173,6 +208,18 @@ public final class QueenFounding {
     }
     private void excavate(ServerLevel level) {
         if (progress >= plan.tasks().size() || progress >= NestPlan.HARD_CAP) { phase(Phase.ENTERING); return; }
+        // Keep enough mandible capacity to finish this vertical column before a long outside trip.
+        // Otherwise its exposed pending dirt can naturally regrow grass and correctly lose origin permission.
+        // The final two recovered units still belong to sealing, not exterior deposition.
+        if (carried() > 0 && progress < plan.tasks().size() - 2) {
+            BlockPos top = plan.tasks().get(progress); int column = 1;
+            while (progress + column < plan.tasks().size() - 2) {
+                BlockPos p = plan.tasks().get(progress + column);
+                if (p.getX() != top.getX() || p.getZ() != top.getZ()) break;
+                column++;
+            }
+            if (carried() + column > CARRY_CAPACITY) { phase(Phase.TRANSPORTING); return; }
+        }
         BlockPos target = plan.tasks().get(progress);
         if (!NaturalSoil.get(level).eligible(level, target) || !level.getBlockState(target).equals(plan.expected().get(progress))) {
             fail("planned_soil_replaced_or_origin_revoked_at_" + target); return;
@@ -226,6 +273,7 @@ public final class QueenFounding {
                     || !level.getEntities(queen, new AABB(p)).isEmpty() || queen.getBoundingBox().intersects(new AABB(p))
                     || queen.position().distanceToSqr(Vec3.atCenterOf(p)) > 5.0) { fail("plug_revalidation_failed"); return; }
             if (!level.setBlock(p, Blocks.DIRT.defaultBlockState(), 3)) { fail("plug_placement_failed"); return; }
+            ColonyPlugs.get(level).placed(p, queen.getUUID());
             carry(carried() - 1); plugged++; cooldown = cadence(); stalled = 0;
             return;
         }
@@ -260,6 +308,7 @@ public final class QueenFounding {
         phase = Phase.DEAD; reason = "queen_died_unfinished_terrain_retained";
     }
     public void save(ValueOutput out) {
+        out.putString("Lifecycle", lifecycle.name()); if (workerClaim != null) out.putString("WorkerClaim",workerClaim.toString());
         out.putString("Phase", phase.name()); out.putString("Reason", reason());
         out.putInt("Progress", progress); out.putInt("Deposited", deposited); out.putInt("Released", released); out.putInt("Plugged", plugged);
         out.putInt("Cooldown", cooldown); out.putInt("Stalled", stalled); out.putLong("LoadedTicks", loadedTicks);
@@ -271,6 +320,8 @@ public final class QueenFounding {
         // Mainhand soil uses vanilla Mob equipment persistence and synchronization.
     }
     public void load(ValueInput in) {
+        lifecycle = Lifecycle.valueOf(in.getStringOr("Lifecycle","CLAUSTRAL"));
+        workerClaim = in.getString("WorkerClaim").map(java.util.UUID::fromString).orElse(null);
         try { phase = Phase.valueOf(in.getStringOr("Phase", "NONE")); } catch (IllegalArgumentException e) { phase = Phase.FAILED; }
         reason = in.getStringOr("Reason", "restored"); progress = in.getIntOr("Progress", 0);
         deposited = in.getIntOr("Deposited", 0); released = in.getIntOr("Released", 0); plugged = in.getIntOr("Plugged", 0);

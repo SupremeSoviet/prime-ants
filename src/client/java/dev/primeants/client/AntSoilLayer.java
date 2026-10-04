@@ -12,7 +12,9 @@ public final class AntSoilLayer extends RenderLayer<AntRenderState, AntModel> {
         pose.pushPose();
         getParentModel().root().getChild("ant").translateAndRotate(pose);
         getParentModel().root().getChild("ant").getChild("head").translateAndRotate(pose);
-        pose.translate(0, 0, -0.72F); pose.scale(0.75F, 0.75F, 0.75F);
+        // Head-local jaw tips: queen 12/2+7 raw units, worker 7/2+2 raw units.
+        pose.translate(0, 1.2F / 16, state.queen ? -0.72F : -0.40F);
+        float size = state.queen ? 0.75F : 0.60F; pose.scale(size, size, size);
         state.carriedSoil.submit(pose, collector, light, OverlayTexture.NO_OVERLAY, state.outlineColor);
         pose.popPose();
     }

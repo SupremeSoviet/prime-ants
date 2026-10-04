@@ -172,3 +172,17 @@ The T04 contract is one walking frame per form/view; the prior 48-frame/full-cyc
 `t07-a4` is the accepted current-run sequence: [eggs](t07-a4-eggs.png), [larvae](t07-a4-larvae.png), [cocoons](t07-a4-cocoons.png), [pale workers](t07-a4-callows.png), [mound](t07-a4-mound.png). Brood 100x/founding 20x; spectator with disclosed night vision. Captions/provenance preserve identities, loaded ticks, live counts and hashes. No injection/staging or paused AI. A1 failed site selection; A2 remains preserved rejected evidence for grass floor/foliage view, despite its genuine biological sequence.
 
 A3 is also preserved as a successful earlier revision; A4 follows the final zero-reserve guard.
+
+
+## T08 dropped-item foraging (2026-10-05)
+
+A1 stopped during protected founding; A2 stopped before an egg. Their failure provenance is preserved; neither produced PNGs. A3 passed the physical path but is visually provisional/rejected. A4 is the final four-frame set. All scenes use one queen egg, production AI/physics, ordinary player food drops, observer night vision, brood 100x and founding 20x; defaults remain 1.
+
+- [t08-a3-traffic.png](t08-a3-traffic.png) ? Mature brood worker crossing the colony opening beside its real soil mound; PROVISIONAL; rejected for camera/cache-model defects.
+- [t08-a3-sugar.png](t08-a3-sugar.png) ? Forager carrying the ordinary player-dropped apple unit; PROVISIONAL; rejected for camera/cache-model defects.
+- [t08-a3-protein.png](t08-a3-protein.png) ? Forager carrying the ordinary player-dropped raw chicken unit; PROVISIONAL; rejected for camera/cache-model defects.
+- [t08-a3-cache.png](t08-a3-cache.png) ? Canonical food cache inside the nest with its queen and genuine workers; PROVISIONAL; rejected for camera/cache-model defects.
+- [t08-a4-traffic.png](t08-a4-traffic.png) ? Mature brood worker crossing the colony opening beside its real soil mound; Final current-run production capture.
+- [t08-a4-sugar.png](t08-a4-sugar.png) ? Forager carrying the ordinary player-dropped apple unit; Final current-run production capture.
+- [t08-a4-protein.png](t08-a4-protein.png) ? Forager carrying the ordinary player-dropped raw chicken unit; Final current-run production capture.
+- [t08-a4-cache.png](t08-a4-cache.png) ? Canonical food cache inside the nest with its queen and genuine workers; Final current-run production capture.

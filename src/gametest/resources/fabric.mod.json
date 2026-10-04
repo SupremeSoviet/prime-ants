@@ -16,7 +16,8 @@
       "dev.primeants.gametest.BootstrapGameTest",
       "dev.primeants.gametest.AntEntityGameTest",
       "dev.primeants.gametest.QueenFoundingGameTest",
-      "dev.primeants.gametest.BroodGameTest"
+      "dev.primeants.gametest.BroodGameTest",
+      "dev.primeants.gametest.WorkerForagingGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

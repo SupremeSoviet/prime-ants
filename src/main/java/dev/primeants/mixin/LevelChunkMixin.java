@@ -24,6 +24,9 @@ public abstract class LevelChunkMixin {
     // Even a same-state write revokes permission conservatively.
     @Inject(method = "setBlockState", at = @At("HEAD"))
     private void primeAntsRevoke(BlockPos pos, BlockState state, int flags, CallbackInfoReturnable<BlockState> cir) {
-        if (level instanceof ServerLevel server) NaturalSoil.get(server).invalidate(pos);
+        if (level instanceof ServerLevel server) {
+            NaturalSoil.get(server).invalidate(pos);
+            dev.primeants.founding.ColonyPlugs.get(server).invalidate(pos);
+        }
     }
 }

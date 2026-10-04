@@ -40,6 +40,9 @@ public final class LasiusNigerEntity extends PathfinderMob {
     private UUID broodId, queenId;
     private BlockPos nurseryHome;
     private boolean nurseryClaimed;
+    private final dev.primeants.worker.WorkerTasks workerTasks = new dev.primeants.worker.WorkerTasks(this);
+    public dev.primeants.worker.WorkerTasks workerTasks() { return workerTasks; }
+    public BlockPos nurseryHome() { return nurseryHome; }
     private static long initialReserve() {
         return Math.max(0, Math.min(BroodPile.MAX_RESERVE, Long.parseLong(System.getProperty("prime_ants.queenInitialReserve", Long.toString(BroodPile.MAX_RESERVE)))));
     }
@@ -124,9 +127,9 @@ public final class LasiusNigerEntity extends PathfinderMob {
             elapsedAgeTicks++;
             founding.tick((ServerLevel)level());
             if (broodId != null) {
-                getNavigation().stop();
                 if (callowAgeTicks < callowDuration) callowAgeTicks++;
                 entityData.set(CALLOW, (int)Math.min(1000, callowAgeTicks * 1000 / Math.max(1, callowDuration)));
+                workerTasks.tick((ServerLevel)level());
             }
         }
     }
@@ -137,6 +140,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
         output.putString("AntForm", form.serializedName());
         output.putLong("AntElapsedAgeTicks", elapsedAgeTicks);
         founding.save(output.child("Founding"));
+        workerTasks.save(output.child("WorkerTask"));
         output.putLong("QueenBodyReserve", bodyReserve); output.putBoolean("NurseryClaimed", nurseryClaimed);
         if (broodId != null) {
             output.putString("BroodId", broodId.toString()); output.putString("QueenId", queenId.toString());
@@ -155,6 +159,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
         }
         elapsedAgeTicks = Math.max(0, input.getLongOr("AntElapsedAgeTicks", 0));
         founding.load(input.childOrEmpty("Founding"));
+        workerTasks.load(input.childOrEmpty("WorkerTask"));
         bodyReserve = form == AntForm.QUEEN ? Math.max(0, Math.min(BroodPile.MAX_RESERVE, input.getLongOr("QueenBodyReserve", initialReserve()))) : 0;
         nurseryClaimed = input.getBooleanOr("NurseryClaimed", false);
         if (input.getString("BroodId").isPresent()) {
@@ -175,7 +180,9 @@ public final class LasiusNigerEntity extends PathfinderMob {
     }
 
     @Override public void die(DamageSource source) {
-        if (level() instanceof ServerLevel server) founding.die(server);
+        if (level() instanceof ServerLevel server) {
+            if (form == AntForm.QUEEN) founding.die(server); else workerTasks.die(server);
+        }
         super.die(source);
     }
 }

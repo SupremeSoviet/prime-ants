@@ -24,6 +24,11 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
         return List.copyOf(result);
     }
     public BlockPos nursery() { return at(4, 1, -2); }
+    public BlockPos cache() { return at(3, -1, -2); }
+    public static boolean loaded(ServerLevel level, BlockPos p) {
+        return level.getChunkSource().getChunk(p.getX() >> 4, p.getZ() >> 4,
+                net.minecraft.world.level.chunk.status.ChunkStatus.FULL, false) != null;
+    }
     public List<BlockPos> undergroundSurfaces() {
         LinkedHashSet<BlockPos> result = new LinkedHashSet<>();
         for (BlockPos p : tasks) for (Direction d : Direction.values()) {
@@ -94,17 +99,32 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
     }
     /** Live habitat checks shared by founding and brood, even when the queen is absent. */
     public String nurseryProblem(ServerLevel level, java.util.UUID owner) {
+        return nurseryProblem(level, owner, false);
+    }
+    public String nurseryProblem(ServerLevel level, java.util.UUID owner, boolean operational) {
         for (int f : new int[]{2, 6}) for (int s : new int[]{-2, 2}) {
             BlockPos p = at(f, s, -3);
             if (level.getChunkSource().getChunk(p.getX() >> 4, p.getZ() >> 4,
                     net.minecraft.world.level.chunk.status.ChunkStatus.FULL, false) == null) return "enclosure_chunk_unavailable";
         }
-        if (plugs().stream().anyMatch(p -> !level.getBlockState(p).is(net.minecraft.world.level.block.Blocks.DIRT))) return "enclosure_plug_missing";
+        if (plugs().stream().anyMatch(p -> !(operational && ColonyPlugs.get(level).opened(level,p,owner))
+                && !level.getBlockState(p).is(net.minecraft.world.level.block.Blocks.DIRT))) return "enclosure_plug_missing";
+        if (operational) {
+            if (plugs().stream().anyMatch(p -> !ColonyPlugs.get(level).opened(level,p,owner) && !ColonyPlugs.get(level).owned(level,p,owner))) return "enclosure_plug_ownership_revoked";
+            for (int f=0;f<2;f++) if (!loaded(level,at(f,0,-f)) || !walkable(level,at(f,0,-f))) return "enclosure_route_obstructed";
+            if (plugs().stream().allMatch(p -> ColonyPlugs.get(level).opened(level,p,owner)) && !walkable(level,at(2,0,-2))) return "enclosure_route_obstructed";
+            // The recorded plugs are the only new opening. Retain the underground corridor's support/shell too.
+            for (BlockPos p : undergroundSurfaces()) {
+                if (!loaded(level,p)) return "enclosure_chunk_unavailable";
+                if (!level.getBlockState(p).isSolidRender() || !level.getFluidState(p).isEmpty()) return "enclosure_shell_open";
+            }
+        }
         if (!enclosedChamber(level)) return "enclosure_shell_open";
         for (int f = 3; f <= 5; f++) for (int s = -1; s <= 1; s++) {
             BlockPos p = at(f, s, -2);
             boolean owned = p.equals(nursery()) && level.getBlockEntity(p) instanceof dev.primeants.brood.BroodPile pile
                     && pile.ownedBy(owner, this);
+            owned |= p.equals(cache()) && level.getBlockEntity(p) instanceof dev.primeants.worker.NestCache cache && cache.ownedBy(owner, this);
             if ((!level.getBlockState(p).isAir() && !owned) || !level.getBlockState(p.above()).isAir()
                     || !level.getBlockState(p.below()).isSolidRender() || !level.getFluidState(p).isEmpty()
                     || !level.getFluidState(p.below()).isEmpty()) return "enclosure_chamber_obstructed";

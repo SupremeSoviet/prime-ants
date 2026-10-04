@@ -38,6 +38,7 @@ public final class AntRenderer extends MobRenderer<LasiusNigerEntity, AntRenderS
     public void extractRenderState(LasiusNigerEntity entity, AntRenderState state, float partialTicks) {
         super.extractRenderState(entity, state, partialTicks);
         state.callow = entity.callowVisual();
+        state.queen = entity.form() == AntForm.QUEEN;
         itemModelResolver.updateForLiving(state.carriedSoil, entity.getMainHandItem(), net.minecraft.world.item.ItemDisplayContext.GROUND, entity);
         double dx = entity.getX() - entity.xo;
         double dz = entity.getZ() - entity.zo;
