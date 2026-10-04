@@ -10,6 +10,8 @@ import dev.primeants.item.AntItems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.security.MessageDigest;
+import java.util.HexFormat;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -40,10 +42,17 @@ public final class AntCaptureTest implements FabricClientGameTest {
     public static final long SEED = 2026100402L;
     private final List<Map<String, Object>> observations = new ArrayList<>();
     private final Map<String, Object> provenance = new LinkedHashMap<>();
+    private final AntModelGameTest gameplayGeometry = new AntModelGameTest();
+    private final String runId = System.getProperty("prime_ants.runId");
+    private final String prefix = System.getProperty("prime_ants.capturePrefix");
 
     @Override
     public void runTest(ClientGameTestContext context) {
-        provenance.put("caption", "T02 debug entity specimens; colony not implemented");
+        provenance.put("caption", "T03 debug entity specimens; colony not implemented");
+        provenance.put("run_id", runId);
+        provenance.put("capture_prefix", prefix);
+        provenance.put("entrypoint", getClass().getName());
+        provenance.put("status", "running");
         provenance.put("seed", SEED);
         provenance.put("started_utc", Instant.now().toString());
         provenance.put("observations", observations);
@@ -59,6 +68,15 @@ public final class AntCaptureTest implements FabricClientGameTest {
                 }).create()) {
             world.getConnection().waitForChunksRender();
             context.waitForScreen(null);
+            // Read-only T03 failed-world terrain inspection found an existing natural
+            // 13x13 plateau here (same seed). Move only the observer, then revalidate
+            // generated ground in this fresh world; no terrain or ant is moved.
+            provenance.put("observer_ground_probe", List.of(-167.5, 104.0, 34.5));
+            provenance.put("ground_selection_evidence", "T03/14-terrain-diagnosis-r4.json; saved natural terrain, no edits");
+            world.getServer().runCommand("tp @p -167.5 104 34.5");
+            world.getConnection().waitForClientboundPackets();
+            world.getConnection().waitForChunksRender();
+            context.waitTicks(3);
             BlockPos ground = world.getServer().computeOnServer(server -> findGround(world.getConnection().getServerLevel(),
                     world.getConnection().getServerPlayer().blockPosition()));
             provenance.put("selected_existing_ground", List.of(ground.getX(), ground.getY(), ground.getZ()));
@@ -80,67 +98,116 @@ public final class AntCaptureTest implements FabricClientGameTest {
                 return adults.getFirst().getUUID();
             });
             observations.add(observe(world, queen, "created", "production queen egg: client useItemOn -> packet -> ItemStack.useOn -> SpawnEggItem"));
-            BlockPos workerGround = world.getServer().computeOnServer(server -> findGround(world.getConnection().getServerLevel(), ground.offset(8, 0, 0), ground));
-            provenance.put("worker_existing_ground", List.of(workerGround.getX(), workerGround.getY(), workerGround.getZ()));
-            // Ordinary permission-checked operator command, sent through the player's command connection.
-            String summon = String.format(Locale.ROOT, "summon prime_ants:lasius_niger_worker %.2f %.2f %.2f", workerGround.getX() + 0.5, workerGround.getY() + 1.0, workerGround.getZ() + 0.5);
-            context.runOnClient(client -> client.player.connection.sendCommand(summon));
-            world.getConnection().waitForServerboundPackets();
-            UUID worker = world.getServer().computeOnServer(server -> {
-                var adults = world.getConnection().getServerLevel().getEntitiesOfClass(LasiusNigerEntity.class, new AABB(workerGround).inflate(4), ant -> ant.form() == AntForm.WORKER);
-                require(adults.size() == 1, "Operator summon must create one worker");
-                return adults.getFirst().getUUID();
-            });
-            observations.add(observe(world, worker, "created", "ordinary operator /" + summon));
             world.getServer().runCommand("gamemode spectator @p");
-            world.getConnection().waitForClientboundEntityUpdates(AntEntities.WORKER, AntEntities.QUEEN);
+            world.getConnection().waitForClientboundEntityUpdates(AntEntities.QUEEN);
             context.waitTicks(4);
             context.runOnClient(client -> {
                 if (!client.gui.hud.isHidden()) client.gui.hud.toggle();
                 client.options.fov().set(45);
             });
-            capture(context, world, worker, "worker");
             capture(context, world, queen, "queen");
+            UUID worker = createWorker(context, world, ground);
+            world.getConnection().waitForClientboundEntityUpdates(AntEntities.WORKER);
+            capture(context, world, worker, "worker");
             provenance.put("completed_utc", Instant.now().toString());
             provenance.put("status", "success");
+        } catch (Throwable failure) {
+            provenance.put("status", "failed");
+            provenance.put("failure", failure.toString());
+            provenance.put("failed_utc", Instant.now().toString());
+            throw failure;
         } finally {
             try {
                 Path directory = Path.of(System.getProperty("prime_ants.captureDir"));
                 Files.createDirectories(directory);
-                Files.writeString(directory.resolve("t02-capture-provenance.json"), new GsonBuilder().setPrettyPrinting().create().toJson(provenance));
+                Files.writeString(directory.resolve(prefix + "-provenance.json"), new GsonBuilder().setPrettyPrinting().create().toJson(provenance));
+                gameplayGeometry.writeFootTrace(directory.resolve(prefix + "-gameplay-feet.csv"));
             } catch (Exception e) { throw new RuntimeException(e); }
         }
+    }
+
+    private UUID createWorker(ClientGameTestContext context, TestSingleplayerContext world, BlockPos queenGround) {
+        BlockPos workerGround = world.getServer().computeOnServer(server -> findGround(world.getConnection().getServerLevel(), queenGround.offset(8, 0, 0), queenGround));
+        provenance.put("worker_existing_ground", List.of(workerGround.getX(), workerGround.getY(), workerGround.getZ()));
+        // Sequential creation avoids losing a specimen's original open ground while
+        // observing the other. Once created, both specimens keep free production AI.
+        String summon = String.format(Locale.ROOT, "summon prime_ants:lasius_niger_worker %.2f %.2f %.2f", workerGround.getX() + 0.5, workerGround.getY() + 1.0, workerGround.getZ() + 0.5);
+        context.runOnClient(client -> client.player.connection.sendCommand(summon));
+        world.getConnection().waitForServerboundPackets();
+        UUID worker = world.getServer().computeOnServer(server -> {
+            var adults = world.getConnection().getServerLevel().getEntitiesOfClass(LasiusNigerEntity.class, new AABB(workerGround).inflate(4), ant -> ant.form() == AntForm.WORKER);
+            require(adults.size() == 1, "Operator summon must create one worker");
+            return adults.getFirst().getUUID();
+        });
+        observations.add(observe(world, worker, "created", "ordinary operator /" + summon));
+        return worker;
     }
 
     private void capture(ClientGameTestContext context, TestSingleplayerContext world, UUID uuid, String form) {
         Map<String, Object> initial = observe(world, uuid, "before_observation", "autonomous wandering");
         observations.add(initial);
-        for (int frame = 1; frame <= 3; frame++) {
+        for (String view : new String[]{"side", "oblique"}) {
+        float lastPosition = Float.NEGATIVE_INFINITY;
+        for (int frame = 1; frame <= 12; frame++) {
             int waited = 0;
             while (waited < 300) {
-                context.runOnClient(client -> camera(client, uuid, form));
+                context.runOnClient(client -> camera(client, uuid, form, view));
                 context.waitTick();
                 waited++;
+                final float targetPosition = lastPosition + (float)(2 * Math.PI / 2.8 / 8);
                 boolean moving = context.computeOnClient(client -> {
                     LasiusNigerEntity ant = clientAnt(client, uuid);
                     double dx = ant.getX() - ant.xo, dz = ant.getZ() - ant.zo;
-                    return ant.isAlive() && ant.onGround() && dx * dx + dz * dz > 0.000004;
+                    return ant.isAlive() && ant.onGround() && dx * dx + dz * dz > 0.000004
+                            && ant.walkAnimation.speed(1) > 0.02F && ant.walkAnimation.position(1) >= targetPosition;
                 });
-                if (moving) break;
+                boolean unobstructed = moving && world.getServer().computeOnServer(server -> {
+                    Entity ant = world.getConnection().getServerLevel().getEntity(uuid);
+                    BlockPos feet = ant.blockPosition();
+                    for (int x = -1; x <= 1; x++) for (int z = -1; z <= 1; z++) {
+                        BlockPos p = feet.offset(x, 0, z);
+                        if (!ant.level().getBlockState(p).isAir() || !ant.level().getBlockState(p.above()).isAir()
+                                || !ant.level().getBlockState(p.below()).isSolidRender()) return false;
+                    }
+                    return true;
+                });
+                if (unobstructed) break;
                 if (waited % 40 == 0) observations.add(observe(world, uuid, "waiting_for_walk", "AI and physics active"));
             }
-            require(waited < 300, "No autonomous ground walking observed for " + form);
-            context.runOnClient(client -> camera(client, uuid, form));
-            Map<String, Object> observation = observe(world, uuid, "walking_frame_" + frame, "autonomous wandering");
+            require(waited < 300, "No eligible autonomous ground walking on unobstructed 3x3 ground for " + form);
+            context.runOnClient(client -> camera(client, uuid, form, view));
+            Map<String, Object> observation = observe(world, uuid, "walking_frame", "autonomous wandering");
+            observation.put("view", view);
+            observation.put("sequence_position", frame);
+            observation.put("run_id", runId);
+            observation.put("existing_ground_observation_clearance", "3x3 solid ground with two air blocks above; observation selection only");
             observation.put("waited_client_ticks", waited);
-            observation.put("capture_utc", Instant.now().toString());
-            Path image = context.takeScreenshot(TestScreenshotOptions.of(System.getProperty("prime_ants.capturePrefix") + "-" + form + "-walking-" + frame)
-                    .disableCounterPrefix().withSize(1600, 1000)
+            observation.put("capture_started_utc", Instant.now().toString());
+            observations.add(observation); // Preserve partial attempts even if later validation fails.
+            context.runOnClient(client -> AntRenderRecorder.start(uuid));
+            Path image = context.takeScreenshot(TestScreenshotOptions.of(prefix + "-" + form + "-" + view + "-" + frame)
+                    .disableCounterPrefix().withDeltaTicks(1).withSize(1600, 1000)
                     .withDestinationDir(Path.of(System.getProperty("prime_ants.captureDir"))));
             observation.put("image", image.toAbsolutePath().toString());
-            observations.add(observation);
-            PrimeAnts.LOGGER.info("T02 capture {}: {}", form, observation);
-            context.waitTicks(4);
+            observation.put("capture_completed_utc", Instant.now().toString());
+            try {
+                var png = javax.imageio.ImageIO.read(image.toFile());
+                observation.put("width", png.getWidth()); observation.put("height", png.getHeight());
+                observation.put("modified_epoch_ms", Files.getLastModifiedTime(image).toMillis());
+                observation.put("sha256", HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(image))));
+                String caption = "T03 debug entity specimens; colony not implemented — " + form + ", " + view + ", walking sequence " + frame + "/12. Run " + runId + ". AI, collision and physics active.\n";
+                Files.writeString(image.resolveSibling(image.getFileName() + ".md"), caption);
+            } catch (Exception e) { throw new RuntimeException(e); }
+            var renderFrames = context.computeOnClient(client -> AntRenderRecorder.finish());
+            observation.put("screenshot_render_extractions", renderFrames);
+            require(renderFrames.size() == 1, "Expected exactly one screenshot-sized production render extraction; got " + renderFrames.size());
+            observation.putAll(renderFrames.getFirst());
+            lastPosition = ((Number)observation.get("walk_animation_position")).floatValue();
+            gameplayGeometry.checkFootMotion(form.equals("queen") ? AntForm.QUEEN : AntForm.WORKER,
+                    ((Number)observation.get("walk_animation_speed")).floatValue());
+            observation.put("geometry_motion_verified", true);
+            PrimeAnts.LOGGER.info("T03 capture {}/{} frame {}: {}", form, view, frame, observation);
+        }
         }
     }
 
@@ -167,13 +234,15 @@ public final class AntCaptureTest implements FabricClientGameTest {
         throw new AssertionError("Tracked specimen not present on client: " + uuid);
     }
 
-    private static void camera(Minecraft client, UUID uuid, String form) {
+    private static void camera(Minecraft client, UUID uuid, String form, String view) {
         LasiusNigerEntity ant = clientAnt(client, uuid);
         require(client.getEntityRenderDispatcher().getRenderer(ant) instanceof AntRenderer, "Production renderer must be registered");
         double yaw = Math.toRadians(ant.yBodyRot);
         boolean queen = form.equals("queen");
-        double side = queen ? 3.3 : 2.0, forward = queen ? 3.0 : 1.7;
-        double eyeHeight = queen ? 2.0 : 1.25;
+        boolean sideView = view.equals("side");
+        double side = sideView ? (queen ? 3.8 : 2.1) : (queen ? 1.5 : 0.9);
+        double forward = sideView ? 0.25 : (queen ? 1.1 : 0.5);
+        double eyeHeight = sideView ? (queen ? 1.0 : 0.55) : (queen ? 3.5 : 2.0);
         Vec3 eye = ant.position().add(side * Math.cos(yaw) - forward * Math.sin(yaw), eyeHeight,
                 side * Math.sin(yaw) + forward * Math.cos(yaw));
         double playerEyeOffset = client.player.getEyeY() - client.player.getY();
@@ -201,7 +270,7 @@ public final class AntCaptureTest implements FabricClientGameTest {
             var state = level.getBlockState(ground);
             if (!(state.is(Blocks.GRASS_BLOCK) || state.is(Blocks.DIRT) || state.is(Blocks.STONE) || state.is(Blocks.SAND))) continue;
             boolean clear = true;
-            for (int ox = -2; ox <= 2; ox++) for (int oz = -2; oz <= 2; oz++) {
+            for (int ox = -4; ox <= 4; ox++) for (int oz = -4; oz <= 4; oz++) {
                 BlockPos p = ground.offset(ox, 0, oz);
                 if (!level.getBlockState(p).isSolidRender() || !level.getBlockState(p.above()).isAir() || !level.getBlockState(p.above(2)).isAir()) clear = false;
             }

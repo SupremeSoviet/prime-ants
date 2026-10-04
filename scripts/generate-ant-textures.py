@@ -13,19 +13,17 @@ for form in ('worker', 'queen'):
         for x in range(256):
             noise = rng.randrange(-3, 4)
             shine = max(0, 5 - abs(x % 24 - 7))
-            pixels[x, y] = (30 + noise + shine, 26 + noise + shine, 23 + noise + shine, 255)
+            pixels[x, y] = (38 + noise + shine, 34 + noise + shine, 30 + noise + shine, 255)
     draw = ImageDraw.Draw(image)
-    # Gaster has a subtly polished upper face and transverse intersegment sutures.
-    w, h, d = (18, 13, 29) if form == 'queen' else (8, 6.5, 11)
-    u, v = 64, 0
-    draw.rectangle((u + d + w, v, u + d + 2 * w, v + d), fill=(43, 38, 33, 255))
-    for band in (0.24, 0.48, 0.73):
-        yy = v + d * band
-        draw.line((u + d, yy, u + d + 2 * w, yy), fill=(20, 18, 16, 255), width=1)
-        xx = u + d * band
-        draw.line((xx, v + d, xx, v + d + h), fill=(18, 17, 16, 255), width=1)
-        xx = u + d + w + d * band
-        draw.line((xx, v + d, xx, v + d + h), fill=(18, 17, 16, 255), width=1)
+    # Natural dorsal chitin polish on the actual faceted ModelPart cube UV islands.
+    # Model-local min-Y faces become upper faces after the renderer's Y flip.
+    dimensions = ((12, 9, 12), (13, 11, 20), (3.5, 5, 3), (18, 13, 29)) if form == 'queen' else (
+        (7, 6, 7), (5, 4.5, 10), (1.8, 3.5, 1.8), (8, 6.5, 11))
+    for (u, v), (w, h, d) in zip(((0, 0), (0, 48), (40, 90), (64, 0)), dimensions):
+        depth = d / 5
+        for taper in (0.48, 0.8, 1):
+            width = w * taper * 0.76
+            draw.rectangle((u + depth, v, u + depth + width, v + depth), fill=(57, 51, 45, 255))
     # Eye faceting, jaw tips and pale wing attachment scars occupy their actual UV islands.
     draw.rectangle((220, 0, 238, 12), fill=(9, 10, 11, 255))
     for y in range(0, 12, 2):

@@ -1,0 +1,128 @@
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+import groovy.xml.XmlSlurper
+import java.time.Instant
+import java.security.MessageDigest
+import javax.imageio.ImageIO
+
+// Shared by the real client task and malformed-manifest fixtures. No Minecraft launch in fixture checks.
+ext.validateClientEvidence = { Map request ->
+    def require = { boolean ok, String message -> if (!ok) throw new GradleException(message) }
+    File modelFile = file(request.model_report)
+    File captureFile = file(request.provenance)
+    require(modelFile.isFile(), 'Missing current-run model entrypoint report')
+    require(captureFile.isFile(), 'Missing current-run capture entrypoint provenance')
+    require(modelFile.lastModified() >= request.started_epoch_ms, 'Stale model report')
+    require(captureFile.lastModified() >= request.started_epoch_ms, 'Stale capture provenance')
+    def model = new XmlSlurper().parse(modelFile)
+    def props = model.properties.property.collectEntries { [(it.@name.text()): it.@value.text()] }
+    require(props.run_id == request.run_id, 'Mismatched model run ID')
+    require(props.entrypoint == 'dev.primeants.gametest.AntModelGameTest', 'Missing named model entrypoint')
+    def names = (file('src/gametest/java/dev/primeants/gametest/AntModelGameTest.java').text =~ /(?m)^\s*test\(form,\s*"([^"]+)"/).collect { it[1] }
+    def required = ['sixArticulatedLegsOnMesosoma', 'articulatedLegGeometryStaysConnected', 'elbowedAntennaeMandiblesAndEyes', 'onePetioleAndBodySegments',
+                    'lowAmplitudeTransformedFootMotion', 'normalAmplitudeTransformedFootMotion', 'amplitudeOneMirroringRegression',
+                    'stanceContactTracksVanillaWalkDistance',
+                    'stationaryLegsStopWhileAntennaeAnimate', 'bakedUvDensityIs32TexelsPerWorldBlock',
+                    'renderedBodyDimensionsMatchForm', 'taperedProfilesConnectedConstrictedWaist']
+    require(names.containsAll(required) && names.toSet().size() == names.size(), 'Required model regression discovery incomplete')
+    def expected = ['WORKER', 'QUEEN'].collectMany { form -> names.collect { name -> "AntModel.${form}/${name}".toString() } }.toSet()
+    def actual = model.testcase.collect { "${it.@classname}/${it.@name}".toString() }
+    require(actual.toSet() == expected && actual.size() == expected.size(), 'Executed named model test discovery mismatch')
+    require(!model.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] } && model.@failures.text() == '0', 'Model case failed or skipped')
+    def capture = new JsonSlurper().parse(captureFile)
+    require(capture.run_id == request.run_id, 'Mismatched capture run ID')
+    require(capture.capture_prefix == request.capture_prefix, 'Mismatched capture prefix')
+    require(capture.entrypoint == 'dev.primeants.gametest.AntCaptureTest', 'Missing named capture entrypoint')
+    require(capture.status == 'success' && capture.completed_utc, 'Capture did not complete successfully')
+    require(Instant.parse(capture.started_utc).toEpochMilli() >= request.started_epoch_ms, 'Stale capture start')
+    long completed = Instant.parse(capture.completed_utc).toEpochMilli()
+    def frames = capture.observations.findAll { it.event == 'walking_frame' }
+    require(frames.size() == 4 * request.frames_per_view, 'Missing captures')
+    def images = []
+    ['worker', 'queen'].each { form ->
+        ['side', 'oblique'].each { view ->
+            def sequence = frames.findAll { it.form == form && it.view == view }.sort { it.sequence_position }
+            require(sequence.collect { it.sequence_position } == (1..request.frames_per_view).toList(), "Missing ${form}/${view} sequence")
+            require(sequence*.support_tripod.containsAll(['A', 'B']), "Support alternation missing ${form}/${view}")
+            require(sequence.last().walk_animation_position - sequence.first().walk_animation_position >= 2 * Math.PI / 2.8, "Incomplete gait cycle ${form}/${view}")
+            require(sequence.every { it.geometry_motion_verified && it.walk_animation_speed > 0 && it.moving }, 'Missing measured gameplay geometry validation')
+            sequence.each { frame ->
+                require(frame.run_id == request.run_id, 'Mismatched frame run ID')
+                File png = file(frame.image)
+                File expectedPng = new File(request.capture_directory, "${request.capture_prefix}-${form}-${view}-${frame.sequence_position}.png")
+                require(png.canonicalPath == expectedPng.canonicalPath, 'Mismatched PNG path')
+                require(png.isFile(), 'Missing PNG')
+                require(png.lastModified() == frame.modified_epoch_ms && png.lastModified() >= request.started_epoch_ms, 'Stale or mismatched PNG timestamp')
+                require(png.lastModified() >= Instant.parse(frame.capture_started_utc).toEpochMilli() && png.lastModified() <= completed, 'PNG outside capture interval')
+                def image = ImageIO.read(png)
+                require(image != null && image.width == frame.width && image.height == frame.height && image.width == 1600 && image.height == 1000, 'Mismatched PNG dimensions')
+                def hash = MessageDigest.getInstance('SHA-256').digest(png.bytes).encodeHex().toString()
+                require(hash == frame.sha256, 'Mismatched PNG hash')
+                images.add(png.canonicalPath)
+            }
+        }
+    }
+    require(images.toSet().size() == images.size(), 'Duplicate PNG paths')
+    [run_id: request.run_id, model_cases: actual.size(), captures: images.size(), names: actual.sort(), status: 'success']
+}
+
+tasks.register('testClientEvidenceValidator') {
+    dependsOn tasks.named('verifyAntModel')
+    doLast {
+        File dir = layout.buildDirectory.dir('client-validator-fixtures').get().asFile
+        dir.mkdirs()
+        long started = System.currentTimeMillis() - 5000
+        def request = [run_id:'fixture-current', capture_prefix:'fixture', started_epoch_ms:started,
+                       frames_per_view:12, capture_directory:dir.absolutePath,
+                       model_report:new File(dir,'model.xml').absolutePath, provenance:new File(dir,'capture.json').absolutePath]
+        file(request.model_report).text = file('build/test-results/client-model/headless.xml').text.replaceFirst(/name="run_id" value="[^"]*"/, 'name="run_id" value="fixture-current"')
+        def capture = [run_id:'fixture-current', capture_prefix:'fixture', entrypoint:'dev.primeants.gametest.AntCaptureTest', status:'success',
+                       started_utc:Instant.ofEpochMilli(started).toString(), observations:[]]
+        ['worker','queen'].each { form -> ['side','oblique'].each { view -> (1..12).each { n ->
+            File png = new File(dir, "fixture-${form}-${view}-${n}.png")
+            ImageIO.write(new java.awt.image.BufferedImage(1600,1000,java.awt.image.BufferedImage.TYPE_INT_RGB), 'png', png)
+            capture.observations.add([event:'walking_frame', form:form, view:view, sequence_position:n, run_id:request.run_id,
+                image:png.absolutePath, modified_epoch_ms:png.lastModified(), capture_started_utc:Instant.ofEpochMilli(started).toString(), width:1600,height:1000,
+                sha256:MessageDigest.getInstance('SHA-256').digest(png.bytes).encodeHex().toString(), support_tripod:n % 2 ? 'A':'B',
+                walk_animation_position:n*0.3,walk_animation_speed:0.2,moving:true,geometry_motion_verified:true])
+        } } }
+        capture.completed_utc = Instant.now().toString()
+        def save = { value -> file(request.provenance).text = JsonOutput.toJson(value) }
+        save(capture)
+        def results = [[fixture:'valid-current', result:validateClientEvidence(request).status]]
+        def reject = { String name, Map changedRequest, Map changedCapture ->
+            save(changedCapture)
+            if (name == 'stale-provenance') file(request.provenance).setLastModified(started - 1000)
+            File fixture = new File(dir, name); fixture.mkdirs()
+            new File(fixture, 'request.json').text = JsonOutput.prettyPrint(JsonOutput.toJson(changedRequest))
+            new File(fixture, 'provenance.json').text = JsonOutput.prettyPrint(JsonOutput.toJson(changedCapture))
+            new File(fixture, 'model.xml').text = file(request.model_report).text
+            try { validateClientEvidence(changedRequest); throw new IllegalStateException("Fixture erroneously accepted: ${name}") }
+            catch (GradleException expected) { results.add([fixture:name,result:'rejected',reason:expected.message]); logger.lifecycle("Rejected ${name}: ${expected.message}") }
+        }
+        reject('stale-provenance', request, capture)
+        reject('mismatched-capture-run-id', request, capture + [run_id:'fixture-old'])
+        reject('missing-captures', request, capture + [observations:capture.observations.drop(1)])
+        reject('missing-capture-entrypoint-with-old-success-present', request + [provenance:new File(dir,'never-created.json').absolutePath], capture)
+        reject('wrong-image-hash', request, capture + [observations:capture.observations.collect { it + [sha256:'old'] }])
+        reject('wrong-image-timestamp', request, capture + [observations:capture.observations.collect { it + [modified_epoch_ms:0] }])
+        reject('wrong-image-dimensions', request, capture + [observations:capture.observations.collect { it + [width:1280] }])
+        reject('wrong-image-path', request, capture + [observations:capture.observations.collect { it + [image:new File(dir,'old.png').absolutePath] }])
+        reject('missing-named-capture-entrypoint', request, capture + [entrypoint:''])
+        save(capture)
+        file(request.model_report).text = file(request.model_report).text.replace('fixture-current','fixture-old')
+        reject('mismatched-model-run-id', request, capture)
+        new File(dir,'results.json').text = JsonOutput.prettyPrint(JsonOutput.toJson(results))
+    }
+}
+
+// Offline diagnosis of a preserved attempt; never launches Minecraft or changes its run ID.
+tasks.register('validateClientEvidenceFile') {
+    doLast {
+        def requestFile = file(providers.gradleProperty('primeAntsEvidenceRequest').get())
+        def result = validateClientEvidence(new JsonSlurper().parse(requestFile))
+        def destination = file(providers.gradleProperty('primeAntsValidationOutput').getOrElse('build/client-evidence-offline-validation.json'))
+        destination.text = JsonOutput.prettyPrint(JsonOutput.toJson(result))
+        logger.lifecycle("Offline evidence recovery: ${result.model_cases} named model cases, ${result.captures} captures, run ${result.run_id}")
+    }
+}

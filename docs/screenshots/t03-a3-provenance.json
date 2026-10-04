@@ -1,0 +1,22 @@
+{
+  "caption": "T03 debug entity specimens; colony not implemented",
+  "run_id": "1fa85631-6511-433c-8cd1-cb3a65fa3bf9",
+  "capture_prefix": "t03-a3",
+  "entrypoint": "dev.primeants.gametest.AntCaptureTest",
+  "status": "failed",
+  "seed": 2026100402,
+  "started_utc": "2026-10-04T12:37:07.923723300Z",
+  "observations": [],
+  "terrain_edits": 0,
+  "ant_teleports": 0,
+  "ai_disabled": false,
+  "animation_poses_forced": false,
+  "observer_ground_probe": [
+    -167.5,
+    104.0,
+    34.5
+  ],
+  "ground_selection_evidence": "T03/14-terrain-diagnosis-r4.json; saved natural terrain, no edits",
+  "failure": "java.lang.AssertionError: No existing unobstructed natural ground near observer; terrain was not altered",
+  "failed_utc": "2026-10-04T12:37:16.753409400Z"
+}
