@@ -151,3 +151,17 @@ Owner decision needed before another autonomous verification turn: may the stoch
 
 
 The focused server diagnostic filter initially also allowed a full build to use the single-case discovery branch. This temporary build-guard widening was closed after audit: taskGraph rejects the diagnostic property whenever `:check` is present, before any workload or Minecraft launch. `19-diagnostic-build-bypass-rejected` exits 1 with that guard message; `20-default-graph-config-check` exits 0. Normal full-suite discovery and all test assertions remain intact. No complete build/client rerun followed the stop condition.
+
+
+## T04 recovery - four interim walking specimens
+
+Successful dedicated t04-a1, after unfiltered green final build. Run `32eea718-db4c-4a80-9887-4df7a0ffff93`, seed 2026100402, four fresh 1600x1000 PNGs. Production egg queen and operator-summoned worker; unchanged terrain, free production AI/collision/physics, only observer moved. Current silhouettes retained without visual refinement. Individual captions link the exact paths and timestamps; [provenance](t04-a1-provenance.json) retains creation and tick/movement records.
+
+| Frame | Server tick / age | Horizontal blocks from creation | SHA-256 |
+| --- | --- | --- | --- |
+| [queen side](t04-a1-queen-side-1.png) | 76 / 26 | 0.1223 | `9ce557c10c17f68a240e9df033e016417d1bd1bfd4a7097ceef299b7a2d9815f` |
+| [queen oblique](t04-a1-queen-oblique-1.png) | 78 / 28 | 0.1844 | `e78c34165e43f64c2c84983bc9a8983659a6f0dd300653cfed1b1b9caecd26d7` |
+| [worker side](t04-a1-worker-side-1.png) | 230 / 150 | 0.1422 | `809016855762d73089ca5689df57bd26087cd1513a452da6192ae0501f372d6c` |
+| [worker oblique](t04-a1-worker-oblique-1.png) | 232 / 152 | 0.2752 | `033901967a882257c92c6e45f81fb0c0ba2c9d403c5de07eec4de9454eec0048` |
+
+The T04 contract is one walking frame per form/view; the prior 48-frame/full-cycle presentation is no longer required. Both model forms still execute all 24 named tests. Earlier attempts are preserved. Lifetime client launches: eight; native 5 successes/3 failures, task 4 successes/4 failures. Colony not implemented.

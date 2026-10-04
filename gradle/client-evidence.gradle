@@ -37,14 +37,14 @@ ext.validateClientEvidence = { Map request ->
     require(Instant.parse(capture.started_utc).toEpochMilli() >= request.started_epoch_ms, 'Stale capture start')
     long completed = Instant.parse(capture.completed_utc).toEpochMilli()
     def frames = capture.observations.findAll { it.event == 'walking_frame' }
+    require(request.frames_per_view == 1, 'T04 requires one walking frame per form/view')
     require(frames.size() == 4 * request.frames_per_view, 'Missing captures')
     def images = []
     ['worker', 'queen'].each { form ->
         ['side', 'oblique'].each { view ->
             def sequence = frames.findAll { it.form == form && it.view == view }.sort { it.sequence_position }
             require(sequence.collect { it.sequence_position } == (1..request.frames_per_view).toList(), "Missing ${form}/${view} sequence")
-            require(sequence*.support_tripod.containsAll(['A', 'B']), "Support alternation missing ${form}/${view}")
-            require(sequence.last().walk_animation_position - sequence.first().walk_animation_position >= 2 * Math.PI / 2.8, "Incomplete gait cycle ${form}/${view}")
+            require(sequence.every { it.support_tripod in ['A', 'B'] }, "Missing walking support observation ${form}/${view}")
             require(sequence.every { it.geometry_motion_verified && it.walk_animation_speed > 0 && it.moving }, 'Missing measured gameplay geometry validation')
             sequence.each { frame ->
                 require(frame.run_id == request.run_id, 'Mismatched frame run ID')
@@ -73,12 +73,12 @@ tasks.register('testClientEvidenceValidator') {
         dir.mkdirs()
         long started = System.currentTimeMillis() - 5000
         def request = [run_id:'fixture-current', capture_prefix:'fixture', started_epoch_ms:started,
-                       frames_per_view:12, capture_directory:dir.absolutePath,
+                       frames_per_view:1, capture_directory:dir.absolutePath,
                        model_report:new File(dir,'model.xml').absolutePath, provenance:new File(dir,'capture.json').absolutePath]
         file(request.model_report).text = file('build/test-results/client-model/headless.xml').text.replaceFirst(/name="run_id" value="[^"]*"/, 'name="run_id" value="fixture-current"')
         def capture = [run_id:'fixture-current', capture_prefix:'fixture', entrypoint:'dev.primeants.gametest.AntCaptureTest', status:'success',
                        started_utc:Instant.ofEpochMilli(started).toString(), observations:[]]
-        ['worker','queen'].each { form -> ['side','oblique'].each { view -> (1..12).each { n ->
+        ['worker','queen'].each { form -> ['side','oblique'].each { view -> (1..1).each { n ->
             File png = new File(dir, "fixture-${form}-${view}-${n}.png")
             ImageIO.write(new java.awt.image.BufferedImage(1600,1000,java.awt.image.BufferedImage.TYPE_INT_RGB), 'png', png)
             capture.observations.add([event:'walking_frame', form:form, view:view, sequence_position:n, run_id:request.run_id,

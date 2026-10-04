@@ -37,18 +37,22 @@ gradle.taskGraph.whenReady { graph ->
     if (serverDiagnosticFilter.isPresent() && graph.hasTask(':check')) {
         throw new GradleException('Server diagnostic filter is forbidden in check/build; use runGameTest for an explicitly labelled single-case diagnosis')
     }
+    if (providers.gradleProperty('primeAntsIdleSeed').isPresent() && !serverDiagnosticFilter.isPresent()) {
+        throw new GradleException('Idle seed override is diagnostic only; acceptance uses the declared regression fixtures')
+    }
 }
 loom.runs.named('gameTest') {
     systemProperties.put('fabric-api.gametest.report-file', gameTestReport.get().asFile.absolutePath)
     systemProperties.put('fabric-api.gametest.filter', serverDiagnosticFilter.getOrElse('prime_ants_test:*'))
+    if (providers.gradleProperty('primeAntsIdleSeed').isPresent()) systemProperties.put('prime_ants.idleSeed', providers.gradleProperty('primeAntsIdleSeed').get())
 }
 apply from: 'gradle/client-evidence.gradle'
-def capturePrefix = providers.gradleProperty('primeAntsCapturePrefix').getOrElse('t03-' + java.util.UUID.randomUUID().toString())
+def capturePrefix = providers.gradleProperty('primeAntsCapturePrefix').getOrElse('t04-' + java.util.UUID.randomUUID().toString())
 def captureRunId = java.util.UUID.randomUUID().toString()
 def captureStart = System.currentTimeMillis()
 def currentModelReport = file("build/test-results/client-model/${capturePrefix}-model.xml")
 def captureRequest = [run_id:captureRunId, capture_prefix:capturePrefix, started_epoch_ms:captureStart,
-                      frames_per_view:12, capture_directory:file('docs/screenshots').absolutePath,
+                      frames_per_view:1, capture_directory:file('docs/screenshots').absolutePath,
                       model_report:currentModelReport.absolutePath,
                       provenance:file("docs/screenshots/${capturePrefix}-provenance.json").absolutePath]
 loom.runs.named('clientGameTest') {
@@ -117,7 +121,11 @@ tasks.named('runGameTest') {
                         'survival_egg_creates_nothing', 'creative_egg_creates_exactly_one_queen',
                         'operator_survival_egg_creates_exactly_one_queen', 'null_player_egg_cannot_spawn',
                         'debug_egg_cannot_configure_spawner', 'dispenser_cannot_bypass_egg_restriction',
-                        'queen_wanders_after_long_idle']
+                        'queen_wanders_after_long_idle', 'queen_wanders_after_sparse_land_candidates',
+                        'queen_wanders_after_null_land_candidates', 'queen_wanders_after_long_idle_odd_phase',
+                        'queen_wanders_after_sparse_land_candidates_even_phase', 'queen_wanders_after_null_land_candidates_even_phase',
+                        'queen_wanders_to_adjacent_land_candidate',
+                        'capture_ground_rejects_obstructions_and_incomplete_footprints']
         antTests.each { name ->
             if (!cases.any { it.@name.text() == "prime_ants_test:ant_entity_game_test_${name}" }) {
                 throw new GradleException("Expected ant GameTest was not executed: ${name}")

@@ -48,6 +48,12 @@ public final class LasiusNigerEntity extends PathfinderMob {
             @Override protected Vec3 getPosition() {
                 return LandRandomPos.getPos(LasiusNigerEntity.this, 6, 2);
             }
+            @Override public void start() {
+                // Vanilla's reach range 1 accepts a neighboring destination at the
+                // current node. Our small waypoint tolerance cannot follow a node
+                // omitted by that search: request the actual chosen ground block.
+                getNavigation().moveTo(wantedX, wantedY, wantedZ, 0, speedModifier);
+            }
         };
         goalSelector.addGoal(1, wander);
         goalSelector.addGoal(2, new RandomLookAroundGoal(this));

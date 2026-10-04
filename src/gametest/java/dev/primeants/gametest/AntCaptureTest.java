@@ -31,8 +31,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -48,7 +46,7 @@ public final class AntCaptureTest implements FabricClientGameTest {
 
     @Override
     public void runTest(ClientGameTestContext context) {
-        provenance.put("caption", "T03 debug entity specimens; colony not implemented");
+        provenance.put("caption", "T04 debug entity specimens; colony not implemented");
         provenance.put("run_id", runId);
         provenance.put("capture_prefix", prefix);
         provenance.put("entrypoint", getClass().getName());
@@ -68,17 +66,9 @@ public final class AntCaptureTest implements FabricClientGameTest {
                 }).create()) {
             world.getConnection().waitForChunksRender();
             context.waitForScreen(null);
-            // Read-only T03 failed-world terrain inspection found an existing natural
-            // 13x13 plateau here (same seed). Move only the observer, then revalidate
-            // generated ground in this fresh world; no terrain or ant is moved.
-            provenance.put("observer_ground_probe", List.of(-167.5, 104.0, 34.5));
-            provenance.put("ground_selection_evidence", "T03/14-terrain-diagnosis-r4.json; saved natural terrain, no edits");
-            world.getServer().runCommand("tp @p -167.5 104 34.5");
-            world.getConnection().waitForClientboundPackets();
-            world.getConnection().waitForChunksRender();
-            context.waitTicks(3);
-            BlockPos ground = world.getServer().computeOnServer(server -> findGround(world.getConnection().getServerLevel(),
-                    world.getConnection().getServerPlayer().blockPosition()));
+            provenance.put("ground_selection_evidence", "CaptureGround: minecraft:full across search/footprint, then live block-state and clearance queries; no saved plateau assumption");
+            BlockPos ground = world.getServer().computeOnServer(server -> CaptureGround.find(world.getConnection().getServerLevel(),
+                    world.getConnection().getServerPlayer().blockPosition(), null));
             provenance.put("selected_existing_ground", List.of(ground.getX(), ground.getY(), ground.getZ()));
             world.getServer().runCommand(String.format(Locale.ROOT, "tp @p %.2f %.2f %.2f", ground.getX() + 0.5, ground.getY() + 1.0, ground.getZ() - 2.0));
             world.getConnection().waitForClientboundPackets();
@@ -86,6 +76,7 @@ public final class AntCaptureTest implements FabricClientGameTest {
             world.getServer().runOnServer(server -> world.getConnection().getServerPlayer().setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(AntItems.DEBUG_QUEEN_EGG)));
             world.getConnection().waitForClientboundPackets();
             context.waitFor(client -> client.player.getMainHandItem().is(AntItems.DEBUG_QUEEN_EGG));
+            world.getServer().runOnServer(server -> require(CaptureGround.clear(world.getConnection().getServerLevel(), ground, 2), "NO_SUITABLE_GROUND before egg interaction"));
             // Real client interaction sends the normal use-on packet to the production server item path.
             context.runOnClient(client -> {
                 BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(ground).add(0, 0.5, 0), Direction.UP, ground, false);
@@ -127,11 +118,12 @@ public final class AntCaptureTest implements FabricClientGameTest {
     }
 
     private UUID createWorker(ClientGameTestContext context, TestSingleplayerContext world, BlockPos queenGround) {
-        BlockPos workerGround = world.getServer().computeOnServer(server -> findGround(world.getConnection().getServerLevel(), queenGround.offset(8, 0, 0), queenGround));
+        BlockPos workerGround = world.getServer().computeOnServer(server -> CaptureGround.find(world.getConnection().getServerLevel(), queenGround.offset(8, 0, 0), queenGround));
         provenance.put("worker_existing_ground", List.of(workerGround.getX(), workerGround.getY(), workerGround.getZ()));
         // Sequential creation avoids losing a specimen's original open ground while
         // observing the other. Once created, both specimens keep free production AI.
         String summon = String.format(Locale.ROOT, "summon prime_ants:lasius_niger_worker %.2f %.2f %.2f", workerGround.getX() + 0.5, workerGround.getY() + 1.0, workerGround.getZ() + 0.5);
+        world.getServer().runOnServer(server -> require(CaptureGround.clear(world.getConnection().getServerLevel(), workerGround, 2), "NO_SUITABLE_GROUND before operator summon"));
         context.runOnClient(client -> client.player.connection.sendCommand(summon));
         world.getConnection().waitForServerboundPackets();
         UUID worker = world.getServer().computeOnServer(server -> {
@@ -147,34 +139,27 @@ public final class AntCaptureTest implements FabricClientGameTest {
         Map<String, Object> initial = observe(world, uuid, "before_observation", "autonomous wandering");
         observations.add(initial);
         for (String view : new String[]{"side", "oblique"}) {
-        float lastPosition = Float.NEGATIVE_INFINITY;
-        for (int frame = 1; frame <= 12; frame++) {
+        for (int frame = 1; frame <= 1; frame++) {
             int waited = 0;
             while (waited < 300) {
                 context.runOnClient(client -> camera(client, uuid, form, view));
                 context.waitTick();
                 waited++;
-                final float targetPosition = lastPosition + (float)(2 * Math.PI / 2.8 / 8);
                 boolean moving = context.computeOnClient(client -> {
                     LasiusNigerEntity ant = clientAnt(client, uuid);
                     double dx = ant.getX() - ant.xo, dz = ant.getZ() - ant.zo;
                     return ant.isAlive() && ant.onGround() && dx * dx + dz * dz > 0.000004
-                            && ant.walkAnimation.speed(1) > 0.02F && ant.walkAnimation.position(1) >= targetPosition;
+                            && ant.walkAnimation.speed(1) > 0.02F;
                 });
                 boolean unobstructed = moving && world.getServer().computeOnServer(server -> {
                     Entity ant = world.getConnection().getServerLevel().getEntity(uuid);
                     BlockPos feet = ant.blockPosition();
-                    for (int x = -1; x <= 1; x++) for (int z = -1; z <= 1; z++) {
-                        BlockPos p = feet.offset(x, 0, z);
-                        if (!ant.level().getBlockState(p).isAir() || !ant.level().getBlockState(p.above()).isAir()
-                                || !ant.level().getBlockState(p.below()).isSolidRender()) return false;
-                    }
-                    return true;
+                    return CaptureGround.clear(world.getConnection().getServerLevel(), feet.below(), 1);
                 });
                 if (unobstructed) break;
-                if (waited % 40 == 0) observations.add(observe(world, uuid, "waiting_for_walk", "AI and physics active"));
+                if (waited % 40 == 0) observations.add(observe(world, uuid, moving ? "waiting_for_observation_ground" : "waiting_for_walk", "AI and physics active; ground clearance and movement diagnosed separately"));
             }
-            require(waited < 300, "No eligible autonomous ground walking on unobstructed 3x3 ground for " + form);
+            require(waited < 300, "No eligible walking frame for " + form + "; waiting events distinguish not walking from unsuitable observation ground");
             context.runOnClient(client -> camera(client, uuid, form, view));
             Map<String, Object> observation = observe(world, uuid, "walking_frame", "autonomous wandering");
             observation.put("view", view);
@@ -195,18 +180,17 @@ public final class AntCaptureTest implements FabricClientGameTest {
                 observation.put("width", png.getWidth()); observation.put("height", png.getHeight());
                 observation.put("modified_epoch_ms", Files.getLastModifiedTime(image).toMillis());
                 observation.put("sha256", HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(image))));
-                String caption = "T03 debug entity specimens; colony not implemented — " + form + ", " + view + ", walking sequence " + frame + "/12. Run " + runId + ". AI, collision and physics active.\n";
+                String caption = "T04 debug entity specimens; colony not implemented — " + form + ", " + view + ", walking frame. Run " + runId + ". AI, collision and physics active.\n";
                 Files.writeString(image.resolveSibling(image.getFileName() + ".md"), caption);
             } catch (Exception e) { throw new RuntimeException(e); }
             var renderFrames = context.computeOnClient(client -> AntRenderRecorder.finish());
             observation.put("screenshot_render_extractions", renderFrames);
             require(renderFrames.size() == 1, "Expected exactly one screenshot-sized production render extraction; got " + renderFrames.size());
             observation.putAll(renderFrames.getFirst());
-            lastPosition = ((Number)observation.get("walk_animation_position")).floatValue();
             gameplayGeometry.checkFootMotion(form.equals("queen") ? AntForm.QUEEN : AntForm.WORKER,
                     ((Number)observation.get("walk_animation_speed")).floatValue());
             observation.put("geometry_motion_verified", true);
-            PrimeAnts.LOGGER.info("T03 capture {}/{} frame {}: {}", form, view, frame, observation);
+            PrimeAnts.LOGGER.info("T04 capture {}/{} frame {}: {}", form, view, frame, observation);
         }
         }
     }
@@ -250,33 +234,6 @@ public final class AntCaptureTest implements FabricClientGameTest {
         client.player.lookAt(EntityAnchorArgument.Anchor.EYES, ant.position().add(0, queen ? 0.35 : 0.2, 0));
         client.player.xo = client.player.getX(); client.player.yo = client.player.getY(); client.player.zo = client.player.getZ();
         client.player.yRotO = client.player.getYRot(); client.player.xRotO = client.player.getXRot();
-    }
-
-    private static BlockPos findGround(ServerLevel level, BlockPos origin) {
-        return findGround(level, origin, null);
-    }
-
-    private static BlockPos findGround(ServerLevel level, BlockPos origin, BlockPos otherSpecimenGround) {
-        for (int radius = 0; radius <= 40; radius++) for (int dx = -radius; dx <= radius; dx++) for (int dz = -radius; dz <= radius; dz++) {
-            if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) continue;
-            int x = origin.getX() + dx, z = origin.getZ() + dz;
-            if (otherSpecimenGround != null) {
-                int separationX = x - otherSpecimenGround.getX(), separationZ = z - otherSpecimenGround.getZ();
-                if (separationX * separationX + separationZ * separationZ < 49) continue;
-            }
-            if (!level.hasChunkAt(x, z)) continue;
-            int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
-            BlockPos ground = new BlockPos(x, y, z);
-            var state = level.getBlockState(ground);
-            if (!(state.is(Blocks.GRASS_BLOCK) || state.is(Blocks.DIRT) || state.is(Blocks.STONE) || state.is(Blocks.SAND))) continue;
-            boolean clear = true;
-            for (int ox = -4; ox <= 4; ox++) for (int oz = -4; oz <= 4; oz++) {
-                BlockPos p = ground.offset(ox, 0, oz);
-                if (!level.getBlockState(p).isSolidRender() || !level.getBlockState(p.above()).isAir() || !level.getBlockState(p.above(2)).isAir()) clear = false;
-            }
-            if (clear) return ground;
-        }
-        throw new AssertionError("No existing unobstructed natural ground near observer; terrain was not altered");
     }
 
     private static void require(boolean condition, String message) { if (!condition) throw new AssertionError(message); }

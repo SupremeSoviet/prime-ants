@@ -1,0 +1,756 @@
+{
+  "caption": "T04 debug entity specimens; colony not implemented",
+  "run_id": "32eea718-db4c-4a80-9887-4df7a0ffff93",
+  "capture_prefix": "t04-a1",
+  "entrypoint": "dev.primeants.gametest.AntCaptureTest",
+  "status": "success",
+  "seed": 2026100402,
+  "started_utc": "2026-10-04T14:24:18.845525100Z",
+  "observations": [
+    {
+      "uuid": "029cbae3-925c-4876-80a2-9aa49ec2b026",
+      "form": "queen",
+      "event": "created",
+      "route": "production queen egg: client useItemOn -\u003e packet -\u003e ItemStack.useOn -\u003e SpawnEggItem",
+      "server_game_time": 51,
+      "elapsed_age_ticks": 1,
+      "position": [
+        -9.5,
+        73.0,
+        -12.5
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": false,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 1,
+      "navigation_done": true
+    },
+    {
+      "uuid": "029cbae3-925c-4876-80a2-9aa49ec2b026",
+      "form": "queen",
+      "event": "before_observation",
+      "route": "autonomous wandering",
+      "server_game_time": 58,
+      "elapsed_age_ticks": 8,
+      "position": [
+        -9.5,
+        73.0,
+        -12.5
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 8,
+      "navigation_done": true
+    },
+    {
+      "uuid": "029cbae3-925c-4876-80a2-9aa49ec2b026",
+      "form": "queen",
+      "event": "walking_frame",
+      "route": "autonomous wandering",
+      "server_game_time": 76,
+      "elapsed_age_ticks": 26,
+      "position": [
+        -9.58647618973228,
+        73.0,
+        -12.58647618973228
+      ],
+      "delta_movement": [
+        -0.01165150044399277,
+        -0.0784000015258789,
+        -0.01165150044399277
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 26,
+      "navigation_done": false,
+      "view": "side",
+      "sequence_position": 1,
+      "run_id": "32eea718-db4c-4a80-9887-4df7a0ffff93",
+      "existing_ground_observation_clearance": "3x3 solid ground with two air blocks above; observation selection only",
+      "waited_client_ticks": 18,
+      "capture_started_utc": "2026-10-04T14:24:27.341301Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t04-a1-queen-side-1.png",
+      "capture_completed_utc": "2026-10-04T14:24:27.476065500Z",
+      "width": 1600,
+      "height": 1000,
+      "modified_epoch_ms": 1791123867470,
+      "sha256": "9ce557c10c17f68a240e9df033e016417d1bd1bfd4a7097ceef299b7a2d9815f",
+      "screenshot_render_extractions": [
+        {
+          "render_extraction_utc": "2026-10-04T14:24:27.349978400Z",
+          "render_entity_tick": 25,
+          "render_position": [
+            -9.5274658203125,
+            73.0,
+            -12.5274658203125
+          ],
+          "body_yaw": 135.0,
+          "walk_animation_position": 0.08024557,
+          "walk_animation_speed": 0.05008305,
+          "visual_age_ticks": 26.0,
+          "moving": true,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.464375,
+              1.5,
+              -0.68268824
+            ],
+            [
+              0.54562503,
+              1.4941859,
+              -0.09856173
+            ],
+            [
+              0.464375,
+              1.5,
+              0.0048117214
+            ],
+            [
+              -0.464375,
+              1.4941859,
+              -0.4423117
+            ],
+            [
+              -0.545625,
+              1.5,
+              -0.3389383
+            ],
+            [
+              -0.46437496,
+              1.4941858,
+              0.2451883
+            ]
+          ],
+          "support_legs": [
+            0,
+            2,
+            4
+          ],
+          "support_tripod": "A"
+        }
+      ],
+      "render_extraction_utc": "2026-10-04T14:24:27.349978400Z",
+      "render_entity_tick": 25,
+      "render_position": [
+        -9.5274658203125,
+        73.0,
+        -12.5274658203125
+      ],
+      "body_yaw": 135.0,
+      "walk_animation_position": 0.08024557,
+      "walk_animation_speed": 0.05008305,
+      "visual_age_ticks": 26.0,
+      "moving": true,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.464375,
+          1.5,
+          -0.68268824
+        ],
+        [
+          0.54562503,
+          1.4941859,
+          -0.09856173
+        ],
+        [
+          0.464375,
+          1.5,
+          0.0048117214
+        ],
+        [
+          -0.464375,
+          1.4941859,
+          -0.4423117
+        ],
+        [
+          -0.545625,
+          1.5,
+          -0.3389383
+        ],
+        [
+          -0.46437496,
+          1.4941858,
+          0.2451883
+        ]
+      ],
+      "support_legs": [
+        0,
+        2,
+        4
+      ],
+      "support_tripod": "A",
+      "geometry_motion_verified": true
+    },
+    {
+      "uuid": "029cbae3-925c-4876-80a2-9aa49ec2b026",
+      "form": "queen",
+      "event": "walking_frame",
+      "route": "autonomous wandering",
+      "server_game_time": 78,
+      "elapsed_age_ticks": 28,
+      "position": [
+        -9.630413640855377,
+        73.0,
+        -12.630413640855377
+      ],
+      "delta_movement": [
+        -0.012068574459865361,
+        -0.0784000015258789,
+        -0.012068574459865361
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 28,
+      "navigation_done": false,
+      "view": "oblique",
+      "sequence_position": 1,
+      "run_id": "32eea718-db4c-4a80-9887-4df7a0ffff93",
+      "existing_ground_observation_clearance": "3x3 solid ground with two air blocks above; observation selection only",
+      "waited_client_ticks": 1,
+      "capture_started_utc": "2026-10-04T14:24:27.548400200Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t04-a1-queen-oblique-1.png",
+      "capture_completed_utc": "2026-10-04T14:24:27.686715700Z",
+      "width": 1600,
+      "height": 1000,
+      "modified_epoch_ms": 1791123867681,
+      "sha256": "e78c34165e43f64c2c84983bc9a8983659a6f0dd300653cfed1b1b9caecd26d7",
+      "screenshot_render_extractions": [
+        {
+          "render_extraction_utc": "2026-10-04T14:24:27.551914400Z",
+          "render_entity_tick": 27,
+          "render_position": [
+            -9.5655517578125,
+            73.0,
+            -12.5655517578125
+          ],
+          "body_yaw": 135.0,
+          "walk_animation_position": 0.2378716,
+          "walk_animation_speed": 0.088630095,
+          "visual_age_ticks": 28.0,
+          "moving": true,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.4643749,
+              1.5,
+              -0.6432817
+            ],
+            [
+              0.5456249,
+              1.4833552,
+              -0.13796826
+            ],
+            [
+              0.46437496,
+              1.5,
+              0.044218227
+            ],
+            [
+              -0.464375,
+              1.483355,
+              -0.48171824
+            ],
+            [
+              -0.5456251,
+              1.5,
+              -0.2995318
+            ],
+            [
+              -0.46437496,
+              1.483355,
+              0.20578174
+            ]
+          ],
+          "support_legs": [
+            0,
+            2,
+            4
+          ],
+          "support_tripod": "A"
+        }
+      ],
+      "render_extraction_utc": "2026-10-04T14:24:27.551914400Z",
+      "render_entity_tick": 27,
+      "render_position": [
+        -9.5655517578125,
+        73.0,
+        -12.5655517578125
+      ],
+      "body_yaw": 135.0,
+      "walk_animation_position": 0.2378716,
+      "walk_animation_speed": 0.088630095,
+      "visual_age_ticks": 28.0,
+      "moving": true,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.4643749,
+          1.5,
+          -0.6432817
+        ],
+        [
+          0.5456249,
+          1.4833552,
+          -0.13796826
+        ],
+        [
+          0.46437496,
+          1.5,
+          0.044218227
+        ],
+        [
+          -0.464375,
+          1.483355,
+          -0.48171824
+        ],
+        [
+          -0.5456251,
+          1.5,
+          -0.2995318
+        ],
+        [
+          -0.46437496,
+          1.483355,
+          0.20578174
+        ]
+      ],
+      "support_legs": [
+        0,
+        2,
+        4
+      ],
+      "support_tripod": "A",
+      "geometry_motion_verified": true
+    },
+    {
+      "uuid": "728ce676-8181-455a-b90a-1970f2fe9983",
+      "form": "worker",
+      "event": "created",
+      "route": "ordinary operator /summon prime_ants:lasius_niger_worker -14.50 69.00 6.50",
+      "server_game_time": 80,
+      "elapsed_age_ticks": 0,
+      "position": [
+        -14.5,
+        69.0,
+        6.5
+      ],
+      "delta_movement": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "on_ground": false,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 0,
+      "navigation_done": true
+    },
+    {
+      "uuid": "728ce676-8181-455a-b90a-1970f2fe9983",
+      "form": "worker",
+      "event": "before_observation",
+      "route": "autonomous wandering",
+      "server_game_time": 83,
+      "elapsed_age_ticks": 3,
+      "position": [
+        -14.5,
+        69.0,
+        6.5
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 3,
+      "navigation_done": true
+    },
+    {
+      "uuid": "728ce676-8181-455a-b90a-1970f2fe9983",
+      "form": "worker",
+      "event": "waiting_for_walk",
+      "route": "AI and physics active; ground clearance and movement diagnosed separately",
+      "server_game_time": 123,
+      "elapsed_age_ticks": 43,
+      "position": [
+        -14.5,
+        69.0,
+        6.5
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 43,
+      "navigation_done": true
+    },
+    {
+      "uuid": "728ce676-8181-455a-b90a-1970f2fe9983",
+      "form": "worker",
+      "event": "waiting_for_walk",
+      "route": "AI and physics active; ground clearance and movement diagnosed separately",
+      "server_game_time": 163,
+      "elapsed_age_ticks": 83,
+      "position": [
+        -14.5,
+        69.0,
+        6.5
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 83,
+      "navigation_done": true
+    },
+    {
+      "uuid": "728ce676-8181-455a-b90a-1970f2fe9983",
+      "form": "worker",
+      "event": "waiting_for_walk",
+      "route": "AI and physics active; ground clearance and movement diagnosed separately",
+      "server_game_time": 203,
+      "elapsed_age_ticks": 123,
+      "position": [
+        -14.5,
+        69.0,
+        6.5
+      ],
+      "delta_movement": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 123,
+      "navigation_done": true
+    },
+    {
+      "uuid": "728ce676-8181-455a-b90a-1970f2fe9983",
+      "form": "worker",
+      "event": "walking_frame",
+      "route": "autonomous wandering",
+      "server_game_time": 230,
+      "elapsed_age_ticks": 150,
+      "position": [
+        -14.399417238711827,
+        69.0,
+        6.600574659240077
+      ],
+      "delta_movement": [
+        0.023068413866302172,
+        -0.0784000015258789,
+        0.02306769873690819
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 150,
+      "navigation_done": false,
+      "view": "side",
+      "sequence_position": 1,
+      "run_id": "32eea718-db4c-4a80-9887-4df7a0ffff93",
+      "existing_ground_observation_clearance": "3x3 solid ground with two air blocks above; observation selection only",
+      "waited_client_ticks": 147,
+      "capture_started_utc": "2026-10-04T14:24:35.228639800Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t04-a1-worker-side-1.png",
+      "capture_completed_utc": "2026-10-04T14:24:35.354817100Z",
+      "width": 1600,
+      "height": 1000,
+      "modified_epoch_ms": 1791123875349,
+      "sha256": "809016855762d73089ca5689df57bd26087cd1513a452da6192ae0501f372d6c",
+      "screenshot_render_extractions": [
+        {
+          "render_extraction_utc": "2026-10-04T14:24:35.231226800Z",
+          "render_entity_tick": 149,
+          "render_position": [
+            -14.488525390625,
+            69.0,
+            6.511474609375
+          ],
+          "body_yaw": -22.499992,
+          "walk_animation_position": 0.02596408,
+          "walk_animation_speed": 0.02596408,
+          "visual_age_ticks": 150.0,
+          "moving": true,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.26875,
+              1.4999999,
+              -0.39938366
+            ],
+            [
+              0.29999998,
+              1.4986144,
+              0.07125864
+            ],
+            [
+              0.26874998,
+              1.5,
+              0.006866353
+            ],
+            [
+              -0.26875004,
+              1.4986144,
+              -0.13186635
+            ],
+            [
+              -0.3,
+              1.5,
+              -0.19625863
+            ],
+            [
+              -0.26875,
+              1.4986145,
+              0.2743837
+            ]
+          ],
+          "support_legs": [
+            0,
+            2,
+            4
+          ],
+          "support_tripod": "A"
+        }
+      ],
+      "render_extraction_utc": "2026-10-04T14:24:35.231226800Z",
+      "render_entity_tick": 149,
+      "render_position": [
+        -14.488525390625,
+        69.0,
+        6.511474609375
+      ],
+      "body_yaw": -22.499992,
+      "walk_animation_position": 0.02596408,
+      "walk_animation_speed": 0.02596408,
+      "visual_age_ticks": 150.0,
+      "moving": true,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.26875,
+          1.4999999,
+          -0.39938366
+        ],
+        [
+          0.29999998,
+          1.4986144,
+          0.07125864
+        ],
+        [
+          0.26874998,
+          1.5,
+          0.006866353
+        ],
+        [
+          -0.26875004,
+          1.4986144,
+          -0.13186635
+        ],
+        [
+          -0.3,
+          1.5,
+          -0.19625863
+        ],
+        [
+          -0.26875,
+          1.4986145,
+          0.2743837
+        ]
+      ],
+      "support_legs": [
+        0,
+        2,
+        4
+      ],
+      "support_tripod": "A",
+      "geometry_motion_verified": true
+    },
+    {
+      "uuid": "728ce676-8181-455a-b90a-1970f2fe9983",
+      "form": "worker",
+      "event": "walking_frame",
+      "route": "autonomous wandering",
+      "server_game_time": 232,
+      "elapsed_age_ticks": 152,
+      "position": [
+        -14.30542394309845,
+        69.0,
+        6.694566849263366
+      ],
+      "delta_movement": [
+        0.026215985897012788,
+        -0.0784000015258789,
+        0.026215772705448847
+      ],
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "idle_ticks": 152,
+      "navigation_done": false,
+      "view": "oblique",
+      "sequence_position": 1,
+      "run_id": "32eea718-db4c-4a80-9887-4df7a0ffff93",
+      "existing_ground_observation_clearance": "3x3 solid ground with two air blocks above; observation selection only",
+      "waited_client_ticks": 1,
+      "capture_started_utc": "2026-10-04T14:24:35.389394800Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t04-a1-worker-oblique-1.png",
+      "capture_completed_utc": "2026-10-04T14:24:35.486707400Z",
+      "width": 1600,
+      "height": 1000,
+      "modified_epoch_ms": 1791123875481,
+      "sha256": "033901967a882257c92c6e45f81fb0c0ba2c9d403c5de07eec4de9454eec0048",
+      "screenshot_render_extractions": [
+        {
+          "render_extraction_utc": "2026-10-04T14:24:35.391441500Z",
+          "render_entity_tick": 151,
+          "render_position": [
+            -14.438232421875,
+            69.0,
+            6.561767578125
+          ],
+          "body_yaw": -45.0,
+          "walk_animation_position": 0.18026805,
+          "walk_animation_speed": 0.11276144,
+          "visual_age_ticks": 152.0,
+          "moving": true,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.26875,
+              1.5,
+              -0.3608077
+            ],
+            [
+              0.29999995,
+              1.4902511,
+              0.032682642
+            ],
+            [
+              0.26874998,
+              1.5,
+              0.045442343
+            ],
+            [
+              -0.26874998,
+              1.4902511,
+              -0.17044234
+            ],
+            [
+              -0.3,
+              1.5,
+              -0.15768266
+            ],
+            [
+              -0.26874995,
+              1.4902511,
+              0.23580766
+            ]
+          ],
+          "support_legs": [
+            0,
+            2,
+            4
+          ],
+          "support_tripod": "A"
+        }
+      ],
+      "render_extraction_utc": "2026-10-04T14:24:35.391441500Z",
+      "render_entity_tick": 151,
+      "render_position": [
+        -14.438232421875,
+        69.0,
+        6.561767578125
+      ],
+      "body_yaw": -45.0,
+      "walk_animation_position": 0.18026805,
+      "walk_animation_speed": 0.11276144,
+      "visual_age_ticks": 152.0,
+      "moving": true,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.26875,
+          1.5,
+          -0.3608077
+        ],
+        [
+          0.29999995,
+          1.4902511,
+          0.032682642
+        ],
+        [
+          0.26874998,
+          1.5,
+          0.045442343
+        ],
+        [
+          -0.26874998,
+          1.4902511,
+          -0.17044234
+        ],
+        [
+          -0.3,
+          1.5,
+          -0.15768266
+        ],
+        [
+          -0.26874995,
+          1.4902511,
+          0.23580766
+        ]
+      ],
+      "support_legs": [
+        0,
+        2,
+        4
+      ],
+      "support_tripod": "A",
+      "geometry_motion_verified": true
+    }
+  ],
+  "terrain_edits": 0,
+  "ant_teleports": 0,
+  "ai_disabled": false,
+  "animation_poses_forced": false,
+  "ground_selection_evidence": "CaptureGround: minecraft:full across search/footprint, then live block-state and clearance queries; no saved plateau assumption",
+  "selected_existing_ground": [
+    -10,
+    72,
+    -13
+  ],
+  "worker_existing_ground": [
+    -15,
+    68,
+    6
+  ],
+  "completed_utc": "2026-10-04T14:24:35.510105400Z"
+}

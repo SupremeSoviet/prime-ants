@@ -32,6 +32,18 @@ import net.minecraft.world.phys.Vec3;
 
 /** Fixtures may place blocks and request paths. All elapsed work is performed by the server. */
 public final class AntEntityGameTest {
+    @GameTest public void captureGroundRejectsObstructionsAndIncompleteFootprints(GameTestHelper c) {
+        floor(c);
+        BlockPos ground = c.absolutePos(new BlockPos(3, 1, 3));
+        CaptureGround.generateFootprint(c.getLevel(), ground.getX() - 2, ground.getX() + 2, ground.getZ() - 2, ground.getZ() + 2);
+        c.assertTrue(CaptureGround.clear(c.getLevel(), ground, 2), "FULL chunks and actual solid support/two air layers must pass");
+        c.setBlock(4, 2, 3, Blocks.BIRCH_LEAVES.defaultBlockState());
+        c.assertTrue(!CaptureGround.clear(c.getLevel(), ground, 2), "Property-bearing live vegetation must reject candidate");
+        c.setBlock(4, 2, 3, Blocks.AIR);
+        c.assertTrue(!CaptureGround.clear(c.getLevel(), c.absolutePos(new BlockPos(1, 1, 1)), 2), "Incomplete reachable floor must reject candidate");
+        c.assertTrue(!CaptureGround.clear(c.getLevel(), ground.offset(160000, 0, 160000), 2), "An unloaded footprint must be rejected without trusting a heightmap");
+        c.succeed();
+    }
     private void floor(GameTestHelper c) {
         for (int x = 1; x <= 6; x++) for (int z = 1; z <= 6; z++) c.setBlock(x, 1, z, Blocks.STONE);
     }
@@ -90,12 +102,60 @@ public final class AntEntityGameTest {
         });
     }
 
-    @GameTest(maxTicks = 240) public void queenWandersAfterLongIdle(GameTestHelper c) {
-        floor(c);
-        LasiusNigerEntity queen = c.spawn(AntEntities.QUEEN, new Vec3(3.5, 2, 3.5));
+    @GameTest(maxTicks = 240, structure = "prime_ants_test:idle_ground") public void queenWandersAfterLongIdle(GameTestHelper c) {
+        idleWandering(c, 5, 0);
+    }
+    @GameTest(maxTicks = 240, structure = "prime_ants_test:idle_ground") public void queenWandersAfterLongIdleOddPhase(GameTestHelper c) {
+        idleWandering(c, 5, 1);
+    }
+    @GameTest(maxTicks = 240, structure = "prime_ants_test:idle_ground") public void queenWandersAfterSparseLandCandidates(GameTestHelper c) {
+        idleWandering(c, 2, 1);
+    }
+    @GameTest(maxTicks = 240, structure = "prime_ants_test:idle_ground") public void queenWandersAfterSparseLandCandidatesEvenPhase(GameTestHelper c) {
+        idleWandering(c, 2, 0);
+    }
+    @GameTest(maxTicks = 240, structure = "prime_ants_test:idle_ground") public void queenWandersAfterNullLandCandidates(GameTestHelper c) {
+        idleWandering(c, 0, 1);
+    }
+    @GameTest(maxTicks = 240, structure = "prime_ants_test:idle_ground") public void queenWandersAfterNullLandCandidatesEvenPhase(GameTestHelper c) {
+        idleWandering(c, 0, 0);
+    }
+    @GameTest(maxTicks = 240) public void queenWandersToAdjacentLandCandidate(GameTestHelper c) {
+        idleWandering(c, 5, 1, false);
+    }
+    private void idleWandering(GameTestHelper c, long regressionSeed, int idParity) {
+        idleWandering(c, regressionSeed, idParity, true);
+    }
+    private void idleWandering(GameTestHelper c, long regressionSeed, int idParity, boolean wide) {
+        // The old 6x6 floor excluded most of the production +/-6 destination envelope.
+        if (wide) {
+            for (int x = 1; x <= 14; x++) for (int z = 1; z <= 14; z++) c.setBlock(x, 1, z, Blocks.STONE);
+        } else floor(c); // Retain the original failing neighbor-selection regression.
+        // Vanilla schedules by (tickCount + entityId) parity. Allocate/discard fixture
+        // items before spawning to cover BOTH phases without changing an ant ID,
+        // random draw, goal, navigation destination, idle counter or tick schedule.
+        var marker = c.spawnItem(net.minecraft.world.item.Items.APPLE, 2, 4, 2);
+        int nextParity = (marker.getId() + 1) % 2;
+        marker.discard();
+        if (nextParity != idParity) c.spawnItem(net.minecraft.world.item.Items.APPLE, 2, 4, 2).discard();
+        LasiusNigerEntity queen = c.spawn(AntEntities.QUEEN, new Vec3(wide ? 7.5 : 3.5, 2, wide ? 7.5 : 3.5));
+        c.assertTrue(queen.getId() % 2 == idParity, "Declared vanilla scheduler phase must be exercised");
         Vec3 start = queen.position();
         // Fixture begins beyond vanilla's idle cutoff; no destination or tick is supplied.
         queen.setNoActionTime(140);
+        IdleTrace.track(queen);
+        // Seed 5 FAILED before the exact-reach correction. Seeds 2/0 preserve
+        // observed sparse/null-candidate sequences; no passing-seed selection fix.
+        long seed = Long.parseLong(System.getProperty("prime_ants.idleSeed", Long.toString(regressionSeed)));
+        queen.getRandom().setSeed(seed);
+        PrimeAnts.LOGGER.info("T04 idle fixture seed={} entityId={} bounds={} start={} nearbyAdults={}", seed, queen.getId(), c.getBounds(), start, adults(c));
+        c.onEachTick(() -> {
+            if (c.getTick() % 20 == 0) IdleTrace.log(queen, "snapshot", "testTick=" + c.getTick() + " position=" + queen.position()
+                    + " delta=" + queen.getDeltaMovement() + " onGround=" + queen.onGround() + " navigationDone=" + queen.getNavigation().isDone()
+                    + " disabled=" + ((dev.primeants.gametest.mixin.IdleControlsAccessor)queen.getGoalSelector()).primeAntsDisabledFlags()
+                    + " running=" + queen.getGoalSelector().getAvailableGoals().stream().filter(g -> g.isRunning()).map(g -> g.getPriority() + ":" + g.getFlags()).toList()
+                    + " nearbyAdults=" + adults(c));
+        });
         c.succeedWhen(() -> {
             c.assertTrue(!queen.isNoAi() && queen.getNoActionTime() > 100, "Persistent specimen remains active after long idle");
             c.assertTrue(queen.position().distanceToSqr(start) > 0.04, "Production wandering must resume after the vanilla idle cutoff");
