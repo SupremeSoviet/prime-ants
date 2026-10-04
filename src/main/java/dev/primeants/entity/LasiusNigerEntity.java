@@ -1,5 +1,14 @@
 package dev.primeants.entity;
 
+import dev.primeants.founding.QueenFounding;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.ai.goal.Goal;
+import java.util.EnumSet;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -14,10 +23,12 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
-/** Real debug adult. Wandering is not founding, foraging, or a colony simulation. */
+/** Physical adult. Authorized egg queens own bounded founding; other adults retain debug wandering. */
 public final class LasiusNigerEntity extends PathfinderMob {
     private final AntForm form;
     private long elapsedAgeTicks;
+    private final QueenFounding founding = new QueenFounding(this);
+    public QueenFounding founding() { return founding; }
 
     public LasiusNigerEntity(EntityType<? extends LasiusNigerEntity> type, Level level, AntForm form) {
         super(type, level);
@@ -55,6 +66,11 @@ public final class LasiusNigerEntity extends PathfinderMob {
                 getNavigation().moveTo(wantedX, wantedY, wantedZ, 0, speedModifier);
             }
         };
+        goalSelector.addGoal(0, new Goal() {
+            { setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK)); }
+            @Override public boolean canUse() { return founding != null && founding.ownsMovement(); }
+            @Override public boolean canContinueToUse() { return canUse(); }
+        });
         goalSelector.addGoal(1, wander);
         goalSelector.addGoal(2, new RandomLookAroundGoal(this));
     }
@@ -65,6 +81,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
         // The only biological clock owner. No daylight-time subtraction or renderer mutation.
         if (!level().isClientSide() && isAlive() && elapsedAgeTicks < Long.MAX_VALUE) {
             elapsedAgeTicks++;
+            founding.tick((ServerLevel)level());
         }
     }
 
@@ -73,6 +90,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
         super.addAdditionalSaveData(output);
         output.putString("AntForm", form.serializedName());
         output.putLong("AntElapsedAgeTicks", elapsedAgeTicks);
+        founding.save(output.child("Founding"));
     }
 
     @Override
@@ -84,6 +102,18 @@ public final class LasiusNigerEntity extends PathfinderMob {
             throw new IllegalArgumentException("AntForm does not match registered entity type");
         }
         elapsedAgeTicks = Math.max(0, input.getLongOr("AntElapsedAgeTicks", 0));
+        founding.load(input.childOrEmpty("Founding"));
         setPersistenceRequired();
+    }
+
+    @Override public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, EntitySpawnReason reason, SpawnGroupData data) {
+        SpawnGroupData result = super.finalizeSpawn(level, difficulty, reason, data);
+        if (form == AntForm.QUEEN && reason == EntitySpawnReason.SPAWN_ITEM_USE) founding.request();
+        return result;
+    }
+
+    @Override public void die(DamageSource source) {
+        if (level() instanceof ServerLevel server) founding.die(server);
+        super.die(source);
     }
 }

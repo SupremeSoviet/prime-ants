@@ -49,4 +49,22 @@ public final class CaptureGround {
         }
         throw new AssertionError("NO_SUITABLE_GROUND: fully generated search has no live unobstructed 5x5 natural footprint; no specimen created here");
     }
+    /** Capture eligibility comes ONLY from production genuine-generation records. This selector never marks terrain. */
+    public static BlockPos findFounding(ServerLevel level, BlockPos origin) {
+        generateFootprint(level, origin.getX()-66, origin.getX()+66, origin.getZ()-66, origin.getZ()+66);
+        for (int r=0;r<=60;r++) for (int dx=-r;dx<=r;dx++) for(int dz=-r;dz<=r;dz++) {
+            if (Math.max(Math.abs(dx),Math.abs(dz))!=r) continue;
+            int x=origin.getX()+dx,z=origin.getZ()+dz;
+            BlockPos p=new BlockPos(x,level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,x,z)-1,z);
+            if (!clear(level,p,2)) continue;
+            for (var d: net.minecraft.core.Direction.Plane.HORIZONTAL) {
+                var plan=dev.primeants.founding.NestPlan.candidate(level,p,d);
+                if(plan!=null) {
+                    PrimeAnts.LOGGER.info("T05 selected genuinely generated founding ground {} direction={} tasks={}",p,d,plan.tasks().size());
+                    return p;
+                }
+            }
+        }
+        throw new AssertionError("NO_VERIFIED_FOUNDING_SITE: FULL generated search has no supported native plan; no terrain was marked or edited");
+    }
 }

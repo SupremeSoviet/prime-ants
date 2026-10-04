@@ -1,0 +1,2 @@
+T05 transport. Run 67b17cc3-70be-4181-9ba3-bddb6a15f370; queen 912fbfd6-45d3-4257-97bf-a47427dc4472; loaded founding tick 201; phase TRANSPORTING; work multiplier 20.0; 1600x1000; SHA-256 4cb3f359c6315d5b0df1b92c68308dee08be48b8890a70558e61eafe13227ab2.
+Production egg/founding/navigation/rendering. No ant teleport, staged terrain or forced pose. Observer: spectator with vanilla night vision. Soil: removed=4, carried=4, deposited=0, released=0, plugging=0.

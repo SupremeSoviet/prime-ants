@@ -1,0 +1,208 @@
+package dev.primeants.founding;
+
+import dev.primeants.PrimeAnts;
+import dev.primeants.entity.LasiusNigerEntity;
+import dev.primeants.time.SimulationTimeScale;
+import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+
+/** One queen owns one physical job and its soil. Loaded server ticks only; no offline work or population state. */
+public final class QueenFounding {
+    public enum Phase { NONE, SEEKING, EXCAVATING, TRANSPORTING, ENTERING, SEALING, SETTLED, FAILED, DEAD }
+    public static final long BASE_WORK_TICKS = 200;
+    public static final int CARRY_CAPACITY = 4;
+    private final LasiusNigerEntity queen;
+    private Phase phase = Phase.NONE;
+    private NestPlan plan;
+    private int progress, deposited, released, plugged, cooldown, stalled;
+    private long loadedTicks;
+    private String reason = "not_requested";
+    public QueenFounding(LasiusNigerEntity queen) { this.queen = queen; }
+    public static double multiplier() { return Double.parseDouble(System.getProperty("prime_ants.foundingWorkMultiplier", "1")); }
+    public static int cadence() { return (int)Math.max(1, Math.min(Integer.MAX_VALUE, new SimulationTimeScale(multiplier()).ticksForGameDays(BASE_WORK_TICKS / 24000.0))); }
+    public Phase phase() { return phase; }
+    public NestPlan plan() { return plan; }
+    public int removed() { return progress; }
+    public int deposited() { return deposited; }
+    public int released() { return released; }
+    public int plugged() { return plugged; }
+    public int carried() { return queen.getMainHandItem().is(Items.DIRT) ? queen.getMainHandItem().getCount() : 0; }
+    public long loadedTicks() { return loadedTicks; }
+    public String reason() { return reason; }
+    public boolean sealed() { return phase == Phase.SETTLED && plugged == 2 && plan != null
+            && queen.level() instanceof ServerLevel level && plan.enclosedChamber(level)
+            && plan.plugs().stream().allMatch(p -> level.getBlockState(p).is(Blocks.DIRT)); }
+    public boolean ownsMovement() { return phase != Phase.NONE && phase != Phase.FAILED && phase != Phase.DEAD; }
+    public void request() { if (phase == Phase.NONE) { phase = Phase.SEEKING; reason = "seeking_verified_natural_soil"; } }
+    private void phase(Phase value) { phase = value; stalled = 0; queen.getNavigation().stop(); }
+    private void fail(String why) {
+        reason = why; phase(Phase.FAILED);
+        PrimeAnts.LOGGER.info("Founding failed queen={} reason={} removed={} carried={} deposited={} released={} plugged={}", queen.getUUID(), why, progress, carried(), deposited, released, plugged);
+    }
+    private void carry(int count) { queen.setItemSlot(EquipmentSlot.MAINHAND, count == 0 ? ItemStack.EMPTY : new ItemStack(Items.DIRT, count)); }
+    public void tick(ServerLevel level) {
+        if (!queen.isAlive() || !ownsMovement()) return;
+        if (phase == Phase.SETTLED) { queen.getNavigation().stop(); return; }
+        loadedTicks++;
+        if (queen.isInWater()) { fail("fluid_at_queen"); return; }
+        if (phase == Phase.SEEKING) {
+            BlockPos ground = queen.blockPosition().below();
+            for (int r = 0; r <= 3 && plan == null; r++) for (int dx = -r; dx <= r && plan == null; dx++)
+                for (int dz = -r; dz <= r && plan == null; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+                    for (Direction d : Direction.Plane.HORIZONTAL) {
+                        NestPlan candidate = NestPlan.candidate(level, ground.offset(dx, 0, dz), d);
+                        if (candidate != null) { plan = candidate; break; }
+                    }
+                }
+            if (plan == null) { fail("no_verified_supported_soil_site_within_radius_3"); return; }
+            reason = "verified_site_work_in_progress"; cooldown = cadence(); phase(Phase.EXCAVATING);
+            PrimeAnts.LOGGER.info("Founding planned queen={} entrance={} direction={} tasks={} cap={} cadence={} multiplier={}", queen.getUUID(), plan.entrance(), plan.direction(), plan.tasks().size(), NestPlan.HARD_CAP, cadence(), multiplier());
+            return;
+        }
+        if (++stalled > 600) { fail("blocked_physical_route_" + phase); return; }
+        if (cooldown > 0) cooldown--;
+        switch (phase) {
+            case EXCAVATING -> excavate(level);
+            case TRANSPORTING -> transport(level);
+            case ENTERING -> {
+                if (!plan.openWalkable(level) || !plan.enclosedChamber(level)) { fail("excavated_route_no_longer_walkable"); return; }
+                if (arrive(level, plan.at(3, 0, -2)) && cooldown == 0) phase(Phase.SEALING);
+            }
+            case SEALING -> seal(level);
+            default -> { }
+        }
+    }
+    private boolean arrive(ServerLevel level, BlockPos feet) {
+        if (!NestPlan.walkable(level, feet)) return false;
+        Vec3 dest = Vec3.atBottomCenterOf(feet);
+        queen.getLookControl().setLookAt(dest.x, dest.y + 0.3, dest.z);
+        if (queen.position().distanceToSqr(dest) < 0.09 && queen.onGround()) {
+            queen.getNavigation().stop(); stalled = 0; return true;
+        }
+        if (queen.tickCount % 20 == 0 || queen.getNavigation().isDone()) queen.getNavigation().moveTo(dest.x, dest.y, dest.z, 0, 1.0);
+        return false;
+    }
+    private BlockPos workStand(ServerLevel level, BlockPos target) {
+        BlockPos best = null; double distance = Double.MAX_VALUE;
+        for (Direction d : Direction.Plane.HORIZONTAL) for (int dy = -1; dy <= 1; dy++) {
+            BlockPos feet = target.relative(d).offset(0, dy, 0);
+            if (!NestPlan.walkable(level, feet) || !exposed(level, target, feet)) continue;
+            double dist = queen.position().distanceToSqr(Vec3.atBottomCenterOf(feet));
+            if (dist < distance) { best = feet; distance = dist; }
+        }
+        return best;
+    }
+    private boolean exposed(ServerLevel level, BlockPos target, BlockPos feet) {
+        BlockPos face = new BlockPos(feet.getX(), target.getY(), feet.getZ());
+        return target.distManhattan(face) == 1
+                && (level.getBlockState(face).isAir() || (feet.getY() == target.getY() + 1 && level.getBlockState(target.above()).isAir()))
+                && Vec3.atCenterOf(target).distanceToSqr(Vec3.atBottomCenterOf(feet).add(0, 0.5, 0)) <= 3.0;
+    }
+    private void excavate(ServerLevel level) {
+        if (progress >= plan.tasks().size() || progress >= NestPlan.HARD_CAP) { phase(Phase.ENTERING); return; }
+        BlockPos target = plan.tasks().get(progress);
+        if (!NaturalSoil.get(level).eligible(level, target) || !level.getBlockState(target).equals(plan.expected().get(progress))) {
+            fail("planned_soil_replaced_or_origin_revoked_at_" + target); return;
+        }
+        BlockPos stand = workStand(level, target);
+        if (stand == null) { fail("no_exposed_supported_work_face_at_" + target); return; }
+        if (!arrive(level, stand) || cooldown > 0) return;
+        // Immediate mutation-time checks: a living nearby actor, still-native exact state, air face and hard cap.
+        if (!queen.isAlive() || queen.position().distanceToSqr(Vec3.atCenterOf(target)) > 5.0
+                || !exposed(level, target, stand) || !NaturalSoil.get(level).eligible(level, target)
+                || !level.getBlockState(target).equals(plan.expected().get(progress)) || carried() >= CARRY_CAPACITY) {
+            fail("work_revalidation_failed_at_" + target); return;
+        }
+        if (!level.setBlock(target, Blocks.AIR.defaultBlockState(), 3)) { fail("removal_failed_at_" + target); return; }
+        progress++; carry(carried() + 1); cooldown = cadence(); stalled = 0;
+        PrimeAnts.LOGGER.debug("Founding action queen={} tick={} removed={} target={} carried={}", queen.getUUID(), loadedTicks, progress, target, carried());
+        // Reserve final two recovered blocks for a two-high throat seal, carried into the chamber.
+        if (progress <= plan.tasks().size() - 2 && (carried() == CARRY_CAPACITY || progress == plan.tasks().size() - 2)) phase(Phase.TRANSPORTING);
+        else if (progress == plan.tasks().size()) phase(Phase.ENTERING);
+    }
+    private void transport(ServerLevel level) {
+        if (!arrive(level, plan.outside()) || cooldown > 0) return;
+        if (carried() < 1) { fail("transport_stack_empty"); return; }
+        boolean placed = false;
+        for (BlockPos p : plan.deposits()) {
+            if (level.getBlockState(p).isAir() && level.getBlockState(p.below()).isSolidRender()
+                    && level.getFluidState(p).isEmpty() && level.getEntities(queen, new AABB(p)).isEmpty()
+                    && queen.position().distanceToSqr(Vec3.atCenterOf(p)) <= 5.0) {
+                if (level.setBlock(p, Blocks.DIRT.defaultBlockState(), 3)) { deposited++; placed = true; break; }
+            }
+        }
+        if (!placed) {
+            ItemEntity item = queen.spawnAtLocation(level, new ItemStack(Items.DIRT));
+            if (item == null) { fail("external_item_release_failed"); return; }
+            item.setUnlimitedLifetime(); released++;
+        }
+        carry(carried() - 1); cooldown = cadence(); stalled = 0;
+        if (carried() == 0) phase(Phase.EXCAVATING);
+    }
+    private void seal(ServerLevel level) {
+        if (plugged < 2) {
+            BlockPos p = plan.plugs().get(plugged);
+            if (!arrive(level, plan.at(3, 0, -2)) || cooldown > 0) return;
+            if (carried() < 1 || !level.getBlockState(p).isAir() || !level.getFluidState(p).isEmpty()
+                    || !level.getEntities(queen, new AABB(p)).isEmpty() || queen.getBoundingBox().intersects(new AABB(p))
+                    || queen.position().distanceToSqr(Vec3.atCenterOf(p)) > 5.0) { fail("plug_revalidation_failed"); return; }
+            if (!level.setBlock(p, Blocks.DIRT.defaultBlockState(), 3)) { fail("plug_placement_failed"); return; }
+            carry(carried() - 1); plugged++; cooldown = cadence(); stalled = 0;
+            return;
+        }
+        if (arrive(level, plan.chamber()) && cooldown == 0) {
+            reason = "settled_throat_sealed"; phase(Phase.SETTLED);
+            PrimeAnts.LOGGER.info("Founding settled queen={} ticks={} multiplier={} soil: removed={} carried={} deposited={} released={} plugged={}",
+                    queen.getUUID(), loadedTicks, multiplier(), progress, carried(), deposited, released, plugged);
+        }
+    }
+    public void die(ServerLevel level) {
+        queen.getNavigation().stop();
+        int count = carried();
+        if (count > 0) {
+            ItemEntity item = queen.spawnAtLocation(level, new ItemStack(Items.DIRT, count));
+            if (item != null) { item.setUnlimitedLifetime(); released += count; carry(0); }
+        }
+        phase = Phase.DEAD; reason = "queen_died_unfinished_terrain_retained";
+    }
+    public void save(ValueOutput out) {
+        out.putString("Phase", phase.name()); out.putString("Reason", reason);
+        out.putInt("Progress", progress); out.putInt("Deposited", deposited); out.putInt("Released", released); out.putInt("Plugged", plugged);
+        out.putInt("Cooldown", cooldown); out.putInt("Stalled", stalled); out.putLong("LoadedTicks", loadedTicks);
+        if (plan != null) {
+            out.store("Entrance", BlockPos.CODEC, plan.entrance()); out.putString("Direction", plan.direction().getName());
+            out.store("Tasks", BlockPos.CODEC.listOf(), plan.tasks()); out.store("Expected", BlockState.CODEC.listOf(), plan.expected());
+        }
+        // Mainhand soil uses vanilla Mob equipment persistence and synchronization.
+    }
+    public void load(ValueInput in) {
+        try { phase = Phase.valueOf(in.getStringOr("Phase", "NONE")); } catch (IllegalArgumentException e) { phase = Phase.FAILED; }
+        reason = in.getStringOr("Reason", "restored"); progress = in.getIntOr("Progress", 0);
+        deposited = in.getIntOr("Deposited", 0); released = in.getIntOr("Released", 0); plugged = in.getIntOr("Plugged", 0);
+        cooldown = in.getIntOr("Cooldown", 0); stalled = in.getIntOr("Stalled", 0); loadedTicks = in.getLongOr("LoadedTicks", 0);
+        var e = in.read("Entrance", BlockPos.CODEC);
+        if (e.isPresent()) {
+            Direction d = Direction.byName(in.getStringOr("Direction", "north"));
+            List<BlockPos> targets = in.read("Tasks", BlockPos.CODEC.listOf()).orElse(List.of());
+            List<BlockState> expected = in.read("Expected", BlockState.CODEC.listOf()).orElse(List.of());
+            if (d == null || d.getAxis().isVertical() || !targets.equals(NestPlan.geometry(e.get(), d).tasks())
+                    || expected.size() != targets.size() || progress < 0 || progress > targets.size()
+                    || deposited < 0 || released < 0 || plugged < 0 || plugged > 2 || carried() > CARRY_CAPACITY
+                    || progress != deposited + released + plugged + carried()) { fail("invalid_saved_plan_or_soil_balance"); return; }
+            plan = new NestPlan(e.get(), d, targets, expected);
+        } else if (phase != Phase.NONE && phase != Phase.SEEKING && phase != Phase.FAILED && phase != Phase.DEAD) fail("missing_saved_plan");
+    }
+}

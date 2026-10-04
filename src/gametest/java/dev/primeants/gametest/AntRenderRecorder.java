@@ -33,6 +33,8 @@ public final class AntRenderRecorder {
         frame.put("walk_animation_speed", state.walkAnimationSpeed);
         frame.put("visual_age_ticks", state.ageInTicks);
         frame.put("moving", state.moving);
+        frame.put("carried_soil_rendered", !state.carriedSoil.isEmpty());
+        frame.put("client_carried_soil_units", ant.getMainHandItem().getCount());
         frame.put("partial_ticks", partial);
         List<List<Float>> contacts = new ArrayList<>();
         List<Integer> support = new ArrayList<>();

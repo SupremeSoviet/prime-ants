@@ -3,12 +3,13 @@
   "id": "prime_ants",
   "version": "${version}",
   "name": "Prime Ants",
-  "description": "Realistic ant ecology. Infrastructure foundation; colony not implemented.",
+  "description": "Physical ant adults and protected queen founding. Brood unimplemented.",
   "environment": "*",
   "entrypoints": {
     "main": ["dev.primeants.PrimeAnts"],
     "client": ["dev.primeants.client.PrimeAntsClient"]
   },
+  "mixins": ["prime_ants.mixins.json"],
   "depends": {
     "fabricloader": ">=0.19.5",
     "minecraft": "26.3",

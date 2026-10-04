@@ -5,4 +5,5 @@ import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 /** Visual snapshot only: no biological age or writable simulation state. */
 public final class AntRenderState extends LivingEntityRenderState {
     public boolean moving;
+    public final net.minecraft.client.renderer.item.ItemStackRenderState carriedSoil = new net.minecraft.client.renderer.item.ItemStackRenderState();
 }

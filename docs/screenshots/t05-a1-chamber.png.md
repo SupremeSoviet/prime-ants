@@ -1,0 +1,2 @@
+T05 chamber. Run 67b17cc3-70be-4181-9ba3-bddb6a15f370; queen 912fbfd6-45d3-4257-97bf-a47427dc4472; loaded founding tick 3164; phase SETTLED; work multiplier 20.0; 1600x1000; SHA-256 f88a3889c8d06a20b9849b6f5d2cde57abcf6ef3535273bbca5ea0f65367379b.
+Production egg/founding/navigation/rendering. No ant teleport, staged terrain or forced pose. Observer: spectator with vanilla night vision. Soil: removed=24, carried=0, deposited=3, released=19, plugging=2.

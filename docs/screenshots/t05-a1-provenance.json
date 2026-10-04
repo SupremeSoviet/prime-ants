@@ -1,0 +1,722 @@
+{
+  "caption": "T05 queen physically founds a protected excavated nest",
+  "run_id": "67b17cc3-70be-4181-9ba3-bddb6a15f370",
+  "capture_prefix": "t05-a1",
+  "entrypoint": "dev.primeants.gametest.AntCaptureTest",
+  "status": "success",
+  "seed": 2026100402,
+  "started_utc": "2026-10-04T15:39:55.383758500Z",
+  "observations": [
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 65,
+      "founding_ticks": 8,
+      "elapsed_age_ticks": 8,
+      "position": [
+        59.52443927897733,
+        80.0,
+        -40.624456050783685
+      ],
+      "removed": 0,
+      "carried": 0,
+      "deposited": 0,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 258,
+      "founding_ticks": 201,
+      "elapsed_age_ticks": 201,
+      "position": [
+        59.508919967775654,
+        80.0,
+        -40.45820073679685
+      ],
+      "removed": 4,
+      "carried": 4,
+      "deposited": 0,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "event": "founding_frame",
+      "stage": "transport",
+      "run_id": "67b17cc3-70be-4181-9ba3-bddb6a15f370",
+      "work_multiplier": 20.0,
+      "capture_started_utc": "2026-10-04T15:40:12.870291700Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t05-a1-transport.png",
+      "capture_completed_utc": "2026-10-04T15:40:12.994483900Z",
+      "screenshot_render_extractions": [
+        {
+          "render_extraction_utc": "2026-10-04T15:40:12.877309200Z",
+          "render_entity_tick": 200,
+          "render_position": [
+            59.50910036125478,
+            80.252197265625,
+            -40.46533203125
+          ],
+          "body_yaw": 0.0,
+          "walk_animation_position": 20.731073,
+          "walk_animation_speed": 0.015239063,
+          "visual_age_ticks": 201.0,
+          "moving": true,
+          "carried_soil_rendered": true,
+          "client_carried_soil_units": 4,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.46437496,
+              1.5,
+              -0.5689695
+            ],
+            [
+              0.54562503,
+              1.4747332,
+              -0.21228047
+            ],
+            [
+              0.46437502,
+              1.4999999,
+              0.11853049
+            ],
+            [
+              -0.46437496,
+              1.4747332,
+              -0.55603045
+            ],
+            [
+              -0.54562503,
+              1.5,
+              -0.22521953
+            ],
+            [
+              -0.46437493,
+              1.4747331,
+              0.13146949
+            ]
+          ],
+          "support_legs": [
+            0,
+            2,
+            4
+          ],
+          "support_tripod": "A"
+        }
+      ],
+      "width": 1600,
+      "height": 1000,
+      "modified_epoch_ms": 1791128412989,
+      "sha256": "4cb3f359c6315d5b0df1b92c68308dee08be48b8890a70558e61eafe13227ab2"
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 259,
+      "founding_ticks": 202,
+      "elapsed_age_ticks": 202,
+      "position": [
+        59.50878467266629,
+        80.0,
+        -40.44380137344595
+      ],
+      "removed": 4,
+      "carried": 4,
+      "deposited": 0,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 332,
+      "founding_ticks": 275,
+      "elapsed_age_ticks": 275,
+      "position": [
+        59.50202830261798,
+        80.0,
+        -38.75172526938175
+      ],
+      "removed": 4,
+      "carried": 1,
+      "deposited": 3,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "event": "founding_frame",
+      "stage": "entrance-spoil",
+      "run_id": "67b17cc3-70be-4181-9ba3-bddb6a15f370",
+      "work_multiplier": 20.0,
+      "capture_started_utc": "2026-10-04T15:40:16.670778200Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t05-a1-entrance-spoil.png",
+      "capture_completed_utc": "2026-10-04T15:40:16.850914100Z",
+      "screenshot_render_extractions": [
+        {
+          "render_extraction_utc": "2026-10-04T15:40:16.673054500Z",
+          "render_entity_tick": 274,
+          "render_position": [
+            59.501953125,
+            80.0,
+            -38.751708984375
+          ],
+          "body_yaw": 0.0,
+          "walk_animation_position": 27.608454,
+          "walk_animation_speed": 4.529552E-5,
+          "visual_age_ticks": 275.0,
+          "moving": false,
+          "carried_soil_rendered": true,
+          "client_carried_soil_units": 2,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.464375,
+              1.5000001,
+              -0.5625
+            ],
+            [
+              0.54562503,
+              1.4999999,
+              -0.21875
+            ],
+            [
+              0.464375,
+              1.5000001,
+              0.125
+            ],
+            [
+              -0.464375,
+              1.5000001,
+              -0.5625
+            ],
+            [
+              -0.54562503,
+              1.4999999,
+              -0.21875
+            ],
+            [
+              -0.464375,
+              1.5000001,
+              0.125
+            ]
+          ],
+          "support_legs": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "support_tripod": "boundary"
+        }
+      ],
+      "width": 1600,
+      "height": 1000,
+      "modified_epoch_ms": 1791128416845,
+      "sha256": "f06627c9c25928c6008f5900343a9f0732259ad4cce4405ef4d46d7402ad004e"
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 333,
+      "founding_ticks": 276,
+      "elapsed_age_ticks": 276,
+      "position": [
+        59.50202830261798,
+        80.0,
+        -38.75172526938175
+      ],
+      "removed": 4,
+      "carried": 1,
+      "deposited": 3,
+      "released": 0,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 533,
+      "founding_ticks": 476,
+      "elapsed_age_ticks": 476,
+      "position": [
+        59.517778184662276,
+        78.0,
+        -42.020743013708206
+      ],
+      "removed": 8,
+      "carried": 4,
+      "deposited": 3,
+      "released": 1,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 733,
+      "founding_ticks": 676,
+      "elapsed_age_ticks": 676,
+      "position": [
+        59.49186395811451,
+        80.0,
+        -39.8799041537811
+      ],
+      "removed": 8,
+      "carried": 0,
+      "deposited": 3,
+      "released": 5,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 933,
+      "founding_ticks": 876,
+      "elapsed_age_ticks": 876,
+      "position": [
+        59.509897691810224,
+        77.0,
+        -43.409123127689334
+      ],
+      "removed": 12,
+      "carried": 4,
+      "deposited": 3,
+      "released": 5,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 1133,
+      "founding_ticks": 1076,
+      "elapsed_age_ticks": 1076,
+      "position": [
+        59.50015292228306,
+        80.0,
+        -38.751633893544515
+      ],
+      "removed": 12,
+      "carried": 1,
+      "deposited": 3,
+      "released": 8,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 1333,
+      "founding_ticks": 1276,
+      "elapsed_age_ticks": 1276,
+      "position": [
+        59.474999994039536,
+        77.0,
+        -43.43730838079146
+      ],
+      "removed": 14,
+      "carried": 2,
+      "deposited": 3,
+      "released": 9,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 1533,
+      "founding_ticks": 1476,
+      "elapsed_age_ticks": 1476,
+      "position": [
+        59.46435793868227,
+        77.0,
+        -43.474999994039536
+      ],
+      "removed": 16,
+      "carried": 4,
+      "deposited": 3,
+      "released": 9,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 1733,
+      "founding_ticks": 1676,
+      "elapsed_age_ticks": 1676,
+      "position": [
+        59.499719527673555,
+        80.0,
+        -38.8152900146454
+      ],
+      "removed": 16,
+      "carried": 4,
+      "deposited": 3,
+      "released": 9,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 1933,
+      "founding_ticks": 1876,
+      "elapsed_age_ticks": 1876,
+      "position": [
+        59.43165426103048,
+        77.0,
+        -43.52613811234354
+      ],
+      "removed": 16,
+      "carried": 0,
+      "deposited": 3,
+      "released": 13,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 2133,
+      "founding_ticks": 2076,
+      "elapsed_age_ticks": 2076,
+      "position": [
+        59.47692695149623,
+        77.0,
+        -43.35274518464064
+      ],
+      "removed": 20,
+      "carried": 4,
+      "deposited": 3,
+      "released": 13,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 2333,
+      "founding_ticks": 2276,
+      "elapsed_age_ticks": 2276,
+      "position": [
+        59.499733192492194,
+        80.0,
+        -38.75163545213764
+      ],
+      "removed": 20,
+      "carried": 1,
+      "deposited": 3,
+      "released": 16,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 2533,
+      "founding_ticks": 2476,
+      "elapsed_age_ticks": 2476,
+      "position": [
+        59.525000005960464,
+        77.0,
+        -43.44713514895824
+      ],
+      "removed": 20,
+      "carried": 0,
+      "deposited": 3,
+      "released": 17,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 2733,
+      "founding_ticks": 2676,
+      "elapsed_age_ticks": 2676,
+      "position": [
+        59.53033328188632,
+        77.0,
+        -43.474999994039536
+      ],
+      "removed": 22,
+      "carried": 2,
+      "deposited": 3,
+      "released": 17,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 2933,
+      "founding_ticks": 2876,
+      "elapsed_age_ticks": 2876,
+      "position": [
+        59.500313369079045,
+        80.0,
+        -38.75163544239195
+      ],
+      "removed": 22,
+      "carried": 1,
+      "deposited": 3,
+      "released": 18,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "server_game_time": 3133,
+      "founding_ticks": 3076,
+      "elapsed_age_ticks": 3076,
+      "position": [
+        60.159535633414635,
+        77.0,
+        -44.14839712046656
+      ],
+      "removed": 22,
+      "carried": 0,
+      "deposited": 3,
+      "released": 19,
+      "plugged": 0,
+      "sealed": false,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true
+    },
+    {
+      "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+      "form": "queen",
+      "phase": "SETTLED",
+      "reason": "settled_throat_sealed",
+      "server_game_time": 3221,
+      "founding_ticks": 3164,
+      "elapsed_age_ticks": 3164,
+      "position": [
+        59.552666027707595,
+        77.0,
+        -44.23580758215927
+      ],
+      "removed": 24,
+      "carried": 0,
+      "deposited": 3,
+      "released": 19,
+      "plugged": 2,
+      "sealed": true,
+      "on_ground": true,
+      "ai_enabled": true,
+      "normal_physics": true,
+      "event": "founding_frame",
+      "stage": "chamber",
+      "run_id": "67b17cc3-70be-4181-9ba3-bddb6a15f370",
+      "work_multiplier": 20.0,
+      "capture_started_utc": "2026-10-04T15:42:41.244096300Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t05-a1-chamber.png",
+      "capture_completed_utc": "2026-10-04T15:42:41.397453200Z",
+      "screenshot_render_extractions": [
+        {
+          "render_extraction_utc": "2026-10-04T15:42:41.246659500Z",
+          "render_entity_tick": 3163,
+          "render_position": [
+            59.5601806640625,
+            77.0,
+            -44.1419677734375
+          ],
+          "body_yaw": 170.15625,
+          "walk_animation_position": 276.70422,
+          "walk_animation_speed": 0.12576963,
+          "visual_age_ticks": 3164.0,
+          "moving": true,
+          "carried_soil_rendered": false,
+          "client_carried_soil_units": 0,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.46437502,
+              1.5,
+              -0.5295324
+            ],
+            [
+              0.5456249,
+              1.4741191,
+              -0.2517176
+            ],
+            [
+              0.46437496,
+              1.5,
+              0.15796758
+            ],
+            [
+              -0.46437502,
+              1.4741192,
+              -0.59546757
+            ],
+            [
+              -0.54562485,
+              1.5,
+              -0.18578243
+            ],
+            [
+              -0.46437505,
+              1.4741191,
+              0.092032395
+            ]
+          ],
+          "support_legs": [
+            0,
+            2,
+            4
+          ],
+          "support_tripod": "A"
+        }
+      ],
+      "width": 1600,
+      "height": 1000,
+      "modified_epoch_ms": 1791128561392,
+      "sha256": "f88a3889c8d06a20b9849b6f5d2cde57abcf6ef3535273bbca5ea0f65367379b"
+    }
+  ],
+  "staged_terrain_edits": 0,
+  "ant_teleports": 0,
+  "ai_disabled": false,
+  "animation_poses_forced": false,
+  "work_multiplier": 20.0,
+  "cadence_ticks": 10,
+  "observer_effect": "vanilla /effect give @p minecraft:night_vision 99999 0 true; spectator only",
+  "selected_existing_ground": [
+    59,
+    79,
+    -41
+  ],
+  "origin_evidence": "Production TERRAIN completion witness -\u003e ProtoChunk FULL conversion -\u003e persistent NaturalSoil record. No fixture origin path.",
+  "queen_uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+  "entrance": [
+    59,
+    79,
+    -41
+  ],
+  "direction": "north",
+  "final": {
+    "uuid": "912fbfd6-45d3-4257-97bf-a47427dc4472",
+    "form": "queen",
+    "phase": "SETTLED",
+    "reason": "settled_throat_sealed",
+    "server_game_time": 3223,
+    "founding_ticks": 3164,
+    "elapsed_age_ticks": 3166,
+    "position": [
+      59.552666027707595,
+      77.0,
+      -44.2621710289027
+    ],
+    "removed": 24,
+    "carried": 0,
+    "deposited": 3,
+    "released": 19,
+    "plugged": 2,
+    "sealed": true,
+    "on_ground": true,
+    "ai_enabled": true,
+    "normal_physics": true
+  },
+  "completed_utc": "2026-10-04T15:42:41.426480800Z"
+}

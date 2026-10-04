@@ -20,6 +20,7 @@ public final class AntRenderer extends MobRenderer<LasiusNigerEntity, AntRenderS
     public AntRenderer(EntityRendererProvider.Context context, AntForm form) {
         super(context, new AntModel(context.bakeLayer(form == AntForm.QUEEN ? QUEEN_LAYER : WORKER_LAYER)),
                 form == AntForm.QUEEN ? 0.5F : 0.25F);
+        addLayer(new AntSoilLayer(this));
         texture = Identifier.fromNamespaceAndPath(PrimeAnts.MOD_ID, "textures/entity/lasius_niger_" + form.serializedName() + ".png");
     }
 
@@ -29,6 +30,7 @@ public final class AntRenderer extends MobRenderer<LasiusNigerEntity, AntRenderS
     @Override
     public void extractRenderState(LasiusNigerEntity entity, AntRenderState state, float partialTicks) {
         super.extractRenderState(entity, state, partialTicks);
+        itemModelResolver.updateForLiving(state.carriedSoil, entity.getMainHandItem(), net.minecraft.world.item.ItemDisplayContext.GROUND, entity);
         double dx = entity.getX() - entity.xo;
         double dz = entity.getZ() - entity.zo;
         state.moving = entity.isAlive() && dx * dx + dz * dz > 0.000001;

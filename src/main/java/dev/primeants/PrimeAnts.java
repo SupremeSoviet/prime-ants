@@ -14,6 +14,6 @@ public final class PrimeAnts implements ModInitializer {
     public void onInitialize() {
         AntEntities.initialize();
         AntItems.initialize();
-        LOGGER.info("Prime Ants debug adults initialized; colony not implemented.");
+        LOGGER.info("Prime Ants adults initialized; egg queens can physically found protected nests. Brood unimplemented.");
     }
 }

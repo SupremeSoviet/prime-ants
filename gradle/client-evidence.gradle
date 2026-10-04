@@ -36,31 +36,32 @@ ext.validateClientEvidence = { Map request ->
     require(capture.status == 'success' && capture.completed_utc, 'Capture did not complete successfully')
     require(Instant.parse(capture.started_utc).toEpochMilli() >= request.started_epoch_ms, 'Stale capture start')
     long completed = Instant.parse(capture.completed_utc).toEpochMilli()
-    def frames = capture.observations.findAll { it.event == 'walking_frame' }
-    require(request.frames_per_view == 1, 'T04 requires one walking frame per form/view')
-    require(frames.size() == 4 * request.frames_per_view, 'Missing captures')
+    def frames = capture.observations.findAll { it.event == 'founding_frame' }
+    require(request.scenario == 'founding', 'Expected founding capture contract')
+    require(frames.size() == 3 && frames.collect { it.stage }.toSet() == ['transport','entrance-spoil','chamber'].toSet(), 'Missing captures')
+    require(capture.queen_uuid && frames.every { it.uuid == capture.queen_uuid && it.form == 'queen' }, 'Queen identity changed')
+    require(capture.staged_terrain_edits == 0 && capture.ant_teleports == 0 && !capture.ai_disabled && !capture.animation_poses_forced, 'Staged founding evidence')
+    require(capture.final.sealed && capture.final.phase == 'SETTLED' && capture.final.removed == 24 && capture.final.plugged == 2, 'Incomplete claustral seal')
+    require(frames.collect { it.founding_ticks } == frames.collect { it.founding_ticks }.sort(), 'Founding sequence out of order')
     def images = []
-    ['worker', 'queen'].each { form ->
-        ['side', 'oblique'].each { view ->
-            def sequence = frames.findAll { it.form == form && it.view == view }.sort { it.sequence_position }
-            require(sequence.collect { it.sequence_position } == (1..request.frames_per_view).toList(), "Missing ${form}/${view} sequence")
-            require(sequence.every { it.support_tripod in ['A', 'B'] }, "Missing walking support observation ${form}/${view}")
-            require(sequence.every { it.geometry_motion_verified && it.walk_animation_speed > 0 && it.moving }, 'Missing measured gameplay geometry validation')
-            sequence.each { frame ->
-                require(frame.run_id == request.run_id, 'Mismatched frame run ID')
-                File png = file(frame.image)
-                File expectedPng = new File(request.capture_directory, "${request.capture_prefix}-${form}-${view}-${frame.sequence_position}.png")
-                require(png.canonicalPath == expectedPng.canonicalPath, 'Mismatched PNG path')
-                require(png.isFile(), 'Missing PNG')
-                require(png.lastModified() == frame.modified_epoch_ms && png.lastModified() >= request.started_epoch_ms, 'Stale or mismatched PNG timestamp')
-                require(png.lastModified() >= Instant.parse(frame.capture_started_utc).toEpochMilli() && png.lastModified() <= completed, 'PNG outside capture interval')
-                def image = ImageIO.read(png)
-                require(image != null && image.width == frame.width && image.height == frame.height && image.width == 1600 && image.height == 1000, 'Mismatched PNG dimensions')
-                def hash = MessageDigest.getInstance('SHA-256').digest(png.bytes).encodeHex().toString()
-                require(hash == frame.sha256, 'Mismatched PNG hash')
-                images.add(png.canonicalPath)
-            }
-        }
+    frames.each { frame ->
+        require(frame.run_id == request.run_id, 'Mismatched frame run ID')
+        require(frame.ai_enabled && frame.normal_physics && frame.work_multiplier == capture.work_multiplier, 'Missing production state/timing')
+        require(frame.removed == frame.carried + frame.deposited + frame.released + frame.plugged, 'Soil balance mismatch')
+        if (frame.stage == 'transport') require(frame.carried > 0 && frame.phase == 'TRANSPORTING' && frame.screenshot_render_extractions.any { it.carried_soil_rendered && it.moving }, 'Missing moving mandible soil render')
+        if (frame.stage == 'entrance-spoil') require(frame.deposited == 3, 'Missing physical external spoil')
+        if (frame.stage == 'chamber') require(frame.sealed && frame.phase == 'SETTLED' && frame.screenshot_render_extractions, 'Missing rendered settled queen')
+        File png = file(frame.image)
+        File expectedPng = new File(request.capture_directory, "${request.capture_prefix}-${frame.stage}.png")
+        require(png.canonicalPath == expectedPng.canonicalPath, 'Mismatched PNG path')
+        require(png.isFile(), 'Missing PNG')
+        require(png.lastModified() == frame.modified_epoch_ms && png.lastModified() >= request.started_epoch_ms, 'Stale or mismatched PNG timestamp')
+        require(png.lastModified() >= Instant.parse(frame.capture_started_utc).toEpochMilli() && png.lastModified() <= completed, 'PNG outside capture interval')
+        def image = ImageIO.read(png)
+        require(image != null && image.width == frame.width && image.height == frame.height && image.width == 1600 && image.height == 1000, 'Mismatched PNG dimensions')
+        def hash = MessageDigest.getInstance('SHA-256').digest(png.bytes).encodeHex().toString()
+        require(hash == frame.sha256, 'Mismatched PNG hash')
+        images.add(png.canonicalPath)
     }
     require(images.toSet().size() == images.size(), 'Duplicate PNG paths')
     [run_id: request.run_id, model_cases: actual.size(), captures: images.size(), names: actual.sort(), status: 'success']
@@ -73,19 +74,23 @@ tasks.register('testClientEvidenceValidator') {
         dir.mkdirs()
         long started = System.currentTimeMillis() - 5000
         def request = [run_id:'fixture-current', capture_prefix:'fixture', started_epoch_ms:started,
-                       frames_per_view:1, capture_directory:dir.absolutePath,
+                       scenario:'founding', capture_directory:dir.absolutePath,
                        model_report:new File(dir,'model.xml').absolutePath, provenance:new File(dir,'capture.json').absolutePath]
         file(request.model_report).text = file('build/test-results/client-model/headless.xml').text.replaceFirst(/name="run_id" value="[^"]*"/, 'name="run_id" value="fixture-current"')
         def capture = [run_id:'fixture-current', capture_prefix:'fixture', entrypoint:'dev.primeants.gametest.AntCaptureTest', status:'success',
-                       started_utc:Instant.ofEpochMilli(started).toString(), observations:[]]
-        ['worker','queen'].each { form -> ['side','oblique'].each { view -> (1..1).each { n ->
-            File png = new File(dir, "fixture-${form}-${view}-${n}.png")
+                       started_utc:Instant.ofEpochMilli(started).toString(), observations:[], queen_uuid:'fixture-queen', staged_terrain_edits:0, ant_teleports:0,
+                       ai_disabled:false, animation_poses_forced:false, work_multiplier:20, final:[sealed:true,phase:'SETTLED',removed:24,plugged:2]]
+        ['transport','entrance-spoil','chamber'].eachWithIndex { stage,n ->
+            File png = new File(dir, "fixture-${stage}.png")
             ImageIO.write(new java.awt.image.BufferedImage(1600,1000,java.awt.image.BufferedImage.TYPE_INT_RGB), 'png', png)
-            capture.observations.add([event:'walking_frame', form:form, view:view, sequence_position:n, run_id:request.run_id,
+            def state = stage == 'transport' ? [removed:4,carried:4,deposited:0,released:0,plugged:0,phase:'TRANSPORTING',sealed:false] :
+                        stage == 'entrance-spoil' ? [removed:4,carried:1,deposited:3,released:0,plugged:0,phase:'TRANSPORTING',sealed:false] :
+                        [removed:24,carried:0,deposited:3,released:19,plugged:2,phase:'SETTLED',sealed:true]
+            capture.observations.add(state + [event:'founding_frame', form:'queen', uuid:'fixture-queen', stage:stage, founding_ticks:n*500,
+                run_id:request.run_id, ai_enabled:true,normal_physics:true,work_multiplier:20,
                 image:png.absolutePath, modified_epoch_ms:png.lastModified(), capture_started_utc:Instant.ofEpochMilli(started).toString(), width:1600,height:1000,
-                sha256:MessageDigest.getInstance('SHA-256').digest(png.bytes).encodeHex().toString(), support_tripod:n % 2 ? 'A':'B',
-                walk_animation_position:n*0.3,walk_animation_speed:0.2,moving:true,geometry_motion_verified:true])
-        } } }
+                sha256:MessageDigest.getInstance('SHA-256').digest(png.bytes).encodeHex().toString(), screenshot_render_extractions:[[moving:true,carried_soil_rendered:stage=='transport']]])
+        }
         capture.completed_utc = Instant.now().toString()
         def save = { value -> file(request.provenance).text = JsonOutput.toJson(value) }
         save(capture)
@@ -109,6 +114,10 @@ tasks.register('testClientEvidenceValidator') {
         reject('wrong-image-dimensions', request, capture + [observations:capture.observations.collect { it + [width:1280] }])
         reject('wrong-image-path', request, capture + [observations:capture.observations.collect { it + [image:new File(dir,'old.png').absolutePath] }])
         reject('missing-named-capture-entrypoint', request, capture + [entrypoint:''])
+        reject('queen-identity-changed', request, capture + [observations:capture.observations.collect { it + [uuid:'different'] }])
+        reject('missing-carried-render', request, capture + [observations:capture.observations.collect { it + [screenshot_render_extractions:[]] }])
+        reject('soil-balance-mismatch', request, capture + [observations:capture.observations.collect { it + [removed:999] }])
+        reject('incomplete-seal', request, capture + [final:[sealed:false,phase:'ENTERING',removed:24,plugged:0]])
         save(capture)
         file(request.model_report).text = file(request.model_report).text.replace('fixture-current','fixture-old')
         reject('mismatched-model-run-id', request, capture)

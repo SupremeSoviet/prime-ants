@@ -1,0 +1,2 @@
+T05 entrance-spoil. Run 67b17cc3-70be-4181-9ba3-bddb6a15f370; queen 912fbfd6-45d3-4257-97bf-a47427dc4472; loaded founding tick 275; phase TRANSPORTING; work multiplier 20.0; 1600x1000; SHA-256 f06627c9c25928c6008f5900343a9f0732259ad4cce4405ef4d46d7402ad004e.
+Production egg/founding/navigation/rendering. No ant teleport, staged terrain or forced pose. Observer: spectator with vanilla night vision. Soil: removed=4, carried=1, deposited=3, released=0, plugging=0.
