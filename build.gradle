@@ -32,6 +32,12 @@ fabricApi {
 
 def gameTestReport = layout.buildDirectory.file('test-results/gametest/server.xml')
 def serverDiagnosticFilter = providers.gradleProperty('primeAntsServerDiagnosticFilter')
+// A focused diagnostic may validate one case; it must never make check/build green.
+gradle.taskGraph.whenReady { graph ->
+    if (serverDiagnosticFilter.isPresent() && graph.hasTask(':check')) {
+        throw new GradleException('Server diagnostic filter is forbidden in check/build; use runGameTest for an explicitly labelled single-case diagnosis')
+    }
+}
 loom.runs.named('gameTest') {
     systemProperties.put('fabric-api.gametest.report-file', gameTestReport.get().asFile.absolutePath)
     systemProperties.put('fabric-api.gametest.filter', serverDiagnosticFilter.getOrElse('prime_ants_test:*'))
