@@ -1,3 +1,96 @@
+# Slice 1 current assessment - T12, 2026-10-05
+
+**Cross-role ownership is repaired in the exercised regressions, but current acceptance is RED.** The final unfiltered build (`t12-build-final-recovered-6`) exited 1 after 149.807826 seconds: **15 unit passed / 96 server executed (95 passed, 1 failed) / 24 model passed**. All 90 original server cases remain present, with six additions. The retained `expansion_game_test_builder_death_uses_custody_and_actual_worker_reassignment` timed out at its unchanged 26,000-tick deadline. This is a gameplay blocker; this report is a current partial result, not milestone sign-off. No T12 native capture or performance server was launched.
+
+Full commands, failures, interpretation limits and artifacts are in [Report T12](C:/Users/user/Documents/turnloop/directions/prime-ants-slice1/turns/T12/report.md). Final executed XML and inspected binary/source jars are in [final-executed](C:/Users/user/Documents/turnloop/directions/prime-ants-slice1/turns/T12/final-executed/). Production archives contain no development test/capture/restart classes. Commit identity is recorded externally in T12/commit-evidence.json.
+
+## Original outcomes 1-5
+
+| Original outcome | Current assessment and evidence |
+|---|---|
+| 1. Pinned Fabric project, green unit/server build | Project compiles on Minecraft 26.3, Java 25, Gradle 9.7.1, Loader 0.19.5, API 0.161.0+26.3, Loom 1.18.2. Unit/model checks pass, but the latest full server suite is red. [Executed XML](C:/Users/user/Documents/turnloop/directions/prime-ants-slice1/turns/T12/final-executed/server.xml) and [command/exit metadata](C:/Users/user/Documents/turnloop/directions/prime-ants-slice1/turns/T12/t12-build-final-recovered-6.json). |
+| 2. Real queen, brood-derived workers, digging, physical food and starvation consequences | Debug-egg founding, finite first-clutch reserve, real emergence/death, physical dropped-food foraging/nursing, finite larval nutrition and bounded worker excavation are demonstrated by retained tests and historical native saves. T12's six new cases pass in the final full suite. Continued construction after builder death is not reliably demonstrated by that suite. Natural food harvesting, adult hunger/lifespan/mortality and unattended survival remain absent. [Role regressions](../src/gametest/java/dev/primeants/gametest/RoleConflictGameTest.java), [expansion cases](../src/gametest/java/dev/primeants/gametest/ExpansionGameTest.java), [nursing guards](../src/gametest/java/dev/primeants/gametest/NursingGuardGameTest.java). |
+| 3. Anatomy, animation, caste scale, mandible cargo, EN/RU | Production model/textures/carrying offsets are unchanged; all 24 model cases pass. Observer mouth-region geometry is corrected and tested, but readable current cargo has not been photographed. [Model XML](C:/Users/user/Documents/turnloop/directions/prime-ants-slice1/turns/T12/final-executed/headless.xml), [model tests](../src/gametest/java/dev/primeants/gametest/AntModelGameTest.java), [observer geometry](../src/gametest/java/dev/primeants/gametest/CargoView.java). |
+| 4. Actual colony close-ups, mound traffic, connected interior/brood, food carrying | Historical T11 mound/interior images support unchanged views with their original dates. Soil-carrying image is explicitly rejected for occlusion. Fresh colony worker/queen close-ups, readable food and unobscured soil carrying remain missing. No T12 PNG exists. See the visual assessment below. |
+| 5. Current report, measured timing/performance and next direction | This report now leads with T12's current result and preserves history below. Default/accelerated duration definitions and historical measured ticks are distinguished. **MSPT and performance population are unknown**, since no permitted sample could follow the red acceptance. A compiled development sample driver is prepared but unexecuted. |
+
+## Ownership, caregiver reservation and bounded loading evidence
+
+The actual baseline failure is [03-failing-before.xml](C:/Users/user/Documents/turnloop/directions/prime-ants-slice1/turns/T12/03-failing-before.xml): at tick 10,220 an enabled empty-handed builder with an active partially built job also became the replacement forager after normal lethal damage to the original forager. Genuine nurses held food; no adult or cargo was manufactured for that state.
+
+Queen selection and worker assignment now reciprocally reject incompatible tasks, claims and equipment. Both claims are published after assignment returns success. Nursing cannot take a forager/builder or any existing cargo; construction cannot take a forager/occupied job or overwrite cargo. A former builder can forage after actual completion/release. Loaded persisted conflicts release the incompatible forager owner or quarantine unsettled soil/foreign association, retaining cargo and edits. Missing entity lookup retains claims. Normal death of a quarantined soil owner accounts release from the claim rather than its corrupt phase. Exercised corrupt-save variants are a duplicate same-member forage claim and incompatible nursing phase with real soil; the foreign-association quarantine branch is compiled, not exhaustive corruption coverage.
+
+The final suite executed and passed these new cases (full namespace `prime_ants_test:`):
+
+- `role_conflict_game_test_dead_forager_cannot_steal_empty_handed_partial_builder`
+- `role_conflict_game_test_restored_partial_builder_and_queen_keep_reciprocal_claims`
+- `role_conflict_game_test_conflicting_persisted_forager_claim_releases_without_losing_builder_progress`
+- `role_conflict_game_test_persisted_incompatible_builder_cargo_is_explicitly_quarantined`
+- `role_conflict_game_test_disabled_nursing_labels_cannot_reserve_care_with_four_other_mature_workers`
+- `expansion_game_test_completed_excavation_can_relieve_traffic_before_final_soil_delivery`
+
+A remaining caregiver must be the canonical living loaded/ticking entity, mature, AI enabled, associated with the exact colony/home, nursing-authorized and independent of forage/construction claims. The proposed builder is excluded. The negative case has six actual emerged workers: two disabled original nursing labels and four other mature enabled workers. Thus the old four-worker threshold cannot hide an incorrect reservation.
+
+These are bounded real-tick entity/actual SavedData restoration checks, not a new cold restart of nutrition/layout. Negative fixtures explicitly disable/park real ants on existing supported exterior cells and hold the genuine empty-handed partial builder during setup; the builder is enabled before the lethal-damage event. They preserve identity, cargo and physical accounting. This is not native photography or proof of unassisted movement of those held actors. Deadlines, material/origin/custody/nutrition assertions and the retained builder-death case are not removed or extended.
+
+Already verified two-high completed floors may serve nurse circulation while excluding the next excavation and its adjacent work faces. Brood emergence waits for all twelve real removals. This widens the earlier circulation eligibility guard, not the nest plan, removal count, resource balance or excavation permission. The final retained builder-death failure means this has not resolved all continuation problems.
+
+[55-final-builder-death-stall.json](C:/Users/user/Documents/turnloop/directions/prime-ants-slice1/turns/T12/55-final-builder-death-stall.json) reads the failed save: two removals, zero deposits, two released soil units, a real replacement builder still claimed in DIG with empty equipment. The final queen snapshot reports incomplete operational opening. These files are after GameTest shutdown/cleanup; that readiness value is an observation, not an established live root cause. The final world is preserved as T12/final-failed-server-world.zip. No sign-off is based on a claim counter alone.
+
+## Timing and performance
+
+| Timing | Production default, multiplier 1 | Declared development/capture settings |
+|---|---|---|
+| Egg / larva / cocoon, each | 12,000 loaded ticks = 10 minutes at 20 TPS | Brood multiplier 100: 120 ticks each |
+| Egg to worker emergence, excluding care/space stalls | 36,000 loaded ticks = 30 minutes nominal | 360 ticks nominal |
+| Callow darkening | 4,800 loaded ticks = 4 minutes | 48 ticks |
+| Laying cadence | 1,200 loaded ticks = 60 seconds | 12 ticks |
+| Excavation/deposition action cadence | 200 loaded ticks = 10 seconds | Work multiplier 20: 10 ticks |
+
+These definitions are covered by [15 time-scale unit cases](../src/test/java/dev/primeants/time/SimulationTimeScaleTest.java). They are not measurements of a default-speed whole colony. Historical T11 A4 construction took **2,851 loaded construction ticks**, nominally 142.55 seconds at 20 TPS, at work multiplier 20; its full native task took 619.217 seconds. T12 has no new native duration measurement.
+
+A read-only audit of the verified T11 A4 source confirms its **persisted stage duration 120 and six saved callow durations 48**: [18-persisted-timing.json](C:/Users/user/Documents/turnloop/directions/prime-ants-slice1/turns/T12/18-persisted-timing.json). Those accelerated saved durations would affect a replay even if current settings changed.
+
+**Performance: unmeasured; no median/p95/max MSPT, sampled N, loaded-chunk range or active/idle classification is available.** T11's saved one queen + six workers is a historical population, not a measured performance window. The 96 GameTests are not a 20-ant or multi-colony benchmark. No scalability kill criterion is inferred from unknown performance.
+
+[Sample driver](../scripts/sample-performance.py) and the narrowly extended [dedicated harness](../src/gametest/java/dev/primeants/gametest/RestartHarness.java) compile. The unexecuted design uses an untouched owned copy of verified T11 A4, normal 20 TPS without sprint, at least 200 loaded warmup ticks then 1,200 native timing samples, per-tick population/tasks/chunks/ages, normal physical apple/chicken inputs and ordinary expiry. It reads the preceding completed native timing ring at Fabric START (`current tick - 1`); pinned sources place that event after tick-count increment. The last change only removes unlimited food lifetime from this unexecuted performance branch; targeted compile exit 0, T12/t12-58-unexecuted-harness-compile.json. This is preparation, not runtime validation or performance data.
+
+After a new completed green unfiltered build, the intended command is:
+
+```powershell
+python .\scripts\sample-performance.py --attempt t12-performance-a1 --evidence C:\Users\user\Documents\turnloop\directions\prime-ants-slice1\turns\T12\performance-a1 --acceptance-name <fresh-green-evidence-name>
+```
+
+The driver refuses a missing/red acceptance record. It was not invoked in T12. [Observed hardware](C:/Users/user/Documents/turnloop/directions/prime-ants-slice1/turns/T12/16-hardware.json): Ryzen 7 7700, 8 cores / 16 logical processors, 102,130,163,712 bytes installed RAM; Gradle helper pins Temurin 25.0.3.9. No performance JVM exists to report a sampled heap/load context.
+
+## Visible evidence and original dates
+
+The following actual historical PNGs were opened again in T12; none is relabelled as a T12 capture. Original run **7544f303-8d9d-4e0a-9203-4ff2faa47ace**, original queen **0915c15f-8000-482e-8ccf-fc6caba553e1**, native ordinary founding/growth, spectator with disclosed night vision; [original provenance](screenshots/t11-a4-provenance.json).
+
+| File | Original UTC capture completion | T12 visual inspection |
+|---|---|---|
+| [T11 mound](screenshots/t11-a4-expanded-mound.png) | 2026-10-05 05:07:29.729738900Z | Mound, entrance lane and multiple real ants visible. Historical support for entrance/traffic view, not a current-code native run or close-up completion. |
+| [T11 interior](screenshots/t11-a4-usable-interior.png) | 2026-10-05 05:07:32.242472200Z | Chamber and real adults visible; a pale brood cluster is visible but partly overlapped. Supports an interior view; a clearer connected tunnel/brood overview remains useful for review. |
+| [T11 soil carrying](screenshots/t11-a4-soil-carrying.png) | 2026-10-05 05:06:12.885635600Z | **Rejected**: foreground grass/terrain hides the mouth/item region and part of the worker. Render-extraction metadata does not establish readable cargo. |
+
+[13-saved-mouth-region-probe.json](C:/Users/user/Documents/turnloop/directions/prime-ants-slice1/turns/T12/13-saved-mouth-region-probe.json) reads an owned copy of genuine T11 A3. It finds real dirt equipment and tests the production-derived item region against saved voxels; source archive is unchanged. It is geometry evidence only. The observer now targets the worker item at approximately 0.528125 blocks forward / 0.2135 high, checks a region rather than a centre ray and considers foliage. Renderer offsets/adult design are unchanged. Prepared separate colony close-ups and food view have not run; no visual acceptance is inferred from this code or metadata.
+
+## Known limits and next direction
+
+T11's 4-to-1 original-room occupancy change is redistribution, **not demonstrated feeding throughput**. Its final three larvae all lacked sugar; one also lacked protein. Two retained protein stores do not make those larvae nutritionally supported. T12's read-only saved NBT audit preserves that distinction.
+
+Next: diagnose the final retained builder-death continuation with its preserved save and smallest filtered command before another full workload. Establish whether live route/readiness or cross-fixture restoration is responsible; final post-cleanup data alone cannot settle this. Then obtain genuinely green unfiltered acceptance, archive every actual client attempt immediately, obtain and open readable colony/cargo views, and measure the one proportionate normal-TPS sample. **Phase 2 remains pending independent original-outcome review.**
+
+Cold restart of new nutrition/layout, arbitrary unloading, offline catch-up, natural food supply, adult mortality/lifespan and larger-population/multi-colony performance remain missing or unmeasured. Quarantined corrupt persisted states are explicitly blocked rather than silently repaired; no general recovery framework or cargo manufacture is added.
+
+T12 adds **zero client launches**: lifetime remains **24; native 16/8, tasks 11/13**. It launched **39 server GameTest JVM/tasks (23 passing, 16 failing)**, separately from headless model JVMs. No restart/performance server launched. One full workload was mistakenly started after a failed focused check before inspecting its exit; this process deviation is explicitly detailed in T12/report.md. No timeout/RAM increase, removed assertion, filter in build, history rewrite, push or owner-world change was used.
+
+---
+
+## Historical reports through T11
+
+The text below is retained historical evidence. Its earlier milestone/status claims are superseded by the T12 assessment above.
+
 # Current result after T10 - physical food supports continuing brood
 
 One generated-world production queen now raises three original workers, forages for player-dropped food, and receives physical nurse feeding. Six apples and eight raw chickens yielded **four live workers**, a different pale callow and another laying event in the reused pile. Saved NBT independently balances **14 supplied = 6 physical + 8 consumed** (five apples / three chickens consumed). Queen founding reserve stays zero; finite recipient stores fund four new eggs and supported larval development.

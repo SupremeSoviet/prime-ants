@@ -117,10 +117,15 @@ public final class QueenFounding {
                 PrimeAnts.LOGGER.info("Founding readiness queen={} phase={} reason={}", queen.getUUID(), phase, reason);
             }
             if (sealed()) queen.prepareNursery(level, plan);
+            if(workerClaim!=null&&level.getEntity(workerClaim) instanceof LasiusNigerEntity claimed
+                &&(!dev.primeants.worker.ColonyMembers.get(level).belongs(claimed,queen.getUUID(),plan.chamber())||!claimed.workerTasks().foraging())){
+                PrimeAnts.LOGGER.warn("Released incompatible persisted forager claim queen={} worker={} phase={} cargo={}",queen.getUUID(),claimed.getUUID(),claimed.workerTasks().phase(),claimed.getMainHandItem());workerClaim=null;
+            }
+            NestExpansion.get(level).reconcile(level,queen);
             if (workerClaim == null && ready()) {
                 var workers = level.getEntitiesOfClass(LasiusNigerEntity.class, new AABB(plan.chamber()).inflate(4),
                         w -> w.isAlive() && !w.isRemoved() && !w.isCallow() && !w.isNoAi() && queen.getUUID().equals(w.queenId())
-                                && plan.chamber().equals(w.nurseryHome()) && w.getMainHandItem().isEmpty());
+                                && plan.chamber().equals(w.nurseryHome()) && w.workerTasks().canForage(plan));
                 if (!workers.isEmpty()) {
                     // Prefer a free side-row worker over the central worker boxed in by the two nurses.
                     // This is a physical assignment choice among living adults, never a replacement spawn.
@@ -131,8 +136,9 @@ public final class QueenFounding {
                     }).thenComparing(w -> w.getUUID().toString())).orElseThrow();
                     // Closed legacy nests without placement records fail closed; never infer ownership from dirt.
                     if (lifecycle != Lifecycle.CLAUSTRAL || plan.plugs().stream().allMatch(p -> ColonyPlugs.get(level).owned(level,p,queen.getUUID()))) {
-                        workerClaim = worker.getUUID(); if (lifecycle == Lifecycle.CLAUSTRAL) lifecycle = Lifecycle.OPENING;
-                        worker.workerTasks().assign(plan);
+                        if(worker.workerTasks().assign(plan)){
+                            workerClaim = worker.getUUID(); if (lifecycle == Lifecycle.CLAUSTRAL) lifecycle = Lifecycle.OPENING;
+                        }
                     } else reason = "settled_opening_refused_plug_ownership_missing_or_revoked";
                 }
             }
@@ -140,7 +146,7 @@ public final class QueenFounding {
                 var members=level.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(plan.chamber()).inflate(16),w->w.isAlive()&&!w.isRemoved()&&dev.primeants.worker.ColonyMembers.get(level).belongs(w,queen.getUUID(),plan.chamber()));
                 NestExpansion.get(level).consider(level,queen,members);
                 for(var w:level.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(plan.chamber()).inflate(4),w->w.isAlive()&&!w.isRemoved()&&!w.isCallow()&&!w.isNoAi()))
-                    if(!claimedBy(w)&&dev.primeants.worker.ColonyMembers.get(level).belongs(w,queen.getUUID(),plan.chamber()))w.workerTasks().assignNurse(plan);
+                    if(!claimedBy(w)&&!w.workerTasks().construction()&&dev.primeants.worker.ColonyMembers.get(level).belongs(w,queen.getUUID(),plan.chamber()))w.workerTasks().assignNurse(plan);
             }
             return;
         }

@@ -24,7 +24,8 @@
       "dev.primeants.gametest.TransferGameTest",
       "dev.primeants.gametest.NursingGameTest",
       "dev.primeants.gametest.NursingGuardGameTest",
-      "dev.primeants.gametest.ExpansionGameTest"
+      "dev.primeants.gametest.ExpansionGameTest",
+      "dev.primeants.gametest.RoleConflictGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

@@ -83,7 +83,13 @@ public final class NestExpansion extends SavedData {
     public boolean opening(ServerLevel l,BlockPos p,UUID owner){var j=job(owner);return j!=null&&j.completed.contains(p)&&ColonyTerrain.get(l).opened(l,p,owner);}
     public String problem(ServerLevel l,UUID owner){var j=job(owner);return j==null?null:j.problem(l,owner);}
     public List<BlockPos> usable(ServerLevel l,UUID owner){var j=job(owner);return j==null?List.of():j.usable(l,owner);}
-    public List<BlockPos> operationalSpace(ServerLevel l,UUID owner){var j=job(owner);return j!=null&&j.complete()?j.usable(l,owner):List.of();}
+    public List<BlockPos> operationalSpace(ServerLevel l,UUID owner){var j=job(owner);return j!=null&&j.removed()==j.tasks.size()?j.usable(l,owner):List.of();}
+    /** Idle/feeding circulation may use already verified two-high floors during a job, while
+     * reserving the next removal and its adjacent work faces. Births still await complete excavation. */
+    public List<BlockPos> circulationSpace(ServerLevel l,UUID owner){
+        var j=job(owner);if(j==null)return List.of();if(j.removed()==j.tasks.size())return j.usable(l,owner);
+        var target=j.tasks.get(j.removed());return j.usable(l,owner).stream().filter(p->Math.abs(p.getX()-target.getX())+Math.abs(p.getZ()-target.getZ())>1).toList();
+    }
     /** A completed lower removal can temporarily fit an adult below its unchanged pending roof.
      * This is physical body containment only; usable space/emergence still require two completed air cells. */
     public List<BlockPos> bodyFloors(ServerLevel l,UUID owner,double bodyTop){
@@ -94,6 +100,38 @@ public final class NestExpansion extends SavedData {
                 :bodyTop<=p.getY()+1&&terrain.eligible(l,p.above(),owner)&&l.getBlockState(p.above()).equals(j.expected.get(j.tasks.indexOf(p.above()))))).toList();
     }
     public void changed(){setDirty();}
+    /** Loaded conflicts are resolved from the worker's canonical task/cargo. Missing lookup stays unknown. */
+    public void reconcile(ServerLevel l,LasiusNigerEntity q){
+        var j=job(q.getUUID());if(j==null||j.claim==null)return;
+        if(!(l.getEntity(j.claim) instanceof LasiusNigerEntity w))return;
+        if(!ColonyMembers.get(l).belongs(w,q.getUUID(),j.home.chamber())||w.workerTasks().plan()==null
+            ||!w.workerTasks().plan().entrance().equals(j.home.entrance())||w.workerTasks().plan().direction()!=j.home.direction()){
+            j.claim=null;j.reason="quarantined_foreign_builder_claim_cargo_and_edits_retained";setDirty();
+            dev.primeants.PrimeAnts.LOGGER.error("Quarantined foreign construction owner queen={} worker={} actualQueen={}",q.getUUID(),w.getUUID(),w.queenId());return;
+        }
+        if(!w.workerTasks().construction()&&(w.getMainHandItem().is(net.minecraft.world.item.Items.DIRT)||j.removed()>j.deposited+j.released)){
+            q.founding().releaseWorker(w);
+            if(!j.reason.startsWith("quarantined_")){
+                j.reason="quarantined_incompatible_task_with_unsettled_soil";setDirty();
+                dev.primeants.PrimeAnts.LOGGER.error("Quarantined construction claim queen={} worker={} phase={} cargo={} removed={} deposited={} released={}",q.getUUID(),w.getUUID(),w.workerTasks().phase(),w.getMainHandItem(),j.removed(),j.deposited,j.released);
+            }
+            return;
+        }
+        if(q.founding().claimedBy(w)){
+            if(w.workerTasks().construction())q.founding().releaseWorker(w);
+            else {j.claim=null;j.reason="persisted_construction_claim_released_task_and_cargo_retained";setDirty();}
+            dev.primeants.PrimeAnts.LOGGER.warn("Resolved overlapping role claims queen={} worker={} phase={} cargo={} removed={} deposited={}",q.getUUID(),w.getUUID(),w.workerTasks().phase(),w.getMainHandItem(),j.removed(),j.deposited);
+        }
+        if(j.claim!=null&&!w.workerTasks().construction()){
+            // Never overwrite nursing/foraging or equipment to recover a historical claim.
+            j.claim=null;j.reason="persisted_construction_claim_released_incompatible_task";setDirty();
+            dev.primeants.PrimeAnts.LOGGER.warn("Released incompatible construction claim queen={} worker={} task={} cargo={}",q.getUUID(),w.getUUID(),w.workerTasks().phase(),w.getMainHandItem());
+        }
+    }
+    public static long remainingCaregivers(ServerLevel l,UUID owner,NestPlan p,LasiusNigerEntity proposed){
+        return l.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(p.chamber()).inflate(16),w->w!=proposed&&w.isAlive()&&!w.isRemoved()
+            &&owner.equals(w.queenId())&&w.workerTasks().caregiver(l,p)).size();
+    }
     public void removed(Job j,BlockPos p){if(j.removed()>=HARD_CAP||!j.tasks.get(j.removed()).equals(p))throw new IllegalStateException("Extension order/cap");j.completed.add(p);setDirty();}
     public void release(UUID owner,LasiusNigerEntity w,int soil){var j=job(owner);if(j!=null&&w.getUUID().equals(j.claim)){j.claim=null;j.released+=soil;j.reason="builder_dead_waiting_actual_worker";setDirty();}}
     public void used(UUID owner,LasiusNigerEntity w,String use){var j=job(owner);if(j!=null&&j.usedBy.isEmpty()){j.usedBy=w.getUUID().toString();j.use=use;setDirty();}}
@@ -110,12 +148,11 @@ public final class NestExpansion extends SavedData {
     public void consider(ServerLevel l,LasiusNigerEntity q,List<LasiusNigerEntity> workers){
         var p=q.founding().plan();if(p==null||q.founding().lifecycle()!=QueenFounding.Lifecycle.OPEN||!q.founding().ready())return;
         var j=job(q.getUUID());
+        if(j!=null&&j.reason.startsWith("quarantined_"))return;
         if(j!=null&&j.claim!=null)return; // Absent/unloaded lookup never frees a claim.
         if(j!=null&&j.complete())return;
-        var eligible=workers.stream().filter(w->!w.isCallow()&&!w.isNoAi()&&!q.founding().claimedBy(w)&&w.getMainHandItem().isEmpty()
-                &&ColonyMembers.get(l).belongs(w,q.getUUID(),p.chamber())&&w.workerTasks().freeForConstruction()
-                &&(!w.workerTasks().nursing()||workers.stream().filter(n->n.workerTasks().nursing()).count()>=3)).sorted(Comparator.comparing(w->w.getUUID().toString())).toList();
-        if(workers.stream().filter(w->!w.isCallow()&&!w.isNoAi()).count()<4||eligible.isEmpty()||workers.stream().filter(w->w.workerTasks().nursing()).count()<2)return;
+        var eligible=workers.stream().filter(w->w.workerTasks().canConstruct(p)&&remainingCaregivers(l,q.getUUID(),p,w)>=2).sorted(Comparator.comparing(w->w.getUUID().toString())).toList();
+        if(workers.stream().filter(w->w.isAlive()&&!w.isRemoved()&&!w.isCallow()&&!w.isNoAi()&&ColonyMembers.get(l).belongs(w,q.getUUID(),p.chamber())).count()<4||eligible.isEmpty())return;
         // Four mature real bodies in a nine-cell chamber, with only seven empty floor cells, trigger one widening.
         if(j==null){
             for(int side:new int[]{1,-1}){

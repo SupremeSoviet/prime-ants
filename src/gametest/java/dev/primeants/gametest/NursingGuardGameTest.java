@@ -142,7 +142,7 @@ public final class NursingGuardGameTest {
             var cocoons=p.records().stream().filter(r->!r.founding()&&r.stage()==BroodStage.COCOON).toList();
             if(!armed[0]&&!cocoons.isEmpty()){armed[0]=true;EmergenceFault.block(q[0].getUUID());}
             if(armed[0]&&!restored[0]&&cocoons.size()==3&&EmergenceFault.attempts(q[0].getUUID())>=6){
-                restored[0]=true;p.records().forEach(r->newBrood.add(r.id()));q[0].setNoAi(true);f.workers(c,q[0]).forEach(w->w.setNoAi(true));stale[0]=p.saveWithFullMetadata(c.getLevel().registryAccess());restorePile(c,p,stale[0]);q[0]=f.restore(c,q[0]);
+                restored[0]=true;p.records().forEach(r->newBrood.add(r.id()));q[0].setNoAi(true);f.workers(c,q[0]).forEach(w->{w.setNoAi(true);f.shelterDisabled(c,q[0],w);});stale[0]=p.saveWithFullMetadata(c.getLevel().registryAccess());restorePile(c,p,stale[0]);q[0]=f.restore(c,q[0]);
                 c.getLevel().getDataStorage().saveAndJoin();EmergenceFault.release(q[0].getUUID());
             }
             if(restored[0]&&f.workers(c,q[0]).size()==6){

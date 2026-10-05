@@ -18,7 +18,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public final class ExpansionGameTest {
     private final WorkerForagingGameTest f=new WorkerForagingGameTest();
     private final NursingGameTest food=new NursingGameTest();
-    private void balance(GameTestHelper c,LasiusNigerEntity q){
+    void balance(GameTestHelper c,LasiusNigerEntity q){
         var p=q.founding().plan();if(p==null||q.founding().phase()!=QueenFounding.Phase.SETTLED)return;
         var j=NestExpansion.get(c.getLevel()).job(q.getUUID());
         long mound=NestExpansion.deposits(p).stream().filter(b->c.getLevel().getBlockState(b).is(NurseryBlocks.NEST_SOIL)).count();
@@ -37,7 +37,8 @@ public final class ExpansionGameTest {
         // Read-only camera reproducer: controlled opaque terrain around a one-cell air column, no actors.
         for(int x=6;x<=8;x++)for(int z=6;z<=8;z++)if(x!=7||z!=7)c.setBlock(x,2,z,NurseryBlocks.NEST_SOIL);
         var pos=net.minecraft.world.phys.Vec3.atBottomCenterOf(c.absolutePos(new BlockPos(7,2,7)));
-        var target=CargoView.target(pos,0);var eye=CargoView.eye(c.getLevel(),pos,0);
+        c.assertTrue(CargoView.eye(c.getLevel(),pos,0)==null,"Actual forward mandible region crosses the opaque neighbor; centre-only air column must be rejected");
+        var target=CargoView.target(pos,45);var eye=CargoView.eye(c.getLevel(),pos,45);
         c.assertTrue(eye!=null&&eye.x==pos.x&&eye.z==pos.z&&CargoView.clear(c.getLevel(),eye,target),"Opaque mound blocks reject oblique views; actual unmodified air column supplies the overhead observer view");c.succeed();
     }
     @GameTest(maxTicks=30000,structure="prime_ants_test:idle_ground")
@@ -81,6 +82,20 @@ public final class ExpansionGameTest {
     }
     @GameTest(maxTicks=26000,structure="prime_ants_test:idle_ground")
     public void sameStateReplacementAfterPlanningRevokesPreparedTarget(GameTestHelper c){interfere(c,0);}
+    @GameTest(maxTicks=26000,structure="prime_ants_test:idle_ground")
+    public void completedExcavationCanRelieveTrafficBeforeFinalSoilDelivery(GameTestHelper c){
+        var q=f.start(c);boolean[] supplied={false},observed={false},partial={false};c.onEachTick(()->{
+            growth(c,q,supplied);balance(c,q);var data=NestExpansion.get(c.getLevel());var j=data.job(q.getUUID());if(j==null)return;
+            if(j.removed()<12){var target=j.tasks.get(j.removed());var space=data.circulationSpace(c.getLevel(),q.getUUID());
+                for(var floor:space)c.assertTrue(j.usable(c.getLevel(),q.getUUID()).contains(floor)&&Math.abs(floor.getX()-target.getX())+Math.abs(floor.getZ()-target.getZ())>1,"Partial circulation uses verified connected two-high openings and reserves every adjacent next work face");
+                if(!space.isEmpty())partial[0]=true;
+            }
+            if(j.removed()==12&&!j.complete()){
+                c.assertTrue(j.usable(c.getLevel(),q.getUUID()).size()==6&&data.operationalSpace(c.getLevel(),q.getUUID()).size()==6&&j.claim!=null&&f.workers(c,q).stream().anyMatch(w->w.getUUID().equals(j.claim)&&w.getMainHandItem().is(Items.DIRT)),"All twelve real removals unlock only the six verified two-high floors while final physical soil delivery remains pending");observed[0]=true;
+            }
+            if(j.complete()){c.assertTrue(partial[0]&&observed[0]&&j.removed()==12&&j.deposited==12&&j.released==0,"Real construction/cargo completes with unchanged ownership, soil and deadline");c.succeed();}
+        });
+    }
     @GameTest(maxTicks=26000,structure="prime_ants_test:idle_ground")
     public void playerHoleInPlannedCellCannotBecomeUsableSpace(GameTestHelper c){interfere(c,1);}
     @GameTest(maxTicks=26000,structure="prime_ants_test:idle_ground")

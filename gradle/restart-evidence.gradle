@@ -10,10 +10,11 @@ loom.runs.register('restartServer') {
     systemProperties.put('prime_ants.restartEvidence',providers.gradleProperty('primeAntsRestartEvidence').getOrElse(file('build/restart-evidence').absolutePath))
     systemProperties.put('prime_ants.broodMultiplier','100')
     systemProperties.put('prime_ants.foundingWorkMultiplier','20')
+    if(providers.gradleProperty('primeAntsPerformanceQueen').isPresent())systemProperties.put('prime_ants.performanceQueen',providers.gradleProperty('primeAntsPerformanceQueen').get())
 }
 tasks.named('runRestartServer') {
     doFirst {
-        if(!(restartAttempt ==~ /[a-z0-9][a-z0-9-]*/) || restartAttempt=='unset' || !(restartPhase in ['probe','geometry','active','A','B'])) throw new GradleException('Explicit owned restart attempt and phase required')
+        if(!(restartAttempt ==~ /[a-z0-9][a-z0-9-]*/) || restartAttempt=='unset' || !(restartPhase in ['probe','geometry','active','A','B','performance'])) throw new GradleException('Explicit owned restart attempt and phase required')
         if(!file("build/run/t09-restart/${restartAttempt}/world/level.dat").exists())throw new GradleException('Restart harness requires the unedited copied T08 A4 world')
     }
 }

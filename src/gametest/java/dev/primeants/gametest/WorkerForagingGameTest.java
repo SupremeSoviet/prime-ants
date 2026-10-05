@@ -60,6 +60,17 @@ public final class WorkerForagingGameTest {
     }
     LasiusNigerEntity start(GameTestHelper c) { var f=new QueenFoundingGameTest();f.terrain(c,Blocks.DIRT.defaultBlockState(),true,true);return f.egg(c); }
     List<LasiusNigerEntity> workers(GameTestHelper c,LasiusNigerEntity q) { return c.getLevel().getEntitiesOfClass(LasiusNigerEntity.class,c.getBounds().inflate(8),w->w.isAlive()&&q.getUUID().equals(w.queenId())); }
+    /** Negative fixtures only: keep a disabled real body/cargo on an existing supported
+     * exterior cell, leaving every nursery feeding, emergence and construction stand free. */
+    void shelterDisabled(GameTestHelper c,LasiusNigerEntity q,LasiusNigerEntity w){
+        c.assertTrue(w.isNoAi(),"Only explicitly disabled negative-fixture actors may be isolated");var p=q.founding().plan();
+        for(int forward=-6;forward<=-1;forward++)for(int lane=-5;lane<=5;lane++){
+            var feet=p.at(forward,lane,1);var pos=Vec3.atBottomCenterOf(feet);var body=w.getBoundingBox().move(pos.subtract(w.position()));
+            if(!NestPlan.walkable(c.getLevel(),feet)||!c.getLevel().noCollision(w,body)||!c.getLevel().getEntities(w,body).isEmpty())continue;
+            w.teleportTo(pos.x,pos.y,pos.z);w.setOnGround(true);return;
+        }
+        throw new IllegalStateException("No existing supported exterior cell for disabled negative fixture");
+    }
     NestCache cache(GameTestHelper c,LasiusNigerEntity q) { return q.founding().plan()!=null&&c.getLevel().getBlockEntity(q.founding().plan().cache()) instanceof NestCache n?n:null; }
     ItemEntity drop(GameTestHelper c,BlockPos p,ItemStack stack) { var v=Vec3.atBottomCenterOf(p);var i=new ItemEntity(c.getLevel(),v.x,v.y+0.1,v.z,stack,0,0,0);i.setUnlimitedLifetime();c.assertTrue(c.getLevel().addFreshEntity(i),"Real supported dropped stack insertion");return i; }
     private int foodTotal(GameTestHelper c,LasiusNigerEntity q) {

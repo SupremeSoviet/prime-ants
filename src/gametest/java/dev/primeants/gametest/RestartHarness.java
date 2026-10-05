@@ -42,6 +42,10 @@ public final class RestartHarness implements ModInitializer {
     private BlockPos isolatedPosition;
     private long isolatedCarrierAge;
     private boolean done;
+    private final List<JsonObject> performanceRows=new ArrayList<>();
+    private JsonObject performanceSnapshot;
+    private long performanceStartAge=-1;
+    private boolean performanceSupplied;
     private LasiusNigerEntity queen,soilQueen;
     private NestPlan plan;
     private BlockPos carrierFood,positive,revoked,soilSite;
@@ -55,8 +59,9 @@ public final class RestartHarness implements ModInitializer {
         ServerLifecycleEvents.SERVER_STARTED.register(s->{
             write(phase+"-process",process(s));
             var l=s.overworld();hold(l,ChunkPos.containing(HOME),phase.equals("B")?0:2);
-            s.tickRateManager().requestGameToSprint(30000);
+            if(!phase.equals("performance"))s.tickRateManager().requestGameToSprint(30000);
         });
+        if(phase.equals("performance"))ServerTickEvents.START_SERVER_TICK.register(this::samplePerformance);
         ServerTickEvents.END_SERVER_TICK.register(s->{
             if(done)return;
             try { tick(s); }catch(Throwable ex) {
@@ -78,7 +83,9 @@ public final class RestartHarness implements ModInitializer {
     private NestCache cache(ServerLevel l) {return l.getBlockEntity(plan.cache()) instanceof NestCache n?n:null;}
     private BroodPile pile(ServerLevel l) {return (BroodPile)l.getBlockEntity(plan.nursery());}
     private ItemEntity drop(ServerLevel l,BlockPos pos,ItemStack stack) {
-        var v=Vec3.atBottomCenterOf(pos);var i=new ItemEntity(l,v.x,v.y+0.1,v.z,stack,0,0,0);i.setUnlimitedLifetime();require(l.addFreshEntity(i)&&l.getEntity(i.getUUID())==i,"Supply must really enter the world");return i;
+        var v=Vec3.atBottomCenterOf(pos);var i=new ItemEntity(l,v.x,v.y+0.1,v.z,stack,0,0,0);
+        if(phase.equals("performance"))i.setDefaultPickUpDelay();else i.setUnlimitedLifetime();
+        require(l.addFreshEntity(i)&&l.getEntity(i.getUUID())==i,"Supply must really enter the world");return i;
     }
     private JsonElement stack(ServerLevel l,ItemStack s) {return s.isEmpty()?JsonNull.INSTANCE:ItemStack.CODEC.encodeStart(l.registryAccess().createSerializationContext(com.mojang.serialization.JsonOps.INSTANCE),s).getOrThrow();}
     private JsonArray stacks(ServerLevel l,List<ItemStack> stacks) {var a=new JsonArray();stacks.forEach(s->a.add(stack(l,s)));return a;}
@@ -111,6 +118,7 @@ public final class RestartHarness implements ModInitializer {
         done=true;require(s.saveEverything(false,true,true),"Normal flush save failed");write(file,j);s.halt(false);
     }
     private void tick(MinecraftServer s) {
+        if(phase.equals("performance")){performance(s);return;}
         ticks++;require(ticks<24000,"Bounded harness timeout stage="+stage);var l=s.overworld();
         if(queen==null) {
             if(!(l.getEntity(QUEEN) instanceof LasiusNigerEntity q))return;queen=q;probeAge=q.elapsedAgeTicks();plan=q.founding().plan();require(plan!=null,"Saved queen plan missing");
@@ -175,6 +183,40 @@ public final class RestartHarness implements ModInitializer {
             finish(s,"A-checkpoint",j);
         }
         if(ticks%500==0)PrimeAnts.LOGGER.info("T09 A tick={} stage={} workers={} cache={} pending={}",ticks,stage,workers(l).stream().map(w->w.position()+" "+w.workerTasks().phase()+" "+w.getMainHandItem()).toList(),cache(l)==null?null:cache(l).contents(),TransferCustody.get(l).contents());
+    }
+    private void performance(MinecraftServer s){
+        ticks++;require(ticks<2400,"Performance sample failed to load/warm within bounded normal ticks");var l=s.overworld();
+        if(queen==null){
+            var id=UUID.fromString(System.getProperty("prime_ants.performanceQueen"));
+            if(!(l.getEntity(id) instanceof LasiusNigerEntity q))return;queen=q;plan=q.founding().plan();
+            require(plan!=null&&q.founding().ready(),"Verified operational colony required");performanceStartAge=q.elapsedAgeTicks();
+            var context=process(s);context.addProperty("java_version",System.getProperty("java.version"));context.addProperty("vm",System.getProperty("java.vm.name"));context.addProperty("os",System.getProperty("os.name")+" "+System.getProperty("os.arch"));context.addProperty("logical_processors",Runtime.getRuntime().availableProcessors());context.addProperty("max_heap_bytes",Runtime.getRuntime().maxMemory());
+            context.addProperty("brood_multiplier",BroodPile.multiplier());context.addProperty("work_multiplier",QueenFounding.multiplier());context.addProperty("work_cadence_ticks",QueenFounding.cadence());context.addProperty("stage_default_ticks",BroodPile.stageTicks());context.addProperty("callow_default_ticks",BroodPile.callowTicks());context.addProperty("laying_cadence_ticks",BroodPile.layingCadence());
+            context.add("persisted_brood",JSON.toJsonTree(((BroodPile)l.getBlockEntity(plan.nursery())).records()));write("performance-context",context);
+        }
+        require(!queen.isNoAi()&&queen.isAlive()&&queen.founding().ready()&&!s.tickRateManager().isSprinting()&&s.tickRateManager().tickrate()==20,"Normal 20 TPS, enabled AI, living valid colony");
+        if(!performanceSupplied){drop(l,plan.at(-3,0,1),new ItemStack(Items.APPLE,6));drop(l,plan.at(-4,0,1),new ItemStack(Items.CHICKEN,8));performanceSupplied=true;}
+        var ws=l.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(plan.chamber()).inflate(40),w->w.isAlive()&&queen.getUUID().equals(w.queenId()));
+        require(ws.stream().noneMatch(LasiusNigerEntity::isNoAi),"Actual operational workers must remain AI enabled");
+        var row=new JsonObject();row.addProperty("tick",s.getTickCount());row.addProperty("loaded_ticks",queen.elapsedAgeTicks()-performanceStartAge);row.addProperty("queens",1);row.addProperty("workers",ws.size());row.addProperty("queen_age",queen.elapsedAgeTicks());row.addProperty("loaded_chunks",l.getChunkSource().getLoadedChunksCount());row.addProperty("tickrate",s.tickRateManager().tickrate());row.addProperty("sprint",false);
+        var tasks=new TreeMap<String,Integer>();ws.forEach(w->tasks.merge(w.workerTasks().phase().name(),1,Integer::sum));row.add("tasks",JSON.toJsonTree(tasks));
+        row.addProperty("carried_food",ws.stream().filter(w->WorkerTasks.food(w.getMainHandItem())).mapToInt(w->w.getMainHandItem().getCount()).sum());row.addProperty("world_food",l.getEntitiesOfClass(ItemEntity.class,new AABB(plan.chamber()).inflate(40),i->i.isAlive()&&WorkerTasks.food(i.getItem())).stream().mapToInt(i->i.getItem().getCount()).sum());
+        var pile=(BroodPile)l.getBlockEntity(plan.nursery());var cache=(NestCache)l.getBlockEntity(plan.cache());row.addProperty("cache_food",cache.size());row.addProperty("consumed_food",queen.nutrition().consumedUnits()+pile.consumedFood());row.addProperty("brood",pile.records().size());row.add("worker_ages",JSON.toJsonTree(ws.stream().collect(java.util.stream.Collectors.toMap(w->w.getUUID().toString(),LasiusNigerEntity::elapsedAgeTicks))));
+        performanceSnapshot=row;
+    }
+    private void samplePerformance(MinecraftServer s){
+        if(done||performanceSnapshot==null||performanceSnapshot.get("loaded_ticks").getAsLong()<=200)return;
+        try{
+            // Pinned Fabric START is just before tickChildren, AFTER tickCount increments.
+            // Native ring slot (current-1)%100 contains the preceding completed tick;
+            // its END event produced the matching population snapshot after native timing tally.
+            int n=s.getTickCount()-1;require(n==performanceSnapshot.get("tick").getAsInt(),"Timing/population boundary mismatch");
+            long nanos=s.getTickTimesNanos()[n%100];require(nanos>0,"Native completed tick timing unavailable");
+            var row=performanceSnapshot.deepCopy();row.addProperty("mspt",nanos/1_000_000.0);performanceRows.add(row);
+            if(performanceRows.size()==1200){
+                var result=process(s);var sorted=performanceRows.stream().mapToDouble(r->r.get("mspt").getAsDouble()).sorted().toArray();result.addProperty("median_mspt",(sorted[599]+sorted[600])/2);result.addProperty("p95_mspt",sorted[1139]);result.addProperty("max_mspt",sorted[1199]);result.addProperty("sample_ticks",1200);result.addProperty("warmup_loaded_ticks",200);result.add("samples",JSON.toJsonTree(performanceRows));finish(s,"performance",result);
+            }
+        }catch(Throwable ex){done=true;var j=process(s);j.addProperty("failure",ex.toString());write("performance-failure",j);s.halt(false);}
     }
     private void geometry(MinecraftServer s,ServerLevel l) {
         require(ticks<2400,"Bounded independent-ticket geometry probe");

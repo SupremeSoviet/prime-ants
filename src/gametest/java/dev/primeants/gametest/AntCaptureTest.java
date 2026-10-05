@@ -45,7 +45,7 @@ public final class AntCaptureTest implements FabricClientGameTest {
     private final Map<String,Object> provenance = new LinkedHashMap<>();
     private final String runId = System.getProperty("prime_ants.runId"), prefix = System.getProperty("prime_ants.capturePrefix");
     @Override public void runTest(ClientGameTestContext context) {
-        provenance.put("caption","T11 one production egg -> food-fed growth -> automatic worker circulation widening -> physical spoil -> connected space used by nurses");
+        provenance.put("caption","T12 real colony views, food-fed growth and worker circulation widening; observer-only mandible-region framing");
         provenance.put("run_id",runId); provenance.put("capture_prefix",prefix); provenance.put("entrypoint",getClass().getName());
         provenance.put("status","running"); provenance.put("seed",SEED); provenance.put("started_utc",Instant.now().toString());
         provenance.put("observations",observations); provenance.put("staged_terrain_edits",0); provenance.put("ant_teleports",0);
@@ -87,11 +87,16 @@ public final class AntCaptureTest implements FabricClientGameTest {
                     serverAnt(world,queen).founding().lifecycle()==QueenFounding.Lifecycle.OPEN && liveWorkers(world,plan).stream().anyMatch(w->w.getY()>=plan.entrance().getY() && w.workerTasks().phase()==dev.primeants.worker.WorkerTasks.Phase.EXIT)));
             world.getConnection().waitForClientboundEntityUpdates(AntEntities.WORKER);
             provenance.put("first_generation",observe(world,queen));
+            capture(context,world,queen,plan,"queen-closeup");
+            waitFor(context,world,queen,"unobscured colony worker close-up",()->world.getServer().computeOnServer(server->liveWorkers(world,plan).stream().anyMatch(w->serverAnt(world,queen).founding().claimedBy(w)&&w.getY()>=plan.entrance().getY()+1&&CargoView.eye(w.level(),w.position(),w.yBodyRot)!=null)));
+            capture(context,world,queen,plan,"worker-closeup");
             ordinaryDrop(context,world,plan.at(-3,0,1),net.minecraft.world.item.Items.APPLE,6);
             ordinaryDrop(context,world,plan.at(-4,0,1),net.minecraft.world.item.Items.CHICKEN,8);
+            waitFor(context,world,queen,"readable actual food carrier",()->world.getServer().computeOnServer(server->liveWorkers(world,plan).stream().anyMatch(w->serverAnt(world,queen).founding().claimedBy(w)&&dev.primeants.worker.WorkerTasks.food(w.getMainHandItem())&&w.getY()>=plan.entrance().getY()+1&&CargoView.eye(w.level(),w.position(),w.yBodyRot)!=null)));
+            capture(context,world,queen,plan,"food-carrying");
             waitFor(context,world,queen,"automatically assigned worker removing soil",()->world.getServer().computeOnServer(server->{var j=NestExpansion.get(world.getConnection().getServerLevel()).job(queen);return j!=null&&j.removed()>0&&j.removed()<12&&liveWorkers(world,plan).stream().anyMatch(w->w.getUUID().equals(j.claim)&&w.workerTasks().phase()==dev.primeants.worker.WorkerTasks.Phase.DIG);}));
             provenance.put("expansion_start",observe(world,queen));capture(context,world,queen,plan,"excavation");
-            waitFor(context,world,queen,"builder transporting actual soil outside",()->world.getServer().computeOnServer(server->{var j=NestExpansion.get(world.getConnection().getServerLevel()).job(queen);return j!=null&&liveWorkers(world,plan).stream().anyMatch(w->w.getUUID().equals(j.claim)&&w.workerTasks().phase()==dev.primeants.worker.WorkerTasks.Phase.DIG_OUT&&w.getMainHandItem().is(net.minecraft.world.item.Items.DIRT)&&w.getY()>=plan.entrance().getY()+1);}));
+            waitFor(context,world,queen,"builder transporting actual soil outside with clear item region",()->world.getServer().computeOnServer(server->{var j=NestExpansion.get(world.getConnection().getServerLevel()).job(queen);return j!=null&&liveWorkers(world,plan).stream().anyMatch(w->w.getUUID().equals(j.claim)&&w.workerTasks().phase()==dev.primeants.worker.WorkerTasks.Phase.DIG_OUT&&w.getMainHandItem().is(net.minecraft.world.item.Items.DIRT)&&w.getY()>=plan.entrance().getY()+1&&CargoView.eye(w.level(),w.position(),w.yBodyRot)!=null);}));
             capture(context,world,queen,plan,"soil-carrying");
             waitFor(context,world,queen,"finished enlarged mound with entrance traffic",()->world.getServer().computeOnServer(server->{var j=NestExpansion.get(world.getConnection().getServerLevel()).job(queen);return j!=null&&j.complete()&&liveWorkers(world,plan).stream().anyMatch(w->serverAnt(world,queen).founding().claimedBy(w)&&w.getY()>=plan.entrance().getY());}));
             capture(context,world,queen,plan,"expanded-mound");
@@ -139,14 +144,17 @@ public final class AntCaptureTest implements FabricClientGameTest {
             var job=NestExpansion.get(world.getConnection().getServerLevel()).job(id);
             if(stage.equals("excavation")||stage.equals("soil-carrying"))return job.claim;
             if(stage.equals("expanded-mound"))return serverAnt(world,id).founding().workerClaim();
+            if(stage.equals("worker-closeup")||stage.equals("food-carrying"))return serverAnt(world,id).founding().workerClaim();
             if(stage.equals("usable-interior"))return liveWorkers(world,plan).stream().filter(w->w.workerTasks().nursing()&&job.usable(world.getConnection().getServerLevel(),id).contains(w.blockPosition())).findFirst().orElseThrow().getUUID();
             if(stage.startsWith("nurse-"))return liveWorkers(world,plan).stream().filter(w->w.workerTasks().phase()==dev.primeants.worker.WorkerTasks.Phase.NURSE_FEED&&dev.primeants.worker.WorkerTasks.food(w.getMainHandItem())&&(!stage.equals("nurse-feeding")||w.workerTasks().feedingTicks()>0)).findFirst().orElseThrow().getUUID();
             if(stage.equals("additional-callow"))return liveWorkers(world,plan).stream().filter(LasiusNigerEntity::isCallow).findFirst().orElseThrow().getUUID();return id;
         });
         if(stage.equals("excavation")||stage.equals("soil-carrying"))c.waitFor(client->clientAnt(client,subject).getMainHandItem().is(net.minecraft.world.item.Items.DIRT));
         if(stage.startsWith("nurse-"))c.waitFor(client->dev.primeants.worker.WorkerTasks.food(clientAnt(client,subject).getMainHandItem()));
+        if(stage.equals("food-carrying"))c.waitFor(client->dev.primeants.worker.WorkerTasks.food(clientAnt(client,subject).getMainHandItem()));
         c.runOnClient(client->camera(client,id,subject,plan,stage));
-        var frame=observe(world,id);frame.put("event","expansion_frame");frame.put("stage",stage);frame.put("run_id",runId);frame.put("subject_uuid",subject.toString());
+        var frame=observe(world,id);frame.put("event",List.of("queen-closeup","worker-closeup","food-carrying").contains(stage)?"colony_frame":"expansion_frame");frame.put("stage",stage);frame.put("run_id",runId);frame.put("subject_uuid",subject.toString());
+        frame.put("observer",c.computeOnClient(client->Map.of("eye",List.of(client.player.getX(),client.player.getEyeY(),client.player.getZ()),"yaw",client.player.getYRot(),"pitch",client.player.getXRot(),"fov",client.options.fov().get())));
         frame.put("work_multiplier",QueenFounding.multiplier());frame.put("capture_started_utc",Instant.now().toString());observations.add(frame);
         var tracked=world.getServer().computeOnServer(server->{java.util.Set<UUID> ids=new java.util.HashSet<>();ids.add(id);liveWorkers(world,plan).forEach(w->ids.add(w.getUUID()));return ids;});
         c.runOnClient(client->AntRenderRecorder.start(tracked));
@@ -157,10 +165,11 @@ public final class AntCaptureTest implements FabricClientGameTest {
         require(renders.stream().anyMatch(r->subject.toString().equals(r.get("uuid"))),"Actual feeding/growth subject renders");
         if(stage.equals("excavation")||stage.equals("soil-carrying"))require(renders.stream().anyMatch(r->subject.toString().equals(r.get("uuid"))&&Boolean.TRUE.equals(r.get("carried_soil_rendered"))&&"minecraft:dirt".equals(r.get("carried_item"))),"Actual builder soil in production mandible render");
         if(stage.startsWith("nurse-"))require(renders.stream().anyMatch(r->subject.toString().equals(r.get("uuid"))&&Boolean.TRUE.equals(r.get("carried_soil_rendered"))&&List.of("minecraft:apple","minecraft:chicken","minecraft:sweet_berries").contains(r.get("carried_item"))),"Real nurse mandible cargo renders");
+        if(stage.equals("food-carrying"))require(renders.stream().anyMatch(r->subject.toString().equals(r.get("uuid"))&&Boolean.TRUE.equals(r.get("carried_soil_rendered"))&&List.of("minecraft:apple","minecraft:chicken","minecraft:sweet_berries").contains(r.get("carried_item"))),"Actual forager food must still render during exposure");
         try {
             var image=javax.imageio.ImageIO.read(png.toFile());frame.put("width",image.getWidth());frame.put("height",image.getHeight());
             frame.put("modified_epoch_ms",Files.getLastModifiedTime(png).toMillis());frame.put("sha256",HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(png))));
-            Files.writeString(png.resolveSibling(png.getFileName()+".md"),"T11 "+stage+". Run "+runId+"; subject "+subject+"; queen "+id+"; nursery tick "+frame.get("nursery_ticks")+"; brood multiplier "+BroodPile.multiplier()+"; work multiplier "+QueenFounding.multiplier()+"; 1600x1000; SHA-256 "+frame.get("sha256")+".\nOne production egg, real founding/foraging/nursing/growth and bounded worker excavation/soil transport/deposition. Observer spectator with vanilla night vision. Supplied 6 apples + 8 raw chicken through ordinary player stack-drop packets. Original brood="+frame.get("original_brood_ids")+"; new brood="+frame.get("brood")+"; real workers="+frame.get("workers")+"; consumption and finite nutrition are recorded in provenance. No staged actors, terrain, food, reserve or AI edits.\n");
+            Files.writeString(png.resolveSibling(png.getFileName()+".md"),"T12 "+stage+". Run "+runId+"; subject "+subject+"; queen "+id+"; nursery tick "+frame.get("nursery_ticks")+"; brood multiplier "+BroodPile.multiplier()+"; work multiplier "+QueenFounding.multiplier()+"; 1600x1000; SHA-256 "+frame.get("sha256")+".\nOne production egg, real founding/foraging/nursing/growth and bounded worker excavation/soil transport/deposition. Observer spectator with vanilla night vision. Supplied 6 apples + 8 raw chicken through ordinary player stack-drop packets. Original brood="+frame.get("original_brood_ids")+"; new brood="+frame.get("brood")+"; real workers="+frame.get("workers")+"; consumption and finite nutrition are recorded in provenance. No staged actors, terrain, food, reserve or AI edits.\n");
         } catch(Exception e){throw new RuntimeException(e);}
         dev.primeants.PrimeAnts.LOGGER.info("T08 fresh capture {}: {}",stage,frame);
     }
@@ -229,7 +238,11 @@ public final class AntCaptureTest implements FabricClientGameTest {
 
     private static void camera(Minecraft client,UUID id,UUID subject,NestPlan plan,String stage) {
         var ant=clientAnt(client,id);Vec3 eye,target;
-        if(stage.equals("excavation")){
+        if(stage.equals("queen-closeup")){
+            eye=Vec3.atBottomCenterOf(plan.at(3,0,-2)).add(0,1.25,0);target=ant.position().add(0,0.4,0);client.options.fov().set(65);
+        }else if(stage.equals("worker-closeup")){
+            var worker=clientAnt(client,subject);target=worker.position().add(0,0.25,0);eye=CargoView.eye(client.level,worker.position(),worker.yBodyRot);require(eye!=null,"Clear real worker close-up required");client.options.fov().set(45);
+        }else if(stage.equals("excavation")){
             var worker=clientAnt(client,subject);eye=Vec3.atBottomCenterOf(plan.at(5,-1,-2)).add(0,1.5,0);target=worker.position().add(0,0.25,0);client.options.fov().set(90);
         }else if(stage.equals("usable-interior")){
             var worker=clientAnt(client,subject);eye=Vec3.atBottomCenterOf(plan.at(5,-1,-2)).add(0,1.5,0);target=worker.position().add(0,0.25,0);client.options.fov().set(100);
@@ -242,7 +255,7 @@ public final class AntCaptureTest implements FabricClientGameTest {
         }else if(stage.equals("traffic")||stage.equals("expanded-mound")) {
             // The cleared central route gives an overhead view without placing the observer inside nearby foliage.
             eye=Vec3.atBottomCenterOf(plan.at(-3,0,1)).add(0,4,0);target=Vec3.atCenterOf(plan.at(-3,0,1));client.options.fov().set(90);
-        } else if(stage.equals("sugar") || stage.equals("protein") || stage.equals("soil-carrying")) {
+        } else if(stage.equals("sugar") || stage.equals("protein") || stage.equals("soil-carrying") || stage.equals("food-carrying")) {
             var worker=clientAnt(client,subject);target=CargoView.target(worker.position(),worker.yBodyRot);eye=CargoView.eye(client.level,worker.position(),worker.yBodyRot);
             require(eye!=null,"No unoccluded observer view of actual mandible cargo");
             client.options.fov().set(eye.subtract(worker.position()).horizontalDistanceSqr()<0.1?70:50);
