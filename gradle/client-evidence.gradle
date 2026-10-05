@@ -38,8 +38,32 @@ ext.validateClientEvidence = { Map request ->
     long completed = Instant.parse(capture.completed_utc).toEpochMilli()
     boolean foraging = request.scenario == 'foraging'
     boolean growth = request.scenario == 'growth'
-    def frames = capture.observations.findAll { it.event == (growth?'growth_frame':foraging ? 'foraging_frame' : 'brood_frame') }
-    if(growth){
+    boolean expansion = request.scenario == 'expansion'
+    def frames = capture.observations.findAll { it.event == (expansion?'expansion_frame':growth?'growth_frame':foraging ? 'foraging_frame' : 'brood_frame') }
+    if(expansion){
+        require(frames.size()==4&&frames.collect{it.stage}==['excavation','soil-carrying','expanded-mound','usable-interior'],'Missing real excavation/transport/mound/use sequence')
+        require(capture.staged_terrain_edits==0&&capture.ant_teleports==0&&!capture.ai_disabled&&!capture.animation_poses_forced&&capture.injected_brood==0&&capture.injected_food==0&&capture.summoned_workers==0&&capture.reserve_edits==0,'Staged expansion evidence')
+        require(capture.stage_ticks==Math.ceil(12000/capture.brood_multiplier)&&capture.callow_ticks==Math.ceil(4800/capture.brood_multiplier)&&capture.laying_cadence==Math.ceil(1200/capture.brood_multiplier)&&capture.initial_body_reserve==39000&&capture.adult_capacity==30,'Changed biological timing/capacity')
+        def sources=capture.observations.findAll{it.source_uuid}
+        require(sources.size()==2&&sources.every{it.method=='creative inventory -> ordinary client DROP_ALL_ITEMS packet'}&&sources.find{it.item=='minecraft:apple'}?.count==6&&sources.find{it.item=='minecraft:chicken'}?.count==8,'Food must be ordinary real player drops')
+        def original=capture.first_generation.original_brood_ids.toSet(),firstWorkers=capture.first_generation.workers.collect{it.uuid}.toSet()
+        require(original.size()==3&&firstWorkers.size()==3,'Missing original first clutch')
+        frames.eachWithIndex{frame,n->
+            def e=frame.extension
+            require(frame.uuid==capture.queen_uuid&&frame.ready&&frame.lifecycle=='OPEN'&&frame.phase=='SETTLED'&&frame.owned_openings==2&&frame.live_plugs==0&&frame.body_reserve==0&&frame.underground_grass==0,'Expansion habitat/anchors invalid')
+            require(e.planned.size()==12&&e.planned.toSet().size()==12&&e.completed.size()==e.removed&&e.removed<=32&&e.planned.containsAll(e.completed)&&e.problem=='null'&&e.trigger_workers>=4,'Plan/completed/authorized usable space disagree')
+            require(24+e.removed==frame.mound_blocks+frame.worker_soil+frame.world_soil+frame.custody_soil,'Actual founding plus extension soil conservation failed')
+            require(frame.workers.collect{it.uuid}.toSet().containsAll(firstWorkers)&&frame.original_brood_ids.toSet()==original&&frame.workers.collect{it.uuid}.toSet().size()==frame.workers.size()&&frame.workers.every{it.alive&&it.queen_id==capture.queen_uuid}&&frame.live_adult_count==frame.live_worker_count+1,'Real identities/lineage lost or duplicated')
+            require(frame.world_food+frame.custody_food+frame.cache_contents.sum(0){it.count}+frame.workers.findAll{it.cargo_item in ['minecraft:apple','minecraft:chicken','minecraft:sweet_berries']}.sum(0){it.cargo_count}+frame.queen_consumed+frame.larva_consumed==14,'Physical/consumed food conservation failed during work')
+            def q=frame.queen_nutrition
+            require(q.gained_sugar==q.apples*4000+q.berries*2000&&q.gained_protein==q.chickens*8000&&q.gained_sugar==q.sugar+q.spent_sugar&&q.gained_protein==q.protein+q.spent_protein,'Finite ingested nutrition changed')
+            require(frame.workers.count{it.nursing}>=2&&frame.workers.any{it.uuid==frame.worker_claim},'Construction stole nursing or forager')
+            if(n<2){def builder=frame.workers.find{it.uuid==frame.subject_uuid};require(builder&&builder.uuid==e.claim&&builder.uuid!=frame.worker_claim&&builder.callow_visual==1000&&builder.cargo_item=='minecraft:dirt'&&builder.cargo_count>0,'Builder is not actual mature worker with physical soil');require(frame.screenshot_render_extractions.any{it.uuid==builder.uuid&&it.carried_soil_rendered&&it.carried_item=='minecraft:dirt'},'Mandible soil was not rendered')}
+            if(n>=2)require(e.complete&&e.removed==12&&e.deposited==12&&e.released==0&&e.usable==6&&frame.mound_blocks==36&&frame.worker_soil==0,'Extension/deposition is incomplete')
+        }
+        require(frames[3].extension_workers>0&&frames[3].extension.use in ['existing_nurse_traversal','brood_emergence']&&frames[3].extension.used_by,'No practical extension use')
+        require(frames[3].original_room_workers<frames[0].original_room_workers,'No measured original-room congestion relief')
+    }else if(growth){
         require(frames.size()==4&&frames.collect{it.stage}==['nurse-carrying','nurse-feeding','new-brood','additional-callow'],'Missing physical growth sequence')
         require(capture.queen_uuid&&capture.food_source&&capture.staged_terrain_edits==0&&capture.ant_teleports==0&&!capture.ai_disabled&&!capture.animation_poses_forced&&capture.injected_brood==0&&capture.injected_food==0&&capture.summoned_workers==0&&capture.reserve_edits==0,'Staged growth evidence')
         require(capture.stage_ticks==Math.ceil(12000/capture.brood_multiplier)&&capture.callow_ticks==Math.ceil(4800/capture.brood_multiplier)&&capture.laying_cadence==Math.ceil(1200/capture.brood_multiplier)&&capture.initial_body_reserve==39000&&capture.egg_cost==1000&&capture.larva_cost==12000&&capture.adult_capacity==30&&capture.nursery_capacity==3,'Wrong production durations, reserve or capacity')
@@ -134,7 +158,7 @@ ext.validateClientEvidence = { Map request ->
         require(frame.run_id == request.run_id, 'Mismatched frame run ID')
         require(frame.ai_enabled && frame.normal_physics && frame.work_multiplier == capture.work_multiplier, 'Missing production state/timing')
         require(frame.removed == frame.carried + frame.deposited + frame.released + frame.plugged, 'Soil balance mismatch')
-        if (foraging) {
+        if(expansion){require(frame.screenshot_render_extractions.any{it.uuid==frame.subject_uuid},'Missing actual expansion subject render')}else if (foraging) {
             require(frame.screenshot_render_extractions.any{it.uuid==(frame.stage=='cache'?capture.queen_uuid:frame.worker_claim)}, 'Missing production colony/worker render')
         } else if (frame.stage != 'mound') require(frame.screenshot_render_extractions.any { it.uuid == capture.queen_uuid && it.form == 'queen' }, 'Missing production queen render')
         if (frame.stage == 'callows') require(frame.workers.every { it.callow_visual < 1000 }
@@ -319,6 +343,49 @@ tasks.register('testGrowthEvidenceValidator') {
     }
 }
 tasks.named('check'){dependsOn tasks.named('testGrowthEvidenceValidator')}
+
+tasks.register('testExpansionEvidenceValidator') {
+    dependsOn tasks.named('testGrowthEvidenceValidator')
+    doLast {
+        File dir=layout.buildDirectory.dir('expansion-validator-fixtures').get().asFile;dir.mkdirs()
+        def capture=new JsonSlurper().parse(file('build/growth-validator-fixtures/capture.json'))
+        long started=System.currentTimeMillis()-5000
+        def request=[run_id:'fixture-expansion',capture_prefix:'fixture',started_epoch_ms:started,scenario:'expansion',capture_directory:dir.absolutePath,model_report:new File(dir,'model.xml').absolutePath,provenance:new File(dir,'capture.json').absolutePath]
+        file(request.model_report).text=file('build/test-results/client-model/headless.xml').text.replaceFirst(/name="run_id" value="[^"]*"/,'name="run_id" value="fixture-expansion"')
+        capture.run_id=request.run_id;capture.started_utc=Instant.ofEpochMilli(started).toString()
+        def frames=capture.observations.take(4)
+        ['excavation','soil-carrying','expanded-mound','usable-interior'].eachWithIndex{stage,n->
+            def frame=frames[n];File png=new File(dir,"fixture-${stage}.png");ImageIO.write(new java.awt.image.BufferedImage(1600,1000,java.awt.image.BufferedImage.TYPE_INT_RGB),'png',png)
+            frame.event='expansion_frame';frame.stage=stage;frame.run_id=request.run_id;frame.subject_uuid=n<2?'builder':n==2?'worker-0':'worker-1'
+            frame.workers=capture.first_generation.workers.collect{new LinkedHashMap(it)}
+            frame.workers[0].nursing=false
+            frame.workers.add([uuid:'builder',brood_id:'new-body',queen_id:'queen',alive:true,callow_visual:1000,nursing:n>=2,task:n==0?'DIG':n==1?'DIG_OUT':'NURSE_CACHE',cargo_item:n<2?'minecraft:dirt':'minecraft:air',cargo_count:n==0?1:n==1?4:0])
+            frame.live_worker_count=4;frame.live_adult_count=5
+            frame.world_food=14-frame.queen_consumed-frame.larva_consumed
+            frame.world_soil=0;frame.custody_soil=0;frame.worker_soil=n==0?1:n==1?4:0;frame.mound_blocks=n<2?24:36
+            def removed=n==0?1:n==1?4:12;def plan=(0..11).collect{[it,0,0]}
+            frame.extension=[planned:plan,completed:plan.take(removed),removed:removed,deposited:n<2?0:12,released:0,usable:n<2?0:6,problem:'null',trigger_workers:4,claim:'builder',complete:n>=2,use:n==3?'existing_nurse_traversal':'',used_by:n==3?'worker-1':'']
+            frame.original_room_workers=n==3?1:3;frame.extension_workers=n==3?3:0
+            frame.screenshot_render_extractions=[[uuid:frame.subject_uuid,form:'worker',carried_item:n<2?'minecraft:dirt':'minecraft:air',carried_soil_rendered:n<2]]
+            frame.image=png.absolutePath;frame.modified_epoch_ms=png.lastModified();frame.capture_started_utc=Instant.ofEpochMilli(started).toString();frame.sha256=MessageDigest.getInstance('SHA-256').digest(png.bytes).encodeHex().toString()
+        }
+        capture.final=frames[3];capture.completed_utc=Instant.now().toString()
+        def save={v->file(request.provenance).text=JsonOutput.toJson(v)};save(capture)
+        def results=[[fixture:'valid-expansion',result:validateClientEvidence(request).status]]
+        def reject={name,mutate->def bad=new JsonSlurper().parseText(JsonOutput.toJson(capture));mutate(bad);save(bad);boolean rejected=false;try{validateClientEvidence(request)}catch(GradleException e){rejected=true;results.add([fixture:name,result:'rejected',message:e.message])};if(!rejected)throw new GradleException('Expansion fixture incorrectly accepted: '+name)}
+        reject('plan-as-completion'){it.observations[2].extension.completed=[]}
+        reject('unrecorded-shell-hole'){it.observations[2].extension.problem='extension_unauthorized_pending_breach'}
+        reject('soil-loss'){it.observations[1].worker_soil=0}
+        reject('ornamental-room'){it.observations[3].extension_workers=0}
+        reject('no-congestion-relief'){it.observations[3].original_room_workers=3}
+        reject('summoned-builder'){it.summoned_workers=1}
+        reject('stolen-forager'){it.observations[0].extension.claim='worker-0'}
+        reject('unrendered-soil'){it.observations[0].screenshot_render_extractions=[]}
+        reject('stale-expansion-image'){it.observations[0].modified_epoch_ms=0}
+        new File(dir,'results.json').text=JsonOutput.prettyPrint(JsonOutput.toJson(results))
+    }
+}
+tasks.named('check'){dependsOn tasks.named('testExpansionEvidenceValidator')}
 
 tasks.register('validateClientEvidenceFile') {
     doLast {

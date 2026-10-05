@@ -73,11 +73,25 @@ public final class QueenFounding {
         AABB interior = new AABB(Math.min(a.getX(), b.getX()), a.getY(), Math.min(a.getZ(), b.getZ()),
                 Math.max(a.getX(), b.getX()) + 1, b.getY() + 1, Math.max(a.getZ(), b.getZ()) + 1);
         AABB body = queen.getBoundingBox();
+        boolean inside=body.minX>=interior.minX&&body.minY>=interior.minY&&body.minZ>=interior.minZ
+            &&body.maxX<=interior.maxX&&body.maxY<=interior.maxY&&body.maxZ<=interior.maxZ;
+        if(!inside&&operational&&body.minY>=interior.minY&&body.maxY<=interior.maxY){
+            // A body's entire footprint must be covered by the original room or currently verified
+            // completed physical voids that fit this body. Planned cells and unauthorized holes confer no habitat.
+            var usable=new java.util.ArrayList<BlockPos>(NestExpansion.get(level).bodyFloors(level,queen.getUUID(),body.maxY));
+            if(plan.plugs().stream().allMatch(p->ColonyPlugs.get(level).opened(level,p,queen.getUUID()))
+                &&NestPlan.walkable(level,plan.at(2,0,-2)))usable.add(plan.at(2,0,-2));
+            inside=!usable.isEmpty();
+            for(int x=(int)Math.floor(body.minX);x<Math.ceil(body.maxX)&&inside;x++)for(int z=(int)Math.floor(body.minZ);z<Math.ceil(body.maxZ)&&inside;z++){
+                var p=new BlockPos(x,(int)interior.minY,z);
+                boolean original=x>=interior.minX&&x+1<=interior.maxX&&z>=interior.minZ&&z+1<=interior.maxZ;
+                if(!original&&!usable.contains(p))inside=false;
+            }
+        }
         if (!queen.isAlive() || queen.isRemoved() || !queen.onGround() || queen.isInWater()
                 // AABB.contains is half-open for POINTS and rejects max-face contact. A physical body
                 // may touch the wall without crossing it: use inclusive box containment, with no epsilon.
-                || body.minX < interior.minX || body.minY < interior.minY || body.minZ < interior.minZ
-                || body.maxX > interior.maxX || body.maxY > interior.maxY || body.maxZ > interior.maxZ
+                || !inside
                 || !level.noCollision(queen, body.deflate(0.001))) return "enclosure_queen_not_inside";
         return null;
     }
@@ -123,6 +137,8 @@ public final class QueenFounding {
                 }
             }
             if(lifecycle==Lifecycle.OPEN&&ready()){
+                var members=level.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(plan.chamber()).inflate(16),w->w.isAlive()&&!w.isRemoved()&&dev.primeants.worker.ColonyMembers.get(level).belongs(w,queen.getUUID(),plan.chamber()));
+                NestExpansion.get(level).consider(level,queen,members);
                 for(var w:level.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(plan.chamber()).inflate(4),w->w.isAlive()&&!w.isRemoved()&&!w.isCallow()&&!w.isNoAi()))
                     if(!claimedBy(w)&&dev.primeants.worker.ColonyMembers.get(level).belongs(w,queen.getUUID(),plan.chamber()))w.workerTasks().assignNurse(plan);
             }
@@ -267,6 +283,7 @@ public final class QueenFounding {
                 || !level.getEntities(queen, new AABB(target)).isEmpty() || queen.getBoundingBox().intersects(new AABB(target))
                 || queen.position().distanceToSqr(Vec3.atCenterOf(target)) > 5.0) { fail("mound_placement_revalidation_failed"); return; }
         if (!level.setBlock(target, dev.primeants.brood.NurseryBlocks.NEST_SOIL.defaultBlockState(), 3)) { fail("mound_placement_failed"); return; }
+        ColonyTerrain.get(level).deposited(target,queen.getUUID());
         deposited++;
         carry(carried() - 1); cooldown = cadence(); stalled = 0;
         if (carried() == 0) phase(Phase.EXCAVATING);
@@ -304,7 +321,7 @@ public final class QueenFounding {
             if (!(level.getBlockState(p).is(Blocks.GRASS_BLOCK) || level.getBlockState(p).is(Blocks.DIRT)) || !NaturalSoil.get(level).eligible(level, p)
                     || queen.position().distanceToSqr(Vec3.atCenterOf(p)) > 5.0) continue;
             boolean exposed = plan.tasks().stream().anyMatch(t -> t.distManhattan(p) == 1 && level.getBlockState(t).isAir());
-            if (exposed && level.setBlock(p, dev.primeants.brood.NurseryBlocks.NEST_SOIL.defaultBlockState(), 3)) converted++;
+            if (exposed && ColonyTerrain.get(level).prepare(level,p,queen.getUUID())) converted++;
         }
     }
     public void die(ServerLevel level) {
@@ -344,7 +361,7 @@ public final class QueenFounding {
             Direction d = Direction.byName(in.getStringOr("Direction", "north"));
             List<BlockPos> targets = in.read("Tasks", BlockPos.CODEC.listOf()).orElse(List.of());
             List<BlockState> expected = in.read("Expected", BlockState.CODEC.listOf()).orElse(List.of());
-            if (d == null || d.getAxis().isVertical() || !targets.equals(NestPlan.geometry(e.get(), d).tasks())
+            if (d == null || d.getAxis().isVertical() || (!targets.equals(NestPlan.geometry(e.get(),d).tasks())&&!targets.equals(NestPlan.bottomFirst(e.get(),d).tasks()))
                     || expected.size() != targets.size() || progress < 0 || progress > targets.size()
                     || deposited < 0 || released < 0 || plugged < 0 || plugged > 2 || carried() > CARRY_CAPACITY
                     || progress != deposited + released + plugged + carried()) { fail("invalid_saved_plan_or_soil_balance"); return; }

@@ -14,6 +14,26 @@ public final class NursingGuardGameTest {
     private final WorkerForagingGameTest f=new WorkerForagingGameTest();
     private final NursingGameTest audit=new NursingGameTest();
     @GameTest(maxTicks=18000,structure="prime_ants_test:idle_ground")
+    public void nursesFeedDisplacedQueenAtHerLivePosition(GameTestHelper c){
+        var q=f.start(c);boolean[] supplied={false},offCenterFeed={false};
+        c.onEachTick(()->{
+            if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){
+                var p=q.founding().plan();var side=p.direction().getClockWise();
+                // One test-only geometry intervention reproduces the genuine saved A2 displacement.
+                // Existing nurses/tasks are untouched; only their normal physical feeding can consume food.
+                var pos=net.minecraft.world.phys.Vec3.atBottomCenterOf(p.chamber()).add(side.getStepX()*0.4423-p.direction().getStepX()*0.1649,0,side.getStepZ()*0.4423-p.direction().getStepZ()*0.1649);
+                q.setPos(pos);q.setOnGround(true);c.assertTrue(q.founding().ready(),"Displaced queen remains wholly in the valid original room");supplied[0]=true;audit.supply(c,q,1,0);
+            }
+            if(!supplied[0])return;c.assertTrue(audit.total(c,q)==1,"Live-position feeding conserves exactly one real supplied unit");audit.yields(c,q);
+            for(var w:f.workers(c,q))if(w.workerTasks().feedingTicks()>0){
+                c.assertTrue(WorkerTasks.reaches(c.getLevel(),w,q.position().add(0,0.25,0)),"Loaded feeding action reaches the actual recipient mouth");
+                var fixed=net.minecraft.world.phys.Vec3.atBottomCenterOf(q.founding().plan().at(4,-1,-2)).add(0,0.25,0);
+                if(fixed.distanceToSqr(q.position().add(0,0.25,0))>1.6)offCenterFeed[0]=true;
+            }
+            if(q.nutrition().apples()==1){c.assertTrue(offCenterFeed[0]&&q.nutrition().sugar()==4000&&q.nutrition().protein()==0&&q.bodyReserve()==0&&f.workers(c,q).size()==3,"One physical feed succeeds where the old fixed stand cannot reach; no reserve refill or synthetic growth");c.succeed();}
+        });
+    }
+    @GameTest(maxTicks=18000,structure="prime_ants_test:idle_ground")
     public void disabledAbsentOutOfReachAndForeignNursesCannotWithdraw(GameTestHelper c){
         var q=f.start(c);boolean[] supplied={false},checked={false};
         c.onEachTick(()->{

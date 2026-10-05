@@ -27,6 +27,7 @@ public abstract class LevelChunkMixin {
         if (level instanceof ServerLevel server) {
             NaturalSoil.get(server).invalidate(pos);
             dev.primeants.founding.ColonyPlugs.get(server).invalidate(pos);
+            dev.primeants.founding.ColonyTerrain.get(server).invalidate(pos);
         }
     }
 }

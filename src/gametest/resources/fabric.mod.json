@@ -12,7 +12,9 @@
     }
   ],
   "entrypoints": {
-    "main": ["dev.primeants.gametest.RestartHarness"],
+    "main": [
+      "dev.primeants.gametest.RestartHarness"
+    ],
     "fabric-gametest": [
       "dev.primeants.gametest.BootstrapGameTest",
       "dev.primeants.gametest.AntEntityGameTest",
@@ -21,7 +23,8 @@
       "dev.primeants.gametest.WorkerForagingGameTest",
       "dev.primeants.gametest.TransferGameTest",
       "dev.primeants.gametest.NursingGameTest",
-      "dev.primeants.gametest.NursingGuardGameTest"
+      "dev.primeants.gametest.NursingGuardGameTest",
+      "dev.primeants.gametest.ExpansionGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

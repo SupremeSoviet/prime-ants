@@ -178,13 +178,16 @@ public final class BroodPile extends BlockEntity {
         var worker = AntEntities.WORKER.create(server, EntitySpawnReason.BREEDING);
         if (worker == null) { condition = "worker_creation_failed"; return false; }
         worker.setUUID(r.workerId()); worker.initializeCallow(r.id(), queenId, plan.chamber());
-        for (int f : new int[]{5, 3, 4}) for (int s : new int[]{-1, 0, 1}) {
-            BlockPos p = plan.at(f, s, -2); Vec3 pos = Vec3.atBottomCenterOf(p);
+        var emergence=new ArrayList<BlockPos>(dev.primeants.founding.NestExpansion.get(server).operationalSpace(server,queenId));
+        for(int f:new int[]{5,3,4})for(int s:new int[]{-1,0,1})emergence.add(plan.at(f,s,-2));
+        for (BlockPos p:emergence) {
+            Vec3 pos = Vec3.atBottomCenterOf(p);
             worker.setPos(pos);
             AABB body = worker.getBoundingBox();
             if (!NestPlan.walkable(server, p) || !server.noCollision(worker, body) || !server.getEntities(worker, body).isEmpty()) continue;
             if (!server.addFreshEntity(worker) || server.getEntity(r.workerId()) != worker) { condition = "worker_insertion_failed"; return false; }
             ColonyMembers.get(server).record(r.id(),queenId,plan.chamber());retire(r); condition = "callow_emerged";
+            if(dev.primeants.founding.NestExpansion.get(server).operationalSpace(server,queenId).contains(p))dev.primeants.founding.NestExpansion.get(server).used(queenId,worker,"brood_emergence");
             PrimeAnts.LOGGER.info("Callow emerged queen={} brood={} worker={} pileTicks={} remaining={}", queenId, r.id(), worker.getUUID(), loadedTicks, records.size());
             return true;
         }

@@ -64,8 +64,8 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
             BlockPos n = p.relative(d);
             if (!level.getFluidState(n).isEmpty()) return null;
         }
-        return new NestPlan(entrance, direction, geometry.tasks,
-                geometry.tasks.stream().map(level::getBlockState).toList());
+        var work=bottomFirst(entrance,direction).tasks();
+        return new NestPlan(entrance,direction,work,work.stream().map(level::getBlockState).toList());
     }
     public static NestPlan geometry(BlockPos e, Direction d) {
         NestPlan p = new NestPlan(e.immutable(), d, List.of(), List.of());
@@ -77,17 +77,25 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
         if (targets.size() > HARD_CAP) throw new IllegalStateException("Excavation cap exceeded");
         return new NestPlan(e.immutable(), d, List.copyOf(targets), List.of());
     }
+    /** Room columns open from their supported lower face, keeping a pending soil block covered by its roof.
+     * Entrance stairs keep their required top-first order; the original serialized order remains readable. */
+    public static NestPlan bottomFirst(BlockPos e,Direction d){
+        var p=geometry(e,d);var tasks=new ArrayList<BlockPos>(p.tasks().subList(0,6));
+        for(int side:new int[]{0,-1,1})for(int f=3;f<=5;f++)for(int y=-2;y<=-1;y++)tasks.add(p.at(f,side,y));
+        return new NestPlan(e.immutable(),d,List.copyOf(tasks),List.of());
+    }
     public static boolean walkable(ServerLevel level, BlockPos feet) {
         return level.getBlockState(feet).isAir() && level.getBlockState(feet.above()).isAir()
                 && level.getBlockState(feet.below()).isSolidRender()
                 && level.getFluidState(feet.below()).isEmpty();
     }
-    public boolean enclosedChamber(ServerLevel level) {
+    public boolean enclosedChamber(ServerLevel level) { return enclosedChamber(level,null); }
+    private boolean enclosedChamber(ServerLevel level,java.util.UUID owner) {
         for (int f=3; f<=5; f++) for (int side=-1;side<=1;side++) for(int dy=-2;dy<=-1;dy++) {
             BlockPos p=at(f,side,dy);
             for(Direction d:Direction.values()) {
                 BlockPos n=p.relative(d);
-                if (!tasks.contains(n) && !level.getBlockState(n).isSolidRender()) return false;
+                if (!tasks.contains(n) && !(owner!=null&&NestExpansion.get(level).opening(level,n,owner)) && !level.getBlockState(n).isSolidRender()) return false;
             }
         }
         return true;
@@ -116,10 +124,11 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
             // The recorded plugs are the only new opening. Retain the underground corridor's support/shell too.
             for (BlockPos p : undergroundSurfaces()) {
                 if (!loaded(level,p)) return "enclosure_chunk_unavailable";
-                if (!level.getBlockState(p).isSolidRender() || !level.getFluidState(p).isEmpty()) return "enclosure_shell_open";
+                if (!(NestExpansion.get(level).opening(level,p,owner)) && (!level.getBlockState(p).isSolidRender() || !level.getFluidState(p).isEmpty())) return "enclosure_shell_open";
             }
         }
-        if (!enclosedChamber(level)) return "enclosure_shell_open";
+        if (!enclosedChamber(level,owner)) return "enclosure_shell_open";
+        String extension=NestExpansion.get(level).problem(level,owner);if(extension!=null)return extension;
         for (int f = 3; f <= 5; f++) for (int s = -1; s <= 1; s++) {
             BlockPos p = at(f, s, -2);
             boolean owned = p.equals(nursery()) && level.getBlockEntity(p) instanceof dev.primeants.brood.BroodPile pile

@@ -196,3 +196,14 @@ A1 stopped during protected founding; A2 stopped before an egg. Their failure pr
 - `t10-a3-additional-callow.png`: additional-callow, actual subject 5635da1f-0d5b-367d-a204-a159149bac68; new brood and extra pale worker correlate to 7177a838-67b3-45d8-adf5-f9ebce1ac7da; run e530f5cf-9ac5-491b-8675-fdd87c044293.
 
 A1 files are provisional: real growth captured, then habitat validation rejected exact wall contact. A2 has failed provenance and no PNGs after native grass broke the claustral seal. Accepted A3 supplies 6 apples / 8 chickens through ordinary player drops; saved audit confirms 8 consumed and four live workers. Spectator/night vision only; no staged ants, AI pause, forced brood or inventory injection.
+
+
+## T11 bounded worker extension (A4 accepted; A3 provisional)
+
+- [t11-a4-excavation.png](t11-a4-excavation.png): Automatically assigned mature brood-derived builder at the natural/prepared work boundary with real soil; one removal recorded, first new lower opening, nursery and colony intact.
+- [t11-a4-soil-carrying.png](t11-a4-soil-carrying.png): Same worker physically carries four recovered soil units toward the exterior, with the unchanged entrance constraining the view; no pose or terrain edits.
+- [t11-a4-expanded-mound.png](t11-a4-expanded-mound.png): Twelve new deposits enlarge the conserved mound to 36 blocks, including seven supported upper cells, while the original forager uses the entrance route.
+- [t11-a4-usable-interior.png](t11-a4-usable-interior.png): Connected 3-by-2 two-high widening used by three actual nurses; original-room occupancy falls from four to one with original brood/cache/home anchors.
+- [t11-a3-excavation.png](t11-a3-excavation.png): Provisional failed-attempt frame of genuine first worker excavation; A3 later failed camera selection, so this is not completed expansion evidence.
+
+A4 run 7544f303-8d9d-4e0a-9203-4ff2faa47ace; production worker actions, ordinary queen egg and player food-drop packets. Spectator observer with disclosed vanilla night vision. Brood multiplier 100, physical work multiplier 20, adult anatomy unchanged. Per-image hashes/times/actors and partial/completed/live geometry are in [A4 provenance](t11-a4-provenance.json); individual PNG captions remain. All four attempt worlds, including negative attempts, were archived before later Gradle cleanup.
