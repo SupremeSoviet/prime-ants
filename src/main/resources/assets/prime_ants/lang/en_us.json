@@ -5,5 +5,6 @@
   "message.prime_ants.debug_egg_restricted": "Debug specimens require creative mode or operator permission.",
   "block.prime_ants.nest_soil": "Nest soil",
   "block.prime_ants.brood_pile": "Lasius niger brood pile",
-  "block.prime_ants.nest_cache": "Nest food cache"
+  "block.prime_ants.nest_cache": "Nest food cache",
+  "item.prime_ants.flower_nectar": "Flower nectar portion"
 }

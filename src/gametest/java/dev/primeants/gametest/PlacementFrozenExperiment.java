@@ -19,6 +19,9 @@ import net.minecraft.world.level.storage.LevelResource;
 
 /** T16 imported frozen selection; zero biome survey. Loading/tickets only; production generation and ticks own actors. */
 final class PlacementFrozenExperiment {
+    private final boolean integration=PlacementSettings.integrationExperiment();
+    private final String mode=integration?"t17-nectar-v1":"t16-frozen-v1";
+    private final int observationLimit=integration?16000:1000;
     private ServerLevel level;
     private Path evidence;
     private final List<ChunkPos> selected=new ArrayList<>();
@@ -37,7 +40,7 @@ final class PlacementFrozenExperiment {
     private void start(MinecraftServer s) throws Exception {
         var declaration=Path.of(System.getProperty("prime_ants.placementDeclaration"));
         declarationHash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(declaration)));
-        var d=JsonParser.parseString(Files.readString(declaration)).getAsJsonObject();require(d.get("mode").getAsString().equals("t16-frozen-v1"),"Frozen T16 declaration required");
+        var d=JsonParser.parseString(Files.readString(declaration)).getAsJsonObject();require(d.get("mode").getAsString().equals(mode),"Matching frozen declaration required");
         level=s.getLevel(ResourceKey.create(Registries.DIMENSION,Identifier.fromNamespaceAndPath("prime_ants_test","placement_native")));
         require(level!=null && level.getSeed()==Long.parseLong(System.getProperty("prime_ants.placementSeed")),"Actual seed/dimension must match");
         require(level.getChunkSource().getGenerator() instanceof net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator,"Actual vanilla noise required");
@@ -83,11 +86,11 @@ final class PlacementFrozenExperiment {
                 }
                 write("footprints-ready",process(s));
                 // Keep asynchronous generation on normal ticks; sprint only the declared observation.
-                s.tickRateManager().requestGameToSprint(1000);
+                s.tickRateManager().requestGameToSprint(observationLimit);
             }else require(setupTicks<300,"Declared readiness bound exhausted");
             return;
         }
-        if(++observedTicks==1000)finish(s);
+        if(++observedTicks==observationLimit)finish(s);
     }
     private void observeActors() {
         NaturalPlacement.get(level).decisions().asMap().values().forEach(v->{var d=v.getAsJsonObject();var id=UUID.fromString(d.get("queen").getAsString());var actor=level.getEntity(id);
@@ -100,11 +103,12 @@ final class PlacementFrozenExperiment {
         });
     }
     private JsonObject process(MinecraftServer s) {
-        var r=new JsonObject();r.addProperty("mode","t16-frozen-v1");r.addProperty("seed",Long.parseLong(System.getProperty("prime_ants.placementSeed")));r.addProperty("declaration_sha256",declarationHash);r.addProperty("world",s.getWorldPath(LevelResource.ROOT).toAbsolutePath().toString());r.addProperty("pid",ProcessHandle.current().pid());
+        var r=new JsonObject();r.addProperty("mode",mode);r.addProperty("seed",Long.parseLong(System.getProperty("prime_ants.placementSeed")));r.addProperty("declaration_sha256",declarationHash);r.addProperty("world",s.getWorldPath(LevelResource.ROOT).toAbsolutePath().toString());r.addProperty("pid",ProcessHandle.current().pid());
         var all=new JsonArray();PlacementSettings.ALL_FULL.stream().sorted().forEach(all::add);r.add("all_generated_full",all);r.addProperty("total_full_chunks",all.size());r.addProperty("setup_ticks",setupTicks);r.addProperty("observed_ticks",observedTicks);r.addProperty("prior_full_chunks",Integer.getInteger("prime_ants.placementPriorFull",0));return r;
     }
     private void finish(MinecraftServer s) {
         var r=process(s);r.addProperty("biome_queries",survey.size());r.add("selected",sites);r.add("columns",PlacementTerrainTrace.COLUMNS);r.add("decisions",NaturalPlacement.get(level).decisions());r.add("insertion_snapshots",insertions);r.add("insertion_terrain_snapshots",PlacementTerrainTrace.INSERTION_TERRAIN);
+        if(integration)r.add("colony_observation",colonyObservation());
         var observations=new JsonArray();firstAges.forEach((id,age)->{var actor=level.getEntity(id);var o=new JsonObject();o.addProperty("uuid",id.toString());o.addProperty("world_lookup",actor!=null);if(actor instanceof LasiusNigerEntity q) {o.addProperty("age_ticks",q.elapsedAgeTicks());o.addProperty("measured_entity_tick_advancement",q.elapsedAgeTicks()-age);o.addProperty("phase",q.founding().phase().name());o.addProperty("reason",q.founding().reason());o.addProperty("reserve",q.bodyReserve());o.addProperty("removed",q.founding().removed());o.addProperty("deposited",q.founding().deposited());o.addProperty("carried",q.founding().carried());o.addProperty("loaded_founding_ticks",q.founding().loadedTicks());
                 o.addProperty("released",q.founding().released());o.addProperty("plugged",q.founding().plugged());
                 var declared=new JsonArray();if(q.founding().plan()!=null)q.founding().plan().plants().forEach(b->declared.add(b.asLong()));o.add("declared_plants",declared);
@@ -113,6 +117,36 @@ final class PlacementFrozenExperiment {
         require(survey.size()==0 && selected.size()==3 && all.size()+Integer.getInteger("prime_ants.placementPriorFull",0)<=150,"Declared bounded experiment required");
         require(NaturalPlacement.get(level).decisions().size()==selected.size(),"Only frozen selected candidates may generate placement records");
         write("result",r);done=true;s.halt(false);
+    }
+    private JsonObject colonyObservation(){
+        var r=new JsonObject();var colonies=new JsonArray();var nectar=dev.primeants.worker.FlowerNectar.get(level);
+        r.add("source_availability_not_inventory",dev.primeants.worker.FlowerNectar.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE,nectar).getOrThrow());
+        var sources=new JsonArray();nectar.harvestedSources().forEach((p,count)->{var o=new JsonObject();o.addProperty("position",p.asLong());o.addProperty("state",level.getBlockState(p).toString());o.addProperty("native_vegetation",dev.primeants.founding.NativeVegetation.get(level).eligible(level,p));o.addProperty("harvests",count);o.addProperty("cooldown",nectar.remaining(p));sources.add(o);});r.add("sources",sources);
+        long held=0,cached=0,consumed=0;
+        for(var id:firstAges.keySet())if(level.getEntity(id) instanceof LasiusNigerEntity q){
+            var o=new JsonObject();o.addProperty("queen",id.toString());o.addProperty("founding_phase",q.founding().phase().name());o.addProperty("reason",q.founding().reason());o.addProperty("lifecycle",q.founding().lifecycle().name());o.addProperty("ready",q.founding().ready());o.addProperty("body_reserve",q.bodyReserve());
+            o.addProperty("removed",q.founding().removed());o.addProperty("deposited",q.founding().deposited());o.addProperty("carried_soil",q.founding().carried());o.addProperty("plugged",q.founding().plugged());o.addProperty("released",q.founding().released());o.addProperty("prepared",q.founding().converted());
+            var plants=new JsonArray();q.founding().removedPlants().forEach(p->plants.add(p.asLong()));o.add("cleared_plants",plants);
+            var workers=new JsonArray();var p=q.founding().plan();
+            if(p!=null){
+                o.addProperty("entrance",p.entrance().asLong());o.addProperty("direction",p.direction().getName());
+                var declared=new JsonArray();p.plants().forEach(b->declared.add(b.asLong()));o.add("declared_plants",declared);
+                for(var w:level.getEntitiesOfClass(LasiusNigerEntity.class,new net.minecraft.world.phys.AABB(p.chamber()).inflate(20),a->a.isAlive()&&id.equals(a.queenId()))){
+                    var row=new JsonObject();row.addProperty("uuid",w.getUUID().toString());row.addProperty("brood",w.broodId().toString());row.addProperty("callow",w.isCallow());row.addProperty("age",w.elapsedAgeTicks());row.addProperty("position",w.position().toString());row.addProperty("phase",w.workerTasks().phase().name());row.addProperty("reason",w.workerTasks().reason());row.addProperty("cargo",w.getMainHandItem().toString());row.addProperty("opened",w.workerTasks().opened());row.addProperty("mound_units",w.workerTasks().placed());workers.add(row);
+                    if(w.getMainHandItem().is(dev.primeants.item.AntItems.FLOWER_NECTAR))held+=w.getMainHandItem().getCount();
+                }
+                if(level.getBlockEntity(p.nursery()) instanceof dev.primeants.brood.BroodPile brood){
+                    var original=new JsonArray();brood.original().stream().map(UUID::toString).sorted().forEach(original::add);o.add("first_clutch",original);
+                    var current=new JsonArray();for(var b:brood.records()){var row=new JsonObject();row.addProperty("uuid",b.id().toString());row.addProperty("stage",b.stage().name());row.addProperty("founding",b.founding());row.addProperty("sugar",b.nutrition().sugar());row.addProperty("protein",b.nutrition().protein());row.addProperty("nectar_consumed",b.nutrition().nectar());current.add(row);}o.add("brood",current);consumed+=brood.consumedNectar();
+                }
+                if(level.getBlockEntity(p.cache()) instanceof dev.primeants.worker.NestCache cache){var stacks=new JsonArray();cache.contents().forEach(stack->{stacks.add(stack.toString());});o.add("cache",stacks);cached+=cache.contents().stream().filter(stack->stack.is(dev.primeants.item.AntItems.FLOWER_NECTAR)).mapToInt(net.minecraft.world.item.ItemStack::getCount).sum();}
+            }
+            o.add("workers",workers);o.addProperty("queen_nectar_consumed",q.nutrition().nectar());o.addProperty("queen_sugar",q.nutrition().sugar());o.addProperty("queen_protein",q.nutrition().protein());consumed+=q.nutrition().nectar();colonies.add(o);
+        }
+        r.add("colonies",colonies);long world=0;var drops=new JsonArray();
+        for(var e:level.getAllEntities())if(e instanceof net.minecraft.world.entity.item.ItemEntity i&&i.isAlive()&&i.getItem().is(dev.primeants.item.AntItems.FLOWER_NECTAR)){world+=i.getItem().getCount();var row=new JsonObject();row.addProperty("uuid",i.getUUID().toString());row.addProperty("position",i.position().toString());row.addProperty("cargo",i.getItem().toString());drops.add(row);}
+        long custody=dev.primeants.worker.TransferCustody.get(level).contents().stream().filter(t->t.stack().is(dev.primeants.item.AntItems.FLOWER_NECTAR)).mapToInt(t->t.stack().getCount()).sum();
+        r.add("world_drops",drops);r.addProperty("harvests",nectar.harvests());r.addProperty("held",held);r.addProperty("cached",cached);r.addProperty("world",world);r.addProperty("custody",custody);r.addProperty("consumed",consumed);r.addProperty("physical_stock",held+cached+world+custody);r.addProperty("conserved",nectar.harvests()==held+cached+world+custody+consumed);return r;
     }
     private void fail(MinecraftServer s,Throwable e) {done=true;var r=process(s);r.addProperty("failure",e.toString());r.add("columns",PlacementTerrainTrace.COLUMNS);write("failure",r);dev.primeants.PrimeAnts.LOGGER.error("T16 placement experiment failed",e);s.halt(false);}
     private void write(String name,JsonObject r) {try{Files.createDirectories(evidence);Files.writeString(evidence.resolve(name+".json"),new GsonBuilder().setPrettyPrinting().create().toJson(r));}catch(Exception e){throw new RuntimeException(e);}}

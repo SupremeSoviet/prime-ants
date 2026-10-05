@@ -250,7 +250,7 @@ public final class QueenFounding {
     private void excavate(ServerLevel level) {
         if (progress >= plan.tasks().size() || progress >= NestPlan.HARD_CAP) { phase(Phase.ENTERING); return; }
         // Keep enough mandible capacity to finish this vertical column before a long outside trip.
-        // Otherwise its exposed pending dirt can naturally regrow grass and correctly lose origin permission.
+        // Natural grass transitions retain existing soil authority; complete the column before hauling.
         // The final two recovered units still belong to sealing, not exterior deposition.
         if (carried() > 0 && progress < plan.tasks().size() - 2) {
             BlockPos top = plan.tasks().get(progress); int column = 1;
@@ -262,7 +262,7 @@ public final class QueenFounding {
             if (carried() + column > CARRY_CAPACITY) { phase(Phase.TRANSPORTING); return; }
         }
         BlockPos target = plan.tasks().get(progress);
-        if (!NaturalSoil.get(level).eligible(level, target) || !level.getBlockState(target).equals(plan.expected().get(progress))) {
+        if (!NaturalSoil.get(level).compatible(level, target, plan.expected().get(progress))) {
             fail("planned_soil_replaced_or_origin_revoked_at_" + target); return;
         }
         for(int i=0;i<plan.plants().size();i++) {
@@ -290,15 +290,17 @@ public final class QueenFounding {
             PrimeAnts.LOGGER.info("Founding plant removal queen={} tick={} plant={} declared={} soilRemoved={}",queen.getUUID(),loadedTicks,plant,plan.plants(),progress);
             return;
         }
+        if (NativeVegetation.dependentAbove(level,target)) {fail("protected_vegetation_support_at_"+target);return;}
         BlockPos stand = workStand(level, target);
         if (stand == null) { fail("no_exposed_supported_work_face_at_" + target); return; }
         if (!arrive(level, stand) || cooldown > 0) return;
         // Immediate mutation-time checks: a living nearby actor, still-native exact state, air face and hard cap.
         if (!queen.isAlive() || queen.position().distanceToSqr(Vec3.atCenterOf(target)) > 5.0
                 || !exposed(level, target, stand) || !NaturalSoil.get(level).eligible(level, target)
-                || !level.getBlockState(target).equals(plan.expected().get(progress)) || carried() >= CARRY_CAPACITY) {
+                || !NaturalSoil.get(level).compatible(level,target,plan.expected().get(progress)) || carried() >= CARRY_CAPACITY) {
             fail("work_revalidation_failed_at_" + target); return;
         }
+        if (NativeVegetation.dependentAbove(level,target)) {fail("protected_vegetation_support_at_"+target);return;}
         if (!level.setBlock(target, Blocks.AIR.defaultBlockState(), 3)) { fail("removal_failed_at_" + target); return; }
         progress++; carry(carried() + 1); cooldown = cadence(); stalled = 0;
         convertExposedSoil(level);

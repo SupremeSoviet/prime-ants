@@ -15,12 +15,14 @@ public final class PlacementSettings implements ModInitializer {
     public static final Set<ChunkPos> NATIVE_FULL=new HashSet<>();
     public static final Set<String> ALL_FULL=new HashSet<>();
     public static final Set<ChunkPos> DECLARED_FULL=new HashSet<>();
-    public static boolean frozenExperiment() {return "t16-frozen-v1".equals(System.getProperty("prime_ants.placementMode"));}
+    public static boolean integrationExperiment() {return "t17-nectar-v1".equals(System.getProperty("prime_ants.placementMode"));}
+    public static boolean frozenExperiment() {return integrationExperiment() || "t16-frozen-v1".equals(System.getProperty("prime_ants.placementMode"));}
     public static boolean biomeExperiment() {return "t15-biome-v1".equals(System.getProperty("prime_ants.placementMode"));}
     @Override public void onInitialize() {
         String dimensions="prime_ants_test:placement_soil,prime_ants_test:placement_desert,prime_ants_test:placement_stone,prime_ants_test:placement_retry,prime_ants_test:placement_history,prime_ants_test:placement_negative";
         dimensions+=",prime_ants_test:placement_durability_retry,prime_ants_test:placement_durability_history,prime_ants_test:placement_durability_refusal";
         dimensions+=",prime_ants_test:t16_plants,prime_ants_test:t16_protected,prime_ants_test:t16_step,prime_ants_test:t16_thin,prime_ants_test:t16_unsafe,prime_ants_test:t16_legacy";
+        dimensions+=",prime_ants_test:t17_nectar";
         if(System.getProperty("prime_ants.placementSeed")!=null) dimensions+=",prime_ants_test:placement_native";
         System.setProperty("prime_ants.developmentPlacementDimensions",dimensions);
         TICKET=Registry.register(BuiltInRegistries.TICKET_TYPE,Identifier.fromNamespaceAndPath("prime_ants_test","placement"),new TicketType(0,14));

@@ -14,6 +14,11 @@
       "type": "minecraft:single",
       "resource": "minecraft:item/sweet_berries",
       "sprite": "prime_ants:block/cache_sweet_berries"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "prime_ants:item/flower_nectar",
+      "sprite": "prime_ants:block/cache_flower_nectar"
     }
   ]
 }

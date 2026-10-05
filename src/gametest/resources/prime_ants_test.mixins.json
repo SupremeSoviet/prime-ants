@@ -14,7 +14,8 @@
     "PlacementFinalGateMixin",
     "PlacementTraceMixin",
     "TerrainGenerationFixtureMixin",
-    "PlacementFullBudgetMixin"
+    "PlacementFullBudgetMixin",
+    "GrassNestedWriteMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -97,7 +97,7 @@ public final class NestExpansion extends SavedData {
         return j.floors().stream().filter(p->j.completed.contains(p)&&terrain.opened(l,p,owner)
             &&l.getBlockState(p.below()).isSolidRender()&&l.getFluidState(p.below()).isEmpty()
             &&(j.completed.contains(p.above())?terrain.opened(l,p.above(),owner)&&bodyTop<=p.getY()+2
-                :bodyTop<=p.getY()+1&&terrain.eligible(l,p.above(),owner)&&l.getBlockState(p.above()).equals(j.expected.get(j.tasks.indexOf(p.above()))))).toList();
+                :bodyTop<=p.getY()+1&&terrain.compatible(l,p.above(),owner,j.expected.get(j.tasks.indexOf(p.above()))))).toList();
     }
     public void changed(){setDirty();}
     /** Loaded conflicts are resolved from the worker's canonical task/cargo. Missing lookup stays unknown. */
@@ -139,7 +139,7 @@ public final class NestExpansion extends SavedData {
     public static boolean depositSupport(ServerLevel l,BlockPos p,UUID owner){return NestPlan.loaded(l,p)&&NestPlan.loaded(l,p.below())&&l.getFluidState(p).isEmpty()&&l.getBlockState(p.below()).isSolidRender()&&(NaturalSoil.get(l).eligible(l,p.below())||ColonyTerrain.get(l).mound(l,p.below(),owner));}
     private boolean candidate(ServerLevel l,Job j,UUID owner){
         var terrain=ColonyTerrain.get(l);
-        for(int n=0;n<j.tasks.size();n++)if(!terrain.eligible(l,j.tasks.get(n),owner)||!l.getBlockState(j.tasks.get(n)).equals(j.expected.get(n)))return false;
+        for(int n=0;n<j.tasks.size();n++)if(!terrain.compatible(l,j.tasks.get(n),owner,j.expected.get(n)))return false;
         for(var p:j.surfaces())if(!terrain.eligible(l,p,owner)||!l.getFluidState(p).isEmpty())return false;
         // Existing footprint first; verified owned base layers can support another exterior layer.
         long capacity=deposits(j.home).stream().filter(p->depositSupport(l,p,owner)&&NestPlan.walkable(l,p)).count();

@@ -5,9 +5,10 @@ def placementEvidence=providers.gradleProperty('primeAntsPlacementEvidence').get
 def placementMode=providers.gradleProperty('primeAntsPlacementMode').getOrElse('t14')
 def placementDeclaration=providers.gradleProperty('primeAntsPlacementDeclaration').getOrElse('unset')
 def isT15=placementMode=='t15-biome-v1'
+def isT17=placementMode=='t17-nectar-v1'
 def isT16=placementMode=='t16-frozen-v1'
-def fullLimit=isT16?150:100
-def placementDirectory=layout.buildDirectory.dir('run/'+(isT16?'t16':isT15?'t15':'t14')+'-placement/'+placementAttempt)
+def fullLimit=(isT16||isT17)?150:100
+def placementDirectory=layout.buildDirectory.dir('run/'+(isT17?'t17':isT16?'t16':isT15?'t15':'t14')+'-placement/'+placementAttempt)
 loom.runs.register('placementDiagnostic') {
     server()
     sourceSet.set('gametest')
@@ -23,8 +24,18 @@ loom.runs.register('placementDiagnostic') {
 }
 tasks.named('runPlacementDiagnostic') {
     doFirst {
-        if(!(placementSeed in ['2026100501','42','8675309']) || !(placementAttempt ==~ (isT16 ? /t16-seed-[a-z0-9-]+/ : isT15 ? /t15-seed-[a-z0-9-]+/ : /t14-seed-[a-z0-9-]+/)) || placementEvidence=='unset')
+        if(!(placementSeed in ['2026100501','42','8675309']) || !(placementAttempt ==~ (isT17 ? /t17-seed-[a-z0-9-]+/ : isT16 ? /t16-seed-[a-z0-9-]+/ : isT15 ? /t15-seed-[a-z0-9-]+/ : /t14-seed-[a-z0-9-]+/)) || placementEvidence=='unset')
             throw new GradleException('Explicit predeclared seed, owned turn-specific attempt and evidence required')
+        if(isT17) {
+            if(placementDeclaration=='unset' || !file(placementDeclaration).isFile())throw new GradleException('Frozen T17 declaration required')
+            def d=new groovy.json.JsonSlurper().parse(file(placementDeclaration))
+            def expected=[mode:'t17-nectar-v1',seeds:[2026100501],dimension:'prime_ants_test:placement_native',
+                max_biome_queries_per_seed:0,selected_per_seed:3,full_halo_radius:3,all_full_limit_per_seed:150,all_full_limit_total:150,
+                observation_server_ticks:16000,readiness_limit_server_ticks:300,founding_multiplier:20,brood_multiplier:100,
+                nectar_action_ticks:20,nectar_cooldown_ticks:1200,source_duration_multiplier:1,default_enabled:true,sprint:true]
+            expected.each{k,v->if(d[k]!=v)throw new GradleException('T17 declaration mismatch: '+k)}
+            if(d.imports.size()!=1 || d.imports[0].coordinates!=[[5,9],[9,5],[9,9]])throw new GradleException('Exactly frozen T17 selections required')
+        }
         if(isT16) {
             if(placementDeclaration=='unset' || !file(placementDeclaration).isFile())throw new GradleException('Frozen T16 declaration required')
             def d=new groovy.json.JsonSlurper().parse(file(placementDeclaration))
@@ -55,6 +66,7 @@ tasks.named('runPlacementDiagnostic') {
         def result=new groovy.json.JsonSlurper().parse(file(placementEvidence+'/result.json'))
         if(file(placementEvidence+'/failure.json').exists() || result.total_full_chunks+(result.prior_full_chunks?:0)>fullLimit)throw new GradleException('Bounded placement diagnostic incomplete')
         if(isT16 && (result.biome_queries!=0 || result.selected.size()!=3 || result.observed_ticks!=1000))throw new GradleException('T16 frozen diagnostic incomplete')
-        if(!isT16 && (isT15 ? result.full_chunks>75 || result.biome_queries!=4096 || result.selected.size()>3 || result.observed_ticks!=1000 : result.full_chunks<64 || result.full_chunks>81 || result.candidate_region_chunks!=64))throw new GradleException('Turn-specific placement diagnostic incomplete')
+        if(isT17 && (result.biome_queries!=0 || result.selected.size()!=3 || result.observed_ticks!=16000))throw new GradleException('T17 integration incomplete')
+        if(!isT16 && !isT17 && (isT15 ? result.full_chunks>75 || result.biome_queries!=4096 || result.selected.size()>3 || result.observed_ticks!=1000 : result.full_chunks<64 || result.full_chunks>81 || result.candidate_region_chunks!=64))throw new GradleException('Turn-specific placement diagnostic incomplete')
     }
 }

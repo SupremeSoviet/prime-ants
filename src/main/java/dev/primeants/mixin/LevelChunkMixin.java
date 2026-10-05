@@ -27,10 +27,15 @@ public abstract class LevelChunkMixin {
     @Inject(method = "setBlockState", at = @At("HEAD"))
     private void primeAntsRevoke(BlockPos pos, BlockState state, int flags, CallbackInfoReturnable<BlockState> cir) {
         if (level instanceof ServerLevel server) {
-            NaturalSoil.get(server).invalidate(pos);
+            if(!dev.primeants.founding.NativeGrassWrite.consume(server,pos,state)) NaturalSoil.get(server).invalidate(pos);
             dev.primeants.founding.NativeVegetation.get(server).invalidate(pos);
             dev.primeants.founding.ColonyPlugs.get(server).invalidate(pos);
             dev.primeants.founding.ColonyTerrain.get(server).invalidate(pos);
+            dev.primeants.worker.FlowerNectar.get(server).write(pos,state);
         }
+    }
+    @Inject(method="setBlockState",at=@At("RETURN"))
+    private void primeAntsFailedWrite(BlockPos pos,BlockState state,int flags,CallbackInfoReturnable<BlockState> cir) {
+        if(cir.getReturnValue()==null && level instanceof ServerLevel server) NaturalSoil.get(server).invalidate(pos);
     }
 }

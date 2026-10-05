@@ -1,3 +1,30 @@
+# Current slice status - T17, 2026-10-05
+
+**Vegetation support is protected at live mutation time; genuine vanilla grass spread/decay retains existing native-soil authority; physical flower nectar works through genuine emerged workers, cache delivery and nursing. Native integration is partial: two automatically placed queens completed founding and opened their entrances with six first-clutch workers, but harvested zero nectar within the fixed observation.** Current fresh unfiltered acceptance is **GREEN: exit 0 in 261.444869 s; 15 unit / 140 server / 24 model, zero failures or skips**. All 120 baseline server cases and 20 additions execute; both production archives exclude development helpers and presets.
+
+The two reviewer counterexamples failed before the repair through actual queen ticks. A late plant on a cell absent from the plan now refuses removal with retained cargo/progress; preparation centrally refuses dependent vegetation, including lowered supports outside excavation columns. Declared witnessed native plant clearing and genuinely underground preparation remain permitted, with normal neighbor updates.
+
+Only the two actual `SpreadingSnowyBlock.randomTick` grass spread/decay call sites receive a single-use exact level/position/old/new permit. It is consumed before nested callbacks, requires an already valid generation observation, and revokes authority on failed mutation. Pending targets and restored provenance accept those natural changes; ordinary same-state/entity/player writes, unknown/revoked soil and other ownership records keep their protections. Tests invoke the real vanilla implementation with disclosed controlled RNG and a bright daylight clock.
+
+Nectar is a canonical item: **1,000 sugar / zero protein**, **20 loaded action ticks**, **1,200 loaded entity-ticking source ticks** to rearm one portion, with no offline accumulation. These are implementation choices. Search stays within 10 horizontal / 3 vertical blocks and 240 search ticks: at most 3,087 inspected cells, 288 per 20-tick pulse. Approach uses the existing 1,200-tick controller bound. Reach, visibility, current source/state/habitat, mature membership, liveness and empty hands are rechecked. Dropped-food collection retains its original ordering and is considered before flowers; nectar stops when two sweet cache slots are occupied. Flower/source availability is never inventory. EN/RU names, a 16x16 item asset, actual cache slot projections and explicit persisted nectar nutrition receipts are included.
+
+| Native seed 2026100501 | Result |
+|---|---|
+| Frozen chunks; fresh world | (5,9), (9,5), (9,9); zero new surveys |
+| FULL / readiness / observation | 106 of 150 cumulative FULL, all dimensions; 46 / 16,000 real server ticks |
+| Acceleration | Founding/brood 20/100; sprint; nectar action/cooldown unaccelerated; complete founding food costs |
+| Queens / first clutch | 2 settled, operational queens; 6 genuine mature workers, both entrances worker-opened |
+| Physical soil / plants | 48 removed = 48 mounds; no current plugs/cargo/drops; 2 declared plants cleared; 50 prepared supports |
+| Native nectar / consumption | 0 harvests = 0 held/cache/world/custody + 0 consumed |
+
+One ready generated dandelion at (163,67,157) was selected late (2,718 inspections, search counter 228, action counter 0 at closure). The archive predates the corrected separation of search from approach/action; no native rerun or repair was made. A separate late-discovery generated-flower fixture verifies the corrected path with real movement, full action, delivery and nursing. It is controlled evidence, not native survival success. The rejected third candidate exhausted its original 64-column search (56 protected-footprint and 8 unsupported-surface rejections).
+
+Evidence: [T17 report](C:/Users/user/Documents/turnloop/directions/prime-ants-slice1/turns/T17/report.md), `native-saved-state-inspection.json`, `registered-cases.txt`, current XML/jars and closed `t17-native-2026100501-world.zip`. Production placement remains enabled by default; explicit `-Dprime_ants.naturalPlacement=false` is retained. Both traffic reproducers keep their 26,000-tick bounds. No client or benchmark ran: client history remains 24 launches, native 16/8, tasks 11/13; headless servers are counted separately.
+
+**Scope cut:** native nectar delivery/consumption remains unproved this turn. Flower nectar alone cannot sustain a colony. T19 still needs natural protein/other-food reliability, adult ageing/starvation, queen-death extinction and complete unattended growth. No larger closure campaign or native search enlargement is proposed.
+
+## Appendix: earlier checkpoint reports (historical)
+
 # Current slice status - T16, 2026-10-05
 
 **Native protected founding began in 3/3 seed sample regions: five automatically inserted queens, 17 actual soil removals, 11 mound deposits and six carried units; three declared plants were cleared separately. Production placement is enabled by default.** Both retained 26,000-tick traffic reproducers passed focused checks and the latest full suite. Fresh unfiltered acceptance is **GREEN: exit 0 in 203.400079 s; 15 unit / 120 server / 24 model, zero failures or skips**. This sample establishes early founding in these regions, not every plains/meadow column or a complete unattended life cycle. Two native queens subsequently failed closed when pending soil regrew grass/revoked origin, retaining their cargo.

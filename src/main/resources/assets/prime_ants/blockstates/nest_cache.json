@@ -26,6 +26,14 @@
     },
     {
       "when": {
+        "slot0": "4"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_flower_nectar_0"
+      }
+    },
+    {
+      "when": {
         "slot1": "1"
       },
       "apply": {
@@ -46,6 +54,14 @@
       },
       "apply": {
         "model": "prime_ants:block/cache_sweet_berries_1"
+      }
+    },
+    {
+      "when": {
+        "slot1": "4"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_flower_nectar_1"
       }
     },
     {
@@ -74,6 +90,14 @@
     },
     {
       "when": {
+        "slot2": "4"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_flower_nectar_2"
+      }
+    },
+    {
+      "when": {
         "slot3": "1"
       },
       "apply": {
@@ -94,6 +118,14 @@
       },
       "apply": {
         "model": "prime_ants:block/cache_sweet_berries_3"
+      }
+    },
+    {
+      "when": {
+        "slot3": "4"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_flower_nectar_3"
       }
     },
     {
@@ -122,6 +154,14 @@
     },
     {
       "when": {
+        "slot4": "4"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_flower_nectar_4"
+      }
+    },
+    {
+      "when": {
         "slot5": "1"
       },
       "apply": {
@@ -142,6 +182,14 @@
       },
       "apply": {
         "model": "prime_ants:block/cache_sweet_berries_5"
+      }
+    },
+    {
+      "when": {
+        "slot5": "4"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_flower_nectar_5"
       }
     }
   ]

@@ -28,18 +28,31 @@ import net.minecraft.world.phys.Vec3;
 
 /** Sole movement/action owner for brood workers. Mutations run sequentially on the level's server thread. */
 public final class WorkerTasks {
-    public enum Phase { NURSERY, OPENING, SOIL_OUT, EXIT, SEARCH, APPROACH, RETURN, DEPOSIT, NURSE_CACHE, NURSE_FEED, NURSE_RETURN, DIG, DIG_OUT, DEAD }
+    public enum Phase { NURSERY, OPENING, SOIL_OUT, EXIT, SEARCH, APPROACH, NECTAR_APPROACH, HARVEST, RETURN, DEPOSIT, NURSE_CACHE, NURSE_FEED, NURSE_RETURN, DIG, DIG_OUT, DEAD }
     private final LasiusNigerEntity worker;
     private NestPlan plan;
     private Phase phase=Phase.NURSERY;
     private UUID source;
+    private BlockPos flowerSource,flowerStand;
+    private String flowerExpected;
+    private int harvestingTicks,searchTicks,flowerInspections;
+    public static final int FLOWER_INSPECTIONS_PER_PULSE=288, FLOWER_INSPECTION_BUDGET=3087;
+    private static final List<BlockPos> FLOWER_OFFSETS=flowerOffsets();
+    private static List<BlockPos> flowerOffsets(){
+        var result=new java.util.ArrayList<BlockPos>();for(int x=-10;x<=10;x++)for(int z=-10;z<=10;z++)for(int y=-3;y<=3;y++)result.add(new BlockPos(x,y,z));
+        result.sort(java.util.Comparator.comparingInt((BlockPos p)->p.getX()*p.getX()+p.getZ()*p.getZ()).thenComparingInt(p->Math.abs(p.getY())).thenComparingInt(BlockPos::getX).thenComparingInt(BlockPos::getZ).thenComparingInt(BlockPos::getY));return List.copyOf(result);
+    }
+    public BlockPos flowerSource(){return flowerSource;}
+    public int harvestingTicks(){return harvestingTicks;}
+    public int flowerInspections(){return flowerInspections;}
+    public boolean withinSearch(BlockPos p){return plan!=null&&Math.abs(p.getX()-plan.outside().getX())<=10&&Math.abs(p.getZ()-plan.outside().getZ())<=10&&Math.abs(p.getY()-plan.outside().getY())<=3;}
     private UUID recipient;
     private int feedingTicks;
     public static final int FEEDING_TICKS=20;
     public UUID recipientId(){return recipient;}
     public int feedingTicks(){return feedingTicks;}
     public boolean nursing(){return phase==Phase.NURSE_CACHE||phase==Phase.NURSE_FEED||phase==Phase.NURSE_RETURN;}
-    public boolean foraging(){return switch(phase){case OPENING,SOIL_OUT,EXIT,SEARCH,APPROACH,RETURN,DEPOSIT->true;default->false;};}
+    public boolean foraging(){return switch(phase){case OPENING,SOIL_OUT,EXIT,SEARCH,APPROACH,NECTAR_APPROACH,HARVEST,RETURN,DEPOSIT->true;default->false;};}
     private int opened, placed, phaseTicks, cooldown;
     private String reason="nursery_shelter";
     public WorkerTasks(LasiusNigerEntity worker) { this.worker=worker; }
@@ -49,7 +62,7 @@ public final class WorkerTasks {
     public int placed() { return placed; }
     public NestPlan plan() { return plan; }
     public UUID sourceId() { return source; }
-    public static boolean food(ItemStack s) { return !s.isEmpty()&&(s.is(Items.APPLE)||s.is(Items.SWEET_BERRIES)||s.is(Items.CHICKEN)); }
+    public static boolean food(ItemStack s) { return !s.isEmpty()&&(s.is(Items.APPLE)||s.is(Items.SWEET_BERRIES)||s.is(Items.CHICKEN)||s.is(dev.primeants.item.AntItems.FLOWER_NECTAR)); }
     public static boolean reaches(ServerLevel l,LasiusNigerEntity w,Vec3 target) {
         Vec3 mouth=w.position().add(0,0.25,0);
         return w.isAlive() && w.onGround() && !w.isInWater() && NestPlan.loaded(l,BlockPos.containing(target))
@@ -129,7 +142,12 @@ public final class WorkerTasks {
     public void tick(ServerLevel l) {
         if(phase==Phase.DEAD || !worker.isAlive())return;
         if(worker.isCallow() || phase==Phase.NURSERY) {hold(worker.isCallow()?"callow_shelter":"nursery_shelter");return;}
-        if(!(construction()?constructionAuthorized(l):nursing()?nursingAuthorized(l):!constructionClaim(l)&&authorized(l))) {hold("home_unavailable_or_invalid_cargo_retained");feedingTicks=0;return;}
+        if(!(construction()?constructionAuthorized(l):nursing()?nursingAuthorized(l):!constructionClaim(l)&&authorized(l))) {hold("home_unavailable_or_invalid_cargo_retained");feedingTicks=0;harvestingTicks=0;return;}
+        // The existing 240-tick SEARCH window ends when a source is found. Approach/action
+        // keep the normal 1200-tick controller bound; late discovery cannot shorten harvesting.
+        if(phase==Phase.SEARCH) {
+            if(++searchTicks>240){clearFlower();next(Phase.RETURN,"bounded_search_finished");cooldown=40;return;}
+        }
         if(nursing()&&NestExpansion.get(l).operationalSpace(l,worker.queenId()).contains(worker.blockPosition()))NestExpansion.get(l).used(worker.queenId(),worker,"existing_nurse_traversal");
         if(construction()){var data=NestExpansion.get(l);var job=data.job(worker.queenId());job.ticks++;data.changed();}
         phaseTicks++; if(cooldown>0)cooldown--;
@@ -144,9 +162,10 @@ public final class WorkerTasks {
         switch(phase) {
             case OPENING -> open(l);
             case SOIL_OUT -> soilOut(l);
-            case EXIT -> { if(arrive(Vec3.atBottomCenterOf(plan.outside())))next(Phase.SEARCH,"outside_search"); }
+            case EXIT -> { if(arrive(Vec3.atBottomCenterOf(plan.outside()))){searchTicks=0;flowerInspections=0;clearFlower();next(Phase.SEARCH,"outside_search");} }
             case SEARCH -> search(l);
             case APPROACH -> pickup(l);
+            case NECTAR_APPROACH, HARVEST -> nectar(l);
             case RETURN -> {
                 var job=NestExpansion.get(l).job(worker.queenId());
                 // An empty search return has nothing to deliver. Vacate the single founding stair
@@ -287,20 +306,25 @@ public final class WorkerTasks {
         int progress=j.removed();var target=j.tasks.get(progress);int column=1;
         while(progress+column<j.tasks.size()&&j.tasks.get(progress+column).getX()==target.getX()&&j.tasks.get(progress+column).getZ()==target.getZ())column++;
         if(dirt()+column>QueenFounding.CARRY_CAPACITY){next(Phase.DIG_OUT,"complete_column_before_hauling");return;}
-        if(!ColonyTerrain.get(l).eligible(l,target,worker.queenId())||!l.getBlockState(target).equals(j.expected.get(progress))){j.reason="target_replaced_unknown_or_foreign";data.changed();hold(j.reason);return;}
+        if(!targetCompatible(l,target,j.expected.get(progress))){j.reason="target_replaced_unknown_or_foreign";data.changed();hold(j.reason);return;}
+        if(dev.primeants.founding.NativeVegetation.dependentAbove(l,target)){j.reason="protected_vegetation_support_at_"+target;data.changed();hold(j.reason);return;}
         var stand=digStand(l,target);if(stand==null){hold("no_supported_exposed_face");return;}
         // A crowded stand need not be monopolized at its exact center. The actor already occupies
         // this supported adjacent floor; the same physical reach/face/state checks still gate its action.
         if(!worker.blockPosition().equals(stand)||!worker.onGround()||worker.position().distanceToSqr(Vec3.atCenterOf(target))>5.0){arriveSupported(l,Vec3.atBottomCenterOf(stand));return;}
         worker.getNavigation().stop();worker.getLookControl().setLookAt(target.getX()+0.5,target.getY()+0.5,target.getZ()+0.5);
         if(!constructionAuthorized(l)||!NestPlan.walkable(l,stand)||!exposed(l,target,stand)||worker.position().distanceToSqr(Vec3.atCenterOf(target))>5.0
-            ||!ColonyTerrain.get(l).eligible(l,target,worker.queenId())||!l.getBlockState(target).equals(j.expected.get(progress))||dirt()>=QueenFounding.CARRY_CAPACITY||j.removed()>=NestExpansion.HARD_CAP)return;
+            ||!targetCompatible(l,target,j.expected.get(progress))||dirt()>=QueenFounding.CARRY_CAPACITY||j.removed()>=NestExpansion.HARD_CAP)return;
+        if(dev.primeants.founding.NativeVegetation.dependentAbove(l,target)){hold("protected_vegetation_support_at_"+target);return;}
         if(!l.setBlock(target,Blocks.AIR.defaultBlockState(),3)){hold("extension_removal_rejected");return;}
         ColonyTerrain.get(l).removed(target,worker.queenId());data.removed(j,target);
         worker.setItemSlot(EquipmentSlot.MAINHAND,new ItemStack(Items.DIRT,dirt()+1));cooldown=QueenFounding.cadence();phaseTicks=0;
         prepareExposed(l,j);j.reason="worker_removed_one_soil_unit";
         PrimeAnts.LOGGER.info("Extension excavation queen={} worker={} target={} removed={} carried={} deposited={}",worker.queenId(),worker.getUUID(),target,j.removed(),dirt(),j.deposited);
         if((dirt()==QueenFounding.CARRY_CAPACITY||j.removed()==j.tasks.size())&&target.getY()==plan.entrance().getY()-2)next(Phase.DIG_OUT,"soil_in_mandibles_transport");
+    }
+    private boolean targetCompatible(ServerLevel l,BlockPos p,net.minecraft.world.level.block.state.BlockState expected){
+        return ColonyTerrain.get(l).compatible(l,p,worker.queenId(),expected);
     }
     private void digOut(ServerLevel l){
         var data=NestExpansion.get(l);var j=data.job(worker.queenId());
@@ -365,6 +389,8 @@ public final class WorkerTasks {
         if(worker.tickCount%20!=0)return;
         var candidates=l.getEntitiesOfClass(ItemEntity.class,new AABB(plan.outside()).inflate(10,3,10),
                 i->i.isAlive() && !i.isRemoved() && !i.hasPickUpDelay() && food(i.getItem()) && NestPlan.loaded(l,i.blockPosition()));
+        // Preserve ordinary dropped-food ordering. Every reachable drop (including protein)
+        // is considered before nectar; the nectar-only two-sweet-slot limit leaves storage room.
         candidates.sort(java.util.Comparator.comparingDouble(i->worker.distanceToSqr(i)));
         for(var item:candidates) {
             if(!NestPlan.walkable(l,item.blockPosition()))continue;
@@ -372,6 +398,40 @@ public final class WorkerTasks {
             if(path==null || !path.canReach())continue;
             source=item.getUUID();next(Phase.APPROACH,"supported_dropped_food_found");return;
         }
+        if(!nectarRoom(l))return;
+        int end=Math.min(FLOWER_INSPECTION_BUDGET,flowerInspections+FLOWER_INSPECTIONS_PER_PULSE);
+        while(flowerInspections<end){
+            var p=plan.outside().offset(FLOWER_OFFSETS.get(flowerInspections++));
+            if(!NestPlan.loaded(l,p)||!FlowerNectar.habitat(l,p)||!FlowerNectar.get(l).ready(l,p))continue;
+            var path=worker.getNavigation().createPath(p,0);if(path==null||!path.canReach())continue;
+            flowerSource=p;flowerStand=p;flowerExpected=l.getBlockState(p).toString();harvestingTicks=0;next(Phase.NECTAR_APPROACH,"supported_ready_flower_found");return;
+        }
+    }
+    private boolean nectarRoom(ServerLevel l){
+        if(!(l.getBlockEntity(plan.cache()) instanceof NestCache cache))return true;
+        return cache.ownedBy(worker.queenId(),plan)&&cache.size()<NestCache.CAPACITY
+            &&cache.contents().stream().filter(s->Nutrition.sugarYield(s)>0).count()<2;
+    }
+    private void clearFlower(){flowerSource=null;flowerStand=null;flowerExpected=null;harvestingTicks=0;}
+    private void nectar(ServerLevel l){
+        if(!worker.getMainHandItem().isEmpty()){clearFlower();next(Phase.RETURN,"existing_cargo_return");return;}
+        if(flowerSource==null||flowerStand==null||!withinSearch(flowerSource)||!NestPlan.loaded(l,flowerSource)
+            ||!FlowerNectar.habitat(l,flowerSource)||!l.getBlockState(flowerSource).toString().equals(flowerExpected)
+            ||!FlowerNectar.get(l).ready(l,flowerSource)||!nectarRoom(l)){
+            clearFlower();next(Phase.SEARCH,"nectar_source_unready_changed_or_storage_unavailable");return;
+        }
+        var target=Vec3.atBottomCenterOf(flowerSource).add(0,0.35,0);
+        if(!NestPlan.walkable(l,flowerStand)||!reaches(l,worker,target)){
+            harvestingTicks=0;arriveSupported(l,Vec3.atBottomCenterOf(flowerStand));return;
+        }
+        worker.getNavigation().stop();worker.getLookControl().setLookAt(target.x,target.y,target.z);
+        if(phase!=Phase.HARVEST)next(Phase.HARVEST,"physical_flower_harvesting");
+        if(!authorized(l)||!ColonyMembers.get(l).belongs(worker,worker.queenId(),plan.chamber())
+            ||!l.isPositionEntityTicking(flowerSource)||!l.isPositionEntityTicking(worker.blockPosition())
+            ||!l.mayInteract(worker,flowerSource)){harvestingTicks=0;return;}
+        if(++harvestingTicks<FlowerNectar.ACTION_TICKS)return;
+        boolean harvested=FlowerNectar.get(l).harvest(l,worker,flowerSource,flowerExpected);clearFlower();
+        next(harvested?Phase.RETURN:Phase.SEARCH,harvested?"physical_nectar_in_mandibles":"nectar_commit_revalidation_refused");
     }
     private void pickup(ServerLevel l) {
         var entity=source==null?null:l.getEntity(source);
@@ -410,6 +470,7 @@ public final class WorkerTasks {
         var q=queen(l);if(q!=null)q.founding().releaseWorker(worker);
         ColonyMembers.get(l).died(worker);
         source=null;next(Phase.DEAD,"worker_dead_no_replacement");
+        clearFlower();
     }
     public void save(ValueOutput out) {
         out.putString("Phase",phase.name());out.putString("Reason",reason);out.putInt("Opened",opened);out.putInt("Placed",placed);out.putInt("PhaseTicks",phaseTicks);out.putInt("Cooldown",cooldown);
@@ -417,12 +478,18 @@ public final class WorkerTasks {
             out.store("SurfaceDeposits",BlockPos.CODEC.listOf(),plan.surfaceDeposits());
             if(plan.exteriorStand()!=null)out.store("ExteriorStand",BlockPos.CODEC,plan.exteriorStand());}
         if(source!=null)out.putString("Source",source.toString());
+        if(flowerSource!=null){out.store("FlowerSource",BlockPos.CODEC,flowerSource);out.store("FlowerStand",BlockPos.CODEC,flowerStand);out.putString("FlowerExpected",flowerExpected);}
+        out.putInt("HarvestingTicks",harvestingTicks);out.putInt("SearchTicks",searchTicks);out.putInt("FlowerInspections",flowerInspections);
         if(recipient!=null)out.putString("Recipient",recipient.toString());out.putInt("FeedingTicks",feedingTicks);
         // Cargo is canonical vanilla Mob mainhand equipment, not duplicated here.
     }
     public void load(ValueInput in) {
         phase=Phase.valueOf(in.getStringOr("Phase","NURSERY"));reason=in.getStringOr("Reason","restored");opened=in.getIntOr("Opened",0);placed=in.getIntOr("Placed",0);phaseTicks=in.getIntOr("PhaseTicks",0);cooldown=in.getIntOr("Cooldown",0);
         source=in.getString("Source").map(UUID::fromString).orElse(null);
+        flowerSource=in.read("FlowerSource",BlockPos.CODEC).orElse(null);flowerStand=in.read("FlowerStand",BlockPos.CODEC).orElse(null);flowerExpected=in.getString("FlowerExpected").orElse(null);
+        harvestingTicks=in.getIntOr("HarvestingTicks",0);searchTicks=in.getIntOr("SearchTicks",0);flowerInspections=in.getIntOr("FlowerInspections",0);
+        if(harvestingTicks<0||harvestingTicks>=FlowerNectar.ACTION_TICKS||searchTicks<0||flowerInspections<0||flowerInspections>FLOWER_INSPECTION_BUDGET
+            ||(flowerSource!=null&&(flowerStand==null||flowerExpected==null)))throw new IllegalArgumentException("Invalid saved nectar action");
         recipient=in.getString("Recipient").map(UUID::fromString).orElse(null);feedingTicks=in.getIntOr("FeedingTicks",0);
         if(in.read("Entrance",BlockPos.CODEC).isPresent()) {Direction d=Direction.byName(in.getStringOr("Direction",""));if(d==null||d.getAxis().isVertical())throw new IllegalArgumentException("Invalid task home");var g=NestPlan.geometry(in.read("Entrance",BlockPos.CODEC).orElseThrow(),d);
             plan=new NestPlan(g.entrance(),d,g.tasks(),g.expected(),List.of(),List.of(),in.read("SurfaceDeposits",BlockPos.CODEC.listOf()).orElse(List.of()),in.read("ExteriorStand",BlockPos.CODEC).orElse(null));

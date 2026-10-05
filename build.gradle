@@ -98,9 +98,9 @@ tasks.register('verifyNestCacheAssets') {
         def root=file('src/main/resources/assets')
         def atlas=new groovy.json.JsonSlurper().parse(new File(root,'minecraft/atlases/blocks.json'))
         def aliases=atlas.sources.collectEntries{[(it.sprite):it.resource]}
-        if(atlas.sources.size()!=3 || !atlas.sources.every{it.type=='minecraft:single' && it.sprite.startsWith('prime_ants:block/cache_')}) throw new GradleException('Cache block atlas aliases incomplete')
+        if(atlas.sources.size()!=4 || !atlas.sources.every{it.type=='minecraft:single' && it.sprite.startsWith('prime_ants:block/cache_')}) throw new GradleException('Cache block atlas aliases incomplete')
         def parts=new groovy.json.JsonSlurper().parse(new File(root,'prime_ants/blockstates/nest_cache.json')).multipart
-        if(parts.size()!=18)throw new GradleException('Cache slot projection incomplete')
+        if(parts.size()!=24)throw new GradleException('Cache slot projection incomplete')
         def clientJar=fileTree('.gradle/loom-cache/minecraftMaven/net/minecraft').matching{include 'minecraft-clientOnly-*/26.3/*-26.3.jar'}.singleFile
         new java.util.zip.ZipFile(clientJar).withCloseable{jar->
             parts.each{part->
@@ -108,11 +108,15 @@ tasks.register('verifyNestCacheAssets') {
                 def model=new groovy.json.JsonSlurper().parse(new File(root,path))
                 if(!aliases.containsKey(model.textures.food) || model.textures.particle!=model.textures.food)throw new GradleException('Cache model must resolve food and particles from the block atlas')
                 def png='assets/minecraft/textures/'+aliases[model.textures.food].replace('minecraft:','')+'.png'
+                if(aliases[model.textures.food].startsWith('prime_ants:')) {
+                    def imageFile=new File(root,'prime_ants/textures/'+aliases[model.textures.food].replace('prime_ants:','')+'.png')
+                    def img=javax.imageio.ImageIO.read(imageFile);if(img.width!=16 || img.height!=16)throw new GradleException('Nectar sprite must be 16x16');return
+                }
                 def entry=jar.getEntry(png);if(entry==null)throw new GradleException('Missing pinned vanilla food sprite '+png)
                 def img=javax.imageio.ImageIO.read(jar.getInputStream(entry));if(img.width!=16 || img.height!=16)throw new GradleException('Cache sprite must be 16x16')
             }
         }
-        logger.lifecycle('Verified 18 cache projections, three block-atlas aliases and vanilla 16x16 sprites')
+        logger.lifecycle('Verified 24 cache projections, four block-atlas aliases and 16x16 sprites')
     }
 }
 tasks.named('check') {dependsOn tasks.named('verifyNestCacheAssets')}
@@ -210,13 +214,13 @@ tasks.named('runGameTest') {
         def durabilityNames = (file('src/gametest/java/dev/primeants/gametest/PlacementDurabilityGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect { it[1].replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase() }
         if(durabilityNames.size()!=3)throw new GradleException('Placement durability discovery incomplete')
         durabilityNames.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:placement_durability_game_test_${name}"})throw new GradleException('Missing placement durability test '+name)}
-        ['TerrainRulesGameTest':9,'NestmateGameTest':3].each { className,count ->
+        ['TerrainRulesGameTest':9,'NestmateGameTest':3,'SoilContinuityGameTest':9,'NectarGameTest':11].each { className,count ->
             def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
             if(names.size()!=count)throw new GradleException('T16 required discovery incomplete: '+className)
             def prefix=className.replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()
             names.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:${prefix}_${name}"})throw new GradleException('Missing T16 test: '+name)}
         }
-        if(cases.size()!=120)throw new GradleException('Expected all 108 baseline cases and twelve T16 boundary regressions')
+        if(cases.size()!=140)throw new GradleException('Expected all 120 baseline cases and twenty T17 regressions')
         if (report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] }) {
             throw new GradleException('Server GameTest report contains a failure or skipped test')
         }

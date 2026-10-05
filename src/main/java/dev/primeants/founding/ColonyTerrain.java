@@ -29,8 +29,17 @@ public final class ColonyTerrain extends SavedData {
     public boolean mound(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"mound:nest_soil",NurseryBlocks.NEST_SOIL.defaultBlockState());}
     public boolean opened(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"worker_open:air",Blocks.AIR.defaultBlockState());}
     public boolean eligible(ServerLevel l,BlockPos p,UUID owner){return NaturalSoil.get(l).eligible(l,p)||prepared(l,p,owner);}
+    public boolean compatible(ServerLevel l,BlockPos p,UUID owner,BlockState expected){return NaturalSoil.get(l).compatible(l,p,expected)||prepared(l,p,owner)&&l.getBlockState(p).equals(expected);}
+    public String preparationProblem(ServerLevel l,BlockPos p){
+        return NativeVegetation.dependentAbove(l,p)?"protected_vegetation_support_at_"+p:!NaturalSoil.get(l).eligible(l,p)?"soil_authority_unavailable_at_"+p:null;
+    }
     public boolean prepare(ServerLevel l,BlockPos p,UUID owner){
-        if(!NaturalSoil.get(l).eligible(l,p)||!l.setBlock(p,NurseryBlocks.NEST_SOIL.defaultBlockState(),3))return false;
+        var problem=preparationProblem(l,p);
+        if(problem!=null) {
+            dev.primeants.PrimeAnts.LOGGER.debug("Soil preparation refused owner={} reason={}",owner,problem);
+            return false;
+        }
+        if(!l.setBlock(p,NurseryBlocks.NEST_SOIL.defaultBlockState(),3))return false;
         record(p,owner,"prepared:nest_soil");return true;
     }
     public void deposited(BlockPos p,UUID owner){record(p,owner,"mound:nest_soil");}

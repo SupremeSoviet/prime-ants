@@ -48,7 +48,7 @@ public final class WorkerForagingGameTest {
             }
         });
     }
-    private LasiusNigerEntity pairEgg(GameTestHelper c,BlockPos relative) {
+    LasiusNigerEntity pairEgg(GameTestHelper c,BlockPos relative) {
         var player=new net.minecraft.world.entity.player.Player(c.getLevel(),new com.mojang.authlib.GameProfile(UUID.randomUUID(),"foraging-fixture")) {
             public net.minecraft.world.level.GameType gameMode(){return net.minecraft.world.level.GameType.CREATIVE;}
             public boolean isClientAuthoritative(){return false;}

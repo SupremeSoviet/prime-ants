@@ -24,7 +24,8 @@ public abstract class TerrainGenerationFixtureMixin {
         String dimension=context.level().dimension().identifier().toString();
         boolean plants=dimension.equals("prime_ants_test:t16_plants") || dimension.equals("prime_ants_test:t16_protected");
         boolean slope=dimension.equals("prime_ants_test:t16_step");
-        if(!plants && !slope)return;
+        boolean nectar=dimension.equals("prime_ants_test:t17_nectar");
+        if(!plants && !slope && !nectar)return;
         long salt=context.level().getSeed()^UUID.nameUUIDFromBytes(dimension.getBytes(StandardCharsets.UTF_8)).getMostSignificantBits();
         int centerX=Math.floorDiv(chunk.getPos().x(),4)*4+1+(int)(salt&1);
         int centerZ=Math.floorDiv(chunk.getPos().z(),4)*4+1+(int)((salt>>>1)&1);
@@ -33,6 +34,10 @@ public abstract class TerrainGenerationFixtureMixin {
             for(int x=chunk.getPos().getMinBlockX();x<=chunk.getPos().getMaxBlockX();x++)
                 for(int z=chunk.getPos().getMinBlockZ();z<=chunk.getPos().getMaxBlockZ();z++) {
                     int top=generated.getHeight(Heightmap.Types.WORLD_SURFACE,x&15,z&15);
+                    boolean late=Math.floorDiv(chunk.getPos().x(),4)==890 && Math.floorDiv(chunk.getPos().z(),4)==890;
+                    // Isolated late-search source on the untouched side of the founding roof.
+                    // Far fixtures also need the standard radius-3 diagnostic entity-ticking halo.
+                    if(nectar && x==(late?ex+10:ex-3) && z==(late?ez-5:ez+3)) generated.setBlockState(new BlockPos(x,top+1,z),Blocks.POPPY.defaultBlockState(),0);
                     if(slope && z>ez) generated.setBlockState(new BlockPos(x,top+1,z),Blocks.DIRT.defaultBlockState(),0);
                     if(plants && (x==ex && z>=ez-2 && z<=ez || (x&3)==0 && (z&3)==0)) {
                         var plant=x==ex && z==ez?Blocks.SHORT_GRASS:x==ex && z==ez-1?Blocks.FERN:x==ex && z==ez-2?Blocks.POPPY:Blocks.WILDFLOWERS;

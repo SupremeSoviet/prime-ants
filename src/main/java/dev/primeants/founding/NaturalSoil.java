@@ -56,6 +56,17 @@ public final class NaturalSoil extends SavedData {
             && ("support:"+type(level.getBlockState(pos))).equals(observed.get(key(pos)));
     }
     public void invalidate(BlockPos pos) { if (observed.remove(key(pos)) != null) setDirty(); }
+    public static boolean grassPair(BlockState old,BlockState next) {
+        return old.is(Blocks.DIRT) && next.is(Blocks.GRASS_BLOCK) || old.is(Blocks.GRASS_BLOCK) && next.is(Blocks.DIRT);
+    }
+    /** A stale plan may differ only within the grass/dirt family AND with current positive authority. */
+    public boolean compatible(ServerLevel l,BlockPos p,BlockState expected) {
+        return eligible(l,p) && (l.getBlockState(p).equals(expected) || grassPair(expected,l.getBlockState(p)));
+    }
+    public boolean nativeGrassWrite(ServerLevel l,BlockPos p,BlockState old,BlockState next) {
+        if(!grassPair(old,next) || !eligible(l,p) || !l.getBlockState(p).equals(old))return false;
+        observed.put(key(p),type(next));setDirty();return true;
+    }
     /** Called ONLY on main-thread ProtoChunk -> LevelChunk conversion with a genuine new-generation witness.
      * Observes at most the top eight layers; deeper/old/retrogen terrain stays unknown. No world edits. */
     public void observeGenerated(ProtoChunk chunk) {
