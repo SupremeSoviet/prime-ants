@@ -78,7 +78,8 @@ public final class WorkerTasks {
     public boolean canForage(NestPlan p){return worker.level() instanceof ServerLevel l&&eligible(l,p)&&freeForConstruction()
         &&worker.getMainHandItem().isEmpty()&&!constructionClaim(l)&&queen(l).founding().workerClaim()==null;}
     public boolean canConstruct(NestPlan p){return worker.level() instanceof ServerLevel l&&eligible(l,p)&&freeForConstruction()
-        &&worker.getMainHandItem().isEmpty()&&!constructionClaim(l)&&!foragerClaim(l);}
+        &&worker.getMainHandItem().isEmpty()&&!constructionClaim(l)&&!foragerClaim(l)
+        &&(NestExpansion.get(l).job(worker.queenId())==null||NestExpansion.get(l).job(worker.queenId()).claim==null);}
     public boolean caregiver(ServerLevel l,NestPlan p){return l.getEntity(worker.getUUID())==worker&&NestPlan.loaded(l,worker.blockPosition())&&l.isPositionEntityTicking(worker.blockPosition())
         &&eligible(l,p)&&nursingAuthorized(l)&&plan.entrance().equals(p.entrance())&&plan.direction()==p.direction();}
     public boolean assignConstruction(NestPlan p){
@@ -145,7 +146,13 @@ public final class WorkerTasks {
             case EXIT -> { if(arrive(Vec3.atBottomCenterOf(plan.outside())))next(Phase.SEARCH,"outside_search"); }
             case SEARCH -> search(l);
             case APPROACH -> pickup(l);
-            case RETURN -> { if(arrive(Vec3.atBottomCenterOf(plan.at(3,0,-2))))next(Phase.DEPOSIT,"inside_delivery"); }
+            case RETURN -> {
+                var job=NestExpansion.get(l).job(worker.queenId());
+                // An empty search return has nothing to deliver. Vacate the single founding stair
+                // while its real builder still needs it; loaded collision/pathfinding moves both actors.
+                if(worker.getMainHandItem().isEmpty()&&job!=null&&!job.complete())next(Phase.EXIT,"empty_forager_yields_construction_stair");
+                else if(arrive(Vec3.atBottomCenterOf(plan.at(3,0,-2))))next(Phase.DEPOSIT,"inside_delivery");
+            }
             case DEPOSIT -> deposit(l);
             case NURSE_CACHE -> nurseCache(l);
             case NURSE_FEED -> nurseFeed(l);
@@ -166,9 +173,14 @@ public final class WorkerTasks {
         if(!worker.getMainHandItem().isEmpty()){next(Phase.NURSE_RETURN,"existing_nurse_cargo_retained");return;}
         if(!(l.getBlockEntity(plan.cache()) instanceof NestCache cache)||!cache.ownedBy(worker.queenId(),plan)){hold("nurse_owned_cache_unavailable");return;}
         if(cache.contents().stream().noneMatch(s->hasRecipient(l,s))){
-            var space=NestExpansion.get(l).circulationSpace(l,worker.queenId());
+            var space=new java.util.ArrayList<>(NestExpansion.get(l).circulationSpace(l,worker.queenId()));
+            var job=NestExpansion.get(l).job(worker.queenId());
+            // With only the first column open, every extension floor is reserved for the builder.
+            // Idle nurses must walk back to the opposite original row instead of holding the sole
+            // supported work stand indefinitely. Ordinary collision/navigation still own movement.
+            if(job!=null&&job.removed()<job.tasks.size())for(int f=3;f<=5;f++)space.add(plan.at(f,-job.side,-2));
             if(!space.isEmpty()){
-                var nurses=l.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(plan.chamber()).inflate(6),w->w.isAlive()&&worker.queenId().equals(w.queenId())&&w.workerTasks().nursing()).stream().sorted(java.util.Comparator.comparing(w->w.getUUID().toString())).toList();
+                var nurses=l.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(plan.chamber()).inflate(6),w->w.isAlive()&&!w.isNoAi()&&worker.queenId().equals(w.queenId())&&w.workerTasks().nursing()).stream().sorted(java.util.Comparator.comparing(w->w.getUUID().toString())).toList();
                 int index=java.util.stream.IntStream.range(0,nurses.size()).filter(n->nurses.get(n)==worker).findFirst().orElse(0);
                 var floor=space.get(index%space.size());if(NestPlan.walkable(l,floor)){reason="nurse_circulation_space";arriveSupported(l,Vec3.atBottomCenterOf(floor));return;}
             }

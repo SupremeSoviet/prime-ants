@@ -15,6 +15,73 @@ public final class RoleConflictGameTest {
     private final NursingGameTest food=new NursingGameTest();
     private final ExpansionGameTest soil=new ExpansionGameTest();
     @GameTest(maxTicks=26000,structure="prime_ants_test:idle_ground")
+    public void occupiedCanonicalJobRejectsDirectNurseAssignmentWithoutMutation(GameTestHelper c){
+        var q=f.start(c);boolean[] supplied={false},checked={false};
+        c.onEachTick(()->{
+            if(checked[0])return;
+            if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;food.supply(c,q,6,8);}
+            if(supplied[0]){c.assertTrue(food.total(c,q)==14,"Occupied boundary preserves real food");food.yields(c,q);}soil.balance(c,q);
+            var j=NestExpansion.get(c.getLevel()).job(q.getUUID());if(j==null||j.claim==null||j.complete())return;
+            var w=f.workers(c,q).stream().filter(a->!a.isNoAi()&&!a.isCallow()&&a.workerTasks().freeForConstruction()&&a.getMainHandItem().isEmpty()&&NestExpansion.remainingCaregivers(c.getLevel(),q.getUUID(),j.home,a)>=2).findFirst().orElse(null);if(w==null)return;
+            checked[0]=true;var claim=j.claim;var owner=f.workers(c,q).stream().filter(a->a.getUUID().equals(claim)).findFirst().orElseThrow();var ownerTask=taskTag(c,owner);var ownerPlan=owner.workerTasks().plan();var ownerEquipment=equipment(owner);
+            var phase=w.workerTasks().phase();var plan=w.workerTasks().plan();var equipment=equipment(w);var task=taskTag(c,w);
+            boolean eligible=w.workerTasks().canConstruct(j.home),assigned=w.workerTasks().assignConstruction(j.home);
+            c.assertTrue(!eligible&&!assigned&&claim.equals(j.claim)&&ownerTask.equals(taskTag(c,owner))&&ownerPlan==owner.workerTasks().plan()&&sameEquipment(ownerEquipment,owner)&&phase==w.workerTasks().phase()&&plan==w.workerTasks().plan()&&task.equals(taskTag(c,w))&&sameEquipment(equipment,w),"Occupied canonical job rejects direct enabled empty nurse without changing either task, plan, equipment or existing owner: can="+eligible+" assigned="+assigned);
+            c.runAfterDelay(20,()->{c.assertTrue(claim.equals(NestExpansion.get(c.getLevel()).job(q.getUUID()).claim)&&!w.workerTasks().construction(),"Real ticks retain claimant and unrelated nursing role");soil.balance(c,q);c.succeed();});
+        });
+    }
+    @GameTest(maxTicks=26000,structure="prime_ants_test:idle_ground")
+    public void enabledRealFoodAndSoilCarriersRejectAssignmentsWithEmptyHandControls(GameTestHelper c){
+        var q=f.start(c);boolean[] supplied={false},empty={false},soilChecked={false},extra={false},foodChecked={false};
+        c.onEachTick(()->{
+            if(foodChecked[0])return;
+            if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;food.supply(c,q,6,8);}
+            if(supplied[0]){c.assertTrue(food.total(c,q)==(extra[0]?22:14),"Enabled carriers conserve every physical/consumed food unit");food.yields(c,q);}soil.balance(c,q);
+            var j=NestExpansion.get(c.getLevel()).job(q.getUUID());if(j==null)return;
+            var builder=f.workers(c,q).stream().filter(w->w.getUUID().equals(j.claim)).findFirst().orElse(null);
+            if(builder!=null&&NestExpansion.remainingCaregivers(c.getLevel(),q.getUUID(),j.home,builder)>=2){
+                if(!empty[0]&&builder.getMainHandItem().isEmpty()){checkCargoBoundary(c,q,builder,false);empty[0]=true;}
+                if(empty[0]&&!soilChecked[0]&&builder.getMainHandItem().is(net.minecraft.world.item.Items.DIRT)){checkCargoBoundary(c,q,builder,true);soilChecked[0]=true;}
+            }
+            if(!j.complete()||j.claim!=null||!empty[0]||!soilChecked[0])return;
+            if(!extra[0]){extra[0]=true;food.supply(c,q,4,4);
+                for(var item:c.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,c.getBounds().inflate(8),i->i.isAlive()&&WorkerTasks.food(i.getItem()))){var stack=item.getItem().copy();stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("T13 physical source"));item.setItem(stack);}return;
+            }
+            var carrier=f.workers(c,q).stream().filter(w->!w.isNoAi()&&!w.isCallow()&&w.workerTasks().nursing()&&WorkerTasks.food(w.getMainHandItem())&&w.getMainHandItem().has(net.minecraft.core.component.DataComponents.CUSTOM_NAME)&&WorkerTasks.reaches(c.getLevel(),w,net.minecraft.world.phys.Vec3.atBottomCenterOf(j.home.cache()).add(0,.15,0))).findFirst().orElse(null);
+            if(carrier==null)return;var exact=carrier.getMainHandItem().copy();carrier=f.restore(c,carrier);
+            c.assertTrue(!carrier.isNoAi()&&ItemStack.matches(exact,carrier.getMainHandItem()),"Enabled actor restoration retains genuinely transferred named food and quantity");
+            checkCargoBoundary(c,q,carrier,true);
+            // Restore the ordinary nursing phase, then perform a real physical return to the cache.
+            c.assertTrue(f.cache(c,q).deposit(carrier,j.home)&&carrier.getMainHandItem().isEmpty()&&f.cache(c,q).contents().stream().anyMatch(s->ItemStack.matches(exact,s)),"Real enabled cache return preserves exact components/quantity and supplies same-body empty-hand control");
+            checkCargoBoundary(c,q,carrier,false);foodChecked[0]=true;
+            c.assertTrue(food.total(c,q)==22,"Components/physical return never manufacture a unit");soil.balance(c,q);c.succeed();
+        });
+    }
+    private static net.minecraft.nbt.CompoundTag taskTag(GameTestHelper c,LasiusNigerEntity w){var out=net.minecraft.world.level.storage.TagValueOutput.createWithContext(net.minecraft.util.ProblemReporter.DISCARDING,c.getLevel().registryAccess());w.workerTasks().save(out);return out.buildResult();}
+    private static Map<net.minecraft.world.entity.EquipmentSlot,ItemStack> equipment(LasiusNigerEntity w){var result=new EnumMap<net.minecraft.world.entity.EquipmentSlot,ItemStack>(net.minecraft.world.entity.EquipmentSlot.class);for(var slot:net.minecraft.world.entity.EquipmentSlot.values())result.put(slot,w.getItemBySlot(slot).copy());return result;}
+    private static boolean sameEquipment(Map<net.minecraft.world.entity.EquipmentSlot,ItemStack> before,LasiusNigerEntity w){return before.entrySet().stream().allMatch(e->ItemStack.matches(e.getValue(),w.getItemBySlot(e.getKey())));}
+    private static void loadTask(GameTestHelper c,LasiusNigerEntity w,net.minecraft.nbt.CompoundTag tag){w.workerTasks().load(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING,c.getLevel().registryAccess(),tag));}
+    private static void checkCargoBoundary(GameTestHelper c,LasiusNigerEntity q,LasiusNigerEntity w,boolean cargo){
+        var p=q.founding().plan();var j=NestExpansion.get(c.getLevel()).job(q.getUUID());var original=taskTag(c,w);var claim=j.claim;var qout=net.minecraft.world.level.storage.TagValueOutput.createWithContext(net.minecraft.util.ProblemReporter.DISCARDING,c.getLevel().registryAccess());q.founding().save(qout);var queenTask=qout.buildResult();
+        var forager=q.founding().workerClaim()==null?null:c.getLevel().getEntity(q.founding().workerClaim());
+        if(forager instanceof LasiusNigerEntity a)q.founding().releaseWorker(a);
+        // Controlled negative restored-task fixture isolates equipment as the ONLY changed eligibility
+        // condition. No loaded tick occurs with these temporary unoccupied claim/task snapshots.
+        j.claim=null;var candidate=original.copy();candidate.putString("Phase","NURSERY");loadTask(c,w,candidate);
+        try{
+            c.assertTrue(w.isAlive()&&!w.isNoAi()&&!w.isCallow()&&ColonyMembers.get(c.getLevel()).belongs(w,q.getUUID(),p.chamber())&&q.founding().ready()&&w.workerTasks().freeForConstruction()&&NestExpansion.remainingCaregivers(c.getLevel(),q.getUUID(),p,w)>=2&&q.founding().workerClaim()==null&&j.claim==null,"All non-cargo eligibility conditions are established, enabled and unoccupied");
+            var equipment=w.getMainHandItem().copy();var phase=w.workerTasks().phase();var plan=w.workerTasks().plan();var task=taskTag(c,w);
+            if(cargo){
+                c.assertTrue(!equipment.isEmpty()&&!w.workerTasks().canForage(p)&&!w.workerTasks().canConstruct(p)&&!w.workerTasks().assign(p)&&!w.workerTasks().assignConstruction(p)&&!w.workerTasks().assignNurse(p),"Enabled real food/soil cargo independently refuses every assignment");
+                c.assertTrue(phase==w.workerTasks().phase()&&plan==w.workerTasks().plan()&&task.equals(taskTag(c,w))&&ItemStack.matches(equipment,w.getMainHandItem()),"Cargo refusal preserves task/plan, exact quantity and components");
+            }else{
+                c.assertTrue(equipment.isEmpty()&&w.workerTasks().canForage(p)&&w.workerTasks().canConstruct(p)&&w.workerTasks().assign(p),"Same eligible empty hand accepts foraging");loadTask(c,w,candidate);
+                c.assertTrue(w.workerTasks().assignConstruction(p),"Same empty hand accepts construction with two real retained caregivers");loadTask(c,w,candidate);
+                c.assertTrue(w.workerTasks().assignNurse(p)&&w.getMainHandItem().isEmpty(),"Same empty hand accepts nursing");
+            }
+        }finally{j.claim=claim;q.founding().load(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING,c.getLevel().registryAccess(),queenTask));loadTask(c,w,original);}
+    }
+    @GameTest(maxTicks=26000,structure="prime_ants_test:idle_ground")
     public void deadForagerCannotStealEmptyHandedPartialBuilder(GameTestHelper c){conflict(c,0);}
     @GameTest(maxTicks=26000,structure="prime_ants_test:idle_ground")
     public void restoredPartialBuilderAndQueenKeepReciprocalClaims(GameTestHelper c){conflict(c,1);}
@@ -22,11 +89,13 @@ public final class RoleConflictGameTest {
     public void conflictingPersistedForagerClaimReleasesWithoutLosingBuilderProgress(GameTestHelper c){conflict(c,2);}
     private void conflict(GameTestHelper c,int restoration){
         LasiusNigerEntity[] queen={f.start(c)};boolean[] supplied={false},killed={false},released={false},replacement={false};
+        var trace=new ConstructionTrace();
         UUID[] builder={null},dead={null};int[] atDeath={0};long[] deathTick={0};boolean[] formerReleased={false},builderHeld={false};Map<UUID,ItemStack> retained=new HashMap<>();Set<UUID> disabled=new HashSet<>();
         c.onEachTick(()->{
             var q=queen[0];if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;food.supply(c,q,6,8);}
             if(supplied[0]){c.assertTrue(food.total(c,q)==14,"Food/custody/terminal receipts conserved on every loaded tick");food.yields(c,q);}soil.balance(c,q);
             var j=NestExpansion.get(c.getLevel()).job(q.getUUID());if(j==null)return;
+            trace.tick(c,q);
             var workers=f.workers(c,q);var claimBefore=j.claim;var b=workers.stream().filter(w->w.getUUID().equals(claimBefore)).findFirst().orElse(null);
             if(c.getTick()%1000==0)PrimeAnts.LOGGER.info("T12 conflict mode={} tick={} killed={} released={} replacement={} removed={} deposited={} builder={} forager={} workers={}",restoration,c.getTick(),killed[0],released[0],replacement[0],j.removed(),j.deposited,j.claim,q.founding().workerClaim(),workers.stream().map(w->w.getUUID()+" "+w.workerTasks().phase()+" "+w.workerTasks().reason()+" "+w.getMainHandItem()+" enabled="+!w.isNoAi()).toList());
             if(!killed[0]){

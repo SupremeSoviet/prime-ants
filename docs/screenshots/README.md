@@ -212,3 +212,8 @@ A4 run 7544f303-8d9d-4e0a-9203-4ff2faa47ace; production worker actions, ordinary
 ### T12 inspection notice - 2026-10-05 (no new capture)
 
 The original T11 A4 PNGs/provenance are preserved with their original run/date. Opened in T12: `t11-a4-expanded-mound.png` (original 05:07:29.729738900Z: visible mound/lane/ants), `t11-a4-usable-interior.png` (05:07:32.242472200Z: visible chamber/adults/pale brood cluster, partly overlapped), and `t11-a4-soil-carrying.png` (05:06:12.885635600Z: **rejected for readable carrying evidence**, because terrain/grass occludes the mouth/item and worker). Metadata does not replace visible cargo. No T12 PNG exists: all new close-ups/carrying captures and performance were withheld after red acceptance. See [current slice report](../slice-1-report.md).
+
+
+### T13 closure inspection — 2026-10-05 (no new client launch)
+
+Opened again: [T11 mound/traffic](t11-a4-expanded-mound.png) and [T11 connected interior](t11-a4-usable-interior.png), with original T11 run/date/provenance retained. The pale brood cluster is partly overlapped. The [T11 soil image](t11-a4-soil-carrying.png) remains rejected for readable carrying evidence as recorded in T12; no replacement was captured. Worker/queen close-ups and readable food carrying still need fresh real evidence. Red T13 acceptance blocked all native capture and performance. All 269 historical capture/caption/provenance files retain their hashes. The current partial result and Phase 2 handoff are in [slice report](../slice-1-report.md).

@@ -55,10 +55,12 @@ public final class ExpansionGameTest {
     @GameTest(maxTicks=26000,structure="prime_ants_test:idle_ground")
     public void automaticWorkerBuildsConnectedUsefulExtensionWithConservedSoil(GameTestHelper c){
         var q=f.start(c);boolean[] supplied={false},snapshot={false},cargo={false},column={false};int[] last={0};Map<BlockPos,BlockState> before=new HashMap<>();Set<UUID> initial=new HashSet<>();
+        var trace=new ConstructionTrace();
         c.onEachTick(()->{
             growth(c,q,supplied);balance(c,q);var p=q.founding().plan();if(p==null)return;var ws=f.workers(c,q);
             if(!snapshot[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){snapshot[0]=true;ws.forEach(w->initial.add(w.getUUID()));for(int x=-7;x<=7;x++)for(int z=-7;z<=7;z++)for(int y=-4;y<=3;y++){var b=p.entrance().offset(x,y,z);before.put(b,c.getLevel().getBlockState(b));}}
             var j=NestExpansion.get(c.getLevel()).job(q.getUUID());if(j==null)return;
+            trace.tick(c,q);
             c.assertTrue(j.tasks.size()==12&&j.removed()-last[0]<=1&&j.removed()<=32,"Twelve planned tasks, cap 32 and at most one removal per loaded tick");last[0]=j.removed();
             c.assertTrue(q.founding().ready()&&j.problem(c.getLevel(),q.getUUID())==null,"Verified partial shell remains live, no habitat bypass");
             c.assertTrue(ws.stream().filter(w->w.workerTasks().nursing()).count()>=2&&ws.stream().anyMatch(q.founding()::claimedBy),"Construction preserves two nurses and real forager");
@@ -149,9 +151,35 @@ public final class ExpansionGameTest {
     }
     @GameTest(maxTicks=26000,structure="prime_ants_test:idle_ground")
     public void builderDeathUsesCustodyAndActualWorkerReassignment(GameTestHelper c){
+        builderDeath(c,false);
+    }
+    @GameTest(maxTicks=26000,structure="prime_ants_test:idle_ground")
+    public void replacementBuilderRecoversFromObservedNurseryCrowding(GameTestHelper c){
+        builderDeath(c,true);
+    }
+    private void builderDeath(GameTestHelper c,boolean reproduce){
         var q=f.start(c);boolean[] supplied={false},dead={false},custodyRestored={false};UUID[] killed={null};
+        var trace=new ConstructionTrace();
+        boolean[] held={false},arranged={false};
         c.onEachTick(()->{
             growth(c,q,supplied);balance(c,q);var j=NestExpansion.get(c.getLevel()).job(q.getUUID());if(j==null)return;
+            trace.tick(c,q);
+            if(reproduce&&dead[0]&&j.removed()==2&&j.claim!=null&&!arranged[0]){
+                var ws=f.workers(c,q);var replacement=ws.stream().filter(w->w.getUUID().equals(j.claim)).findFirst().orElseThrow();
+                if(!held[0]){held[0]=true;replacement.setNoAi(true);f.shelterDisabled(c,q,replacement);}
+                var nurses=ws.stream().filter(w->w.workerTasks().phase()==WorkerTasks.Phase.NURSE_CACHE&&w.getMainHandItem().isEmpty()&&!w.isCallow()).sorted(Comparator.comparing(w->w.getUUID().toString())).toList();
+                if(ws.size()==5&&nurses.size()==3){
+                    // Disclosed ONE-TIME negative placement fixture, copied from T12/55's five live
+                    // positions in local entrance coordinates. Trace itself never moves an actor.
+                    double[][] positions={{5.500001394,2.084998518},{5.498077597,2.699999988},{5.438998416,.61746573}};
+                    for(int n=0;n<3;n++)placeObserved(nurses.get(n),j.home,positions[n][0],positions[n][1]);
+                    placeObserved(replacement,j.home,5.500089611,1.47212594);
+                    var forager=ws.stream().filter(q.founding()::claimedBy).findFirst().orElseThrow();placeObserved(forager,j.home,2.50429753,.526508069);
+                    replacement.setNoAi(false);arranged[0]=true;
+                    c.assertTrue(ws.stream().allMatch(w->!w.isNoAi()&&w.isAlive())&&q.founding().ready()&&j.problem(c.getLevel(),q.getUUID())==null,"Observed real-body crowding retains all enabled actors, soil and habitat");
+                    PrimeAnts.LOGGER.info("T13 observed-crowding fixture tick={} claim={} workers={}",c.getTick(),j.claim,ws.stream().map(w->w.getUUID()+" "+w.position()).toList());
+                }
+            }
             if(!dead[0]&&j.removed()>=2){var w=f.workers(c,q).stream().filter(a->a.getUUID().equals(j.claim)&&a.getMainHandItem().is(Items.DIRT)).findFirst();if(w.isEmpty())return;dead[0]=true;killed[0]=w.get().getUUID();var position=w.get().position();TransferFault.blockAt(position);w.get().hurtServer(c.getLevel(),w.get().damageSources().generic(),1000);
                 c.runAfterDelay(40,()->{
                     c.assertTrue(TransferFault.refusedAt(position)>0&&TransferCustody.get(c.getLevel()).contents().stream().anyMatch(t->t.source().equals("worker:"+killed[0])&&t.stack().is(Items.DIRT)),"Rejected dead-builder drop retains verified custody");
@@ -159,8 +187,12 @@ public final class ExpansionGameTest {
                     try(var disk=new net.minecraft.world.level.storage.SavedDataStorage(net.minecraft.world.level.dimension.DimensionType.getStorageFolder(c.getLevel().dimension(),c.getLevel().getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT)).resolve("data"),net.minecraft.util.datafix.DataFixers.getDataFixer(),c.getLevel().registryAccess())){var saved=disk.get(TransferCustody.TYPE);c.assertTrue(saved!=null&&saved.contents().stream().anyMatch(t->t.source().equals("worker:"+killed[0])),"Actual disk preserves rejected builder soil");c.getLevel().getDataStorage().set(TransferCustody.TYPE,saved);}
                     custodyRestored[0]=true;TransferFault.releaseAt(position);
                 });}
-            if(dead[0]&&custodyRestored[0]&&j.complete()){c.assertTrue(j.released>0&&j.deposited+j.released==12&&j.removed()==12&&ColonyMembers.get(c.getLevel()).member(killed[0]).dead()&&f.workers(c,q).stream().noneMatch(w->w.getUUID().equals(killed[0])),"Dead builder soil follows custody and no replacement body/duplicate edit is invented");c.succeed();}
+            if(dead[0]&&custodyRestored[0]&&j.complete()){c.assertTrue(!reproduce||arranged[0],"Observed crowding fixture actually exercised");c.assertTrue(j.released>0&&j.deposited+j.released==12&&j.removed()==12&&ColonyMembers.get(c.getLevel()).member(killed[0]).dead()&&f.workers(c,q).stream().noneMatch(w->w.getUUID().equals(killed[0])),"Dead builder soil follows custody and no replacement body/duplicate edit is invented");c.succeed();}
         });
+    }
+    private static void placeObserved(LasiusNigerEntity w,NestPlan p,double forward,double side){
+        var lateral=p.direction().getClockWise();var pos=new net.minecraft.world.phys.Vec3(p.entrance().getX()+forward*p.direction().getStepX()+side*lateral.getStepX(),p.entrance().getY()-2,p.entrance().getZ()+forward*p.direction().getStepZ()+side*lateral.getStepZ());
+        w.teleportTo(pos.x,pos.y,pos.z);w.setOnGround(true);
     }
     @GameTest(maxTicks=26000,structure="prime_ants_test:idle_ground")
     public void protectedUnknownForeignAndHistoricalLiningFailClosed(GameTestHelper c){
