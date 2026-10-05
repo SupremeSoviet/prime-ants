@@ -1,3 +1,17 @@
+# Current slice status - T14, 2026-10-05
+
+**Phase 2 placement feasibility: safe controlled-generation entry works; the bounded native experiment inserted zero queens.** Three predeclared vanilla seeds covered 192 core chunks and **246 FULL chunks including all auxiliary generation**, below 300. The sparse deterministic lattice selected 12 candidates; all rejected on unsupported biomes (96 bounded column checks). Five center samples were eligible, but none was selected. No search expansion or native success-driven retry occurred. The experimental production setting remains disabled by default. [Feasibility, exact settings, commands and archived worlds](natural-placement-feasibility.md).
+
+Six new required placement/default-setting tests retain automatic genuine-generation insertion, zero block edits, shared founding initialization/real ticks, protected rejection, stable refusal/retry identity and persisted event decisions. The last real-occupant focused recovery passed; the one current unfiltered run also passed all six new cases. This is a placement diagnostic, not full acceptance or playable natural-colony evidence.
+
+The **queen/outbound-worker single-throat lock remains a blocking gameplay defect**. Missing readable original views, unmeasured MSPT, broad nutrition/layout cold restart, arbitrary unload/offline behavior, natural food, adult mortality and the remaining Phase 2 life-cycle/defense/release stages carry forward. No T14 client launched: history stays **24 launches, native 16/8, tasks 11/13**. Headless servers are counted separately.
+
+The one current unfiltered `t14-build-status` exited **0 in 175.518951 s**: **15 unit / 105 server / 24 model**, zero failures or skips. All 99 baseline names and six new required cases ran. Source/build-input snapshots stayed unchanged; executed XML and production binary/source jars are archived in `T14/t14-build-status-executed/`, and the full world in `t14-build-status-world.zip`. This is a single passing current run, not a traffic repair or robust playability acceptance. Production QueenFounding/WorkerTasks and their deadlines were unchanged; the previously evidenced throat lock remains unresolved.
+
+The T13 appendix now points to the actual [t13-build-final-failed-world.zip](C:/Users/user/Documents/turnloop/directions/prime-ants-slice1/turns/T13/t13-build-final-failed-world.zip); its original report is preserved under T14. No traffic test, deadline, capture gate or performance gate was removed. Next Phase 2 work should predeclare bounded biome-aware sampling/terrain-fit diagnostics while retaining all placement protection and the traffic blocker.
+
+---
+
 # Slice 1 closure assessment — T13, 2026-10-05
 
 **Partial closure: acceptance remains red.** The retained T12 stall is explained by live body occupancy: idle nurses occupied the only supported work stand while `circulation=[]`, despite valid target permission, support and readiness. Moving idle nurses through ordinary AI to the opposite original row demonstrated recovery in the compact copied-position fixture. Recovery was not robust in the full context: the new crowding regression subsequently pushed the stationary queen into the single exit and stranded outbound workers. That failure remains open.

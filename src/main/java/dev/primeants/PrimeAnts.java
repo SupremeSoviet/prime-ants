@@ -16,6 +16,7 @@ public final class PrimeAnts implements ModInitializer {
         dev.primeants.brood.NurseryBlocks.initialize();
         AntItems.initialize();
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_LEVEL_TICK.register(dev.primeants.worker.TransferCustody::tick);
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_LEVEL_TICK.register(dev.primeants.founding.NaturalPlacement::tick);
         LOGGER.info("Prime Ants initialized: physical founding, foraging, nurse feeding and finite food-supported brood growth.");
     }
 }

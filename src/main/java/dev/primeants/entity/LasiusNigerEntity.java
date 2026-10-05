@@ -188,7 +188,8 @@ public final class LasiusNigerEntity extends PathfinderMob {
 
     @Override public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, EntitySpawnReason reason, SpawnGroupData data) {
         SpawnGroupData result = super.finalizeSpawn(level, difficulty, reason, data);
-        if (form == AntForm.QUEEN && reason == EntitySpawnReason.SPAWN_ITEM_USE) founding.request();
+        if (form == AntForm.QUEEN && (reason == EntitySpawnReason.SPAWN_ITEM_USE
+                || reason == EntitySpawnReason.CHUNK_GENERATION)) founding.request();
         return result;
     }
 

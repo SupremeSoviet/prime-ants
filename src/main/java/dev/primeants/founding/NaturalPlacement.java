@@ -1,0 +1,177 @@
+package dev.primeants.founding;
+
+import com.google.gson.*;
+import com.mojang.serialization.Codec;
+import dev.primeants.entity.AntEntities;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.datafix.DataFixTypes;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.ProtoChunk;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.saveddata.*;
+import net.minecraft.world.phys.AABB;
+
+/** Experimental placement EVENT ledger. Never counts population or replaces missing actors. */
+public final class NaturalPlacement extends SavedData {
+    public static final int COLUMNS = 8, PER_TICK = 2, RETRIES = 3, MIN_SPACING = 56;
+    public static final String AUTHORITY = "new_terrain_v1";
+    public static final TagKey<Biome> BIOMES = TagKey.create(Registries.BIOME,
+            Identifier.fromNamespaceAndPath("prime_ants", "founding_queen"));
+    public static final Codec<NaturalPlacement> CODEC = Codec.PASSTHROUGH.xmap(d -> {
+        var data = new NaturalPlacement();
+        d.getMapValues().getOrThrow().forEach((k,v) -> {
+            var r = JsonParser.parseString(v.asString().getOrThrow()).getAsJsonObject();
+            // A durable reservation surviving a crash is uncertain: NEVER retry it.
+            if (r.get("status").getAsString().equals("RESERVED")) {
+                r.addProperty("status", "INDETERMINATE"); r.addProperty("reason", "interrupted_insertion_no_replacement");
+            }
+            data.records.put(k.asString().getOrThrow(), r);
+            if (r.get("status").getAsString().equals("PENDING")) data.queue.add(k.asString().getOrThrow());
+        });
+        return data;
+    }, data -> {
+        var object = new JsonObject(); data.records.forEach((k,v) -> object.addProperty(k,v.toString()));
+        return new com.mojang.serialization.Dynamic<>(com.mojang.serialization.JsonOps.INSTANCE,object);
+    });
+    public static final SavedDataType<NaturalPlacement> TYPE = new SavedDataType<>(
+            Identifier.fromNamespaceAndPath("prime_ants", "natural_placement"), NaturalPlacement::new, CODEC, DataFixTypes.LEVEL);
+    private final Map<String,JsonObject> records = new LinkedHashMap<>();
+    private final ArrayDeque<String> queue = new ArrayDeque<>();
+    public static NaturalPlacement get(ServerLevel l) { return l.getDataStorage().computeIfAbsent(TYPE); }
+    /** Off by default. The second clause is a development provider, never an ordinary dimension override. */
+    public static boolean enabled(ServerLevel l) {
+        return Boolean.getBoolean("prime_ants.experimentalNaturalPlacement") && l.dimension().equals(Level.OVERWORLD)
+            || net.fabricmc.loader.api.FabricLoader.getInstance().isDevelopmentEnvironment()
+                && Arrays.asList(System.getProperty("prime_ants.developmentPlacementDimensions", "").split(","))
+                    .contains(l.dimension().identifier().toString());
+    }
+    private static long salt(ServerLevel l) {
+        return l.getSeed() ^ UUID.nameUUIDFromBytes(l.dimension().identifier().toString().getBytes(StandardCharsets.UTF_8)).getMostSignificantBits();
+    }
+    public static boolean selected(ServerLevel l, ChunkPos p) {
+        // One central chunk per 4x4 cell. Seed/dimension choose residue 1 or 2; negative coordinates use floorMod.
+        return Math.floorMod(p.x(),4) == 1 + (int)(salt(l)&1)
+                && Math.floorMod(p.z(),4) == 1 + (int)((salt(l)>>>1)&1);
+    }
+    private static UUID identity(ServerLevel l, ChunkPos p) {
+        return UUID.nameUUIDFromBytes((AUTHORITY+":"+l.getSeed()+":"+l.dimension().identifier()+":"+p.x()+":"+p.z()).getBytes(StandardCharsets.UTF_8));
+    }
+    public JsonObject decisions() {
+        var copy = new JsonObject(); records.forEach((k,v) -> copy.add(k,v.deepCopy())); return copy;
+    }
+    /** Main-thread conversion only. Reads the passed proto, no world queries/neighbor loading/insertion. */
+    public void observeGenerated(ServerLevel l, ProtoChunk proto) {
+        if (!l.getServer().isSameThread()) throw new IllegalStateException("Placement authority requires server thread");
+        if (!enabled(l) || !((GenerationWitness)proto).primeAntsGeneratedTerrain()
+                || proto.isUpgrading() || proto.getBelowZeroRetrogen()!=null || !selected(l,proto.getPos())) return;
+        String key = Long.toString(proto.getPos().pack());
+        if (records.containsKey(key)) return;
+        var r = new JsonObject(); r.addProperty("authority",AUTHORITY); r.addProperty("seed",l.getSeed());
+        r.addProperty("dimension",l.dimension().identifier().toString()); r.addProperty("x",proto.getPos().x()); r.addProperty("z",proto.getPos().z());
+        r.addProperty("queen",identity(l,proto.getPos()).toString()); r.addProperty("status","PENDING");
+        r.addProperty("reason","awaiting_full_entity_ticking"); r.addProperty("column",0); r.addProperty("attempts",0);
+        r.add("rejections",new JsonObject()); records.put(key,r); queue.add(key); setDirty();
+    }
+    public static void tick(ServerLevel l) { if (enabled(l)) get(l).evaluate(l); }
+    private void evaluate(ServerLevel l) {
+        if (!l.getServer().isSameThread()) throw new IllegalStateException("Placement evaluation requires server thread");
+        int budget = Math.min(PER_TICK,queue.size());
+        for (int i=0;i<budget;i++) {
+            String key=queue.remove(); var r=records.get(key);
+            if (!"PENDING".equals(r.get("status").getAsString())) continue;
+            var p=new ChunkPos(r.get("x").getAsInt(),r.get("z").getAsInt());
+            if (!authority(l,r,p,key)) finish(r,"REJECTED","missing_or_mismatched_generation_authority");
+            else if (ready(l,p)) evaluateColumn(l,r,p);
+            if ("PENDING".equals(r.get("status").getAsString())) queue.add(key);
+        }
+    }
+    private boolean authority(ServerLevel l,JsonObject r,ChunkPos p,String key) {
+        return r.has("authority") && AUTHORITY.equals(r.get("authority").getAsString()) && r.has("seed") && r.get("seed").getAsLong()==l.getSeed()
+                && r.has("dimension") && r.get("dimension").getAsString().equals(l.dimension().identifier().toString())
+                && key.equals(Long.toString(p.pack())) && selected(l,p) && identity(l,p).toString().equals(r.get("queen").getAsString());
+    }
+    public static boolean ready(ServerLevel l,ChunkPos p) {
+        // Search offsets 6..9 keep every prospective founding cell (+/-6) inside the candidate chunk.
+        // A loaded halo also covers the larger read-only insertion snapshot; never request missing neighbors.
+        for(int x=p.x()-1;x<=p.x()+1;x++) for(int z=p.z()-1;z<=p.z()+1;z++) {
+            var q=new ChunkPos(x,z);
+            if(l.getChunkSource().getChunk(x,z,ChunkStatus.FULL,false)==null) return false;
+        }
+        return l.areEntitiesActuallyLoadedAndTicking(p)
+            && l.isPositionEntityTicking(new BlockPos(p.getMinBlockX()+8,l.getMinY()+8,p.getMinBlockZ()+8));
+    }
+    private static final int[][] OFFSETS={{7,7},{8,8},{6,8},{9,7},{7,9},{8,6},{6,6},{9,9}};
+    private void reject(JsonObject r,String why) {
+        var counts=r.getAsJsonObject("rejections"); counts.addProperty(why,counts.has(why)?counts.get(why).getAsInt()+1:1);
+        r.addProperty("reason",why); setDirty();
+    }
+    private void finish(JsonObject r,String status,String why) { r.addProperty("status",status);r.addProperty("reason",why);setDirty(); }
+    private void evaluateColumn(ServerLevel l,JsonObject r,ChunkPos p) {
+        if(r.has("retryAfter") && l.getGameTime()<r.get("retryAfter").getAsLong()) return;
+        int column=r.get("column").getAsInt();
+        if(column<0 || column>=COLUMNS) {finish(r,"REJECTED","bounded_search_exhausted");return;}
+        int[] offset=OFFSETS[(column+(int)(salt(l)&7))%COLUMNS];
+        var surface=new BlockPos(p.getMinBlockX()+offset[0],0,p.getMinBlockZ()+offset[1]);
+        surface=surface.atY(l.getHeight(Heightmap.Types.WORLD_SURFACE,surface.getX(),surface.getZ())-1);
+        r.addProperty("biome",l.getBiome(surface).getRegisteredName());
+        String problem=null; NestPlan plan=null;
+        if(!l.getBiome(surface).is(BIOMES)) problem="unsupported_biome";
+        else if(!l.getFluidState(surface).isEmpty() || !l.getFluidState(surface.above()).isEmpty()) problem="fluid";
+        else if(!NaturalSoil.material(l.getBlockState(surface))) problem="unsupported_surface";
+        else if(!NaturalSoil.get(l).eligible(l,surface)) problem="unknown_or_revoked_origin";
+        else {
+            for(Direction d:Direction.Plane.HORIZONTAL) {plan=NestPlan.candidate(l,surface,d);if(plan!=null)break;}
+            if(plan==null) problem="protected_footprint_or_support_roof_floor";
+        }
+        if(problem!=null) {reject(r,problem);r.addProperty("column",column+1);if(column+1==COLUMNS)finish(r,"REJECTED","bounded_search_exhausted");return;}
+        var feet=surface.above();
+        var box=AntEntities.QUEEN.getSpawnAABB(feet.getX()+.5,feet.getY(),feet.getZ()+.5);
+        if(!l.getWorldBorder().isWithinBounds(feet) || !NestPlan.walkable(l,feet) || !l.noCollision(box)
+                || !l.getEntities(null,box).isEmpty()) problem="occupied_or_obstructed_space";
+        // Selected chunks are separated by >=64 blocks on a fixed lattice; offsets 6..9
+        // reduce the nearest possible separation to 61, exceeding MIN_SPACING. No historical-ledger scan.
+        if(!l.getEntitiesOfClass(dev.primeants.entity.LasiusNigerEntity.class,new AABB(feet).inflate(MIN_SPACING),
+                q->q.form()==dev.primeants.entity.AntForm.QUEEN && q.isAlive()).isEmpty()) problem="existing_queen_spacing";
+        if(problem!=null) {reject(r,problem);r.addProperty("column",column+1);return;}
+        var uuid=UUID.fromString(r.get("queen").getAsString());
+        if(l.getEntityInAnyDimension(uuid)!=null) {finish(r,"INDETERMINATE","identity_already_present_no_replacement");return;}
+        var queen=AntEntities.QUEEN.create(l,EntitySpawnReason.CHUNK_GENERATION);
+        if(queen==null) {finish(r,"REJECTED","entity_factory_refused");return;}
+        queen.setUUID(uuid); queen.snapTo(feet.getX()+.5,feet.getY(),feet.getZ()+.5,0,0);
+        queen.finalizeSpawn(l,l.getCurrentDifficultyAt(feet),EntitySpawnReason.CHUNK_GENERATION,null);
+        // No world mutation between final live checks and insertion. All prospective work still uses original protection.
+        if(!ready(l,p) || NestPlan.candidate(l,plan.entrance(),plan.direction())==null
+                || !l.getBiome(surface).is(BIOMES) || !l.noCollision(queen,queen.getBoundingBox())
+                || !l.getEntities(queen,queen.getBoundingBox()).isEmpty()) {reject(r,"immediate_revalidation_failed");return;}
+        r.addProperty("surface",surface.asLong());r.addProperty("direction",plan.direction().getName());
+        var before=terrain(l,surface); r.addProperty("attempts",r.get("attempts").getAsInt()+1);
+        finish(r,"RESERVED","durable_insertion_reservation");l.getDataStorage().saveAndJoin();
+        boolean inserted=l.addFreshEntity(queen);
+        boolean actual=l.getEntity(uuid)==queen && queen.level()==l && !queen.isRemoved();
+        r.addProperty("zeroBlockEdits",before.equals(terrain(l,surface)));
+        if(!r.get("zeroBlockEdits").getAsBoolean()) throw new IllegalStateException("Natural placement altered terrain");
+        if(inserted && actual) finish(r,"PLACED","verified_world_insertion");
+        else if(actual || inserted) finish(r,"INDETERMINATE","insertion_identity_uncertain_no_replacement");
+        else if(r.get("attempts").getAsInt()>=RETRIES) finish(r,"REJECTED","insertion_retry_budget_exhausted");
+        else {finish(r,"PENDING","insertion_refused_retry_same_identity");r.addProperty("retryAfter",l.getGameTime()+20);}
+        l.getDataStorage().saveAndJoin();
+        dev.primeants.PrimeAnts.LOGGER.info("PLACEMENT DIAGNOSTIC queen={} chunk={} status={} attempts={} zeroBlockEdits={}",uuid,p,r.get("status"),r.get("attempts"),r.get("zeroBlockEdits"));
+    }
+    /** Read-only insertion invariant covering the complete founding envelope. */
+    public static List<net.minecraft.world.level.block.state.BlockState> terrain(ServerLevel l,BlockPos surface) {
+        var result=new ArrayList<net.minecraft.world.level.block.state.BlockState>();
+        for(var p:BlockPos.betweenClosed(surface.offset(-8,-4,-8),surface.offset(8,3,8))) result.add(l.getBlockState(p));
+        return result;
+    }
+}

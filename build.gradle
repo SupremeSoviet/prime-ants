@@ -54,6 +54,7 @@ loom.runs.named('gameTest') {
 }
 apply from: 'gradle/client-evidence.gradle'
 apply from: 'gradle/restart-evidence.gradle'
+apply from: 'gradle/placement-diagnostic.gradle'
 def capturePrefix = providers.gradleProperty('primeAntsCapturePrefix').getOrElse('t05-' + java.util.UUID.randomUUID().toString())
 def captureRunId = java.util.UUID.randomUUID().toString()
 def captureStart = System.currentTimeMillis()
@@ -202,7 +203,10 @@ tasks.named('runGameTest') {
             def prefix=className.replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()
             names.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:${prefix}_${name}"})throw new GradleException('Missing nursing test: '+name)}
         }
-        if(cases.size()!=99)throw new GradleException('Expected all 96 retained and three crowding/occupied-job/enabled-cargo regression server cases')
+        def placementNames = (file('src/gametest/java/dev/primeants/gametest/NaturalPlacementGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect { it[1].replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase() }
+        if (placementNames.size()!=6) throw new GradleException('Placement discovery incomplete')
+        placementNames.each { name -> if (!cases.any { it.@name.text()=="prime_ants_test:natural_placement_game_test_${name}" }) throw new GradleException('Missing placement test '+name) }
+        if(cases.size()!=105)throw new GradleException('Expected all 99 baseline and six required placement/default-setting cases')
         if (report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] }) {
             throw new GradleException('Server GameTest report contains a failure or skipped test')
         }

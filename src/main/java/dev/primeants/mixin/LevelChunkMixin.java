@@ -19,6 +19,7 @@ public abstract class LevelChunkMixin {
     @Inject(method = "<init>(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ProtoChunk;Lnet/minecraft/world/level/chunk/LevelChunk$PostLoadProcessor;)V", at = @At("RETURN"))
     private void primeAntsObserve(ServerLevel level, ProtoChunk proto, LevelChunk.PostLoadProcessor post, CallbackInfo ci) {
         NaturalSoil.get(level).observeGenerated(proto);
+        dev.primeants.founding.NaturalPlacement.get(level).observeGenerated(level, proto);
     }
     // Includes ordinary placement, breaking/replacement, piston writes and ant deposits.
     // Even a same-state write revokes permission conservatively.

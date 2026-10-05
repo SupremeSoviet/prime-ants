@@ -8,7 +8,8 @@
     "IdlePathTraceMixin",
     "IdleControlsAccessor",
     "EmergenceInsertionMixin",
-    "TransferInsertionMixin"
+    "TransferInsertionMixin",
+    "PlacementInsertionMixin"
   ],
   "injectors": {
     "defaultRequire": 1

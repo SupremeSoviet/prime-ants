@@ -13,7 +13,9 @@
   ],
   "entrypoints": {
     "main": [
-      "dev.primeants.gametest.RestartHarness"
+      "dev.primeants.gametest.RestartHarness",
+      "dev.primeants.gametest.PlacementSettings",
+      "dev.primeants.gametest.PlacementDiagnosticHarness"
     ],
     "fabric-gametest": [
       "dev.primeants.gametest.BootstrapGameTest",
@@ -25,7 +27,8 @@
       "dev.primeants.gametest.NursingGameTest",
       "dev.primeants.gametest.NursingGuardGameTest",
       "dev.primeants.gametest.ExpansionGameTest",
-      "dev.primeants.gametest.RoleConflictGameTest"
+      "dev.primeants.gametest.RoleConflictGameTest",
+      "dev.primeants.gametest.NaturalPlacementGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

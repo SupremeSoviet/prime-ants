@@ -88,6 +88,169 @@
           ]
         }
       }
+    },
+    "prime_ants_test:placement_soil": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:flat",
+        "settings": {
+          "biome": "minecraft:plains",
+          "features": false,
+          "lakes": false,
+          "structure_overrides": [],
+          "layers": [
+            {
+              "block": "minecraft:bedrock",
+              "height": 1
+            },
+            {
+              "block": "minecraft:dirt",
+              "height": 6
+            },
+            {
+              "block": "minecraft:grass_block",
+              "height": 1
+            }
+          ]
+        }
+      }
+    },
+    "prime_ants_test:placement_desert": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:flat",
+        "settings": {
+          "biome": "minecraft:desert",
+          "features": false,
+          "lakes": false,
+          "structure_overrides": [],
+          "layers": [
+            {
+              "block": "minecraft:bedrock",
+              "height": 1
+            },
+            {
+              "block": "minecraft:dirt",
+              "height": 6
+            },
+            {
+              "block": "minecraft:grass_block",
+              "height": 1
+            }
+          ]
+        }
+      }
+    },
+    "prime_ants_test:placement_stone": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:flat",
+        "settings": {
+          "biome": "minecraft:plains",
+          "features": false,
+          "lakes": false,
+          "structure_overrides": [],
+          "layers": [
+            {
+              "block": "minecraft:bedrock",
+              "height": 1
+            },
+            {
+              "block": "minecraft:stone",
+              "height": 7
+            }
+          ]
+        }
+      }
+    },
+    "prime_ants_test:placement_native": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:noise",
+        "settings": "minecraft:overworld",
+        "biome_source": {
+          "type": "minecraft:multi_noise",
+          "preset": "minecraft:overworld"
+        }
+      }
+    },
+    "prime_ants_test:placement_retry": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:flat",
+        "settings": {
+          "biome": "minecraft:plains",
+          "features": false,
+          "lakes": false,
+          "structure_overrides": [],
+          "layers": [
+            {
+              "block": "minecraft:bedrock",
+              "height": 1
+            },
+            {
+              "block": "minecraft:dirt",
+              "height": 6
+            },
+            {
+              "block": "minecraft:grass_block",
+              "height": 1
+            }
+          ]
+        }
+      }
+    },
+    "prime_ants_test:placement_history": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:flat",
+        "settings": {
+          "biome": "minecraft:plains",
+          "features": false,
+          "lakes": false,
+          "structure_overrides": [],
+          "layers": [
+            {
+              "block": "minecraft:bedrock",
+              "height": 1
+            },
+            {
+              "block": "minecraft:dirt",
+              "height": 6
+            },
+            {
+              "block": "minecraft:grass_block",
+              "height": 1
+            }
+          ]
+        }
+      }
+    },
+    "prime_ants_test:placement_negative": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:flat",
+        "settings": {
+          "biome": "minecraft:plains",
+          "features": false,
+          "lakes": false,
+          "structure_overrides": [],
+          "layers": [
+            {
+              "block": "minecraft:bedrock",
+              "height": 1
+            },
+            {
+              "block": "minecraft:dirt",
+              "height": 6
+            },
+            {
+              "block": "minecraft:grass_block",
+              "height": 1
+            }
+          ]
+        }
+      }
     }
   }
 }
