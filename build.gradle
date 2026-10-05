@@ -98,9 +98,9 @@ tasks.register('verifyNestCacheAssets') {
         def root=file('src/main/resources/assets')
         def atlas=new groovy.json.JsonSlurper().parse(new File(root,'minecraft/atlases/blocks.json'))
         def aliases=atlas.sources.collectEntries{[(it.sprite):it.resource]}
-        if(atlas.sources.size()!=4 || !atlas.sources.every{it.type=='minecraft:single' && it.sprite.startsWith('prime_ants:block/cache_')}) throw new GradleException('Cache block atlas aliases incomplete')
+        if(atlas.sources.size()!=5 || !atlas.sources.every{it.type=='minecraft:single' && it.sprite.startsWith('prime_ants:block/cache_')}) throw new GradleException('Cache block atlas aliases incomplete')
         def parts=new groovy.json.JsonSlurper().parse(new File(root,'prime_ants/blockstates/nest_cache.json')).multipart
-        if(parts.size()!=24)throw new GradleException('Cache slot projection incomplete')
+        if(parts.size()!=30)throw new GradleException('Cache slot projection incomplete')
         def clientJar=fileTree('.gradle/loom-cache/minecraftMaven/net/minecraft').matching{include 'minecraft-clientOnly-*/26.3/*-26.3.jar'}.singleFile
         new java.util.zip.ZipFile(clientJar).withCloseable{jar->
             parts.each{part->
@@ -116,7 +116,7 @@ tasks.register('verifyNestCacheAssets') {
                 def img=javax.imageio.ImageIO.read(jar.getInputStream(entry));if(img.width!=16 || img.height!=16)throw new GradleException('Cache sprite must be 16x16')
             }
         }
-        logger.lifecycle('Verified 24 cache projections, four block-atlas aliases and 16x16 sprites')
+        logger.lifecycle('Verified 30 cache projections, five block-atlas aliases and 16x16 sprites')
     }
 }
 tasks.named('check') {dependsOn tasks.named('verifyNestCacheAssets')}
@@ -214,13 +214,15 @@ tasks.named('runGameTest') {
         def durabilityNames = (file('src/gametest/java/dev/primeants/gametest/PlacementDurabilityGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect { it[1].replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase() }
         if(durabilityNames.size()!=3)throw new GradleException('Placement durability discovery incomplete')
         durabilityNames.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:placement_durability_game_test_${name}"})throw new GradleException('Missing placement durability test '+name)}
-        ['TerrainRulesGameTest':9,'NestmateGameTest':3,'SoilContinuityGameTest':9,'NectarGameTest':11].each { className,count ->
+        ['TerrainRulesGameTest':9,'NestmateGameTest':3,'SoilContinuityGameTest':11,'NectarGameTest':11].each { className,count ->
             def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
             if(names.size()!=count)throw new GradleException('T16 required discovery incomplete: '+className)
             def prefix=className.replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()
             names.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:${prefix}_${name}"})throw new GradleException('Missing T16 test: '+name)}
         }
-        if(cases.size()!=140)throw new GradleException('Expected all 120 baseline cases and twenty T17 regressions')
+        def additions=['lifecycle_game_test_environmental_chicken_loot_funds_new_worker_then_queen_death_ends_colony','soil_continuity_game_test_lowered_bamboo_survives_queen_preparation_and_restoration','soil_continuity_game_test_sideways_attachment_refuses_real_queen_excavation_with_read_only_survival','lifecycle_game_test_daylight_zombie_loot_travels_through_cache_and_nursing','lifecycle_game_test_genuine_unfed_workers_starve_before_their_birth_selected_age_limit','lifecycle_game_test_physical_meals_sustain_workers_until_age_death_and_persist_through_restore','lifecycle_game_test_queen_death_stops_laying_viable_cocoons_emerge_and_all_adults_die','lifecycle_game_test_birth_selected_capacity_keeps_unloaded_identities_and_death_releases_reservation','lifecycle_game_test_legacy_worker_age_adopts_stable_defaults_once_without_renewal','lifecycle_game_test_restored_protein_carrier_starves_releases_cargo_and_keeps_death_receipts']
+        additions.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:'+n})throw new GradleException('Missing T18 regression '+n)}
+        if(cases.size()!=150)throw new GradleException('Expected all 140 baseline cases and ten T18 regressions')
         if (report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] }) {
             throw new GradleException('Server GameTest report contains a failure or skipped test')
         }

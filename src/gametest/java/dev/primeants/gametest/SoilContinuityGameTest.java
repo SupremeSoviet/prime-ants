@@ -11,6 +11,42 @@ import static dev.primeants.gametest.NaturalPlacementGameTest.*;
 /** Actual auto-placed queen ticks; interventions are explicitly negative fixtures. */
 public final class SoilContinuityGameTest {
     @GameTest(maxTicks=1500)
+    public void sidewaysAttachmentRefusesRealQueenExcavationWithReadOnlySurvival(GameTestHelper c){
+        var l=level(c,"placement_soil");var chunk=prepare(c,l,3200);boolean[] placed={false};
+        c.onEachTick(()->{
+            if(!(l.getEntity(uuid(l,chunk)) instanceof LasiusNigerEntity q)||q.founding().plan()==null||placed[0])return;
+            placed[0]=true;var target=q.founding().plan().tasks().getFirst();var side=target.east();
+            var torch=Blocks.WALL_TORCH.defaultBlockState().setValue(net.minecraft.world.level.block.WallTorchBlock.FACING,net.minecraft.core.Direction.EAST);
+            l.setBlock(side,torch,3);var before=l.getBlockState(target);
+            c.assertTrue(torch.canSurvive(l,side)&&NaturalSoil.get(l).eligible(l,target),"Sideways vanilla attachment on still-authorized excavation support");
+            c.assertTrue(SupportSurvival.problem(l,target,Blocks.AIR.defaultBlockState())!=null&&l.getBlockState(target).equals(before)&&l.getBlockState(side).equals(torch),"Read-only survival sees proposed air without terrain/neighbor updates");
+            c.assertTrue(SupportSurvival.problem(l,new BlockPos(29900000,64,29900000),Blocks.AIR.defaultBlockState())!=null,"Unavailable required cells fail closed without loading");
+            c.runAfterDelay(200,()->{c.assertTrue(q.founding().phase()==QueenFounding.Phase.FAILED&&q.founding().removed()==0&&q.founding().carried()==0&&l.getBlockState(side).equals(torch)&&NaturalSoil.get(l).compatible(l,target,before),"Actual queen refuses sideways support destruction and conserves material");c.succeed();});
+        });
+    }
+    @GameTest(maxTicks=1500)
+    public void loweredBambooSurvivesQueenPreparationAndRestoration(GameTestHelper c) {
+        var l=level(c,"placement_soil");var chunk=prepare(c,l,3160);boolean[] placed={false};
+        c.onEachTick(()->{
+            if(!(l.getEntity(uuid(l,chunk)) instanceof LasiusNigerEntity q)||q.founding().plan()==null||placed[0])return;
+            placed[0]=true;var p=q.founding().plan();var support=p.at(1,1,-1);var plant=support.above();
+            c.assertTrue(!p.tasks().contains(support)&&p.undergroundSurfaces().contains(support),"Lowered support outside excavation columns");
+            var soil=l.getBlockState(support);l.setBlock(plant,Blocks.AIR.defaultBlockState(),3);l.setBlock(plant,Blocks.BAMBOO_SAPLING.defaultBlockState(),3);
+            c.assertTrue(NaturalSoil.get(l).eligible(l,support)&&l.getBlockState(plant).canSurvive(l,plant),"Late bamboo has still-authorized vanilla support");
+            c.runAfterDelay(400,()->{
+                c.assertTrue(q.founding().removed()>=3,"Actual queen excavates adjacent stair");
+                c.assertTrue(l.getBlockState(plant).is(Blocks.BAMBOO_SAPLING)&&NaturalSoil.get(l).compatible(l,support,soil),"Queen preparation retains bamboo and support: plant="+l.getBlockState(plant)+" support="+l.getBlockState(support));
+                c.assertTrue(!ColonyTerrain.get(l).prepare(l,support,q.getUUID()),"Shared preparation also refuses worker path");
+                reloadSoil(l);
+                var out=net.minecraft.world.level.storage.TagValueOutput.createWithContext(net.minecraft.util.ProblemReporter.DISCARDING,l.registryAccess());c.assertTrue(q.save(out),"Normal queen save");
+                var copy=(LasiusNigerEntity)net.minecraft.world.entity.EntityType.loadEntityRecursive(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING,l.registryAccess(),out.buildResult()),l,net.minecraft.world.entity.EntitySpawnReason.LOAD,e->e);
+                c.assertTrue(copy!=null&&copy.founding().removed()==q.founding().removed()&&copy.founding().carried()==q.founding().carried()&&copy.founding().deposited()==q.founding().deposited()&&copy.founding().converted()==q.founding().converted(),"Read-only uninserted restoration retains material and preparation progress");
+                c.assertTrue(NaturalSoil.get(l).compatible(l,support,soil)&&l.getBlockState(plant).is(Blocks.BAMBOO_SAPLING)&&!ColonyTerrain.get(l).prepare(l,support,q.getUUID()),"Restored authority cannot renew permission or destroy bamboo");
+                c.assertTrue(q.founding().removed()==q.founding().carried()+q.founding().deposited()+q.founding().plugged()+q.founding().released(),"Material balance unchanged by refusal");c.succeed();
+            });
+        });
+    }
+    @GameTest(maxTicks=1500)
     public void actualNaturalWriteCannotExemptNestedOrdinaryWrite(GameTestHelper c){
         c.getLevel().clockManager().setTotalTicks(c.getLevel().dimensionType().defaultClock().orElseThrow(),6000); // Explicit bright-light fixture for real vanilla spread; shared day clock.
         var l=level(c,"placement_soil");var chunk=prepare(c,l,3120);boolean[] changed={false};
@@ -30,7 +66,7 @@ public final class SoilContinuityGameTest {
             if(!(l.getEntity(uuid(l,chunk)) instanceof LasiusNigerEntity q)||q.founding().plan()==null||saved[0])return;
             if(!placed[0]&&q.founding().removed()==2){placed[0]=true;var target=q.founding().plan().tasks().get(2);l.setBlock(target.above(),Blocks.FERN.defaultBlockState(),3);}
             if(placed[0]&&q.founding().phase()==QueenFounding.Phase.FAILED){
-                saved[0]=true;c.assertTrue(q.founding().reason().startsWith("protected_vegetation_support_at_")&&q.founding().removed()==2&&q.founding().carried()==2,"Refusal retains existing physical cargo and progress");reloadSoil(l);
+                saved[0]=true;c.assertTrue(q.founding().reason().startsWith("protected_support_survival_at_")&&q.founding().removed()==2&&q.founding().carried()==2,"Refusal retains existing physical cargo and progress");reloadSoil(l);
                 var out=net.minecraft.world.level.storage.TagValueOutput.createWithContext(net.minecraft.util.ProblemReporter.DISCARDING,l.registryAccess());c.assertTrue(q.save(out),"Failed queen and canonical equipment save");
                 var copy=(LasiusNigerEntity)net.minecraft.world.entity.EntityType.loadEntityRecursive(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING,l.registryAccess(),out.buildResult()),l,net.minecraft.world.entity.EntitySpawnReason.LOAD,e->e);
                 c.assertTrue(copy!=null&&copy.founding().phase()==QueenFounding.Phase.FAILED&&copy.founding().removed()==2&&copy.founding().carried()==2&&copy.founding().removed()==copy.founding().carried()+copy.founding().deposited()+copy.founding().released()+copy.founding().plugged(),"Restoration neither revives failed queen nor loses its soil; copy never inserted");c.succeed();
@@ -136,7 +172,7 @@ public final class SoilContinuityGameTest {
             c.assertTrue(NaturalSoil.get(l).eligible(l,soil),"Plant write does not revoke underlying native soil authority");
             c.runAfterDelay(300,()->{
                 c.assertTrue(l.getBlockState(plant).is(Blocks.FERN) && l.getBlockState(soil).equals(support),"Late protected plant AND support survive real queen ticks");
-                c.assertTrue(q.founding().phase()==QueenFounding.Phase.FAILED && q.founding().reason().startsWith("protected_vegetation_support_at_")
+                c.assertTrue(q.founding().phase()==QueenFounding.Phase.FAILED && q.founding().reason().startsWith("protected_support_survival_at_")
                     && q.founding().removed()==0 && q.founding().carried()==0,"Explicit refusal conserves work and material");c.succeed();
             });
         });
@@ -154,7 +190,7 @@ public final class SoilContinuityGameTest {
                 c.assertTrue(q.founding().removed()>=3,"Queen actually excavated the neighboring stair");
                 c.assertTrue(l.getBlockState(plant).is(Blocks.POPPY) && NaturalSoil.get(l).compatible(l,support,soil),"Preparation preserves lowered plant AND authoritative support with normal neighbor updates: plant="+l.getBlockState(plant)+" support="+l.getBlockState(support)+" old="+soil);
                 c.assertTrue(!ColonyTerrain.get(l).prepare(l,support,q.getUUID()),"Central preparation guard also refuses worker call path");
-                c.assertTrue(ColonyTerrain.get(l).preparationProblem(l,support).startsWith("protected_vegetation_support_at_"),"Central refusal exposes explicit live reason");
+                c.assertTrue(ColonyTerrain.get(l).preparationProblem(l,support).startsWith("protected_support_survival_at_"),"Central refusal exposes explicit live reason");
                 c.assertTrue(q.founding().removed()==q.founding().carried()+q.founding().deposited()+q.founding().plugged()+q.founding().released(),"Plant refusal adds no soil");c.succeed();
             });
         });

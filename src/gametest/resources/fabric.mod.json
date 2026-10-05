@@ -33,7 +33,8 @@
       "dev.primeants.gametest.TerrainRulesGameTest",
       "dev.primeants.gametest.NestmateGameTest",
       "dev.primeants.gametest.SoilContinuityGameTest",
-      "dev.primeants.gametest.NectarGameTest"
+      "dev.primeants.gametest.NectarGameTest",
+      "dev.primeants.gametest.LifecycleGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

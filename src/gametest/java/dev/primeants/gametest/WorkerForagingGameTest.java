@@ -78,7 +78,7 @@ public final class WorkerForagingGameTest {
         int held=workers(c,q).stream().filter(w->WorkerTasks.food(w.getMainHandItem())).mapToInt(w->w.getMainHandItem().getCount()).sum();
         var p=q.founding().plan()!=null&&c.getLevel().getBlockEntity(q.founding().plan().nursery()) instanceof dev.primeants.brood.BroodPile b?b:null;
         int custody=TransferCustody.get(c.getLevel()).contents().stream().filter(t->c.getBounds().inflate(8).contains(t.position())&&WorkerTasks.food(t.stack())).mapToInt(t->t.stack().getCount()).sum();
-        return world+held+custody+(cache(c,q)==null?0:cache(c,q).size())+(int)q.nutrition().consumedUnits()+(p==null?0:(int)p.consumedFood());
+        return world+held+custody+(cache(c,q)==null?0:cache(c,q).size())+(int)q.nutrition().consumedUnits()+(p==null?0:(int)p.consumedFood())+(int)AdultReceipts.consumed(c.getLevel(),q);
     }
     // Transfer-specific fixtures establish legitimate caregiver absence, keeping canonical stock reviewable.
     void absentCaregivers(GameTestHelper c,LasiusNigerEntity q){if(q.founding().workerClaim()!=null)for(var w:workers(c,q))if(!w.isCallow()&&!q.founding().claimedBy(w))w.setNoAi(true);}

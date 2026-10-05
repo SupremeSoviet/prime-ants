@@ -59,7 +59,7 @@ public final class NursingGuardGameTest {
         c.onEachTick(()->{
             var p=audit.pile(c,q);if(p==null)return;if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;audit.supply(c,q,3,0);}
             if(supplied[0]){c.assertTrue(audit.total(c,q)==3,"Stock plus terminal consumption conserves three units");audit.yields(c,q);}
-            var n=f.cache(c,q);if(!checked[0]&&q.nutrition().sugar()==8000&&n!=null&&n.size()==1){checked[0]=true;c.runAfterDelay(200,()->{c.assertTrue(q.nutrition().consumedUnits()==2&&q.nutrition().protein()==0&&q.nutrition().sugar()==8000&&n.size()==1&&p.records().isEmpty()&&f.workers(c,q).size()==3,"Full queen refuses third apple; sugar cannot substitute for egg protein");c.succeed();});}
+            var n=f.cache(c,q);if(!checked[0]&&q.nutrition().apples()==2&&q.nutrition().sugar()>4000&&n!=null&&n.size()==1){checked[0]=true;c.runAfterDelay(200,()->{c.assertTrue(q.nutrition().consumedUnits()==2&&q.nutrition().protein()==0&&q.nutrition().sugar()+q.nutrition().spentSugar()==8000&&q.nutrition().spentSugar()==q.adultLife().maintenanceTicks()&&n.size()==1&&!q.acceptsFood(n.contents().getFirst())&&p.records().isEmpty()&&f.workers(c,q).size()==3,"Finite queen intake refuses third whole apple after real maintenance; sugar cannot substitute for egg protein");c.succeed();});}
         });
     }
     @GameTest(maxTicks=18000,structure="prime_ants_test:idle_ground")
@@ -94,8 +94,8 @@ public final class NursingGuardGameTest {
                     c.runAfterDelay(100,()->{
                         c.assertTrue(audit.consumed(c,q[0])==receipts&&audit.total(c,q[0])==1,"Unavailable recipient retains cargo or receives physical cache return");q[0].setNoAi(false);
                         c.runAfterDelay(300,()->{
-                            c.assertTrue(q[0].nutrition().apples()==1&&q[0].nutrition().sugar()==4000&&audit.total(c,q[0])==1&&f.workers(c,q[0]).stream().allMatch(a->a.getMainHandItem().isEmpty()),"Accepted action clears one stack and credits yield once");
-                            q[0]=f.restore(c,q[0]);c.runAfterDelay(80,()->{c.assertTrue(q[0].nutrition().apples()==1&&q[0].nutrition().sugar()==4000&&audit.total(c,q[0])==1,"Persisted consumption cannot repeat");done[0]=true;c.succeed();});
+                            c.assertTrue(q[0].nutrition().apples()==1&&q[0].nutrition().sugar()+q[0].nutrition().spentSugar()==4000&&q[0].nutrition().spentSugar()==q[0].adultLife().maintenanceTicks()&&audit.total(c,q[0])==1&&f.workers(c,q[0]).stream().allMatch(a->a.getMainHandItem().isEmpty()),"Accepted action clears one stack and credits yield once");
+                            q[0]=f.restore(c,q[0]);c.runAfterDelay(80,()->{c.assertTrue(q[0].nutrition().apples()==1&&q[0].nutrition().sugar()+q[0].nutrition().spentSugar()==4000&&q[0].nutrition().spentSugar()==q[0].adultLife().maintenanceTicks()&&audit.total(c,q[0])==1,"Persisted consumption cannot repeat");done[0]=true;c.succeed();});
                         });
                     });
                 });

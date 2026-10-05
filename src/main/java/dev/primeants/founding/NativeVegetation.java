@@ -41,12 +41,6 @@ public final class NativeVegetation extends SavedData {
         return NestPlan.loaded(l,p) && material(l.getBlockState(p))
             && l.getBlockState(p).toString().equals(observed.get(Long.toString(p.asLong())));
     }
-    /** Live support dependency, including cells that were air at planning time.
-     * No clearing authority is inferred here; native planned plants must be cleared separately. */
-    public static boolean dependentAbove(ServerLevel l, BlockPos support) {
-        var above=support.above();
-        return !NestPlan.loaded(l,above) || l.getBlockState(above).getBlock() instanceof net.minecraft.world.level.block.VegetationBlock;
-    }
     public void invalidate(BlockPos p) { if (observed.remove(Long.toString(p.asLong())) != null) setDirty(); }
     public void observeGenerated(ProtoChunk chunk) {
         if (!((GenerationWitness)chunk).primeAntsGeneratedTerrain() || chunk.isUpgrading() || chunk.getBelowZeroRetrogen()!=null) return;

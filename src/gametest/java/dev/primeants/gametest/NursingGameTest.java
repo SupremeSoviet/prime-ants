@@ -16,7 +16,7 @@ import net.minecraft.world.phys.AABB;
 public final class NursingGameTest {
     private final WorkerForagingGameTest fixture=new WorkerForagingGameTest();
     BroodPile pile(GameTestHelper c,LasiusNigerEntity q){return q.founding().plan()!=null&&c.getLevel().getBlockEntity(q.founding().plan().nursery()) instanceof BroodPile p?p:null;}
-    long consumed(GameTestHelper c,LasiusNigerEntity q){var p=pile(c,q);return q.nutrition().consumedUnits()+(p==null?0:p.consumedFood());}
+    long consumed(GameTestHelper c,LasiusNigerEntity q){var p=pile(c,q);return q.nutrition().consumedUnits()+(p==null?0:p.consumedFood())+AdultReceipts.consumed(c.getLevel(),q);}
     long total(GameTestHelper c,LasiusNigerEntity q){
         var n=fixture.cache(c,q);var plan=q.founding().plan();
         long world=c.getLevel().getEntitiesOfClass(ItemEntity.class,c.getBounds().inflate(8),i->i.isAlive()&&WorkerTasks.food(i.getItem())).stream().mapToInt(i->i.getItem().getCount()).sum();

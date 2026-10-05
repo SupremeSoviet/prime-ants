@@ -29,7 +29,7 @@ public final class ColonyPlugs extends SavedData {
     public boolean owned(ServerLevel l, BlockPos p, UUID colony) { return NestPlan.loaded(l,p) && material(l.getBlockState(p)) && (colony + ":plug").equals(records.get(key(p))); }
     public boolean opened(ServerLevel l, BlockPos p, UUID colony) { return NestPlan.loaded(l,p) && l.getBlockState(p).isAir() && (colony + ":open").equals(records.get(key(p))); }
     public boolean remove(ServerLevel l, BlockPos p, UUID colony) {
-        if (!owned(l,p,colony) || !l.setBlock(p,Blocks.AIR.defaultBlockState(),3)) return false;
+        if (!owned(l,p,colony) || SupportSurvival.problem(l,p,Blocks.AIR.defaultBlockState())!=null || !l.setBlock(p,Blocks.AIR.defaultBlockState(),3)) return false;
         records.put(key(p), colony + ":open"); setDirty(); return true;
     }
 }

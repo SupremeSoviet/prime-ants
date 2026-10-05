@@ -19,6 +19,11 @@
       "type": "minecraft:single",
       "resource": "prime_ants:item/flower_nectar",
       "sprite": "prime_ants:block/cache_flower_nectar"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:item/rotten_flesh",
+      "sprite": "prime_ants:block/cache_rotten_flesh"
     }
   ]
 }

@@ -15,6 +15,9 @@ public final class PlacementSettings implements ModInitializer {
     public static final Set<ChunkPos> NATIVE_FULL=new HashSet<>();
     public static final Set<String> ALL_FULL=new HashSet<>();
     public static final Set<ChunkPos> DECLARED_FULL=new HashSet<>();
+    public static final Set<String> EXISTING_FULL=new HashSet<>();
+    public static boolean replayExperiment(){return "t18-replay-v1".equals(System.getProperty("prime_ants.placementMode"));}
+    public static int replayBudget(){return EXISTING_FULL.size()+Integer.getInteger("prime_ants.placementPriorFull",0)+(int)ALL_FULL.stream().filter(p->!EXISTING_FULL.contains(p)).count();}
     public static boolean integrationExperiment() {return "t17-nectar-v1".equals(System.getProperty("prime_ants.placementMode"));}
     public static boolean frozenExperiment() {return integrationExperiment() || "t16-frozen-v1".equals(System.getProperty("prime_ants.placementMode"));}
     public static boolean biomeExperiment() {return "t15-biome-v1".equals(System.getProperty("prime_ants.placementMode"));}
@@ -26,10 +29,24 @@ public final class PlacementSettings implements ModInitializer {
         if(System.getProperty("prime_ants.placementSeed")!=null) dimensions+=",prime_ants_test:placement_native";
         System.setProperty("prime_ants.developmentPlacementDimensions",dimensions);
         TICKET=Registry.register(BuiltInRegistries.TICKET_TYPE,Identifier.fromNamespaceAndPath("prime_ants_test","placement"),new TicketType(0,14));
+        if(replayExperiment()) {
+            try {
+                var d=com.google.gson.JsonParser.parseString(java.nio.file.Files.readString(java.nio.file.Path.of(System.getProperty("prime_ants.placementDeclaration")))).getAsJsonObject();
+                d.getAsJsonArray("existing_full").forEach(v->EXISTING_FULL.add(v.getAsString()));
+                for(var v:d.getAsJsonArray("selected")){var p=v.getAsJsonArray();for(int x=p.get(0).getAsInt()-3;x<=p.get(0).getAsInt()+3;x++)for(int z=p.get(1).getAsInt()-3;z<=p.get(1).getAsInt()+3;z++)DECLARED_FULL.add(new ChunkPos(x,z));}
+                if(EXISTING_FULL.size()!=106||replayBudget()>=150)throw new IllegalStateException("Replay existing/prior budget invalid");
+            }catch(java.io.IOException e){throw new RuntimeException(e);}
+        }
         ServerChunkEvents.CHUNK_LOAD.register((l,c,g)->recordFull(l,c.getPos()));
     }
     public static void recordFull(net.minecraft.server.level.ServerLevel l, ChunkPos p) {
         if(System.getProperty("prime_ants.placementSeed")==null)return;
+        if(replayExperiment()) {
+            String key=l.dimension().identifier()+":"+p.x()+":"+p.z();
+            if(l.dimension().identifier().toString().equals("prime_ants_test:placement_native")&&!DECLARED_FULL.contains(p))throw new IllegalStateException("Replay native region expansion refused: "+key);
+            if(!EXISTING_FULL.contains(key)&&!ALL_FULL.contains(key)&&replayBudget()>=150)throw new IllegalStateException("Replay FULL allowance exhausted before construction: "+key);
+            ALL_FULL.add(key);if(l.dimension().identifier().toString().equals("prime_ants_test:placement_native"))NATIVE_FULL.add(p);return;
+        }
         ALL_FULL.add(l.dimension().identifier()+":"+p.x()+":"+p.z());
         if(ALL_FULL.size()+Integer.getInteger("prime_ants.placementPriorFull",0)>(frozenExperiment()?150:100))
             throw new IllegalStateException("Total diagnostic FULL budget includes every dimension and prior attempt");

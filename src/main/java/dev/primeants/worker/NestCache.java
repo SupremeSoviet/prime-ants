@@ -53,11 +53,20 @@ public final class NestCache extends BlockEntity {
         }
         return false;
     }
+    public boolean withdrawMeal(LasiusNigerEntity w,NestPlan p){
+        if(!(level instanceof ServerLevel l)||!ownedBy(w.queenId(),p)||!w.isAlive()||w.isNoAi()||!w.adultLife().hungry()||!w.getMainHandItem().isEmpty()
+            ||!ColonyMembers.get(l).belongs(w,w.queenId(),p.chamber())||p.nurseryProblem(l,colony,true)!=null
+            ||!WorkerTasks.reaches(l,w,Vec3.atBottomCenterOf(getBlockPos()).add(0,0.15,0)))return false;
+        for(int i=0;i<contents.size();i++)if(Nutrition.sugarYield(contents.get(i))>0&&w.nutrition().accepts(contents.get(i),Nutrition.QUEEN_SUGAR_CAPACITY,0)){
+            w.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND,contents.remove(i));changed();return true;
+        }
+        return false;
+    }
     private void changed() {
         setChanged(); if (level==null || level.isClientSide()) return;
         BlockState before=getBlockState(), next=before;
         for(int i=0;i<CAPACITY;i++) {
-            int value= i>=contents.size()?0:contents.get(i).is(Items.CHICKEN)?2:contents.get(i).is(Items.SWEET_BERRIES)?3:contents.get(i).is(dev.primeants.item.AntItems.FLOWER_NECTAR)?4:1;
+            int value= i>=contents.size()?0:contents.get(i).is(Items.ROTTEN_FLESH)?5:contents.get(i).is(Items.CHICKEN)?2:contents.get(i).is(Items.SWEET_BERRIES)?3:contents.get(i).is(dev.primeants.item.AntItems.FLOWER_NECTAR)?4:1;
             next=next.setValue(NestCacheBlock.SLOTS.get(i),value);
         }
         if(!next.equals(before)) level.setBlock(getBlockPos(),next,3);

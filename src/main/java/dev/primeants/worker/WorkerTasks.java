@@ -62,7 +62,7 @@ public final class WorkerTasks {
     public int placed() { return placed; }
     public NestPlan plan() { return plan; }
     public UUID sourceId() { return source; }
-    public static boolean food(ItemStack s) { return !s.isEmpty()&&(s.is(Items.APPLE)||s.is(Items.SWEET_BERRIES)||s.is(Items.CHICKEN)||s.is(dev.primeants.item.AntItems.FLOWER_NECTAR)); }
+    public static boolean food(ItemStack s) { return !s.isEmpty()&&(s.is(Items.APPLE)||s.is(Items.SWEET_BERRIES)||s.is(Items.CHICKEN)||s.is(Items.ROTTEN_FLESH)||s.is(dev.primeants.item.AntItems.FLOWER_NECTAR)); }
     public static boolean reaches(ServerLevel l,LasiusNigerEntity w,Vec3 target) {
         Vec3 mouth=w.position().add(0,0.25,0);
         return w.isAlive() && w.onGround() && !w.isInWater() && NestPlan.loaded(l,BlockPos.containing(target))
@@ -141,6 +141,7 @@ public final class WorkerTasks {
     }
     public void tick(ServerLevel l) {
         if(phase==Phase.DEAD || !worker.isAlive())return;
+        if(adultMeal(l))return;
         if(worker.isCallow() || phase==Phase.NURSERY) {hold(worker.isCallow()?"callow_shelter":"nursery_shelter");return;}
         if(!(construction()?constructionAuthorized(l):nursing()?nursingAuthorized(l):!constructionClaim(l)&&authorized(l))) {hold("home_unavailable_or_invalid_cargo_retained");feedingTicks=0;harvestingTicks=0;return;}
         // The existing 240-tick SEARCH window ends when a source is found. Approach/action
@@ -181,6 +182,25 @@ public final class WorkerTasks {
             case DIG_OUT -> digOut(l);
             default -> { }
         }
+    }
+    private boolean adultMeal(ServerLevel l){
+        var life=worker.adultLife();
+        if(!life.hungry()||worker.isNoAi()||plan==null||!ColonyMembers.get(l).belongs(worker,worker.queenId(),plan.chamber())
+            ||plan.nurseryProblem(l,worker.queenId(),true)!=null){life.resetMeal();return false;}
+        if(worker.getMainHandItem().isEmpty()&&l.getBlockEntity(plan.cache()) instanceof NestCache cache&&cache.ownedBy(worker.queenId(),plan)
+            &&cache.contents().stream().anyMatch(s->Nutrition.sugarYield(s)>0)){
+            if(!reaches(l,worker,Vec3.atBottomCenterOf(plan.cache()).add(0,0.15,0))){life.resetMeal();arrive(Vec3.atBottomCenterOf(plan.at(4,-1,-2)));return true;}
+            cache.withdrawMeal(worker,plan);
+        }
+        var cargo=worker.getMainHandItem();
+        if(Nutrition.sugarYield(cargo)==0||!worker.nutrition().accepts(cargo,Nutrition.QUEEN_SUGAR_CAPACITY,0)||!worker.onGround()||worker.isInWater()){life.resetMeal();return false;}
+        worker.getNavigation().stop();reason="physical_adult_meal";
+        if(!life.mealAction())return true;
+        if(worker.nutrition().ingest(cargo,Nutrition.QUEEN_SUGAR_CAPACITY,0)){
+            PrimeAnts.LOGGER.info("Physical adult meal worker={} consumed={} age={} fasting={} receipts={}",worker.getUUID(),cargo,worker.elapsedAgeTicks(),life.fasting(),worker.nutrition().consumedUnits());
+            worker.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);
+        }
+        life.resetMeal();return true;
     }
     private UUID chooseRecipient(ServerLevel l,ItemStack s){
         if(l.getBlockEntity(plan.nursery()) instanceof dev.primeants.brood.BroodPile p){
@@ -307,7 +327,7 @@ public final class WorkerTasks {
         while(progress+column<j.tasks.size()&&j.tasks.get(progress+column).getX()==target.getX()&&j.tasks.get(progress+column).getZ()==target.getZ())column++;
         if(dirt()+column>QueenFounding.CARRY_CAPACITY){next(Phase.DIG_OUT,"complete_column_before_hauling");return;}
         if(!targetCompatible(l,target,j.expected.get(progress))){j.reason="target_replaced_unknown_or_foreign";data.changed();hold(j.reason);return;}
-        if(dev.primeants.founding.NativeVegetation.dependentAbove(l,target)){j.reason="protected_vegetation_support_at_"+target;data.changed();hold(j.reason);return;}
+        if(dev.primeants.founding.SupportSurvival.problem(l,target,Blocks.AIR.defaultBlockState()) instanceof String problem){j.reason=problem;data.changed();hold(j.reason);return;}
         var stand=digStand(l,target);if(stand==null){hold("no_supported_exposed_face");return;}
         // A crowded stand need not be monopolized at its exact center. The actor already occupies
         // this supported adjacent floor; the same physical reach/face/state checks still gate its action.
@@ -315,7 +335,7 @@ public final class WorkerTasks {
         worker.getNavigation().stop();worker.getLookControl().setLookAt(target.getX()+0.5,target.getY()+0.5,target.getZ()+0.5);
         if(!constructionAuthorized(l)||!NestPlan.walkable(l,stand)||!exposed(l,target,stand)||worker.position().distanceToSqr(Vec3.atCenterOf(target))>5.0
             ||!targetCompatible(l,target,j.expected.get(progress))||dirt()>=QueenFounding.CARRY_CAPACITY||j.removed()>=NestExpansion.HARD_CAP)return;
-        if(dev.primeants.founding.NativeVegetation.dependentAbove(l,target)){hold("protected_vegetation_support_at_"+target);return;}
+        if(dev.primeants.founding.SupportSurvival.problem(l,target,Blocks.AIR.defaultBlockState()) instanceof String problem){hold(problem);return;}
         if(!l.setBlock(target,Blocks.AIR.defaultBlockState(),3)){hold("extension_removal_rejected");return;}
         ColonyTerrain.get(l).removed(target,worker.queenId());data.removed(j,target);
         worker.setItemSlot(EquipmentSlot.MAINHAND,new ItemStack(Items.DIRT,dirt()+1));cooldown=QueenFounding.cadence();phaseTicks=0;
@@ -344,6 +364,7 @@ public final class WorkerTasks {
         if(!arriveSupported(l,dest))return;
         if(!constructionAuthorized(l)||!NestExpansion.depositSupport(l,target,worker.queenId())||!l.getBlockState(target).isAir()||!l.getEntities(worker,new AABB(target)).isEmpty()
             ||worker.getBoundingBox().intersects(new AABB(target))||worker.position().distanceToSqr(Vec3.atCenterOf(target))>5.0)return;
+        if(dev.primeants.founding.SupportSurvival.problem(l,target,NurseryBlocks.NEST_SOIL.defaultBlockState()) instanceof String problem){hold(problem);return;}
         if(l.setBlock(target,NurseryBlocks.NEST_SOIL.defaultBlockState(),3)){
             ColonyTerrain.get(l).deposited(target,worker.queenId());j.deposited++;data.changed();
             worker.setItemSlot(EquipmentSlot.MAINHAND,dirt()==1?ItemStack.EMPTY:new ItemStack(Items.DIRT,dirt()-1));cooldown=QueenFounding.cadence();phaseTicks=0;
@@ -382,6 +403,7 @@ public final class WorkerTasks {
         if(!arrive(dest))return;
         if(!authorized(l)||!l.getBlockState(target).isAir()||!NaturalSoil.get(l).eligible(l,target.below())||!l.getEntities(worker,new AABB(target)).isEmpty()
                 || worker.getBoundingBox().intersects(new AABB(target)) || worker.position().distanceToSqr(Vec3.atCenterOf(target))>5.0) {hold("mound_revalidation_failed");return;}
+        if(dev.primeants.founding.SupportSurvival.problem(l,target,NurseryBlocks.NEST_SOIL.defaultBlockState()) instanceof String problem){hold(problem);return;}
         if(l.setBlock(target,NurseryBlocks.NEST_SOIL.defaultBlockState(),3)) {ColonyTerrain.get(l).deposited(target,worker.queenId());worker.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);placed++;cooldown=10;next(Phase.OPENING,"plug_soil_on_mound");}
     }
     private void search(ServerLevel l) {

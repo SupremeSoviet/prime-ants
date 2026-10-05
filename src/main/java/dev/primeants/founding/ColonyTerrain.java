@@ -31,7 +31,8 @@ public final class ColonyTerrain extends SavedData {
     public boolean eligible(ServerLevel l,BlockPos p,UUID owner){return NaturalSoil.get(l).eligible(l,p)||prepared(l,p,owner);}
     public boolean compatible(ServerLevel l,BlockPos p,UUID owner,BlockState expected){return NaturalSoil.get(l).compatible(l,p,expected)||prepared(l,p,owner)&&l.getBlockState(p).equals(expected);}
     public String preparationProblem(ServerLevel l,BlockPos p){
-        return NativeVegetation.dependentAbove(l,p)?"protected_vegetation_support_at_"+p:!NaturalSoil.get(l).eligible(l,p)?"soil_authority_unavailable_at_"+p:null;
+        var survival=SupportSurvival.problem(l,p,NurseryBlocks.NEST_SOIL.defaultBlockState());
+        return survival!=null?survival:!NaturalSoil.get(l).eligible(l,p)?"soil_authority_unavailable_at_"+p:null;
     }
     public boolean prepare(ServerLevel l,BlockPos p,UUID owner){
         var problem=preparationProblem(l,p);

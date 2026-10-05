@@ -34,6 +34,10 @@ import net.minecraft.world.level.storage.ValueOutput;
 /** Physical adult. Authorized egg queens own bounded founding; other adults retain debug wandering. */
 public final class LasiusNigerEntity extends PathfinderMob {
     private final AntForm form;
+    private final AdultLife adultLife=new AdultLife();
+    public AdultLife adultLife(){return adultLife;}
+    private int colonyAdultCapacity=Integer.getInteger("prime_ants.colonyAdultCapacity",30);
+    public int colonyAdultCapacity(){return colonyAdultCapacity;}
     private long elapsedAgeTicks;
     private static final EntityDataAccessor<String> LINEAGE = SynchedEntityData.defineId(LasiusNigerEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Integer> CALLOW = SynchedEntityData.defineId(LasiusNigerEntity.class, EntityDataSerializers.INT);
@@ -92,6 +96,9 @@ public final class LasiusNigerEntity extends PathfinderMob {
         broodId = brood; queenId = queen; nurseryHome = home.immutable(); callowDuration = BroodPile.callowTicks(); callowAgeTicks = 0;
         entityData.set(CALLOW, 0); entityData.set(LINEAGE, queen.toString());
     }
+    public void initializeCallow(UUID brood,UUID queen,BlockPos home,long lifespan,long grace){
+        adultLife.selectAtEmergence(this,lifespan,grace);initializeCallow(brood,queen,home);
+    }
     public void prepareNursery(ServerLevel level, NestPlan plan) {
         if (nurseryClaimed || !founding.sealed() || position().distanceToSqr(Vec3.atBottomCenterOf(plan.nursery())) > BroodPile.CARE_REACH_SQUARED
                 || bodyReserve < BroodPile.CAPACITY * BroodPile.EGG_COST || !NestPlan.walkable(level, plan.nursery())) return;
@@ -105,6 +112,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
     public LasiusNigerEntity(EntityType<? extends LasiusNigerEntity> type, Level level, AntForm form) {
         super(type, level);
         this.form = form;
+        if(colonyAdultCapacity<4||colonyAdultCapacity>30)throw new IllegalArgumentException("Colony adult capacity must be 4..30");
         if (form == AntForm.WORKER) bodyReserve = 0;
         setPersistenceRequired();
     }
@@ -155,6 +163,8 @@ public final class LasiusNigerEntity extends PathfinderMob {
         // The only biological clock owner. No daylight-time subtraction or renderer mutation.
         if (!level().isClientSide() && isAlive() && elapsedAgeTicks < Long.MAX_VALUE) {
             elapsedAgeTicks++;
+            adultLife.tick((ServerLevel)level(),this);
+            if(!isAlive())return;
             founding.tick((ServerLevel)level());
             if (broodId != null) {
                 if (callowAgeTicks < callowDuration) callowAgeTicks++;
@@ -169,6 +179,8 @@ public final class LasiusNigerEntity extends PathfinderMob {
         super.addAdditionalSaveData(output);
         output.putString("AntForm", form.serializedName());
         output.putLong("AntElapsedAgeTicks", elapsedAgeTicks);
+        adultLife.save(output.child("AdultLife"));
+        output.putInt("ColonyAdultCapacity",colonyAdultCapacity);
         founding.save(output.child("Founding"));
         workerTasks.save(output.child("WorkerTask"));
         output.putLong("QueenBodyReserve", bodyReserve); output.putBoolean("NurseryClaimed", nurseryClaimed);
@@ -190,6 +202,9 @@ public final class LasiusNigerEntity extends PathfinderMob {
         }
         elapsedAgeTicks = Math.max(0, input.getLongOr("AntElapsedAgeTicks", 0));
         founding.load(input.childOrEmpty("Founding"));
+        adultLife.load(input.childOrEmpty("AdultLife"),this);
+        colonyAdultCapacity=input.getIntOr("ColonyAdultCapacity",30);
+        if(colonyAdultCapacity<4||colonyAdultCapacity>30)throw new IllegalArgumentException("Invalid saved adult capacity");
         workerTasks.load(input.childOrEmpty("WorkerTask"));
         bodyReserve = form == AntForm.QUEEN ? Math.max(0, Math.min(BroodPile.MAX_RESERVE, input.getLongOr("QueenBodyReserve", initialReserve()))) : 0;
         nurseryClaimed = input.getBooleanOr("NurseryClaimed", false);
@@ -216,6 +231,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
 
     @Override public void die(DamageSource source) {
         if (level() instanceof ServerLevel server) {
+            dev.primeants.worker.AdultHistory.get(server).died(this);
             if (form == AntForm.QUEEN) founding.die(server); else workerTasks.die(server);
         }
         super.die(source);

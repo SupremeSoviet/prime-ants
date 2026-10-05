@@ -285,12 +285,13 @@ public final class QueenFounding {
                 || !NativeVegetation.get(level).eligible(level,plant) || !level.getBlockState(plant).equals(plan.plantExpected().get(i))) {
                 fail("plant_work_revalidation_failed_at_"+plant);return;
             }
+            if(SupportSurvival.problem(level,plant,Blocks.AIR.defaultBlockState()) instanceof String problem){fail(problem);return;}
             if(!level.setBlock(plant,Blocks.AIR.defaultBlockState(),3)) {fail("plant_removal_failed_at_"+plant);return;}
             removedPlants.add(plant);cooldown=cadence();stalled=0; // No soil, cargo, drops or nutrition.
             PrimeAnts.LOGGER.info("Founding plant removal queen={} tick={} plant={} declared={} soilRemoved={}",queen.getUUID(),loadedTicks,plant,plan.plants(),progress);
             return;
         }
-        if (NativeVegetation.dependentAbove(level,target)) {fail("protected_vegetation_support_at_"+target);return;}
+        if (SupportSurvival.problem(level,target,Blocks.AIR.defaultBlockState()) instanceof String problem) {fail(problem);return;}
         BlockPos stand = workStand(level, target);
         if (stand == null) { fail("no_exposed_supported_work_face_at_" + target); return; }
         if (!arrive(level, stand) || cooldown > 0) return;
@@ -300,7 +301,7 @@ public final class QueenFounding {
                 || !NaturalSoil.get(level).compatible(level,target,plan.expected().get(progress)) || carried() >= CARRY_CAPACITY) {
             fail("work_revalidation_failed_at_" + target); return;
         }
-        if (NativeVegetation.dependentAbove(level,target)) {fail("protected_vegetation_support_at_"+target);return;}
+        if (SupportSurvival.problem(level,target,Blocks.AIR.defaultBlockState()) instanceof String problem) {fail(problem);return;}
         if (!level.setBlock(target, Blocks.AIR.defaultBlockState(), 3)) { fail("removal_failed_at_" + target); return; }
         progress++; carry(carried() + 1); cooldown = cadence(); stalled = 0;
         convertExposedSoil(level);
@@ -327,6 +328,7 @@ public final class QueenFounding {
         if (!level.getBlockState(target).isAir() || !NaturalSoil.get(level).eligible(level, target.below())
                 || !level.getEntities(queen, new AABB(target)).isEmpty() || queen.getBoundingBox().intersects(new AABB(target))
                 || queen.position().distanceToSqr(Vec3.atCenterOf(target)) > 5.0) { fail("mound_placement_revalidation_failed"); return; }
+        if (SupportSurvival.problem(level,target,dev.primeants.brood.NurseryBlocks.NEST_SOIL.defaultBlockState()) instanceof String problem) {fail(problem);return;}
         if (!level.setBlock(target, dev.primeants.brood.NurseryBlocks.NEST_SOIL.defaultBlockState(), 3)) { fail("mound_placement_failed"); return; }
         ColonyTerrain.get(level).deposited(target,queen.getUUID());
         deposited++;
@@ -343,7 +345,8 @@ public final class QueenFounding {
                     || queen.position().distanceToSqr(Vec3.atCenterOf(p)) > 5.0) { fail("plug_revalidation_failed"); return; }
             // One recovered soil unit becomes a compacted plug, just as mound deposition does.
             // Vanilla grass targets minecraft:dirt and must not erase a legitimate claustral seal.
-            if (!level.setBlock(p, dev.primeants.brood.NurseryBlocks.NEST_SOIL.defaultBlockState(), 3)) { fail("plug_placement_failed"); return; }
+            if (SupportSurvival.problem(level,p,dev.primeants.brood.NurseryBlocks.NEST_SOIL.defaultBlockState()) instanceof String problem) {fail(problem);return;}
+        if (!level.setBlock(p, dev.primeants.brood.NurseryBlocks.NEST_SOIL.defaultBlockState(), 3)) { fail("plug_placement_failed"); return; }
             ColonyPlugs.get(level).placed(p, queen.getUUID());
             carry(carried() - 1); plugged++; cooldown = cadence(); stalled = 0;
             return;
@@ -371,7 +374,7 @@ public final class QueenFounding {
     }
     public void die(ServerLevel level) {
         if(phase==Phase.DEAD)return;
-        queen.getNavigation().stop();
+        queen.getNavigation().stop();workerClaim=null;
         int count = carried();
         if (count > 0) {
             var transfer=java.util.UUID.nameUUIDFromBytes(("queen-soil:"+queen.getUUID()).getBytes(java.nio.charset.StandardCharsets.UTF_8));

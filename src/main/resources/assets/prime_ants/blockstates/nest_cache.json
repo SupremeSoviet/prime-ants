@@ -34,6 +34,14 @@
     },
     {
       "when": {
+        "slot0": "5"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_rotten_flesh_0"
+      }
+    },
+    {
+      "when": {
         "slot1": "1"
       },
       "apply": {
@@ -62,6 +70,14 @@
       },
       "apply": {
         "model": "prime_ants:block/cache_flower_nectar_1"
+      }
+    },
+    {
+      "when": {
+        "slot1": "5"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_rotten_flesh_1"
       }
     },
     {
@@ -98,6 +114,14 @@
     },
     {
       "when": {
+        "slot2": "5"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_rotten_flesh_2"
+      }
+    },
+    {
+      "when": {
         "slot3": "1"
       },
       "apply": {
@@ -126,6 +150,14 @@
       },
       "apply": {
         "model": "prime_ants:block/cache_flower_nectar_3"
+      }
+    },
+    {
+      "when": {
+        "slot3": "5"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_rotten_flesh_3"
       }
     },
     {
@@ -162,6 +194,14 @@
     },
     {
       "when": {
+        "slot4": "5"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_rotten_flesh_4"
+      }
+    },
+    {
+      "when": {
         "slot5": "1"
       },
       "apply": {
@@ -190,6 +230,14 @@
       },
       "apply": {
         "model": "prime_ants:block/cache_flower_nectar_5"
+      }
+    },
+    {
+      "when": {
+        "slot5": "5"
+      },
+      "apply": {
+        "model": "prime_ants:block/cache_rotten_flesh_5"
       }
     }
   ]

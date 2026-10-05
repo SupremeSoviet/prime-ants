@@ -85,7 +85,7 @@ public final class NectarGameTest {
     static List<LasiusNigerEntity> workers(ServerLevel l,LasiusNigerEntity q){return l.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(q.founding().plan().chamber()).inflate(20),w->w.isAlive()&&q.getUUID().equals(w.queenId()));}
     static BroodPile pile(ServerLevel l,LasiusNigerEntity q){return l.getBlockEntity(q.founding().plan().nursery()) instanceof BroodPile p?p:null;}
     static NestCache cache(ServerLevel l,LasiusNigerEntity q){return l.getBlockEntity(q.founding().plan().cache()) instanceof NestCache n?n:null;}
-    static long consumed(ServerLevel l,LasiusNigerEntity q){var p=pile(l,q);return q.nutrition().nectar()+(p==null?0:p.consumedNectar());}
+    static long consumed(ServerLevel l,LasiusNigerEntity q){var p=pile(l,q);return q.nutrition().nectar()+(p==null?0:p.consumedNectar())+AdultReceipts.nectar(l,q);}
     static long physical(ServerLevel l,LasiusNigerEntity q){
         var box=new AABB(q.founding().plan().outside()).inflate(20);var n=cache(l,q);
         return workers(l,q).stream().filter(w->w.getMainHandItem().is(AntItems.FLOWER_NECTAR)).mapToInt(w->w.getMainHandItem().getCount()).sum()
