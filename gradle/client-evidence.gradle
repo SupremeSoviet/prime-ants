@@ -39,8 +39,14 @@ ext.validateClientEvidence = { Map request ->
     boolean foraging = request.scenario == 'foraging'
     boolean growth = request.scenario == 'growth'
     boolean expansion = request.scenario == 'expansion'
-    def frames = capture.observations.findAll { it.event == (expansion?'expansion_frame':growth?'growth_frame':foraging ? 'foraging_frame' : 'brood_frame') }
-    if(expansion){
+    boolean playerBasics = request.scenario == 'player_basics'
+    def frames = capture.observations.findAll { it.event == (playerBasics?'player_frame':expansion?'expansion_frame':growth?'growth_frame':foraging ? 'foraging_frame' : 'brood_frame') }
+    if(playerBasics){
+        require(capture.entered&&capture.local_visible_mound&&capture.measured_teleports==0&&capture.terrain_edits==0&&capture.ant_position_edits==0&&capture.ai_pauses==0&&capture.setup_player_moves==1,'Survival local entry contract failed')
+        require(capture.drops.size()==2&&capture.drops.every{it.inventory_loss==1&&it.carried_units==1&&(it.owned_cache||it.actual_feeding)&&it.carrier&&it.world_uuid&&it.method=='survival inventory -> ordinary client DROP_ALL_ITEMS packet'},'Missing survival inventory/world/carry/cache trace')
+        require(capture.drops.collect{it.item}.toSet()==['minecraft:apple','minecraft:chicken'].toSet(),'Declared player foods mismatch')
+        require(capture.observations.size()==2&&capture.observations.collect{it.stage}==['entrance','feeding'],'Exactly two player screenshots required')
+    }else if(expansion){
         require(frames.size()==4&&frames.collect{it.stage}==['excavation','soil-carrying','expanded-mound','usable-interior'],'Missing real excavation/transport/mound/use sequence')
         require(capture.staged_terrain_edits==0&&capture.ant_teleports==0&&!capture.ai_disabled&&!capture.animation_poses_forced&&capture.injected_brood==0&&capture.injected_food==0&&capture.summoned_workers==0&&capture.reserve_edits==0,'Staged expansion evidence')
         require(capture.stage_ticks==Math.ceil(12000/capture.brood_multiplier)&&capture.callow_ticks==Math.ceil(4800/capture.brood_multiplier)&&capture.laying_cadence==Math.ceil(1200/capture.brood_multiplier)&&capture.initial_body_reserve==39000&&capture.adult_capacity==30,'Changed biological timing/capacity')
@@ -155,6 +161,7 @@ ext.validateClientEvidence = { Map request ->
     }
     def images = []
     frames.each { frame ->
+        if(!playerBasics){
         require(frame.run_id == request.run_id, 'Mismatched frame run ID')
         require(frame.ai_enabled && frame.normal_physics && frame.work_multiplier == capture.work_multiplier, 'Missing production state/timing')
         require(frame.removed == frame.carried + frame.deposited + frame.released + frame.plugged, 'Soil balance mismatch')
@@ -163,6 +170,7 @@ ext.validateClientEvidence = { Map request ->
         } else if (frame.stage != 'mound') require(frame.screenshot_render_extractions.any { it.uuid == capture.queen_uuid && it.form == 'queen' }, 'Missing production queen render')
         if (frame.stage == 'callows') require(frame.workers.every { it.callow_visual < 1000 }
                 && frame.screenshot_render_extractions.findAll { it.form == 'worker' && it.callow_visual < 1000 }.collect { it.uuid }.toSet() == frame.workers.collect { it.uuid }.toSet(), 'Missing pale worker renders')
+        }
         File png = file(frame.image)
         File expectedPng = new File(request.capture_directory, "${request.capture_prefix}-${frame.stage}.png")
         require(png.canonicalPath == expectedPng.canonicalPath, 'Mismatched PNG path')

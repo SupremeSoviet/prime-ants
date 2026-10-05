@@ -217,3 +217,5 @@ The original T11 A4 PNGs/provenance are preserved with their original run/date. 
 ### T13 closure inspection — 2026-10-05 (no new client launch)
 
 Opened again: [T11 mound/traffic](t11-a4-expanded-mound.png) and [T11 connected interior](t11-a4-usable-interior.png), with original T11 run/date/provenance retained. The pale brood cluster is partly overlapped. The [T11 soil image](t11-a4-soil-carrying.png) remains rejected for readable carrying evidence as recorded in T12; no replacement was captured. Worker/queen close-ups and readable food carrying still need fresh real evidence. Red T13 acceptance blocked all native capture and performance. All 269 historical capture/caption/provenance files retain their hashes. The current partial result and Phase 2 handoff are in [slice report](../slice-1-report.md).
+
+- `t20-player-a1-entrance.png`: Actual survival exterior after successful tunnel entry/return; mound/worker visible, entrance behind camera and viewport discontinuity; failed feeding attempt, weak entry evidence. PNG opened and inspected.

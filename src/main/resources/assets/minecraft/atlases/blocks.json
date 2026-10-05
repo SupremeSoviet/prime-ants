@@ -24,6 +24,11 @@
       "type": "minecraft:single",
       "resource": "minecraft:item/rotten_flesh",
       "sprite": "prime_ants:block/cache_rotten_flesh"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "prime_ants:item/small_prey",
+      "sprite": "prime_ants:block/cache_small_prey"
     }
   ]
 }

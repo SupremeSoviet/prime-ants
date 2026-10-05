@@ -1,0 +1,72 @@
+{
+  "textures": {
+    "food": "prime_ants:block/cache_small_prey",
+    "particle": "prime_ants:block/cache_small_prey"
+  },
+  "elements": [
+    {
+      "from": [
+        10,
+        0.5,
+        9
+      ],
+      "to": [
+        13,
+        0.6,
+        12
+      ],
+      "faces": {
+        "up": {
+          "texture": "#food",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "down": {
+          "texture": "#food",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        10,
+        0.5,
+        10.5
+      ],
+      "to": [
+        13,
+        3.5,
+        10.6
+      ],
+      "faces": {
+        "north": {
+          "texture": "#food",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#food",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        }
+      }
+    }
+  ]
+}

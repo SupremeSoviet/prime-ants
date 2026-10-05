@@ -1,0 +1,1 @@
+T20 actual survival exterior after entry and return: mound/worker visible at dusk; entrance behind camera and viewport discontinuity make this weak entry evidence. Feeding attempt failed; no feeding screenshot.

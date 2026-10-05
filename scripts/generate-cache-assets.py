@@ -6,7 +6,7 @@ root = Path(__file__).resolve().parents[1] / 'src/main/resources/assets/prime_an
 parts = []
 for slot in range(6):
     x, z = 2 + (slot % 3) * 4, 2 + (slot // 3) * 7
-    for value, item in [(1, 'apple'), (2, 'chicken'), (3, 'sweet_berries'), (4, 'flower_nectar'), (5, 'rotten_flesh')]:
+    for value, item in [(1, 'apple'), (2, 'chicken'), (3, 'sweet_berries'), (4, 'flower_nectar'), (5, 'rotten_flesh'), (6, 'small_prey')]:
         name = f'cache_{item}_{slot}'
         model = {'textures': {'food': f'prime_ants:block/cache_{item}', 'particle': f'prime_ants:block/cache_{item}'}, 'elements': [
             {'from': [x, 0.5, z], 'to': [x + 3, 0.6, z + 3],
@@ -20,9 +20,9 @@ for slot in range(6):
 # do not copy stock, create display entities, or replace the vanilla atlas sources.
 atlas = root.parent / 'minecraft/atlases/blocks.json'
 atlas.parent.mkdir(parents=True, exist_ok=True)
-atlas.write_text(json.dumps({'sources': [{'type': 'minecraft:single', 'resource': f"{'prime_ants' if item=='flower_nectar' else 'minecraft'}:item/{item}",
+atlas.write_text(json.dumps({'sources': [{'type': 'minecraft:single', 'resource': f"{'prime_ants' if item in ['flower_nectar','small_prey'] else 'minecraft'}:item/{item}",
                                         'sprite': f'prime_ants:block/cache_{item}'}
-                                       for item in ['apple', 'chicken', 'sweet_berries', 'flower_nectar', 'rotten_flesh']]}, indent=2), encoding='utf-8')
+                                       for item in ['apple', 'chicken', 'sweet_berries', 'flower_nectar', 'rotten_flesh', 'small_prey']]}, indent=2), encoding='utf-8')
 for lang, caption in [('en_us', 'Nest food cache'), ('ru_ru', 'Запас пищи в гнезде')]:
     file = root / 'lang' / f'{lang}.json'
     data = json.loads(file.read_text(encoding='utf-8-sig'))

@@ -15,7 +15,7 @@ final class AdultReceipts {
             var row=com.google.gson.JsonParser.parseString(entry.getValue()).getAsJsonObject();
             if(!row.get("queen").getAsString().equals(queen.getUUID().toString()))continue;
             var n=row.getAsJsonObject("nutrition");
-            if(nectar)total+=n.get("nectar").getAsLong();else for(String item:new String[]{"apples","berries","chickens","nectar","flesh"})total+=n.get(item).getAsLong();
+            if(nectar)total+=n.get("nectar").getAsLong();else for(String item:new String[]{"apples","berries","chickens","nectar","flesh","prey"})total+=n.has(item)?n.get(item).getAsLong():0;
         }
         return total;
     }

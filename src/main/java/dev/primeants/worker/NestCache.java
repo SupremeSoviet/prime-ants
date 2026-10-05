@@ -66,7 +66,7 @@ public final class NestCache extends BlockEntity {
         setChanged(); if (level==null || level.isClientSide()) return;
         BlockState before=getBlockState(), next=before;
         for(int i=0;i<CAPACITY;i++) {
-            int value= i>=contents.size()?0:contents.get(i).is(Items.ROTTEN_FLESH)?5:contents.get(i).is(Items.CHICKEN)?2:contents.get(i).is(Items.SWEET_BERRIES)?3:contents.get(i).is(dev.primeants.item.AntItems.FLOWER_NECTAR)?4:1;
+            int value= i>=contents.size()?0:contents.get(i).is(dev.primeants.item.AntItems.SMALL_PREY)?6:contents.get(i).is(Items.ROTTEN_FLESH)?5:contents.get(i).is(Items.CHICKEN)?2:contents.get(i).is(Items.SWEET_BERRIES)?3:(contents.get(i).is(dev.primeants.item.AntItems.FLOWER_NECTAR)||contents.get(i).is(dev.primeants.item.AntItems.FLOWER_NECTAR_V2))?4:1;
             next=next.setValue(NestCacheBlock.SLOTS.get(i),value);
         }
         if(!next.equals(before)) level.setBlock(getBlockPos(),next,3);

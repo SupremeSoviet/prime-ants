@@ -61,10 +61,14 @@ def captureRunId = java.util.UUID.randomUUID().toString()
 def captureStart = System.currentTimeMillis()
 def currentModelReport = file("build/test-results/client-model/${capturePrefix}-model.xml")
 def captureRequest = [run_id:captureRunId, capture_prefix:capturePrefix, started_epoch_ms:captureStart,
-                      scenario:'expansion', capture_directory:file('docs/screenshots').absolutePath,
+                      scenario:providers.gradleProperty('primeAntsPlayerBasicsWorld').isPresent()?'player_basics':'expansion', capture_directory:file('docs/screenshots').absolutePath,
                       model_report:currentModelReport.absolutePath,
                       provenance:file("docs/screenshots/${capturePrefix}-provenance.json").absolutePath]
 loom.runs.named('clientGameTest') {
+    if(providers.gradleProperty('primeAntsPlayerBasicsWorld').isPresent()){
+        systemProperties.put('prime_ants.playerBasicsWorld',providers.gradleProperty('primeAntsPlayerBasicsWorld').get())
+        systemProperties.put('prime_ants.naturalPlacement','false') // copied existing diagnostic colony only; no additional spawn-region discovery
+    }
     systemProperties.put('prime_ants.foundingWorkMultiplier', providers.gradleProperty('primeAntsFoundingMultiplier').getOrElse('20'))
     systemProperties.put('prime_ants.broodMultiplier', providers.gradleProperty('primeAntsBroodMultiplier').getOrElse('1'))
     systemProperties.put('prime_ants.captureDir', file('docs/screenshots').absolutePath)
@@ -98,9 +102,9 @@ tasks.register('verifyNestCacheAssets') {
         def root=file('src/main/resources/assets')
         def atlas=new groovy.json.JsonSlurper().parse(new File(root,'minecraft/atlases/blocks.json'))
         def aliases=atlas.sources.collectEntries{[(it.sprite):it.resource]}
-        if(atlas.sources.size()!=5 || !atlas.sources.every{it.type=='minecraft:single' && it.sprite.startsWith('prime_ants:block/cache_')}) throw new GradleException('Cache block atlas aliases incomplete')
+        if(atlas.sources.size()!=6 || !atlas.sources.every{it.type=='minecraft:single' && it.sprite.startsWith('prime_ants:block/cache_')}) throw new GradleException('Cache block atlas aliases incomplete')
         def parts=new groovy.json.JsonSlurper().parse(new File(root,'prime_ants/blockstates/nest_cache.json')).multipart
-        if(parts.size()!=30)throw new GradleException('Cache slot projection incomplete')
+        if(parts.size()!=36)throw new GradleException('Cache slot projection incomplete')
         def clientJar=fileTree('.gradle/loom-cache/minecraftMaven/net/minecraft').matching{include 'minecraft-clientOnly-*/26.3/*-26.3.jar'}.singleFile
         new java.util.zip.ZipFile(clientJar).withCloseable{jar->
             parts.each{part->
@@ -116,7 +120,7 @@ tasks.register('verifyNestCacheAssets') {
                 def img=javax.imageio.ImageIO.read(jar.getInputStream(entry));if(img.width!=16 || img.height!=16)throw new GradleException('Cache sprite must be 16x16')
             }
         }
-        logger.lifecycle('Verified 30 cache projections, five block-atlas aliases and 16x16 sprites')
+        logger.lifecycle('Verified 36 cache projections, six block-atlas aliases and 16x16 sprites')
     }
 }
 tasks.named('check') {dependsOn tasks.named('verifyNestCacheAssets')}
@@ -225,7 +229,10 @@ tasks.named('runGameTest') {
         def terminalNames=(file('src/gametest/java/dev/primeants/gametest/TerminalBroodGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
         if(terminalNames.size()!=15)throw new GradleException('T19 terminal discovery incomplete')
         terminalNames.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:terminal_brood_game_test_'+n})throw new GradleException('Missing T19 terminal regression '+n)}
-        if(cases.size()!=165)throw new GradleException('Expected all 150 baseline cases and fifteen T19 regressions')
+        def foodNames=(file('src/gametest/java/dev/primeants/gametest/NativeFoodGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+        foodNames.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:native_food_game_test_'+n})throw new GradleException('Missing native food test '+n)}
+        if(!cases.any{it.@name.text()=='prime_ants_test:player_basics_game_test_survival_body_enters_existing_stairs_and_inventory_drop_reaches_owned_cache'})throw new GradleException('Missing survival player case')
+        if(cases.size()!=166+foodNames.size())throw new GradleException('Expected all 150 baseline cases and fifteen T19 regressions')
         if (report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] }) {
             throw new GradleException('Server GameTest report contains a failure or skipped test')
         }

@@ -51,7 +51,7 @@ public final class BroodPile extends BlockEntity {
     private long adultLifespan=dev.primeants.entity.AdultLife.DEFAULT_LIFESPAN,fastingGrace=dev.primeants.entity.AdultLife.DEFAULT_FASTING;
     private int adultCapacity=ADULT_CAPACITY;
     public int adultCapacity(){return adultCapacity;}
-    private long lastLayingTick,archivedApples,archivedBerries,archivedChickens,archivedNectar,archivedFlesh;
+    private long lastLayingTick,archivedApples,archivedBerries,archivedChickens,archivedNectar,archivedNectarV2,archivedPrey,archivedFlesh;
     public Set<UUID> original(){return Set.copyOf(original);}
     public boolean operational(){return operational;}
     public long lastLayingTick(){return lastLayingTick;}
@@ -59,10 +59,12 @@ public final class BroodPile extends BlockEntity {
     public long consumedBerries(){return archivedBerries+terminalUnits("berries")+records.stream().mapToLong(r->r.nutrition().berries()).sum();}
     public long consumedChickens(){return archivedChickens+terminalUnits("chickens")+records.stream().mapToLong(r->r.nutrition().chickens()).sum();}
     public long consumedNectar(){return archivedNectar+terminalUnits("nectar")+records.stream().mapToLong(r->r.nutrition().nectar()).sum();}
+    public long consumedNectarV2(){return archivedNectarV2+terminalUnits("nectarV2")+records.stream().mapToLong(r->r.nutrition().nectarV2()).sum();}
+    public long consumedPrey(){return archivedPrey+terminalUnits("prey")+records.stream().mapToLong(r->r.nutrition().prey()).sum();}
     public long consumedFlesh(){return archivedFlesh+terminalUnits("flesh")+records.stream().mapToLong(r->r.nutrition().flesh()).sum();}
-    public long consumedFood(){return consumedApples()+consumedBerries()+consumedChickens()+consumedNectar()+consumedFlesh();}
-    public long gainedSugar(){return consumedApples()*Nutrition.APPLE_SUGAR+consumedBerries()*Nutrition.BERRY_SUGAR+consumedNectar()*Nutrition.NECTAR_SUGAR;}
-    public long gainedProtein(){return consumedChickens()*Nutrition.CHICKEN_PROTEIN+consumedFlesh()*Nutrition.FLESH_PROTEIN;}
+    public long consumedFood(){return consumedApples()+consumedBerries()+consumedChickens()+consumedNectar()+consumedPrey()+consumedFlesh();}
+    public long gainedSugar(){return consumedApples()*Nutrition.APPLE_SUGAR+consumedBerries()*Nutrition.BERRY_SUGAR+consumedNectar()*Nutrition.NECTAR_SUGAR+consumedNectarV2()*(Nutrition.NECTAR_V2_SUGAR-Nutrition.NECTAR_SUGAR);}
+    public long gainedProtein(){return consumedChickens()*Nutrition.CHICKEN_PROTEIN+consumedFlesh()*Nutrition.FLESH_PROTEIN+consumedPrey()*Nutrition.PREY_PROTEIN;}
     private long loadedTicks, stageDuration = stageTicks();
     private String condition = "unowned";
     public BroodPile(BlockPos pos, BlockState state) { super(NurseryBlocks.BROOD_TYPE, pos, state); }
@@ -107,7 +109,7 @@ public final class BroodPile extends BlockEntity {
         nurse.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND,net.minecraft.world.item.ItemStack.EMPTY);setChanged();return true;
     }
     private void retire(BroodRecord r){
-        consumed.add(r.id());records.remove(r);archivedApples+=r.nutrition().apples();archivedBerries+=r.nutrition().berries();archivedChickens+=r.nutrition().chickens();archivedNectar+=r.nutrition().nectar();archivedFlesh+=r.nutrition().flesh();
+        consumed.add(r.id());records.remove(r);archivedApples+=r.nutrition().apples();archivedBerries+=r.nutrition().berries();archivedChickens+=r.nutrition().chickens();archivedNectar+=r.nutrition().nectar();archivedNectarV2+=r.nutrition().nectarV2();archivedPrey+=r.nutrition().prey();archivedFlesh+=r.nutrition().flesh();
     }
     private boolean lay(ServerLevel l,LasiusNigerEntity q,boolean care){
         if(!care||!operational||!originalTerminal()||loadedTicks-lastLayingTick<layingCadence())return false;
@@ -248,7 +250,7 @@ public final class BroodPile extends BlockEntity {
         out.putLong("NeglectGrace",neglectGrace);out.putLong("WaitingBound",waitingBound);
         out.store("Expired",com.mojang.serialization.Codec.unboundedMap(com.mojang.serialization.Codec.STRING,com.mojang.serialization.Codec.STRING),expired.entrySet().stream().collect(java.util.stream.Collectors.toMap(e->e.getKey().toString(),java.util.Map.Entry::getValue)));
         out.putLong("AdultLifespan",adultLifespan);out.putLong("AdultFastingGrace",fastingGrace);out.putInt("AdultCapacity",adultCapacity);
-        out.putBoolean("Operational",operational);out.putLong("LastLayingTick",lastLayingTick);out.putLong("ConsumedApples",archivedApples);out.putLong("ConsumedBerries",archivedBerries);out.putLong("ConsumedChickens",archivedChickens);out.putLong("ConsumedNectar",archivedNectar);out.putLong("ConsumedFlesh",archivedFlesh);
+        out.putBoolean("Operational",operational);out.putLong("LastLayingTick",lastLayingTick);out.putLong("ConsumedApples",archivedApples);out.putLong("ConsumedBerries",archivedBerries);out.putLong("ConsumedChickens",archivedChickens);out.putLong("ConsumedNectar",archivedNectar);out.putLong("ConsumedNectarV2",archivedNectarV2);out.putLong("ConsumedPrey",archivedPrey);out.putLong("ConsumedFlesh",archivedFlesh);
         out.store("Original",com.mojang.serialization.Codec.STRING.listOf(),original.stream().map(UUID::toString).sorted().toList());
         var list = out.childrenList("Brood"); for (BroodRecord r : records) r.save(list.addChild());
         out.store("Consumed", com.mojang.serialization.Codec.STRING.listOf(), consumed.stream().map(UUID::toString).sorted().toList());
@@ -277,8 +279,8 @@ public final class BroodPile extends BlockEntity {
         for (String s : in.read("Consumed", com.mojang.serialization.Codec.STRING.listOf()).orElse(List.of())) consumed.add(UUID.fromString(s));
         original.addAll(in.read("Original",com.mojang.serialization.Codec.STRING.listOf()).orElseGet(()->java.util.stream.Stream.concat(java.util.stream.Stream.concat(consumed.stream(),expired.keySet().stream()),records.stream().filter(BroodRecord::founding).map(BroodRecord::id)).map(UUID::toString).toList()).stream().map(UUID::fromString).toList());
         if (records.size() > CAPACITY || ids.stream().anyMatch(consumed::contains)||original.size()!=CAPACITY||expired.keySet().stream().anyMatch(consumed::contains)||!java.util.stream.Stream.concat(java.util.stream.Stream.concat(ids.stream(),consumed.stream()),expired.keySet().stream()).toList().containsAll(original)) throw new IllegalArgumentException("Invalid reusable nursery ownership");
-        operational=in.getBooleanOr("Operational",false);lastLayingTick=in.getLongOr("LastLayingTick",0);archivedApples=in.getLongOr("ConsumedApples",0);archivedBerries=in.getLongOr("ConsumedBerries",0);archivedChickens=in.getLongOr("ConsumedChickens",0);archivedNectar=in.getLongOr("ConsumedNectar",0);archivedFlesh=in.getLongOr("ConsumedFlesh",0);
-        if(lastLayingTick<0||lastLayingTick>in.getLongOr("LoadedTicks",0)||archivedApples<0||archivedBerries<0||archivedChickens<0||archivedNectar<0||archivedFlesh<0)throw new IllegalArgumentException("Invalid nutrition history");
+        operational=in.getBooleanOr("Operational",false);lastLayingTick=in.getLongOr("LastLayingTick",0);archivedApples=in.getLongOr("ConsumedApples",0);archivedBerries=in.getLongOr("ConsumedBerries",0);archivedChickens=in.getLongOr("ConsumedChickens",0);archivedNectar=in.getLongOr("ConsumedNectar",0);archivedNectarV2=in.getLongOr("ConsumedNectarV2",0);archivedPrey=in.getLongOr("ConsumedPrey",0);archivedFlesh=in.getLongOr("ConsumedFlesh",0);
+        if(lastLayingTick<0||lastLayingTick>in.getLongOr("LoadedTicks",0)||archivedApples<0||archivedBerries<0||archivedChickens<0||archivedNectar<0||archivedNectarV2<0||archivedNectarV2>archivedNectar||archivedPrey<0||archivedFlesh<0)throw new IllegalArgumentException("Invalid nutrition history");
         queenId = id; plan = p; loadedTicks = Math.max(0, in.getLongOr("LoadedTicks", 0)); condition = in.getStringOr("Condition", "restored");
     }
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries) { return saveWithoutMetadata(registries); }

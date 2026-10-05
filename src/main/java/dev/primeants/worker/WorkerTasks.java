@@ -36,16 +36,16 @@ public final class WorkerTasks {
     private BlockPos flowerSource,flowerStand;
     private String flowerExpected;
     private int harvestingTicks,searchTicks,flowerInspections;
-    public static final int FLOWER_INSPECTIONS_PER_PULSE=288, FLOWER_INSPECTION_BUDGET=3087;
+    public static final int SEARCH_RADIUS=24, FLOWER_INSPECTIONS_PER_PULSE=1536, FLOWER_INSPECTION_BUDGET=49*49*7;
     private static final List<BlockPos> FLOWER_OFFSETS=flowerOffsets();
     private static List<BlockPos> flowerOffsets(){
-        var result=new java.util.ArrayList<BlockPos>();for(int x=-10;x<=10;x++)for(int z=-10;z<=10;z++)for(int y=-3;y<=3;y++)result.add(new BlockPos(x,y,z));
+        var result=new java.util.ArrayList<BlockPos>();for(int x=-SEARCH_RADIUS;x<=SEARCH_RADIUS;x++)for(int z=-SEARCH_RADIUS;z<=SEARCH_RADIUS;z++)for(int y=-3;y<=3;y++)result.add(new BlockPos(x,y,z));
         result.sort(java.util.Comparator.comparingInt((BlockPos p)->p.getX()*p.getX()+p.getZ()*p.getZ()).thenComparingInt(p->Math.abs(p.getY())).thenComparingInt(BlockPos::getX).thenComparingInt(BlockPos::getZ).thenComparingInt(BlockPos::getY));return List.copyOf(result);
     }
     public BlockPos flowerSource(){return flowerSource;}
     public int harvestingTicks(){return harvestingTicks;}
     public int flowerInspections(){return flowerInspections;}
-    public boolean withinSearch(BlockPos p){return plan!=null&&Math.abs(p.getX()-plan.outside().getX())<=10&&Math.abs(p.getZ()-plan.outside().getZ())<=10&&Math.abs(p.getY()-plan.outside().getY())<=3;}
+    public boolean withinSearch(BlockPos p){return plan!=null&&Math.abs(p.getX()-plan.outside().getX())<=SEARCH_RADIUS&&Math.abs(p.getZ()-plan.outside().getZ())<=SEARCH_RADIUS&&Math.abs(p.getY()-plan.outside().getY())<=3;}
     private UUID recipient;
     private int feedingTicks;
     public static final int FEEDING_TICKS=20;
@@ -62,7 +62,7 @@ public final class WorkerTasks {
     public int placed() { return placed; }
     public NestPlan plan() { return plan; }
     public UUID sourceId() { return source; }
-    public static boolean food(ItemStack s) { return !s.isEmpty()&&(s.is(Items.APPLE)||s.is(Items.SWEET_BERRIES)||s.is(Items.CHICKEN)||s.is(Items.ROTTEN_FLESH)||s.is(dev.primeants.item.AntItems.FLOWER_NECTAR)); }
+    public static boolean food(ItemStack s) { return !s.isEmpty()&&(s.is(Items.APPLE)||s.is(Items.SWEET_BERRIES)||s.is(Items.CHICKEN)||s.is(Items.ROTTEN_FLESH)||s.is(dev.primeants.item.AntItems.FLOWER_NECTAR)||s.is(dev.primeants.item.AntItems.FLOWER_NECTAR_V2)||s.is(dev.primeants.item.AntItems.SMALL_PREY)); }
     public static boolean reaches(ServerLevel l,LasiusNigerEntity w,Vec3 target) {
         Vec3 mouth=w.position().add(0,0.25,0);
         return w.isAlive() && w.onGround() && !w.isInWater() && NestPlan.loaded(l,BlockPos.containing(target))
@@ -409,37 +409,68 @@ public final class WorkerTasks {
     private void search(ServerLevel l) {
         if(phaseTicks>240) {next(Phase.RETURN,"bounded_search_finished");cooldown=40;return;}
         if(worker.tickCount%20!=0)return;
-        var candidates=l.getEntitiesOfClass(ItemEntity.class,new AABB(plan.outside()).inflate(10,3,10),
+        var candidates=l.getEntitiesOfClass(ItemEntity.class,new AABB(plan.outside()).inflate(SEARCH_RADIUS,3,SEARCH_RADIUS),
                 i->i.isAlive() && !i.isRemoved() && !i.hasPickUpDelay() && food(i.getItem()) && NestPlan.loaded(l,i.blockPosition()));
         // Preserve ordinary dropped-food ordering. Every reachable drop (including protein)
         // is considered before nectar; the nectar-only two-sweet-slot limit leaves storage room.
         candidates.sort(java.util.Comparator.comparingDouble(i->worker.distanceToSqr(i)));
+        int droppedPathTrials=0;
         for(var item:candidates) {
-            if(!NestPlan.walkable(l,item.blockPosition()))continue;
-            var path=worker.getNavigation().createPath(item.blockPosition(),0);
+            if(!withinSearch(item.blockPosition())||!NestPlan.walkable(l,item.blockPosition()))continue;
+            if(++droppedPathTrials>8)break;
+            var path=worker.getNavigation().createPath(item.blockPosition(),0,48);
             if(path==null || !path.canReach())continue;
             source=item.getUUID();next(Phase.APPROACH,"supported_dropped_food_found");return;
         }
-        if(!nectarRoom(l))return;
+        // Discovery only reads loaded cells. At most 1536 inspections and 8 path trials per pulse;
+        // 12 pulses cover the full 16807-cell box when no eligible reachable source is found.
         int end=Math.min(FLOWER_INSPECTION_BUDGET,flowerInspections+FLOWER_INSPECTIONS_PER_PULSE);
+        var ready=new java.util.ArrayList<BlockPos>();
         while(flowerInspections<end){
             var p=plan.outside().offset(FLOWER_OFFSETS.get(flowerInspections++));
-            if(!NestPlan.loaded(l,p)||!FlowerNectar.habitat(l,p)||!FlowerNectar.get(l).ready(l,p))continue;
-            var path=worker.getNavigation().createPath(p,0);if(path==null||!path.canReach())continue;
-            flowerSource=p;flowerStand=p;flowerExpected=l.getBlockState(p).toString();harvestingTicks=0;next(Phase.NECTAR_APPROACH,"supported_ready_flower_found");return;
+            if(!NestPlan.loaded(l,p))continue;
+            boolean prey=NativePrey.flower(l.getBlockState(p));
+            if(!harvestRoom(l,prey))continue;
+            if(prey?NativePrey.get(l).ready(l,p):FlowerNectar.get(l).ready(l,p))ready.add(p);
+        }
+        // Rank by recipient deficit after actual cache/cargo, then distance. Drops retain priority.
+        ready.sort(java.util.Comparator.comparingDouble((BlockPos p)->-harvestNeed(l,NativePrey.flower(l.getBlockState(p))))
+            .thenComparingDouble(p->worker.position().distanceToSqr(Vec3.atBottomCenterOf(p))));
+        int attempts=0;
+        for(var p:ready){
+            if(++attempts>8)break;
+            var path=worker.getNavigation().createPath(p,0,48);if(path==null||!path.canReach())continue;
+            flowerSource=p;flowerStand=p;flowerExpected=l.getBlockState(p).toString();harvestingTicks=0;next(Phase.NECTAR_APPROACH,"supported_ready_native_food_found");return;
         }
     }
-    private boolean nectarRoom(ServerLevel l){
-        if(!(l.getBlockEntity(plan.cache()) instanceof NestCache cache))return true;
-        return cache.ownedBy(worker.queenId(),plan)&&cache.size()<NestCache.CAPACITY
-            &&cache.contents().stream().filter(s->Nutrition.sugarYield(s)>0).count()<2;
+    private double harvestNeed(ServerLevel l,boolean prey){
+        var q=queen(l);if(q==null)return 0;
+        long need=prey?Nutrition.QUEEN_PROTEIN_CAPACITY-q.nutrition().protein():Nutrition.QUEEN_SUGAR_CAPACITY-q.nutrition().sugar();
+        if(l.getBlockEntity(plan.nursery()) instanceof dev.primeants.brood.BroodPile pile)
+            for(var r:pile.records())if(!r.founding()&&r.stage()==dev.primeants.brood.BroodStage.LARVA)
+                need+=prey?Nutrition.LARVA_PROTEIN-r.nutrition().gainedProtein():Nutrition.LARVA_SUGAR-r.nutrition().gainedSugar();
+        var units=new java.util.ArrayList<ItemStack>();
+        if(l.getBlockEntity(plan.cache()) instanceof NestCache cache)units.addAll(cache.contents());
+        for(var a:l.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(plan.outside()).inflate(32,6,32),a->a.isAlive()&&worker.queenId().equals(a.queenId()))){
+            units.add(a.getMainHandItem());
+            if(!prey)need+=Math.max(0,4000-a.nutrition().sugar()); // one finite future adult meal
+        }
+        for(var stack:units)need-=prey?Nutrition.proteinYield(stack):Nutrition.sugarYield(stack);
+        return Math.max(0,need)/(double)(prey?Nutrition.PREY_PROTEIN:Nutrition.NECTAR_V2_SUGAR);
+    }
+    public boolean harvestRoom(ServerLevel l,boolean prey){
+        if(l.getBlockEntity(plan.cache()) instanceof NestCache cache){
+            if(!cache.ownedBy(worker.queenId(),plan)||cache.size()>=NestCache.CAPACITY)return false;
+            if(cache.contents().stream().filter(s->prey?Nutrition.proteinYield(s)>0:Nutrition.sugarYield(s)>0).count()>=2)return false;
+        }
+        return harvestNeed(l,prey)>0;
     }
     private void clearFlower(){flowerSource=null;flowerStand=null;flowerExpected=null;harvestingTicks=0;}
     private void nectar(ServerLevel l){
         if(!worker.getMainHandItem().isEmpty()){clearFlower();next(Phase.RETURN,"existing_cargo_return");return;}
         if(flowerSource==null||flowerStand==null||!withinSearch(flowerSource)||!NestPlan.loaded(l,flowerSource)
-            ||!FlowerNectar.habitat(l,flowerSource)||!l.getBlockState(flowerSource).toString().equals(flowerExpected)
-            ||!FlowerNectar.get(l).ready(l,flowerSource)||!nectarRoom(l)){
+            ||!(NativePrey.flower(l.getBlockState(flowerSource))?NativePrey.habitat(l,flowerSource):FlowerNectar.habitat(l,flowerSource))||!l.getBlockState(flowerSource).toString().equals(flowerExpected)
+            ||!(NativePrey.flower(l.getBlockState(flowerSource))?NativePrey.get(l).ready(l,flowerSource):FlowerNectar.get(l).ready(l,flowerSource))||!harvestRoom(l,NativePrey.flower(l.getBlockState(flowerSource)))){
             clearFlower();next(Phase.SEARCH,"nectar_source_unready_changed_or_storage_unavailable");return;
         }
         var target=Vec3.atBottomCenterOf(flowerSource).add(0,0.35,0);
@@ -452,12 +483,12 @@ public final class WorkerTasks {
             ||!l.isPositionEntityTicking(flowerSource)||!l.isPositionEntityTicking(worker.blockPosition())
             ||!l.mayInteract(worker,flowerSource)){harvestingTicks=0;return;}
         if(++harvestingTicks<FlowerNectar.ACTION_TICKS)return;
-        boolean harvested=FlowerNectar.get(l).harvest(l,worker,flowerSource,flowerExpected);clearFlower();
+        boolean harvested=NativePrey.flower(l.getBlockState(flowerSource))?NativePrey.get(l).harvest(l,worker,flowerSource,flowerExpected):FlowerNectar.get(l).harvest(l,worker,flowerSource,flowerExpected);clearFlower();
         next(harvested?Phase.RETURN:Phase.SEARCH,harvested?"physical_nectar_in_mandibles":"nectar_commit_revalidation_refused");
     }
     private void pickup(ServerLevel l) {
         var entity=source==null?null:l.getEntity(source);
-        if(!(entity instanceof ItemEntity item) || !item.isAlive()||item.isRemoved()||item.hasPickUpDelay()||!food(item.getItem())||!NestPlan.loaded(l,item.blockPosition())) {source=null;next(Phase.SEARCH,"source_unavailable");return;}
+        if(!(entity instanceof ItemEntity item) || !item.isAlive()||item.isRemoved()||item.hasPickUpDelay()||!food(item.getItem())||!withinSearch(item.blockPosition())||!NestPlan.loaded(l,item.blockPosition())) {source=null;next(Phase.SEARCH,"source_unavailable");return;}
         if(!worker.getMainHandItem().isEmpty()) {next(Phase.RETURN,"existing_cargo_return");return;}
         Vec3 target=item.position().add(0,0.1,0);
         if(!reaches(l,worker,target)) {arrive(Vec3.atBottomCenterOf(item.blockPosition()));return;}

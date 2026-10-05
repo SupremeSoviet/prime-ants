@@ -23,11 +23,11 @@ public final class NectarGameTest {
     @GameTest(maxTicks=18000)
     public void lateDiscoveredGeneratedFlowerGetsNormalApproachAndFullAction(GameTestHelper c){
         var l=level(c,"t17_nectar");var chunk=prepare(c,l,3560);boolean[] late={false};
-        l.getChunkSource().addTicketWithRadius(PlacementSettings.TICKET,chunk,3); // Existing diagnostic halo: far source and approaching worker must actually entity-tick.
+        l.getChunkSource().addTicketWithRadius(PlacementSettings.TICKET,chunk,4); // Widened declared diagnostic halo: late far source and worker must actually entity-tick.
         c.onEachTick(()->{
             if(!(l.getEntity(uuid(l,chunk)) instanceof LasiusNigerEntity q)||q.founding().plan()==null)return;balance(c,l,q);
             for(var w:workers(l,q))if(w.workerTasks().flowerSource()!=null){
-                late[0]=true;c.assertTrue(w.workerTasks().flowerInspections()>2700,"Generated source discovered near end of finite 240-tick SEARCH window");
+                late[0]=true;c.assertTrue(w.workerTasks().flowerInspections()>14000,"Generated source discovered near end of finite 240-tick SEARCH window");
             }
             if(consumed(l,q)>0){c.assertTrue(late[0]&&NativeVegetation.get(l).eligible(l,flower(l,q)),"Late discovery still permits normal physical approach, full 20-tick action, return and nurse consumption");c.succeed();}
         });
@@ -49,9 +49,9 @@ public final class NectarGameTest {
             if(!supplied[0])return;
             java.util.stream.Stream.concat(f.workers(c,a).stream(),f.workers(c,b).stream()).filter(w->source.equals(w.workerTasks().flowerSource())).forEach(w->approached.add(w.getUUID()));
             long count=FlowerNectar.get(l).harvestedSources().getOrDefault(source,0L);if(count>0&&firstHarvest[0]<0)firstHarvest[0]=l.getGameTime();
-            long held=java.util.stream.Stream.concat(f.workers(c,a).stream(),f.workers(c,b).stream()).filter(w->w.getMainHandItem().is(AntItems.FLOWER_NECTAR)).mapToInt(w->w.getMainHandItem().getCount()).sum();
-            long cached=java.util.stream.Stream.of(f.cache(c,a),f.cache(c,b)).filter(Objects::nonNull).flatMap(n->n.contents().stream()).filter(s->s.is(AntItems.FLOWER_NECTAR)).mapToInt(ItemStack::getCount).sum();
-            long world=l.getEntitiesOfClass(ItemEntity.class,c.getBounds(),i->i.isAlive()&&i.getItem().is(AntItems.FLOWER_NECTAR)).stream().mapToInt(i->i.getItem().getCount()).sum();
+            long held=java.util.stream.Stream.concat(f.workers(c,a).stream(),f.workers(c,b).stream()).filter(w->w.getMainHandItem().is(AntItems.FLOWER_NECTAR_V2)).mapToInt(w->w.getMainHandItem().getCount()).sum();
+            long cached=java.util.stream.Stream.of(f.cache(c,a),f.cache(c,b)).filter(Objects::nonNull).flatMap(n->n.contents().stream()).filter(s->s.is(AntItems.FLOWER_NECTAR_V2)).mapToInt(ItemStack::getCount).sum();
+            long world=l.getEntitiesOfClass(ItemEntity.class,c.getBounds(),i->i.isAlive()&&i.getItem().is(AntItems.FLOWER_NECTAR_V2)).stream().mapToInt(i->i.getItem().getCount()).sum();
             c.assertTrue(count==held+cached+world+consumed(l,a)+consumed(l,b),"One shared source is counted once against both real colonies' cargo/cache/consumption");
             if(firstHarvest[0]>=0&&l.getGameTime()-firstHarvest[0]>100){c.assertTrue(count==1&&approached.size()==2,"Two genuinely emerged mature foragers independently approached same ready flower; only one wins before cooldown");l.setBlock(source,Blocks.AIR.defaultBlockState(),3);c.succeed();}
         });
@@ -62,7 +62,7 @@ public final class NectarGameTest {
         c.onEachTick(()->{
             if(!(l.getEntity(uuid(l,chunk)) instanceof LasiusNigerEntity q)||q.founding().plan()==null||killed[0])return;balance(c,l,q);
             var ws=workers(l,q);var p=q.founding().plan();
-            if(!filled[0]&&ws.stream().anyMatch(w->w.getMainHandItem().is(AntItems.FLOWER_NECTAR))){
+            if(!filled[0]&&ws.stream().anyMatch(w->w.getMainHandItem().is(AntItems.FLOWER_NECTAR_V2))){
                 filled[0]=true;ws.stream().filter(w->!q.founding().claimedBy(w)).forEach(w->w.setNoAi(true));
                 // Explicit negative full-storage fixture: six physical chicken stacks, separate from nectar accounting.
                 l.setBlock(p.cache(),dev.primeants.brood.NurseryBlocks.NEST_CACHE.defaultBlockState(),3);var n=cache(l,q);
@@ -71,33 +71,33 @@ public final class NectarGameTest {
                 out.store("Contents",ItemStack.CODEC.listOf(),java.util.stream.IntStream.range(0,6).mapToObj(i->new ItemStack(Items.CHICKEN)).toList());
                 n.loadCustomOnly(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING,l.registryAccess(),out.buildResult()));n.setChanged();
             }
-            if(filled[0])for(var w:ws)if(w.getMainHandItem().is(AntItems.FLOWER_NECTAR)&&w.workerTasks().reason().equals("cache_full_blocked_or_foreign_cargo_retained")){
+            if(filled[0])for(var w:ws)if(w.getMainHandItem().is(AntItems.FLOWER_NECTAR_V2)&&w.workerTasks().reason().equals("cache_full_blocked_or_foreign_cargo_retained")){
                 killed[0]=true;var source=flower(l,q);int cooldown=FlowerNectar.get(l).remaining(source);var loaded=restore(c,l,w);reloadSources(l);
                 c.assertTrue(cache(l,q).size()==6&&physical(l,q)==1&&FlowerNectar.get(l).remaining(source)==cooldown,"Full storage and disk/entity restoration retain sole nectar cargo and exact source state");
                 c.runAfterDelay(40,()->{
-                    c.assertTrue(loaded.getMainHandItem().is(AntItems.FLOWER_NECTAR)&&physical(l,q)==1,"Full storage retries retain cargo");
+                    c.assertTrue(loaded.getMainHandItem().is(AntItems.FLOWER_NECTAR_V2)&&physical(l,q)==1,"Full storage retries retain cargo");
                     loaded.hurtServer(l,loaded.damageSources().generic(),1000);
                     c.runAfterDelay(40,()->{balance(c,l,q);c.assertTrue(physical(l,q)==1&&harvests(l,q)==1&&loaded.getMainHandItem().isEmpty()&&loaded.workerTasks().phase()==WorkerTasks.Phase.DEAD,"Ordinary death releases one canonical cargo through normal world/custody, no source refund or worker replacement");c.succeed();});
                 });return;
             }
         });
     }
-    static List<LasiusNigerEntity> workers(ServerLevel l,LasiusNigerEntity q){return l.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(q.founding().plan().chamber()).inflate(20),w->w.isAlive()&&q.getUUID().equals(w.queenId()));}
+    static List<LasiusNigerEntity> workers(ServerLevel l,LasiusNigerEntity q){return l.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(q.founding().plan().chamber()).inflate(32),w->w.isAlive()&&q.getUUID().equals(w.queenId()));}
     static BroodPile pile(ServerLevel l,LasiusNigerEntity q){return l.getBlockEntity(q.founding().plan().nursery()) instanceof BroodPile p?p:null;}
     static NestCache cache(ServerLevel l,LasiusNigerEntity q){return l.getBlockEntity(q.founding().plan().cache()) instanceof NestCache n?n:null;}
     static long consumed(ServerLevel l,LasiusNigerEntity q){var p=pile(l,q);return q.nutrition().nectar()+(p==null?0:p.consumedNectar())+AdultReceipts.nectar(l,q);}
     static long physical(ServerLevel l,LasiusNigerEntity q){
-        var box=new AABB(q.founding().plan().outside()).inflate(20);var n=cache(l,q);
-        return workers(l,q).stream().filter(w->w.getMainHandItem().is(AntItems.FLOWER_NECTAR)).mapToInt(w->w.getMainHandItem().getCount()).sum()
-            +(n==null?0:n.contents().stream().filter(s->s.is(AntItems.FLOWER_NECTAR)).mapToInt(ItemStack::getCount).sum())
-            +l.getEntitiesOfClass(ItemEntity.class,box,i->i.isAlive()&&i.getItem().is(AntItems.FLOWER_NECTAR)).stream().mapToInt(i->i.getItem().getCount()).sum()
-            +TransferCustody.get(l).contents().stream().filter(t->box.contains(t.position())&&t.stack().is(AntItems.FLOWER_NECTAR)).mapToInt(t->t.stack().getCount()).sum();
+        var box=new AABB(q.founding().plan().outside()).inflate(32);var n=cache(l,q);
+        return workers(l,q).stream().filter(w->w.getMainHandItem().is(AntItems.FLOWER_NECTAR_V2)).mapToInt(w->w.getMainHandItem().getCount()).sum()
+            +(n==null?0:n.contents().stream().filter(s->s.is(AntItems.FLOWER_NECTAR_V2)).mapToInt(ItemStack::getCount).sum())
+            +l.getEntitiesOfClass(ItemEntity.class,box,i->i.isAlive()&&i.getItem().is(AntItems.FLOWER_NECTAR_V2)).stream().mapToInt(i->i.getItem().getCount()).sum()
+            +TransferCustody.get(l).contents().stream().filter(t->box.contains(t.position())&&t.stack().is(AntItems.FLOWER_NECTAR_V2)).mapToInt(t->t.stack().getCount()).sum();
     }
-    static long harvests(ServerLevel l,LasiusNigerEntity q){var box=new AABB(q.founding().plan().outside()).inflate(10,3,10);return FlowerNectar.get(l).harvestedSources().entrySet().stream().filter(e->box.contains(net.minecraft.world.phys.Vec3.atCenterOf(e.getKey()))).mapToLong(Map.Entry::getValue).sum();}
+    static long harvests(ServerLevel l,LasiusNigerEntity q){var box=new AABB(q.founding().plan().outside()).inflate(24,3,24);return FlowerNectar.get(l).harvestedSources().entrySet().stream().filter(e->box.contains(net.minecraft.world.phys.Vec3.atCenterOf(e.getKey()))).mapToLong(Map.Entry::getValue).sum();}
     static void balance(GameTestHelper c,ServerLevel l,LasiusNigerEntity q){c.assertTrue(harvests(l,q)==physical(l,q)+consumed(l,q),"Source harvests = actual held/cache/world/custody + terminal consumption; readiness and receipts are NOT stock");}
     static BlockPos flower(ServerLevel l,LasiusNigerEntity q){
         var origin=q.founding().plan().outside();
-        for(var p:BlockPos.betweenClosed(origin.offset(-10,-3,-10),origin.offset(10,3,10)))if(NestPlan.loaded(l,p)&&FlowerNectar.habitat(l,p))return p.immutable();
+        for(var p:BlockPos.betweenClosed(origin.offset(-24,-3,-24),origin.offset(24,3,24)))if(NestPlan.loaded(l,p)&&FlowerNectar.habitat(l,p))return p.immutable();
         throw new AssertionError("One actual generation flower expected in controlled fixture");
     }
     static void reloadSources(ServerLevel l){
@@ -120,13 +120,13 @@ public final class NectarGameTest {
             c.assertTrue(q.founding().phase()!=QueenFounding.Phase.FAILED,"Uninterrupted controlled generation founding: "+q.founding().reason());balance(c,l,q);
             var p=pile(l,q);for(var w:workers(l,q)){
                 callow[0]|=w.isCallow();if(w.workerTasks().harvestingTicks()>0)starts.putIfAbsent(w.getUUID(),w.elapsedAgeTicks());
-                if(w.getMainHandItem().is(AntItems.FLOWER_NECTAR)){
+                if(w.getMainHandItem().is(AntItems.FLOWER_NECTAR_V2)){
                     c.assertTrue(!w.isCallow()&&p!=null&&p.original().contains(w.broodId()),"Only genuinely emerged mature members carry nectar");
                     if(!w.workerTasks().nursing()){carried[0]=true;c.assertTrue(starts.containsKey(w.getUUID())&&w.elapsedAgeTicks()-starts.get(w.getUUID())>=19,"Forager performs 20 actual loaded action ticks before one canonical item; nurse may later carry same item from cache");}
                 }
                 c.assertTrue(w.workerTasks().flowerInspections()<=WorkerTasks.FLOWER_INSPECTION_BUDGET,"Finite production inspection budget");
             }
-            var n=cache(l,q);delivered[0]|=n!=null&&n.contents().stream().anyMatch(s->s.is(AntItems.FLOWER_NECTAR));
+            var n=cache(l,q);delivered[0]|=n!=null&&n.contents().stream().anyMatch(s->s.is(AntItems.FLOWER_NECTAR_V2));
             if(consumed(l,q)>0){
                 var f=flower(l,q);c.assertTrue(carried[0]&&delivered[0]&&callow[0]&&NativeVegetation.get(l).eligible(l,f)&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN,"Intact witnessed generation flower, real carried item, physical cache delivery and accepted normal nurse feeding");
                 c.assertTrue(q.nutrition().protein()==0&&q.nutrition().chickens()==0&&p.consumedChickens()==0,"Nectar cannot fall through chicken receipt or supply protein");
@@ -141,7 +141,7 @@ public final class NectarGameTest {
         var l=level(c,"t17_nectar");var chunk=prepare(c,l,3240);boolean[] saved={false},resumed={false};LasiusNigerEntity[] frozen={null};BlockPos[] source={null};int[] remaining={0};long[] started={0};
         c.onEachTick(()->{
             if(!(l.getEntity(uuid(l,chunk)) instanceof LasiusNigerEntity q)||q.founding().plan()==null)return;balance(c,l,q);
-            if(!saved[0])for(var w:workers(l,q))if(w.getMainHandItem().is(AntItems.FLOWER_NECTAR)){
+            if(!saved[0])for(var w:workers(l,q))if(w.getMainHandItem().is(AntItems.FLOWER_NECTAR_V2)){
                 saved[0]=true;source[0]=flower(l,q);remaining[0]=FlowerNectar.get(l).remaining(source[0]);started[0]=l.getGameTime();w.setNoAi(true);frozen[0]=restore(c,l,w);reloadSources(l);
                 c.assertTrue(remaining[0]>0&&FlowerNectar.get(l).remaining(source[0])==remaining[0]&&!FlowerNectar.get(l).ready(l,source[0])&&physical(l,q)==1,"Real disk restoration retains unavailable source and exactly one interrupted carried unit");
             }

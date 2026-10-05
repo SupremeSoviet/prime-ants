@@ -1,0 +1,39 @@
+{
+  "run_id": "0f974a0a-4d38-4c19-a797-d93ca230c7cd",
+  "capture_prefix": "t20-player-a1",
+  "entrypoint": "dev.primeants.gametest.AntCaptureTest",
+  "scenario": "player_basics",
+  "started_utc": "2026-10-05T19:29:45.918086200Z",
+  "observations": [
+    {
+      "stage": "entrance",
+      "event": "player_frame",
+      "capture_started_utc": "2026-10-05T19:29:54.997091200Z",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t20-player-a1-entrance.png",
+      "width": 1600,
+      "height": 1000,
+      "modified_epoch_ms": 1791228595128,
+      "sha256": "4dc55219af6279cdaf76a0861a7f1af54649ece740d813ec6f3434857cf49fc9"
+    }
+  ],
+  "queen_uuid": "fcbd4373-abaf-3eb3-bb01-c1281fc43fba",
+  "source_world": "C:/Users/user/Documents/turnloop/directions/prime-ants-slice1/turns/T20/t20-native-replay-b-world.zip",
+  "native_balance": "FAILED: original primary worker took starvation damage; this local smoke cannot satisfy the requested balanced-world predicate",
+  "setup_player_moves": 1,
+  "measured_teleports": 0,
+  "terrain_edits": 0,
+  "ant_position_edits": 0,
+  "ai_pauses": 0,
+  "supplied_food": "1 apple + 1 raw chicken; separate from native evidence",
+  "limit": "Copied diagnostic dimension proves local interaction, not ordinary overworld-spawn discovery.",
+  "start": [
+    154,
+    68,
+    153
+  ],
+  "local_visible_mound": true,
+  "entered": true,
+  "status": "failed",
+  "failure": "java.lang.AssertionError: Genuine forager collects ordinary survival drop",
+  "failed_utc": "2026-10-05T19:31:46.327765400Z"
+}

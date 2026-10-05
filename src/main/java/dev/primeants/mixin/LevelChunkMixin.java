@@ -32,6 +32,7 @@ public abstract class LevelChunkMixin {
             dev.primeants.founding.ColonyPlugs.get(server).invalidate(pos);
             dev.primeants.founding.ColonyTerrain.get(server).invalidate(pos);
             dev.primeants.worker.FlowerNectar.get(server).write(pos,state);
+            dev.primeants.worker.NativePrey.get(server).write(pos,state);
         }
     }
     @Inject(method="setBlockState",at=@At("RETURN"))

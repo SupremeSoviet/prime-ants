@@ -515,6 +515,32 @@
           ]
         }
       }
+    },
+    "prime_ants_test:t20_food": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:flat",
+        "settings": {
+          "biome": "minecraft:plains",
+          "features": false,
+          "lakes": false,
+          "structure_overrides": [],
+          "layers": [
+            {
+              "block": "minecraft:bedrock",
+              "height": 1
+            },
+            {
+              "block": "minecraft:dirt",
+              "height": 6
+            },
+            {
+              "block": "minecraft:grass_block",
+              "height": 1
+            }
+          ]
+        }
+      }
     }
   }
 }
