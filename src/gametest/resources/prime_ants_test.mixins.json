@@ -9,7 +9,10 @@
     "IdleControlsAccessor",
     "EmergenceInsertionMixin",
     "TransferInsertionMixin",
-    "PlacementInsertionMixin"
+    "PlacementInsertionMixin",
+    "PlacementWriteMixin",
+    "PlacementFinalGateMixin",
+    "PlacementTraceMixin"
   ],
   "injectors": {
     "defaultRequire": 1

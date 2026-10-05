@@ -26,6 +26,7 @@ public final class PlacementDiagnosticHarness implements ModInitializer {
     private Path evidence;
     @Override public void onInitialize() {
         if(System.getProperty("prime_ants.placementSeed")==null)return;
+        if(PlacementSettings.biomeExperiment()) {new PlacementBiomeExperiment().install();return;}
         evidence=Path.of(System.getProperty("prime_ants.placementEvidence"));
         ServerLifecycleEvents.SERVER_STARTED.register(s->{
             try {

@@ -25,6 +25,8 @@ import net.minecraft.world.phys.AABB;
 /** Experimental placement EVENT ledger. Never counts population or replaces missing actors. */
 public final class NaturalPlacement extends SavedData {
     public static final int COLUMNS = 8, PER_TICK = 2, RETRIES = 3, MIN_SPACING = 56;
+    // Eight columns plus at most two same-column insertion retries. Checkpoint BEFORE any plan/factory call.
+    public static final int MAX_EVALUATIONS = COLUMNS + RETRIES - 1;
     public static final String AUTHORITY = "new_terrain_v1";
     public static final TagKey<Biome> BIOMES = TagKey.create(Registries.BIOME,
             Identifier.fromNamespaceAndPath("prime_ants", "founding_queen"));
@@ -92,6 +94,7 @@ public final class NaturalPlacement extends SavedData {
             if (!"PENDING".equals(r.get("status").getAsString())) continue;
             var p=new ChunkPos(r.get("x").getAsInt(),r.get("z").getAsInt());
             if (!authority(l,r,p,key)) finish(r,"REJECTED","missing_or_mismatched_generation_authority");
+            else if (PlacementReservation.fenced(l,r)) finish(r,"INDETERMINATE","persisted_insertion_fence_no_replacement");
             else if (ready(l,p)) evaluateColumn(l,r,p);
             if ("PENDING".equals(r.get("status").getAsString())) queue.add(key);
         }
@@ -117,10 +120,24 @@ public final class NaturalPlacement extends SavedData {
         r.addProperty("reason",why); setDirty();
     }
     private void finish(JsonObject r,String status,String why) { r.addProperty("status",status);r.addProperty("reason",why);setDirty(); }
+    private static void count(JsonObject r,String field) {r.addProperty(field,r.has(field)?r.get(field).getAsInt()+1:1);}
+    private String saveVerified(ServerLevel l,JsonObject r,String... fields) {
+        try {l.getDataStorage().saveAndJoin();return PlacementReservation.verify(l,r,fields);}
+        catch(Exception e){return e.toString();}
+    }
+    private void storageDiagnostic(JsonObject r,String stage,String why) {
+        r.addProperty("storageDiagnostic",stage+":"+why);setDirty();
+        dev.primeants.PrimeAnts.LOGGER.error("PLACEMENT persistence verification refused queen={} attempt={} stage={} detail={}",r.get("queen"),r.get("attemptId"),stage,why);
+    }
     private void evaluateColumn(ServerLevel l,JsonObject r,ChunkPos p) {
         if(r.has("retryAfter") && l.getGameTime()<r.get("retryAfter").getAsLong()) return;
         int column=r.get("column").getAsInt();
         if(column<0 || column>=COLUMNS) {finish(r,"REJECTED","bounded_search_exhausted");return;}
+        int evaluations=r.has("evaluations")?r.get("evaluations").getAsInt():0;
+        if(evaluations>=MAX_EVALUATIONS || r.get("attempts").getAsInt()>=RETRIES) {finish(r,"REJECTED","evaluation_or_insertion_budget_exhausted");return;}
+        count(r,"evaluations");setDirty();
+        String checkpoint=saveVerified(l,r,"evaluations","column","attempts");
+        if(checkpoint!=null) {storageDiagnostic(r,"search_checkpoint",checkpoint);finish(r,"INDETERMINATE","unverified_search_progress_no_insertion");return;}
         int[] offset=OFFSETS[(column+(int)(salt(l)&7))%COLUMNS];
         var surface=new BlockPos(p.getMinBlockX()+offset[0],0,p.getMinBlockZ()+offset[1]);
         surface=surface.atY(l.getHeight(Heightmap.Types.WORLD_SURFACE,surface.getX(),surface.getZ())-1);
@@ -131,7 +148,7 @@ public final class NaturalPlacement extends SavedData {
         else if(!NaturalSoil.material(l.getBlockState(surface))) problem="unsupported_surface";
         else if(!NaturalSoil.get(l).eligible(l,surface)) problem="unknown_or_revoked_origin";
         else {
-            for(Direction d:Direction.Plane.HORIZONTAL) {plan=NestPlan.candidate(l,surface,d);if(plan!=null)break;}
+            for(Direction d:Direction.Plane.HORIZONTAL) {count(r,"preliminaryPlans");plan=NestPlan.candidate(l,surface,d);if(plan!=null)break;}
             if(plan==null) problem="protected_footprint_or_support_roof_floor";
         }
         if(problem!=null) {reject(r,problem);r.addProperty("column",column+1);if(column+1==COLUMNS)finish(r,"REJECTED","bounded_search_exhausted");return;}
@@ -146,17 +163,35 @@ public final class NaturalPlacement extends SavedData {
         if(problem!=null) {reject(r,problem);r.addProperty("column",column+1);return;}
         var uuid=UUID.fromString(r.get("queen").getAsString());
         if(l.getEntityInAnyDimension(uuid)!=null) {finish(r,"INDETERMINATE","identity_already_present_no_replacement");return;}
-        var queen=AntEntities.QUEEN.create(l,EntitySpawnReason.CHUNK_GENERATION);
+        count(r,"temporaryQueens");var queen=AntEntities.QUEEN.create(l,EntitySpawnReason.CHUNK_GENERATION);
         if(queen==null) {finish(r,"REJECTED","entity_factory_refused");return;}
         queen.setUUID(uuid); queen.snapTo(feet.getX()+.5,feet.getY(),feet.getZ()+.5,0,0);
         queen.finalizeSpawn(l,l.getCurrentDifficultyAt(feet),EntitySpawnReason.CHUNK_GENERATION,null);
         // No world mutation between final live checks and insertion. All prospective work still uses original protection.
+        count(r,"immediateValidations");
         if(!ready(l,p) || NestPlan.candidate(l,plan.entrance(),plan.direction())==null
                 || !l.getBiome(surface).is(BIOMES) || !l.noCollision(queen,queen.getBoundingBox())
-                || !l.getEntities(queen,queen.getBoundingBox()).isEmpty()) {reject(r,"immediate_revalidation_failed");return;}
+                || !l.getEntities(queen,queen.getBoundingBox()).isEmpty()) {
+            reject(r,"immediate_revalidation_failed");r.addProperty("column",column+1);
+            if(column+1==COLUMNS)finish(r,"REJECTED","bounded_search_exhausted");
+            String progress=saveVerified(l,r,"evaluations","column");
+            if(progress!=null) {storageDiagnostic(r,"final_refusal_progress",progress);finish(r,"INDETERMINATE","unverified_search_progress_no_insertion");}
+            return;
+        }
         r.addProperty("surface",surface.asLong());r.addProperty("direction",plan.direction().getName());
         var before=terrain(l,surface); r.addProperty("attempts",r.get("attempts").getAsInt()+1);
-        finish(r,"RESERVED","durable_insertion_reservation");l.getDataStorage().saveAndJoin();
+        r.addProperty("attemptId",UUID.randomUUID().toString());
+        finish(r,"RESERVED","insertion_reservation_awaiting_disk_verification");
+        count(r,"reservationChecks");String reservation=saveVerified(l,r,"attemptId","attempts","evaluations");
+        if(reservation!=null) {
+            storageDiagnostic(r,"reservation",reservation);reject(r,"reservation_verification_failed");
+            if(r.get("attempts").getAsInt()>=RETRIES)finish(r,"REJECTED","reservation_retry_budget_exhausted");
+            else {finish(r,"PENDING","unverified_reservation_no_insertion");r.addProperty("retryAfter",l.getGameTime()+20);}
+            return;
+        }
+        count(r,"verifiedReservations");String fence=PlacementReservation.createFence(l,r);
+        if(fence!=null) {storageDiagnostic(r,"insertion_fence",fence);finish(r,"INDETERMINATE","unverified_insertion_fence_no_insertion");return;}
+        count(r,"insertionCalls");
         boolean inserted=l.addFreshEntity(queen);
         boolean actual=l.getEntity(uuid)==queen && queen.level()==l && !queen.isRemoved();
         r.addProperty("zeroBlockEdits",before.equals(terrain(l,surface)));
@@ -165,7 +200,15 @@ public final class NaturalPlacement extends SavedData {
         else if(actual || inserted) finish(r,"INDETERMINATE","insertion_identity_uncertain_no_replacement");
         else if(r.get("attempts").getAsInt()>=RETRIES) finish(r,"REJECTED","insertion_retry_budget_exhausted");
         else {finish(r,"PENDING","insertion_refused_retry_same_identity");r.addProperty("retryAfter",l.getGameTime()+20);}
-        l.getDataStorage().saveAndJoin();
+        String completion=saveVerified(l,r,"attemptId","attempts");
+        if(completion!=null)storageDiagnostic(r,"completion",completion);
+        // PLACED/uncertain results keep the fence forever, even after death. No actor lookup can release it.
+        if(!inserted && !actual && "PENDING".equals(r.get("status").getAsString())) {
+            if(completion==null) {
+                String release=PlacementReservation.releaseFence(l,r);
+                if(release!=null) {storageDiagnostic(r,"fence_release",release);finish(r,"INDETERMINATE","persisted_insertion_fence_no_replacement");}
+            }else finish(r,"INDETERMINATE","unverified_completion_no_replacement");
+        }
         dev.primeants.PrimeAnts.LOGGER.info("PLACEMENT DIAGNOSTIC queen={} chunk={} status={} attempts={} zeroBlockEdits={}",uuid,p,r.get("status"),r.get("attempts"),r.get("zeroBlockEdits"));
     }
     /** Read-only insertion invariant covering the complete founding envelope. */

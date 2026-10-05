@@ -28,7 +28,8 @@
       "dev.primeants.gametest.NursingGuardGameTest",
       "dev.primeants.gametest.ExpansionGameTest",
       "dev.primeants.gametest.RoleConflictGameTest",
-      "dev.primeants.gametest.NaturalPlacementGameTest"
+      "dev.primeants.gametest.NaturalPlacementGameTest",
+      "dev.primeants.gametest.PlacementDurabilityGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

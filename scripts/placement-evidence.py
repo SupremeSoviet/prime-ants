@@ -5,16 +5,27 @@ ROOT=pathlib.Path(__file__).resolve().parents[1]
 def quote(value): return "'"+str(value).replace("'","''")+"'"
 def main():
     p=argparse.ArgumentParser();p.add_argument('--evidence',required=True);p.add_argument('--name',required=True)
-    group=p.add_mutually_exclusive_group(required=True);group.add_argument('--focus');group.add_argument('--seed',choices=['2026100501','42','8675309']);a=p.parse_args()
+    group=p.add_mutually_exclusive_group(required=True);group.add_argument('--focus');group.add_argument('--case-id');group.add_argument('--seed',choices=['2026100501','42','8675309'])
+    p.add_argument('--mode',choices=['t14','t15-biome-v1'],default='t14');p.add_argument('--declaration');p.add_argument('--attempt');p.add_argument('--prior-full-count',type=int,default=0);a=p.parse_args()
     evidence=pathlib.Path(a.evidence).resolve();evidence.mkdir(parents=True,exist_ok=True)
     if not re.fullmatch('[a-z0-9-]+',a.name):raise ValueError('Unsafe evidence name')
-    if a.focus:
-        args=['runGameTest','--console=plain','-PprimeAntsServerDiagnosticFilter=prime_ants_test:natural_placement_game_test_'+a.focus]
+    if a.focus or a.case_id:
+        case=a.case_id or 'prime_ants_test:natural_placement_game_test_'+a.focus
+        if not re.fullmatch('prime_ants_test:[a-z0-9_]+',case):raise ValueError('Exact registered case ID required')
+        args=['runGameTest','--console=plain','-PprimeAntsServerDiagnosticFilter='+case]
         report=ROOT/'build/test-results/gametest/server.xml'
     else:
+        if a.mode=='t15-biome-v1' and (not a.declaration or not pathlib.Path(a.declaration).is_file()):raise ValueError('Frozen declaration required')
+        turn='t15' if a.mode=='t15-biome-v1' else 't14'
+        attempt=a.attempt or turn+'-seed-'+a.seed
+        if not re.fullmatch(turn+'-seed-[a-z0-9-]+',attempt):raise ValueError('Unsafe owned attempt')
+        world=ROOT/('build/run/'+turn+'-placement')/attempt/'world'
+        if world.parent.exists():raise ValueError('Existing native attempt directory refused')
         native=evidence/('seed-'+a.seed);native.mkdir(exist_ok=False)
         args=['runPlacementDiagnostic','--console=plain','-PprimeAntsPlacementSeed='+a.seed,
-              '-PprimeAntsPlacementAttempt=t14-seed-'+a.seed,'-PprimeAntsPlacementEvidence='+str(native)]
+              '-PprimeAntsPlacementAttempt='+attempt,'-PprimeAntsPlacementEvidence='+str(native),'-PprimeAntsPlacementMode='+a.mode]
+        if a.declaration:args+=['-PprimeAntsPlacementDeclaration='+str(pathlib.Path(a.declaration).resolve())]
+        if a.prior_full_count:args+=['-PprimeAntsPlacementPriorFull='+str(a.prior_full_count)]
         report=native/'server.xml'
     command=evidence/(a.name+'-command.ps1')
     command.write_text('& '+quote(ROOT/'scripts/Invoke-GradleEvidence.ps1')+' -Name '+quote(a.name)+' -GradleArgs @('+','.join(map(quote,args))+') -EvidenceDirectory '+quote(evidence)+'\n$code=$LASTEXITCODE\nexit $code\n',encoding='utf-8')
@@ -23,10 +34,10 @@ def main():
     metadata=json.loads((evidence/(a.name+'.json')).read_text(encoding='utf-8-sig'))
     log=(evidence/(a.name+'.log')).read_bytes();log=log.decode('utf-16' if log.startswith(b'\xff\xfe') else 'utf-8-sig')
     if report.exists(): (evidence/(a.name+'-server.xml')).write_bytes(report.read_bytes())
-    if a.focus:
+    if a.focus or a.case_id:
         match=re.search(r'Fresh server GameTest directory: (.+)',log)
         world=pathlib.Path(match.group(1).strip())/'world' if match else None
-    else:world=ROOT/'build/run/t14-placement'/('t14-seed-'+a.seed)/'world'
+    else:world=ROOT/('build/run/'+turn+'-placement')/attempt/'world'
     if world and world.exists():
         archive=evidence/(a.name+'-world.zip')
         if archive.exists():raise ValueError('Archive already exists')
