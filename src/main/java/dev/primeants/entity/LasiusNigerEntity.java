@@ -40,6 +40,17 @@ public final class LasiusNigerEntity extends PathfinderMob {
     private UUID broodId, queenId;
     private BlockPos nurseryHome;
     private boolean nurseryClaimed;
+    private final dev.primeants.worker.Nutrition nutrition=new dev.primeants.worker.Nutrition();
+    public dev.primeants.worker.Nutrition nutrition(){return nutrition;}
+    public boolean acceptsFood(net.minecraft.world.item.ItemStack stack){return form==AntForm.QUEEN&&nutrition.accepts(stack,dev.primeants.worker.Nutrition.QUEEN_SUGAR_CAPACITY,dev.primeants.worker.Nutrition.QUEEN_PROTEIN_CAPACITY);}
+    public boolean feedBy(LasiusNigerEntity nurse,NestPlan p){
+        if(!(level() instanceof ServerLevel l)||!isAlive()||isRemoved()||isNoAi()||!founding.ready()||!getUUID().equals(nurse.queenId())
+                ||nurse.workerTasks().phase()!=dev.primeants.worker.WorkerTasks.Phase.NURSE_FEED||!getUUID().equals(nurse.workerTasks().recipientId())||nurse.workerTasks().feedingTicks()<dev.primeants.worker.WorkerTasks.FEEDING_TICKS
+                ||!nurse.workerTasks().nursingAuthorized(l)||!dev.primeants.worker.WorkerTasks.reaches(l,nurse,position().add(0,0.25,0))||!acceptsFood(nurse.getMainHandItem()))return false;
+        if(!nutrition.ingest(nurse.getMainHandItem(),dev.primeants.worker.Nutrition.QUEEN_SUGAR_CAPACITY,dev.primeants.worker.Nutrition.QUEEN_PROTEIN_CAPACITY))return false;
+        dev.primeants.PrimeAnts.LOGGER.info("Physical queen feeding queen={} nurse={} consumed={} sugar={} protein={}",getUUID(),nurse.getUUID(),nurse.getMainHandItem(),nutrition.sugar(),nutrition.protein());
+        nurse.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND,net.minecraft.world.item.ItemStack.EMPTY);return true;
+    }
     private final dev.primeants.worker.WorkerTasks workerTasks = new dev.primeants.worker.WorkerTasks(this);
     public dev.primeants.worker.WorkerTasks workerTasks() { return workerTasks; }
     public BlockPos nurseryHome() { return nurseryHome; }
@@ -142,6 +153,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
         founding.save(output.child("Founding"));
         workerTasks.save(output.child("WorkerTask"));
         output.putLong("QueenBodyReserve", bodyReserve); output.putBoolean("NurseryClaimed", nurseryClaimed);
+        nutrition.save(output.child("Nutrition"));
         if (broodId != null) {
             output.putString("BroodId", broodId.toString()); output.putString("QueenId", queenId.toString());
             output.putLong("CallowTicks", callowAgeTicks); output.putLong("CallowDuration", callowDuration);
@@ -162,6 +174,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
         workerTasks.load(input.childOrEmpty("WorkerTask"));
         bodyReserve = form == AntForm.QUEEN ? Math.max(0, Math.min(BroodPile.MAX_RESERVE, input.getLongOr("QueenBodyReserve", initialReserve()))) : 0;
         nurseryClaimed = input.getBooleanOr("NurseryClaimed", false);
+        nutrition.load(input.childOrEmpty("Nutrition"),dev.primeants.worker.Nutrition.QUEEN_SUGAR_CAPACITY,dev.primeants.worker.Nutrition.QUEEN_PROTEIN_CAPACITY);
         if (input.getString("BroodId").isPresent()) {
             if (form != AntForm.WORKER) throw new IllegalArgumentException("Queen cannot be a callow");
             broodId = UUID.fromString(input.getStringOr("BroodId", "")); queenId = UUID.fromString(input.getStringOr("QueenId", ""));

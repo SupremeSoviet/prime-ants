@@ -12,7 +12,7 @@ def inputs():
  return {str(p.relative_to(ROOT)):sha(p) for p in sorted(set(paths)) if p.is_file() and '__pycache__' not in str(p)}
 def tree(path): return {str(p.relative_to(path)):sha(p) for p in path.rglob('*') if p.is_file()}
 def main():
- parser=argparse.ArgumentParser();parser.add_argument('--attempt',required=True);parser.add_argument('--evidence',required=True);parser.add_argument('--probe',action='store_true');a=parser.parse_args()
+ parser=argparse.ArgumentParser();parser.add_argument('--attempt',required=True);parser.add_argument('--evidence',required=True);parser.add_argument('--probe',action='store_true');parser.add_argument('--phase-only',choices=['geometry','active']);a=parser.parse_args()
  if not a.attempt.replace('-','').isalnum() or a.attempt.lower()!=a.attempt: raise ValueError('Unsafe attempt')
  owned=(ROOT/'build/run/t09-restart').resolve();run=(owned/a.attempt).resolve();run.relative_to(owned)
  if run.exists(): raise ValueError('Attempt already exists; preserve it and choose a fresh name')
@@ -30,7 +30,7 @@ def main():
  frozen=inputs();write(evidence/'frozen-inputs.json',frozen)
  result={'attempt':a.attempt,'world_path':str(world),'source_archive':str(SOURCE),'source_sha256':source_sha,'source_preserved':False,'processes':[],'scope':'Normal flushed graceful checkpoints only; no abrupt-crash consistency claim.'}
  write(evidence/'verification.json',result)
- for phase in (['probe'] if a.probe else ['A','B']):
+ for phase in ([a.phase_only] if a.phase_only else ['probe'] if a.probe else ['A','B']):
   before=tree(world);write(evidence/(phase+'-world-before.json'),before)
   cmd=['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',str(ROOT/'scripts/Invoke-GradleEvidence.ps1'),'-Name',phase+'-server','-GradleArgs','runRestartServer',f'-PprimeAntsRestartAttempt={a.attempt}',f'-PprimeAntsRestartPhase={phase}',f'-PprimeAntsRestartEvidence={evidence}','--console=plain','-EvidenceDirectory',str(evidence)]
   # -File cannot bind multiple native positional arguments to string[] reliably; use a separate exact script.
@@ -53,7 +53,7 @@ def main():
   if check.returncode:raise RuntimeError('Task JVM has not exited; B must not start')
   if not (evidence/(phase+'-stopped.json')).exists():raise RuntimeError('Normal server stop callback missing')
   if (evidence/(phase+'-failure.json')).exists():raise RuntimeError('Harness assertion failed: '+read(evidence/(phase+'-failure.json'))['failure'])
-  terminal=phase+'-checkpoint' if phase=='A' else phase+'-recovered' if phase=='B' else 'probe'
+  terminal=phase+'-checkpoint' if phase=='A' else phase+'-recovered' if phase=='B' else phase
   if not (evidence/(terminal+'.json')).exists():raise RuntimeError('Required checkpoint missing')
   record['checkpoint']=read(evidence/(terminal+'.json'))['checkpoint']
   after=tree(world);write(evidence/(phase+'-world-after.json'),after)
@@ -69,7 +69,7 @@ def main():
   write(evidence/'verification.json',result);print('EXIT '+phase+' pid='+str(native['pid'])+' code=0',flush=True)
  result['source_preserved']=sha(SOURCE)==source_sha
  if not result['source_preserved']:raise RuntimeError('Original archive changed')
- if not a.probe:
+ if not a.probe and not a.phase_only:
   result['before']=read(evidence/'A-checkpoint.json');result['home_first']=read(evidence/'B-home-first.json');result['restored']=read(evidence/'B-restored.json');result['after']=read(evidence/'B-recovered.json');result['recovered']=result['after']['recovered'];result['same_unedited_world']=True
  write(evidence/'verification.json',result)
  print('VERIFIED '+str(evidence/'verification.json'),flush=True)

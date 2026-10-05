@@ -11,6 +11,10 @@ public final class BroodRecord {
     private final int slot;
     BroodStage stage = BroodStage.EGG;
     long progress, nourishment;
+    boolean founding=true;
+    private final dev.primeants.worker.Nutrition nutrition=new dev.primeants.worker.Nutrition();
+    public boolean founding(){return founding;}
+    public dev.primeants.worker.Nutrition nutrition(){return nutrition;}
     public BroodRecord(UUID id, UUID queen, int slot) { this.id = id; this.queen = queen; this.slot = slot; }
     public UUID id() { return id; }
     public UUID queenId() { return queen; }
@@ -22,14 +26,17 @@ public final class BroodRecord {
     void save(ValueOutput out) {
         out.putString("Id", id.toString()); out.putString("Queen", queen.toString()); out.putInt("Slot", slot);
         out.putString("Stage", stage.name()); out.putLong("Progress", progress); out.putLong("Nourishment", nourishment);
+        out.putBoolean("Founding",founding);nutrition.save(out.child("Nutrition"));
     }
     static BroodRecord load(ValueInput in) {
         BroodRecord r = new BroodRecord(UUID.fromString(in.getStringOr("Id", "")), UUID.fromString(in.getStringOr("Queen", "")), in.getIntOr("Slot", -1));
         r.stage = BroodStage.valueOf(in.getStringOr("Stage", ""));
         r.progress = in.getLongOr("Progress", -1); r.nourishment = in.getLongOr("Nourishment", -1);
+        r.founding=in.getBooleanOr("Founding",true);r.nutrition.load(in.childOrEmpty("Nutrition"),dev.primeants.worker.Nutrition.LARVA_SUGAR,dev.primeants.worker.Nutrition.LARVA_PROTEIN);
         if (r.stage == BroodStage.EMPTY || r.slot < 0 || r.slot >= BroodPile.CAPACITY || r.progress < 0
                 || r.nourishment < 0 || r.nourishment > BroodPile.LARVA_COST
                 || r.stage == BroodStage.COCOON && r.nourishment != BroodPile.LARVA_COST) throw new IllegalArgumentException("Invalid brood record");
+        if(!r.founding&&(r.nourishment!=r.nutrition.spentSugar()+r.nutrition.spentProtein()||r.nutrition.gainedSugar()>dev.primeants.worker.Nutrition.LARVA_SUGAR||r.nutrition.gainedProtein()>dev.primeants.worker.Nutrition.LARVA_PROTEIN))throw new IllegalArgumentException("Invalid fed larval accounting");
         return r;
     }
 }

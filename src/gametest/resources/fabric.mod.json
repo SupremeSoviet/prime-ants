@@ -19,7 +19,9 @@
       "dev.primeants.gametest.QueenFoundingGameTest",
       "dev.primeants.gametest.BroodGameTest",
       "dev.primeants.gametest.WorkerForagingGameTest",
-      "dev.primeants.gametest.TransferGameTest"
+      "dev.primeants.gametest.TransferGameTest",
+      "dev.primeants.gametest.NursingGameTest",
+      "dev.primeants.gametest.NursingGuardGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

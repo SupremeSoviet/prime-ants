@@ -19,7 +19,7 @@ public final class TransferGameTest {
     static int world(GameTestHelper c,String name) {return c.getLevel().getEntitiesOfClass(ItemEntity.class,c.getBounds().inflate(8),i->i.isAlive()&&i.getItem().get(DataComponents.CUSTOM_NAME)!=null&&name.equals(i.getItem().get(DataComponents.CUSTOM_NAME).getString())).stream().mapToInt(i->i.getItem().getCount()).sum();}
     static java.util.List<TransferCustody.Pending> pending(GameTestHelper c,String name) {return TransferCustody.get(c.getLevel()).contents().stream().filter(p->p.stack().get(DataComponents.CUSTOM_NAME)!=null&&name.equals(p.stack().get(DataComponents.CUSTOM_NAME).getString())).toList();}
     static int custody(GameTestHelper c,String name) {return pending(c,name).stream().mapToInt(p->p.stack().getCount()).sum();}
-    private void restoreCustody(GameTestHelper c,String name) {
+    void restoreCustody(GameTestHelper c,String name) {
         var before=pending(c,name);c.getLevel().getDataStorage().saveAndJoin();
         try(var disk=new net.minecraft.world.level.storage.SavedDataStorage(
                 net.minecraft.world.level.dimension.DimensionType.getStorageFolder(c.getLevel().dimension(),c.getLevel().getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT)).resolve("data"),
@@ -57,7 +57,7 @@ public final class TransferGameTest {
     private void cache(GameTestHelper c,int successes) {
         var f=new WorkerForagingGameTest();var q=f.start(c);String name="T09-cache-"+UUID.randomUUID();boolean[] dropped={false},removed={false};
         c.onEachTick(()->{
-            if(removed[0])return;var p=q.founding().plan();if(p==null)return;
+            if(removed[0])return;f.absentCaregivers(c,q);var p=q.founding().plan();if(p==null)return;
             if(!dropped[0]&&q.founding().sealed()){dropped[0]=true;f.drop(c,p.at(-3,0,1),stock(name,2));}
             var n=f.cache(c,q);if(n==null||n.size()!=2)return;removed[0]=true;
             TransferFault.block(name,successes);var old=n.getBlockState();c.getLevel().setBlock(p.cache(),Blocks.STONE.defaultBlockState(),3);

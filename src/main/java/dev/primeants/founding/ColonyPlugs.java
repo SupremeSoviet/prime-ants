@@ -24,7 +24,9 @@ public final class ColonyPlugs extends SavedData {
     private String key(BlockPos p) { return Long.toString(p.asLong()); }
     public void invalidate(BlockPos p) { if (records.remove(key(p)) != null) setDirty(); }
     public void placed(BlockPos p, UUID colony) { records.put(key(p), colony + ":plug"); setDirty(); }
-    public boolean owned(ServerLevel l, BlockPos p, UUID colony) { return NestPlan.loaded(l,p) && l.getBlockState(p).is(Blocks.DIRT) && (colony + ":plug").equals(records.get(key(p))); }
+    /** Legacy dirt stays readable; newly compacted plugs use the same nest-soil material as the mound. */
+    public static boolean material(net.minecraft.world.level.block.state.BlockState state){return state.is(Blocks.DIRT)||state.is(dev.primeants.brood.NurseryBlocks.NEST_SOIL);}
+    public boolean owned(ServerLevel l, BlockPos p, UUID colony) { return NestPlan.loaded(l,p) && material(l.getBlockState(p)) && (colony + ":plug").equals(records.get(key(p))); }
     public boolean opened(ServerLevel l, BlockPos p, UUID colony) { return NestPlan.loaded(l,p) && l.getBlockState(p).isAir() && (colony + ":open").equals(records.get(key(p))); }
     public boolean remove(ServerLevel l, BlockPos p, UUID colony) {
         if (!owned(l,p,colony) || !l.setBlock(p,Blocks.AIR.defaultBlockState(),3)) return false;

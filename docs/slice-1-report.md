@@ -1,3 +1,19 @@
+# Current result after T10 - physical food supports continuing brood
+
+One generated-world production queen now raises three original workers, forages for player-dropped food, and receives physical nurse feeding. Six apples and eight raw chickens yielded **four live workers**, a different pale callow and another laying event in the reused pile. Saved NBT independently balances **14 supplied = 6 physical + 8 consumed** (five apples / three chickens consumed). Queen founding reserve stays zero; finite recipient stores fund four new eggs and supported larval development.
+
+Final unfiltered `.\gradlew.bat build --console=plain --rerun-tasks`, exit 0, 74.718 s: **15 unit / 77 server / 24 model**, retaining every earlier case. `.\gradlew.bat runClientGameTest --console=plain -PprimeAntsCapturePrefix=t10-a3 -PprimeAntsBroodMultiplier=100`, exit 0, 462.388 s, run `e530f5cf-9ac5-491b-8675-fdd87c044293`: four fresh images. See [nurse carrying](screenshots/t10-a3-nurse-carrying.png), [feeding action](screenshots/t10-a3-nurse-feeding.png), [new brood with mature workers](screenshots/t10-a3-new-brood.png), [additional pale worker](screenshots/t10-a3-additional-callow.png) and [provenance](screenshots/t10-a3-provenance.json). Sources/jars stayed frozen across capture. No summoned adult, reserve/cache/nutrition injection, forced stage, paused AI or cutaway.
+
+Nursing uses the existing single worker action owner, real cache withdrawal and a 20-tick physical feeding action. Apple/berries/chicken yields are 4,000 sugar / 2,000 sugar / 8,000 protein; queen capacities 8,000/16,000; new egg costs 1,000/2,000; larval requirements 4,000/8,000. Laying is every 1,200 loaded ticks, with three physical slots and cap 30 including the queen. Unknown unloaded member identities occupy capacity. Original/Consumed history and death tombstones prevent restored brood or dead workers duplicating adults. Queen death stops laying but preserves open habitat and viable fed cocoons.
+
+Final-code active-home loading check: one JVM 16248, home (3,-3), carrier (13,-3), flags 14 / radius 2 / level 31. Queen, real home worker and nursery each advanced exactly **400** while saved carrier lookup/loading/ticking were absent. Same claim and named cargo survived; native reload restored the same UUID/task/age and resumed delivery. Disclosed post-pickup and return positioning isolates this fixture only. It is running-process unloading, not a new cold restart. Home consumed zero units during the interval; accounting includes real nurse cargo plus saved carrier stock. Broad restart, offline and crash behavior remain unproved.
+
+Two failed client tasks preceded acceptance: A1 exact wall-face containment and A2 native grass spreading onto a dirt seal. Targeted tests established recovery: inclusive body containment admits contact but rejects 0.001 crossing; newly carried plugs use existing nest soil, retaining legacy dirt readability and every-write ownership revocation. A retained serialization fixture also now saves the obstruction's actual chunk when it crosses the pile's chunk face. No conservation/protection assertion was removed. Full failure/recovery ledger, lost raw A1-world disclosure, source audits, exact identities, commands and commit are in external `turns/T10/report.md` / `commit-evidence.json`.
+
+Client history is **20 launches: native 14/6, tasks 10/10**. T10 added three native exit-0 clients (A2 closed normally for diagnosis), one green and two failed tasks. Dedicated-server outcomes are separate in the T10 report. Dropped-food-supported growth is not unattended survival. Worker expansion is next; natural harvesting, adult hunger/lifespan, performance, broad restart/offline and Phase 2 remain unresolved.
+
+---
+
 # Report T02
 
 

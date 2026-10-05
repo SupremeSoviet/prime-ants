@@ -13,7 +13,7 @@ loom.runs.register('restartServer') {
 }
 tasks.named('runRestartServer') {
     doFirst {
-        if(!(restartAttempt ==~ /[a-z0-9][a-z0-9-]*/) || restartAttempt=='unset' || !(restartPhase in ['probe','A','B'])) throw new GradleException('Explicit owned restart attempt and phase required')
+        if(!(restartAttempt ==~ /[a-z0-9][a-z0-9-]*/) || restartAttempt=='unset' || !(restartPhase in ['probe','geometry','active','A','B'])) throw new GradleException('Explicit owned restart attempt and phase required')
         if(!file("build/run/t09-restart/${restartAttempt}/world/level.dat").exists())throw new GradleException('Restart harness requires the unedited copied T08 A4 world')
     }
 }

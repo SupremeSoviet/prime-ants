@@ -24,11 +24,17 @@ import net.minecraft.world.phys.Vec3;
 
 /** Sole movement/action owner for brood workers. Mutations run sequentially on the level's server thread. */
 public final class WorkerTasks {
-    public enum Phase { NURSERY, OPENING, SOIL_OUT, EXIT, SEARCH, APPROACH, RETURN, DEPOSIT, DEAD }
+    public enum Phase { NURSERY, OPENING, SOIL_OUT, EXIT, SEARCH, APPROACH, RETURN, DEPOSIT, NURSE_CACHE, NURSE_FEED, NURSE_RETURN, DEAD }
     private final LasiusNigerEntity worker;
     private NestPlan plan;
     private Phase phase=Phase.NURSERY;
     private UUID source;
+    private UUID recipient;
+    private int feedingTicks;
+    public static final int FEEDING_TICKS=20;
+    public UUID recipientId(){return recipient;}
+    public int feedingTicks(){return feedingTicks;}
+    public boolean nursing(){return phase==Phase.NURSE_CACHE||phase==Phase.NURSE_FEED||phase==Phase.NURSE_RETURN;}
     private int opened, placed, phaseTicks, cooldown;
     private String reason="nursery_shelter";
     public WorkerTasks(LasiusNigerEntity worker) { this.worker=worker; }
@@ -50,8 +56,18 @@ public final class WorkerTasks {
                 && q!=null && q.isAlive() && q.founding().claimedBy(worker) && q.founding().plan()!=null
                 && q.founding().plan().entrance().equals(plan.entrance()) && q.founding().plan().direction()==plan.direction() && q.founding().ready();
     }
+    public boolean nursingAuthorized(ServerLevel l){
+        return nursing()&&!worker.isCallow()&&!worker.isNoAi()&&worker.isAlive()&&!worker.isRemoved()&&plan!=null
+                &&ColonyMembers.get(l).belongs(worker,worker.queenId(),plan.chamber())
+                &&l.getBlockEntity(plan.nursery()) instanceof dev.primeants.brood.BroodPile p&&p.ownedBy(worker.queenId(),plan)&&p.operational()
+                &&plan.nurseryProblem(l,worker.queenId(),true)==null;
+    }
+    public void assignNurse(NestPlan p){
+        if(phase!=Phase.NURSERY||worker.isCallow())return;
+        plan=NestPlan.geometry(p.entrance(),p.direction());next(Phase.NURSE_CACHE,"mature_member_nursing");
+    }
     public void assign(NestPlan p) {
-        if(phase==Phase.DEAD || worker.isCallow())return;
+        if(phase==Phase.DEAD || worker.isCallow()||!worker.getMainHandItem().isEmpty()&&nursing())return;
         plan=NestPlan.geometry(p.entrance(),p.direction());
         phase=worker.getMainHandItem().is(Items.DIRT)?Phase.SOIL_OUT:food(worker.getMainHandItem())?Phase.RETURN:Phase.OPENING;phaseTicks=0;
     }
@@ -81,10 +97,11 @@ public final class WorkerTasks {
     public void tick(ServerLevel l) {
         if(phase==Phase.DEAD || !worker.isAlive())return;
         if(worker.isCallow() || phase==Phase.NURSERY) {hold(worker.isCallow()?"callow_shelter":"nursery_shelter");return;}
-        if(!authorized(l)) {hold("home_unavailable_or_invalid_cargo_retained");return;}
+        if(!(nursing()?nursingAuthorized(l):authorized(l))) {hold("home_unavailable_or_invalid_cargo_retained");feedingTicks=0;return;}
         phaseTicks++; if(cooldown>0)cooldown--;
         if(phaseTicks>1200) {
             if(phase==Phase.OPENING || phase==Phase.SOIL_OUT) {hold("opening_route_stalled_retry_no_remote_completion");phaseTicks=0;cooldown=40;}
+            else if(nursing()){hold("nursing_route_stalled_cargo_retained");phaseTicks=0;cooldown=40;}
             else if(worker.getMainHandItem().isEmpty()) {source=null;next(Phase.RETURN,"trip_limit_return");}
             else {hold("physical_route_stalled_cargo_retained_retry");phaseTicks=0;cooldown=40;}
         }
@@ -97,8 +114,58 @@ public final class WorkerTasks {
             case APPROACH -> pickup(l);
             case RETURN -> { if(arrive(Vec3.atBottomCenterOf(plan.at(3,0,-2))))next(Phase.DEPOSIT,"inside_delivery"); }
             case DEPOSIT -> deposit(l);
+            case NURSE_CACHE -> nurseCache(l);
+            case NURSE_FEED -> nurseFeed(l);
+            case NURSE_RETURN -> nurseReturn(l);
             default -> { }
         }
+    }
+    private UUID chooseRecipient(ServerLevel l,ItemStack s){
+        if(l.getBlockEntity(plan.nursery()) instanceof dev.primeants.brood.BroodPile p){
+            var larva=p.records().stream().filter(r->p.accepts(r,s)).findFirst();if(larva.isPresent())return larva.get().id();
+        }
+        var q=queen(l);return q!=null&&q.isAlive()&&!q.isNoAi()&&q.founding().ready()&&q.acceptsFood(s)?q.getUUID():null;
+    }
+    public boolean hasRecipient(ServerLevel l,ItemStack s){return nursingAuthorized(l)&&chooseRecipient(l,s)!=null;}
+    private void nurseCache(ServerLevel l){
+        if(!worker.getMainHandItem().isEmpty()){next(Phase.NURSE_RETURN,"existing_nurse_cargo_retained");return;}
+        if(!(l.getBlockEntity(plan.cache()) instanceof NestCache cache)||!cache.ownedBy(worker.queenId(),plan)){hold("nurse_owned_cache_unavailable");return;}
+        if(cache.contents().stream().noneMatch(s->hasRecipient(l,s))){hold("nurse_no_food_or_accepting_recipient");return;}
+        var target=Vec3.atBottomCenterOf(plan.cache()).add(0,0.15,0);
+        if(!reaches(l,worker,target)){arrive(Vec3.atBottomCenterOf(plan.at(4,-1,-2)));return;}
+        if(cache.withdraw(worker,plan)){
+            recipient=chooseRecipient(l,worker.getMainHandItem());feedingTicks=0;next(Phase.NURSE_FEED,"cache_food_in_nurse_mandibles");
+            PrimeAnts.LOGGER.info("Nurse withdrawal nurse={} cargo={} recipient={} position={}",worker.getUUID(),worker.getMainHandItem(),recipient,worker.position());
+        }
+    }
+    private void nurseFeed(ServerLevel l){
+        if(!food(worker.getMainHandItem())){hold("nurse_cargo_invalid_retained");return;}
+        // Revalidate the exact recipient; a changed/refusing recipient never consumes cargo.
+        var q=queen(l);boolean toQueen=recipient!=null&&recipient.equals(worker.queenId());
+        var p=l.getBlockEntity(plan.nursery()) instanceof dev.primeants.brood.BroodPile b?b:null;
+        boolean accepts=toQueen?q!=null&&q.isAlive()&&!q.isNoAi()&&q.founding().ready()&&q.acceptsFood(worker.getMainHandItem()):p!=null&&p.records().stream().anyMatch(r->r.id().equals(recipient)&&p.accepts(r,worker.getMainHandItem()));
+        if(!accepts){feedingTicks=0;next(Phase.NURSE_RETURN,"recipient_refused_food_retained");return;}
+        Vec3 target=toQueen?q.position().add(0,0.25,0):Vec3.atBottomCenterOf(plan.nursery()).add(0,0.15,0);
+        if(!reaches(l,worker,target)){
+            feedingTicks=0;
+            // Walk around the queen along the rear row instead of pushing through her body.
+            var delta=worker.position().subtract(Vec3.atBottomCenterOf(plan.entrance()));double forward=delta.x*plan.direction().getStepX()+delta.z*plan.direction().getStepZ();
+            if(!toQueen&&forward<4.8)arrive(Vec3.atBottomCenterOf(plan.at(5,-1,-2)));
+            else arrive(Vec3.atBottomCenterOf(plan.at(toQueen?4:5,toQueen?-1:1,-2)));
+            return;
+        }
+        worker.getNavigation().stop();worker.getLookControl().setLookAt(target.x,target.y,target.z);reason="physical_feeding";
+        if(++feedingTicks<FEEDING_TICKS)return;
+        boolean accepted=toQueen?q.feedBy(worker,plan):p.feedBy(worker,recipient);
+        feedingTicks=0;if(accepted){recipient=null;next(Phase.NURSE_CACHE,"carried_food_consumed_once");cooldown=20;}else next(Phase.NURSE_RETURN,"feeding_action_refused_cargo_retained");
+    }
+    private void nurseReturn(ServerLevel l){
+        if(worker.getMainHandItem().isEmpty()){recipient=null;next(Phase.NURSE_CACHE,"nurse_empty");return;}
+        // Another recipient may now accept, but the nurse must still walk to it before feeding.
+        var nextRecipient=chooseRecipient(l,worker.getMainHandItem());if(nextRecipient!=null){recipient=nextRecipient;feedingTicks=0;next(Phase.NURSE_FEED,"nurse_recipient_reselected");return;}
+        if(!(l.getBlockEntity(plan.cache()) instanceof NestCache cache)){hold("nurse_return_cache_unavailable_cargo_retained");return;}
+        if(!reaches(l,worker,Vec3.atBottomCenterOf(plan.cache()).add(0,0.15,0))){arrive(Vec3.atBottomCenterOf(plan.at(4,-1,-2)));return;}
+        if(cache.deposit(worker,plan)){recipient=null;next(Phase.NURSE_CACHE,"nurse_food_physically_returned");cooldown=40;}else hold("nurse_return_refused_cargo_retained");
     }
     private void open(ServerLevel l) {
         var plugs=ColonyPlugs.get(l);
@@ -179,18 +246,21 @@ public final class WorkerTasks {
             TransferCustody.get(l).retry(l);
         }
         var q=queen(l);if(q!=null)q.founding().releaseWorker(worker);
+        ColonyMembers.get(l).died(worker);
         source=null;next(Phase.DEAD,"worker_dead_no_replacement");
     }
     public void save(ValueOutput out) {
         out.putString("Phase",phase.name());out.putString("Reason",reason);out.putInt("Opened",opened);out.putInt("Placed",placed);out.putInt("PhaseTicks",phaseTicks);out.putInt("Cooldown",cooldown);
         if(plan!=null) {out.store("Entrance",BlockPos.CODEC,plan.entrance());out.putString("Direction",plan.direction().getName());}
         if(source!=null)out.putString("Source",source.toString());
+        if(recipient!=null)out.putString("Recipient",recipient.toString());out.putInt("FeedingTicks",feedingTicks);
         // Cargo is canonical vanilla Mob mainhand equipment, not duplicated here.
     }
     public void load(ValueInput in) {
         phase=Phase.valueOf(in.getStringOr("Phase","NURSERY"));reason=in.getStringOr("Reason","restored");opened=in.getIntOr("Opened",0);placed=in.getIntOr("Placed",0);phaseTicks=in.getIntOr("PhaseTicks",0);cooldown=in.getIntOr("Cooldown",0);
         source=in.getString("Source").map(UUID::fromString).orElse(null);
+        recipient=in.getString("Recipient").map(UUID::fromString).orElse(null);feedingTicks=in.getIntOr("FeedingTicks",0);
         if(in.read("Entrance",BlockPos.CODEC).isPresent()) {Direction d=Direction.byName(in.getStringOr("Direction",""));if(d==null||d.getAxis().isVertical())throw new IllegalArgumentException("Invalid task home");plan=NestPlan.geometry(in.read("Entrance",BlockPos.CODEC).orElseThrow(),d);}
-        if(opened<0||opened>2||placed<0||placed>opened||phaseTicks<0||cooldown<0)throw new IllegalArgumentException("Invalid worker progress");
+        if(opened<0||opened>2||placed<0||placed>opened||phaseTicks<0||cooldown<0||feedingTicks<0||feedingTicks>=FEEDING_TICKS)throw new IllegalArgumentException("Invalid worker progress");
     }
 }

@@ -5,6 +5,9 @@ import dev.primeants.entity.AntEntities;
 import dev.primeants.entity.LasiusNigerEntity;
 import dev.primeants.founding.NestPlan;
 import dev.primeants.time.SimulationTimeScale;
+import dev.primeants.worker.Nutrition;
+import dev.primeants.worker.ColonyMembers;
+import dev.primeants.worker.WorkerTasks;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -24,9 +27,12 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 
-/** Canonical first clutch. Only the loaded server block-entity ticker advances brood. */
+/** Reusable physical nursery slots. Only the loaded server block-entity ticker advances brood or lays eggs. */
 public final class BroodPile extends BlockEntity {
     public static final int CAPACITY = 3;
+    public static final int ADULT_CAPACITY=30; // queen + at most 29 actual workers; unknown unloaded members occupy space
+    public static final long BASE_LAYING_TICKS=1200;
+    public static long layingCadence(){return new SimulationTimeScale(multiplier()).ticksForGameDays(BASE_LAYING_TICKS/24000.0);}
     public static final long EGG_COST = 1000, LARVA_COST = 12000, MAX_RESERVE = CAPACITY * (EGG_COST + LARVA_COST);
     public static final double CARE_REACH_SQUARED = 2.25 * 2.25;
     private UUID queenId;
@@ -34,6 +40,18 @@ public final class BroodPile extends BlockEntity {
     private final List<BroodRecord> records = new ArrayList<>();
     // Bounded consumed identities prevent replacement after death and reconcile saved-cocoon/live-adult overlap.
     private final Set<UUID> consumed = new HashSet<>();
+    private final Set<UUID> original=new HashSet<>();
+    private boolean operational;
+    private long lastLayingTick,archivedApples,archivedBerries,archivedChickens;
+    public Set<UUID> original(){return Set.copyOf(original);}
+    public boolean operational(){return operational;}
+    public long lastLayingTick(){return lastLayingTick;}
+    public long consumedApples(){return archivedApples+records.stream().mapToLong(r->r.nutrition().apples()).sum();}
+    public long consumedBerries(){return archivedBerries+records.stream().mapToLong(r->r.nutrition().berries()).sum();}
+    public long consumedChickens(){return archivedChickens+records.stream().mapToLong(r->r.nutrition().chickens()).sum();}
+    public long consumedFood(){return consumedApples()+consumedBerries()+consumedChickens();}
+    public long gainedSugar(){return consumedApples()*Nutrition.APPLE_SUGAR+consumedBerries()*Nutrition.BERRY_SUGAR;}
+    public long gainedProtein(){return consumedChickens()*Nutrition.CHICKEN_PROTEIN;}
     private long loadedTicks, stageDuration = stageTicks();
     private String condition = "unowned";
     public BroodPile(BlockPos pos, BlockState state) { super(NurseryBlocks.BROOD_TYPE, pos, state); }
@@ -58,10 +76,34 @@ public final class BroodPile extends BlockEntity {
         queenId = queen.getUUID(); plan = NestPlan.geometry(p.entrance(), p.direction());
         if (!queen.founding().sealed() || queen.position().distanceToSqr(Vec3.atBottomCenterOf(getBlockPos())) > CARE_REACH_SQUARED
                 || !queen.spendReserve(CAPACITY * EGG_COST)) { queenId = null; plan = null; return false; }
-        for (int slot = 0; slot < CAPACITY; slot++) records.add(new BroodRecord(UUID.randomUUID(), queenId, slot));
+        for (int slot = 0; slot < CAPACITY; slot++) {var r=new BroodRecord(UUID.randomUUID(), queenId, slot);records.add(r);original.add(r.id());}
         condition = "eggs_laid"; changed();
         PrimeAnts.LOGGER.info("Nursery established queen={} pile={} brood={} reserve={} multiplier={} stageTicks={}", queenId, getBlockPos(), records.stream().map(BroodRecord::id).toList(), queen.bodyReserve(), multiplier(), stageTicks());
         return true;
+    }
+    public boolean accepts(BroodRecord r,net.minecraft.world.item.ItemStack s){
+        return !r.founding&&r.stage()==BroodStage.LARVA&&r.nutrition().accepts(s,Nutrition.LARVA_SUGAR,Nutrition.LARVA_PROTEIN)
+                &&r.nutrition().gainedSugar()+Nutrition.sugarYield(s)<=Nutrition.LARVA_SUGAR&&r.nutrition().gainedProtein()+Nutrition.proteinYield(s)<=Nutrition.LARVA_PROTEIN;
+    }
+    public boolean feedBy(LasiusNigerEntity nurse,UUID brood){
+        if(!(level instanceof ServerLevel l)||nurse.workerTasks().phase()!=WorkerTasks.Phase.NURSE_FEED||!brood.equals(nurse.workerTasks().recipientId())||nurse.workerTasks().feedingTicks()<WorkerTasks.FEEDING_TICKS
+                ||!nurse.workerTasks().nursingAuthorized(l)||!queenId.equals(nurse.queenId())||!WorkerTasks.reaches(l,nurse,Vec3.atBottomCenterOf(getBlockPos()).add(0,0.15,0))||plan.nurseryProblem(l,queenId,operational)!=null)return false;
+        var r=records.stream().filter(b->b.id().equals(brood)).findFirst().orElse(null);
+        if(r==null||!accepts(r,nurse.getMainHandItem())||!r.nutrition().ingest(nurse.getMainHandItem(),Nutrition.LARVA_SUGAR,Nutrition.LARVA_PROTEIN))return false;
+        PrimeAnts.LOGGER.info("Physical larva feeding queen={} brood={} nurse={} consumed={} sugar={} protein={}",queenId,brood,nurse.getUUID(),nurse.getMainHandItem(),r.nutrition().sugar(),r.nutrition().protein());
+        nurse.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND,net.minecraft.world.item.ItemStack.EMPTY);setChanged();return true;
+    }
+    private void retire(BroodRecord r){
+        consumed.add(r.id());records.remove(r);archivedApples+=r.nutrition().apples();archivedBerries+=r.nutrition().berries();archivedChickens+=r.nutrition().chickens();
+    }
+    private boolean lay(ServerLevel l,LasiusNigerEntity q,boolean care){
+        if(!care||!operational||!consumed.containsAll(original)||loadedTicks-lastLayingTick<layingCadence())return false;
+        if(records.size()>=CAPACITY){if(!condition.equals("larva_sugar_or_protein_exhausted"))condition="nursery_slots_full";return false;}
+        if(ColonyMembers.get(l).occupied(queenId)+records.size()>=ADULT_CAPACITY-1){condition="colony_capacity_full_or_unloaded";return false;}
+        if(!q.nutrition().spend(Nutrition.EGG_SUGAR,Nutrition.EGG_PROTEIN)){condition="queen_ingested_nutrition_exhausted";return false;}
+        int slot=0;while(true){final int index=slot;if(records.stream().noneMatch(r->r.slot()==index))break;slot++;}
+        var r=new BroodRecord(UUID.randomUUID(),queenId,slot);r.founding=false;records.add(r);lastLayingTick=loadedTicks;condition="food_fed_egg_laid";
+        PrimeAnts.LOGGER.info("Food-fed egg queen={} brood={} slot={} pileTicks={} cadence={} sugarCost={} proteinCost={}",queenId,r.id(),slot,loadedTicks,layingCadence(),Nutrition.EGG_SUGAR,Nutrition.EGG_PROTEIN);return true;
     }
     private void changed() {
         setChanged();
@@ -80,7 +122,9 @@ public final class BroodPile extends BlockEntity {
         if (queenId == null || plan == null || !ownedBy(queenId, plan)) return;
         loadedTicks++;
         var owner = server.getEntity(queenId);
-        boolean operational = owner instanceof LasiusNigerEntity q && q.founding().lifecycle() != dev.primeants.founding.QueenFounding.Lifecycle.CLAUSTRAL;
+        if(owner instanceof LasiusNigerEntity q && q.founding().lifecycle()!=dev.primeants.founding.QueenFounding.Lifecycle.CLAUSTRAL)operational=true;
+        // Preserve historical open habitat after queen death. A missing queen cannot reseal recorded openings.
+        for(UUID id:consumed)ColonyMembers.get(server).record(id,queenId,plan.chamber());
         String habitat = plan.nurseryProblem(server, queenId, operational);
         if (habitat != null) { condition = habitat; setChanged(); return; }
         var actor = server.getEntity(queenId);
@@ -95,8 +139,14 @@ public final class BroodPile extends BlockEntity {
                 long next = Math.min(stageDuration, record.progress + 1);
                 // Cumulative integer accounting: EXACT 12,000 per larva even when accelerated/rounded.
                 long required = (next * LARVA_COST / stageDuration) - record.nourishment;
-                if (!care || queen.bodyReserve() == 0 || !queen.spendReserve(required)) { if (care) condition = "queen_reserve_exhausted"; continue; }
-                record.nourishment += required;
+                if(record.founding){
+                    if (!care || queen.bodyReserve() == 0 || !queen.spendReserve(required)) { if (care) condition = "queen_reserve_exhausted"; continue; }
+                }else{
+                    long sugar=next*Nutrition.LARVA_SUGAR/stageDuration-record.nutrition().spentSugar();
+                    long protein=next*Nutrition.LARVA_PROTEIN/stageDuration-record.nutrition().spentProtein();
+                    if(record.nutrition().sugar()==0||record.nutrition().protein()==0||!record.nutrition().spend(sugar,protein)){condition="larva_sugar_or_protein_exhausted";continue;}
+                }
+                record.nourishment = record.founding?record.nourishment+required:record.nutrition().spentSugar()+record.nutrition().spentProtein();
             }
             if (record.progress < stageDuration) record.progress++;
             if (record.progress < stageDuration) continue;
@@ -108,16 +158,23 @@ public final class BroodPile extends BlockEntity {
                 PrimeAnts.LOGGER.info("Brood stage queen={} brood={} stage={} pileTicks={} nourishment={}", queenId, record.id(), record.stage, loadedTicks, record.nourishment);
             }
         }
+        if(lay(server,queen,care))visual=true;
         if (visual) changed(); else setChanged();
     }
     private boolean emerge(ServerLevel server, BroodRecord r) {
+        var member=ColonyMembers.get(server).member(r.workerId());
+        if(member!=null){
+            if(!member.brood().equals(r.id())||!member.queen().equals(queenId)||!member.home().equals(plan.chamber())){condition="emergence_identity_conflict";return false;}
+            retire(r);condition=member.dead()?"emerged_worker_dead_no_respawn":"emergence_recorded_or_unloaded";return true;
+        }
         var existing = server.getEntity(r.workerId());
         if (existing != null) {
             if (existing instanceof LasiusNigerEntity ant && r.id().equals(ant.broodId()) && queenId.equals(ant.queenId())) {
-                consumed.add(r.id()); records.remove(r); condition = "emergence_reconciled"; return true;
+                ColonyMembers.get(server).record(r.id(),queenId,plan.chamber());retire(r); condition = "emergence_reconciled"; return true;
             }
             condition = "emergence_identity_conflict"; return false;
         }
+        if(ColonyMembers.get(server).occupied(queenId)>=ADULT_CAPACITY-1){condition="emergence_capacity_full_or_unloaded";return false;}
         var worker = AntEntities.WORKER.create(server, EntitySpawnReason.BREEDING);
         if (worker == null) { condition = "worker_creation_failed"; return false; }
         worker.setUUID(r.workerId()); worker.initializeCallow(r.id(), queenId, plan.chamber());
@@ -127,7 +184,7 @@ public final class BroodPile extends BlockEntity {
             AABB body = worker.getBoundingBox();
             if (!NestPlan.walkable(server, p) || !server.noCollision(worker, body) || !server.getEntities(worker, body).isEmpty()) continue;
             if (!server.addFreshEntity(worker) || server.getEntity(r.workerId()) != worker) { condition = "worker_insertion_failed"; return false; }
-            consumed.add(r.id()); records.remove(r); condition = "callow_emerged";
+            ColonyMembers.get(server).record(r.id(),queenId,plan.chamber());retire(r); condition = "callow_emerged";
             PrimeAnts.LOGGER.info("Callow emerged queen={} brood={} worker={} pileTicks={} remaining={}", queenId, r.id(), worker.getUUID(), loadedTicks, records.size());
             return true;
         }
@@ -139,11 +196,13 @@ public final class BroodPile extends BlockEntity {
         out.putString("Queen", queenId.toString()); out.store("Entrance", BlockPos.CODEC, plan.entrance()); out.putString("Direction", plan.direction().getName());
         out.putLong("LoadedTicks", loadedTicks); out.putString("Condition", condition);
         out.putLong("StageDuration", stageDuration);
+        out.putBoolean("Operational",operational);out.putLong("LastLayingTick",lastLayingTick);out.putLong("ConsumedApples",archivedApples);out.putLong("ConsumedBerries",archivedBerries);out.putLong("ConsumedChickens",archivedChickens);
+        out.store("Original",com.mojang.serialization.Codec.STRING.listOf(),original.stream().map(UUID::toString).sorted().toList());
         var list = out.childrenList("Brood"); for (BroodRecord r : records) r.save(list.addChild());
         out.store("Consumed", com.mojang.serialization.Codec.STRING.listOf(), consumed.stream().map(UUID::toString).sorted().toList());
     }
     @Override protected void loadAdditional(ValueInput in) {
-        super.loadAdditional(in); records.clear(); consumed.clear(); queenId = null; plan = null;
+        super.loadAdditional(in); records.clear(); consumed.clear();original.clear(); queenId = null; plan = null;
         if (in.getString("Queen").isEmpty()) return;
         UUID id = UUID.fromString(in.getStringOr("Queen", "")); BlockPos entrance = in.read("Entrance", BlockPos.CODEC).orElseThrow();
         Direction direction = Direction.byName(in.getStringOr("Direction", ""));
@@ -159,8 +218,10 @@ public final class BroodPile extends BlockEntity {
             records.add(r);
         }
         for (String s : in.read("Consumed", com.mojang.serialization.Codec.STRING.listOf()).orElse(List.of())) consumed.add(UUID.fromString(s));
-        if (records.size() > CAPACITY || consumed.size() > CAPACITY || ids.stream().anyMatch(consumed::contains)
-                || records.size() + consumed.size() > CAPACITY) throw new IllegalArgumentException("Invalid clutch ownership");
+        original.addAll(in.read("Original",com.mojang.serialization.Codec.STRING.listOf()).orElseGet(()->java.util.stream.Stream.concat(consumed.stream(),records.stream().filter(BroodRecord::founding).map(BroodRecord::id)).map(UUID::toString).toList()).stream().map(UUID::fromString).toList());
+        if (records.size() > CAPACITY || ids.stream().anyMatch(consumed::contains)||original.size()!=CAPACITY||!java.util.stream.Stream.concat(ids.stream(),consumed.stream()).toList().containsAll(original)) throw new IllegalArgumentException("Invalid reusable nursery ownership");
+        operational=in.getBooleanOr("Operational",false);lastLayingTick=in.getLongOr("LastLayingTick",0);archivedApples=in.getLongOr("ConsumedApples",0);archivedBerries=in.getLongOr("ConsumedBerries",0);archivedChickens=in.getLongOr("ConsumedChickens",0);
+        if(lastLayingTick<0||lastLayingTick>in.getLongOr("LoadedTicks",0)||archivedApples<0||archivedBerries<0||archivedChickens<0)throw new IllegalArgumentException("Invalid nutrition history");
         queenId = id; plan = p; loadedTicks = Math.max(0, in.getLongOr("LoadedTicks", 0)); condition = in.getStringOr("Condition", "restored");
     }
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries) { return saveWithoutMetadata(registries); }

@@ -35,6 +35,12 @@ public final class RestartHarness implements ModInitializer {
     private TicketType ticket;
     private int ticks,stage,homeFirstTicks;
     private long probeAge;
+    private long geometryQueenAge, geometryWorkerAge, geometryPileTicks;
+    private LasiusNigerEntity geometryWorker;
+    private final BlockPos remote=HOME.offset(160,0,0);
+    private ItemStack isolatedCargo;
+    private BlockPos isolatedPosition;
+    private long isolatedCarrierAge;
     private boolean done;
     private LasiusNigerEntity queen,soilQueen;
     private NestPlan plan;
@@ -96,7 +102,8 @@ public final class RestartHarness implements ModInitializer {
         if(n!=null)food+=n.contents().stream().mapToInt(ItemStack::getCount).sum();
         for(var p:TransferCustody.get(l).contents()){if(WorkerTasks.food(p.stack()))food+=p.stack().getCount();if(p.stack().is(Items.DIRT))soil+=p.stack().getCount();}
         long mound=plan.deposits().stream().filter(p->l.getBlockState(p).is(NurseryBlocks.NEST_SOIL)).count();soil+=mound;
-        j.addProperty("total_food",food);j.addProperty("total_soil",soil);j.addProperty("mound",mound);
+        long ingested=queen.nutrition().consumedUnits()+pile(l).consumedFood();j.addProperty("consumed_food",ingested);j.addProperty("physical_food",food);j.addProperty("queen_sugar",queen.nutrition().sugar());j.addProperty("queen_protein",queen.nutrition().protein());j.addProperty("queen_age",queen.elapsedAgeTicks());j.addProperty("nursery_ticks",pile(l).loadedTicks());
+        j.addProperty("total_food",food+ingested);j.addProperty("total_soil",soil);j.addProperty("mound",mound);
         if(positive!=null){j.add("positive_soil",pos(positive));j.add("revoked_soil",pos(revoked));j.addProperty("positive_allowed",NaturalSoil.get(l).eligible(l,positive));j.addProperty("revoked_allowed",NaturalSoil.get(l).eligible(l,revoked));}
         return j;
     }
@@ -111,6 +118,8 @@ public final class RestartHarness implements ModInitializer {
                 for(var p:TransferCustody.get(l).contents())TransferFault.blockAt(p.position());
             }
         }
+        if(phase.equals("geometry")) { geometry(s,l);return; }
+        if(phase.equals("active")) { active(s,l);return; }
         if(phase.equals("probe")) {
             if(ticks<600)return;require(queen.elapsedAgeTicks()-probeAge>=400,"Development ticket must keep real entity ticks active beyond vanilla's 300 empty ticks");
             if(soilSite==null){soilSite=findSite(l);egg(l,soilSite);return;}
@@ -166,6 +175,61 @@ public final class RestartHarness implements ModInitializer {
             finish(s,"A-checkpoint",j);
         }
         if(ticks%500==0)PrimeAnts.LOGGER.info("T09 A tick={} stage={} workers={} cache={} pending={}",ticks,stage,workers(l).stream().map(w->w.position()+" "+w.workerTasks().phase()+" "+w.getMainHandItem()).toList(),cache(l)==null?null:cache(l).contents(),TransferCustody.get(l).contents());
+    }
+    private void geometry(MinecraftServer s,ServerLevel l) {
+        require(ticks<2400,"Bounded independent-ticket geometry probe");
+        if(stage==0 && ticks>=100 && l.isPositionEntityTicking(HOME) && workers(l).size()==3) {
+            hold(l,ChunkPos.containing(remote),2);stage=1;return;
+        }
+        if(stage==1 && l.isPositionEntityTicking(remote)) {
+            var j=audit(l);j.add("home_chunk",pos(new BlockPos(HOME.getX()>>4,0,HOME.getZ()>>4)));j.add("remote_chunk",pos(new BlockPos(remote.getX()>>4,0,remote.getZ()>>4)));j.addProperty("ticket_flags",14);j.addProperty("radius",2);j.addProperty("ticket_level",31);write("geometry-both-ticking",j);
+            l.getChunkSource().removeTicketWithRadius(ticket,ChunkPos.containing(remote),2);stage=2;return;
+        }
+        if(stage==2 && !NestPlan.loaded(l,remote) && !l.isPositionEntityTicking(remote)) {
+            geometryWorker=workers(l).getFirst();geometryQueenAge=queen.elapsedAgeTicks();geometryWorkerAge=geometryWorker.elapsedAgeTicks();geometryPileTicks=pile(l).loadedTicks();homeFirstTicks=0;write("geometry-home-start",audit(l));stage=3;return;
+        }
+        if(stage==3) {
+            require(!NestPlan.loaded(l,remote)&&!l.isPositionEntityTicking(remote)&&l.isPositionEntityTicking(HOME),"Independent remote remains unloaded while home ticks");
+            if(++homeFirstTicks<400)return;
+            var j=audit(l);j.addProperty("interval",400);j.addProperty("queen_age_delta",queen.elapsedAgeTicks()-geometryQueenAge);j.addProperty("worker_age_delta",geometryWorker.elapsedAgeTicks()-geometryWorkerAge);j.addProperty("nursery_tick_delta",pile(l).loadedTicks()-geometryPileTicks);j.addProperty("remote_loaded",NestPlan.loaded(l,remote));j.addProperty("remote_ticking",l.isPositionEntityTicking(remote));
+            require(queen.elapsedAgeTicks()-geometryQueenAge>=400&&geometryWorker.elapsedAgeTicks()-geometryWorkerAge>=400&&pile(l).loadedTicks()-geometryPileTicks>=400,"Home entities and nursery truly tick");finish(s,"geometry",j);
+        }
+    }
+    private void active(MinecraftServer s,ServerLevel l){
+        require(ticks<6000,"Bounded active-home carrier loading test stage="+stage);
+        if(stage==0&&ticks>=100&&queen.founding().ready()&&workers(l).size()==3){
+            name="T10-active-carrier-"+UUID.randomUUID();drop(l,plan.at(-3,0,1),TransferGameTest.stock(name,1));stage=1;return;
+        }
+        if(stage==1){
+            var w=workers(l).stream().filter(a->queen.founding().claimedBy(a)&&WorkerTasks.food(a.getMainHandItem())).findFirst();if(w.isEmpty())return;
+            carrier=w.get().getUUID();isolatedCargo=w.get().getMainHandItem().copy();hold(l,ChunkPos.containing(remote),2);
+            // Disclosed post-pickup positioning ONLY isolates loading geometry. This is not foraging/capture evidence.
+            var cp=ChunkPos.containing(remote);for(int x=cp.x()*16+2;x<cp.x()*16+14&&isolatedPosition==null;x++)for(int z=cp.z()*16+2;z<cp.z()*16+14;z++){
+                int y=l.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,x,z);var p=new BlockPos(x,y,z);if(NestPlan.walkable(l,p)){isolatedPosition=p;break;}
+            }
+            require(isolatedPosition!=null,"Small native remote landing probe has no supported ground");w.get().setPos(Vec3.atBottomCenterOf(isolatedPosition));w.get().getNavigation().stop();isolatedCarrierAge=w.get().elapsedAgeTicks();
+            require(s.saveEverything(false,true,true),"Normal isolated carrier checkpoint save");var j=audit(l);j.addProperty("carrier",carrier.toString());j.add("cargo",stack(l,isolatedCargo));j.add("isolated_position",pos(isolatedPosition));j.addProperty("positioning_disclosure","one post-pickup relocation ten chunks away, solely to isolate native unloading; no normal foraging/capture claim");j.addProperty("saved_carrier_age",isolatedCarrierAge);write("active-carrier-saved",j);
+            l.getChunkSource().removeTicketWithRadius(ticket,cp,2);stage=2;return;
+        }
+        if(stage==2&&l.getEntity(carrier)==null&&!NestPlan.loaded(l,isolatedPosition)&&!l.isPositionEntityTicking(isolatedPosition)){
+            geometryWorker=workers(l).getFirst();geometryQueenAge=queen.elapsedAgeTicks();geometryWorkerAge=geometryWorker.elapsedAgeTicks();geometryPileTicks=pile(l).loadedTicks();homeFirstTicks=0;
+            require(queen.founding().workerClaim().equals(carrier)&&ColonyMembers.get(l).member(carrier)!=null&&!ColonyMembers.get(l).member(carrier).dead(),"Absent carrier retains claim and occupied living identity");write("active-home-start",audit(l));stage=3;return;
+        }
+        if(stage==3){
+            require(l.getEntity(carrier)==null&&!NestPlan.loaded(l,isolatedPosition)&&!l.isPositionEntityTicking(isolatedPosition)&&l.isPositionEntityTicking(HOME)&&queen.founding().workerClaim().equals(carrier),"Home really ticks with same saved carrier absent and non-ticking");
+            require(audit(l).get("total_food").getAsLong()+isolatedCargo.getCount()==3,"Loaded physical food plus consumed units plus saved absent carrier cargo conserves initial two and one supplied unit");
+            if(++homeFirstTicks<400)return;var j=audit(l);j.addProperty("interval",400);j.addProperty("queen_age_delta",queen.elapsedAgeTicks()-geometryQueenAge);j.addProperty("worker_age_delta",geometryWorker.elapsedAgeTicks()-geometryWorkerAge);j.addProperty("nursery_tick_delta",pile(l).loadedTicks()-geometryPileTicks);j.addProperty("carrier_lookup_present",false);j.addProperty("carrier_loaded",NestPlan.loaded(l,isolatedPosition));j.addProperty("carrier_ticking",l.isPositionEntityTicking(isolatedPosition));j.addProperty("saved_cargo_units",isolatedCargo.getCount());j.addProperty("total_including_saved_carrier",3);j.addProperty("member_dead",ColonyMembers.get(l).member(carrier).dead());
+            require(queen.elapsedAgeTicks()-geometryQueenAge>=400&&geometryWorker.elapsedAgeTicks()-geometryWorkerAge>=400&&pile(l).loadedTicks()-geometryPileTicks>=400,"All three home biological tickers advance 400");require(s.saveEverything(false,true,true),"Normal active-home save");write("active-home-400",j);hold(l,ChunkPos.containing(isolatedPosition),2);stage=4;return;
+        }
+        if(stage==4&&l.getEntity(carrier) instanceof LasiusNigerEntity w){
+            require(ItemStack.matches(isolatedCargo,w.getMainHandItem())&&queen.founding().claimedBy(w)&&w.workerTasks().phase()==WorkerTasks.Phase.RETURN,"Same saved entity/cargo/claim/task returns through native chunk loading");
+            var j=audit(l);j.addProperty("carrier",carrier.toString());j.add("restored_cargo",stack(l,w.getMainHandItem()));j.addProperty("restored_carrier_age",w.elapsedAgeTicks());j.addProperty("saved_carrier_age",isolatedCarrierAge);write("active-carrier-restored",j);
+            // Resume at the original home route after validating the untouched remote identity/cargo.
+            w.setPos(Vec3.atBottomCenterOf(plan.outside()));w.getNavigation().stop();stage=5;return;
+        }
+        if(stage==5&&l.getEntity(carrier) instanceof LasiusNigerEntity w&&w.getMainHandItem().isEmpty()){
+            var j=audit(l);require(j.get("total_food").getAsLong()==3&&queen.founding().claimedBy(w),"Resumed original carrier physically delivers the same unit; total includes home consumption");j.addProperty("resumed_carrier",carrier.toString());j.addProperty("running_process_unloading_test",true);j.addProperty("cold_restart",false);j.addProperty("recovered",true);finish(s,"active",j);
+        }
     }
     private BlockPos findSite(ServerLevel l) {
         // Read-only audit of the accepted archive found this already generated, positively witnessed

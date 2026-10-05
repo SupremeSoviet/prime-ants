@@ -206,7 +206,11 @@ public final class BroodGameTest {
                 checked[0]=true;c.assertTrue(queen[0].founding().sealed(),"Owned pile alone must be accepted");var states=state(p);long reserve=queen[0].bodyReserve();
                 var tag=p.saveWithFullMetadata(c.getLevel().registryAccess());var plan=queen[0].founding().plan();BlockPos obstruction=plan.at(5,1,-1);
                 c.getLevel().setBlock(obstruction,Blocks.STONE.defaultBlockState(),3);
-                var chunk=c.getLevel().getChunkAt(p.getBlockPos());var serial=net.minecraft.world.level.chunk.storage.SerializableChunkData.copyOf(c.getLevel(),chunk);
+                // The obstruction can be across a chunk face from the pile in a fresh UUID world.
+                // Serialize its actual chunk; reading that coordinate from the pile's chunk tests unrelated local bits.
+                var chunk=c.getLevel().getChunkAt(obstruction);c.assertTrue(chunk.getPos().equals(net.minecraft.world.level.ChunkPos.containing(obstruction)),"Serialize the physical obstruction's own chunk");
+                PrimeAnts.LOGGER.info("T10 obstruction serialization pileChunk={} obstructionChunk={}",net.minecraft.world.level.ChunkPos.containing(p.getBlockPos()),chunk.getPos());
+                var serial=net.minecraft.world.level.chunk.storage.SerializableChunkData.copyOf(c.getLevel(),chunk);
                 var parsed=net.minecraft.world.level.chunk.storage.SerializableChunkData.parse(c.getLevel(),c.getLevel().palettedContainerFactory(),serial.write());
                 var reload=parsed.read(c.getLevel(),c.getLevel().getPoiManager(),new net.minecraft.world.level.chunk.storage.RegionStorageInfo("test",c.getLevel().dimension(),"chunk"),chunk.getPos());
                 c.assertTrue(reload.getBlockState(obstruction).is(Blocks.STONE),"FULL chunk preserves physical invalidity");

@@ -108,7 +108,7 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
                     net.minecraft.world.level.chunk.status.ChunkStatus.FULL, false) == null) return "enclosure_chunk_unavailable";
         }
         if (plugs().stream().anyMatch(p -> !(operational && ColonyPlugs.get(level).opened(level,p,owner))
-                && !level.getBlockState(p).is(net.minecraft.world.level.block.Blocks.DIRT))) return "enclosure_plug_missing";
+                && !ColonyPlugs.material(level.getBlockState(p)))) return "enclosure_plug_missing";
         if (operational) {
             if (plugs().stream().anyMatch(p -> !ColonyPlugs.get(level).opened(level,p,owner) && !ColonyPlugs.get(level).owned(level,p,owner))) return "enclosure_plug_ownership_revoked";
             for (int f=0;f<2;f++) if (!loaded(level,at(f,0,-f)) || !walkable(level,at(f,0,-f))) return "enclosure_route_obstructed";

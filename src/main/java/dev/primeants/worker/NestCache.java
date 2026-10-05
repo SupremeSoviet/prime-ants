@@ -35,14 +35,23 @@ public final class NestCache extends BlockEntity {
     public boolean establish(LasiusNigerEntity w, NestPlan p) {
         if (!(level instanceof ServerLevel l) || colony != null || !getBlockPos().equals(p.cache()) || w.queenId()==null
                 || !(l.getEntity(w.queenId()) instanceof LasiusNigerEntity q) || !q.founding().claimedBy(w)
+                || !w.isAlive() || w.isNoAi() || w.isCallow()
                 || !WorkerTasks.reaches(l,w,Vec3.atBottomCenterOf(getBlockPos()).add(0,0.15,0))) return false;
         colony=w.queenId(); plan=NestPlan.geometry(p.entrance(),p.direction()); changed(); return true;
     }
     public boolean deposit(LasiusNigerEntity w, NestPlan p) {
-        if (!(level instanceof ServerLevel l) || !ownedBy(w.queenId(),p) || !w.workerTasks().authorized(l)
+        if (!(level instanceof ServerLevel l) || !ownedBy(w.queenId(),p) || !(w.workerTasks().authorized(l)||w.workerTasks().nursingAuthorized(l))
                 || contents.size()>=CAPACITY || !WorkerTasks.food(w.getMainHandItem()) || w.getMainHandItem().getCount()!=1
                 || !WorkerTasks.reaches(l,w,Vec3.atBottomCenterOf(getBlockPos()).add(0,0.15,0)) || p.nurseryProblem(l,colony,true)!=null) return false;
         contents.add(w.getMainHandItem().copy()); w.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND,ItemStack.EMPTY); changed(); return true;
+    }
+    public boolean withdraw(LasiusNigerEntity w,NestPlan p){
+        if(!(level instanceof ServerLevel l)||!ownedBy(w.queenId(),p)||!w.workerTasks().nursingAuthorized(l)||!w.getMainHandItem().isEmpty()
+                ||!WorkerTasks.reaches(l,w,Vec3.atBottomCenterOf(getBlockPos()).add(0,0.15,0))||p.nurseryProblem(l,colony,true)!=null)return false;
+        for(int i=0;i<contents.size();i++)if(w.workerTasks().hasRecipient(l,contents.get(i))){
+            w.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND,contents.remove(i));changed();return true;
+        }
+        return false;
     }
     private void changed() {
         setChanged(); if (level==null || level.isClientSide()) return;

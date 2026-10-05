@@ -6,6 +6,7 @@ import dev.primeants.PrimeAnts;
 import dev.primeants.entity.AntEntities;
 import dev.primeants.entity.LasiusNigerEntity;
 import dev.primeants.founding.NaturalSoil;
+import dev.primeants.founding.ColonyPlugs;
 import dev.primeants.founding.NestPlan;
 import dev.primeants.founding.QueenFounding;
 import dev.primeants.item.AntItems;
@@ -39,6 +40,30 @@ import com.mojang.authlib.GameProfile;
 
 /** Controlled origin fixtures only here. No manual ticks, entity movement, plan completion or mutation shortcuts. */
 public final class QueenFoundingGameTest {
+    @GameTest(maxTicks=30000,structure="prime_ants_test:idle_ground")
+    public void compactedSealKeepsOwnedSoilBesideGrassOverRealTicks(GameTestHelper c){
+        terrain(c,Blocks.DIRT.defaultBlockState(),true);var q=egg(c);boolean[] checked={false};
+        c.onEachTick(()->{
+            // Negative caregiver absence holds the seal for observation; no manual block/entity tick.
+            if(checked[0])c.getLevel().getEntitiesOfClass(LasiusNigerEntity.class,c.getBounds(),w->q.getUUID().equals(w.queenId())).forEach(w->w.setNoAi(true));
+            if(checked[0]||!q.founding().sealed())return;checked[0]=true;var p=q.founding().plan();
+            c.getLevel().setBlock(p.at(2,1,0),Blocks.GRASS_BLOCK.defaultBlockState(),3);
+            c.assertTrue(p.plugs().stream().allMatch(b->c.getLevel().getBlockState(b).is(dev.primeants.brood.NurseryBlocks.NEST_SOIL)&&ColonyPlugs.get(c.getLevel()).owned(c.getLevel(),b,q.getUUID())),"Two actual carried units become owned compacted soil, outside vanilla grass's minecraft:dirt target");
+            c.runAfterDelay(1000,()->{c.assertTrue(q.founding().sealed()&&q.bodyReserve()==0&&p.plugs().stream().allMatch(b->c.getLevel().getBlockState(b).is(dev.primeants.brood.NurseryBlocks.NEST_SOIL)&&ColonyPlugs.get(c.getLevel()).owned(c.getLevel(),b,q.getUUID()))&&q.founding().removed()==24&&q.founding().deposited()==22&&q.founding().plugged()==2,"Real first-clutch care finishes, ownership persists and 24=22+2 despite adjacent grass; no refill or repair");c.succeed();});
+        });
+    }
+    @GameTest(maxTicks=30000,structure="prime_ants_test:idle_ground")
+    public void settledQueenMayTouchEnclosureFaceWithoutCrossingIt(GameTestHelper c){
+        terrain(c,Blocks.DIRT.defaultBlockState(),true);var q=egg(c);boolean[] checked={false};
+        c.onEachTick(()->{
+            if(checked[0]||!q.founding().sealed())return;checked[0]=true;var p=q.founding().plan();var a=p.at(3,-1,-2);var b=p.at(5,1,-1);
+            double maxX=Math.max(a.getX(),b.getX())+1,minZ=Math.min(a.getZ(),b.getZ()),maxZ=Math.max(a.getZ(),b.getZ())+1;
+            q.setPos(maxX-q.getBbWidth()/2.0,p.chamber().getY(),(minZ+maxZ)/2);q.setOnGround(true);
+            c.assertTrue(q.getBoundingBox().maxX==maxX&&c.getLevel().noCollision(q,q.getBoundingBox().deflate(0.001)),"Negative geometric fixture touches exactly one enclosure face with ordinary collision");
+            c.assertTrue(q.founding().ready(),"A body wholly inside and touching the face is ready; max point is not an exclusive containment test");
+            q.setPos(q.getX()+0.001,q.getY(),q.getZ());c.assertTrue(!q.founding().ready(),"A real 0.001-block crossing still revokes readiness; no epsilon or enlargement");c.succeed();
+        });
+    }
     private static final BlockPos ENTRANCE = new BlockPos(7, 4, 4);
     void terrain(GameTestHelper c, BlockState material, boolean observed) {
         terrain(c, material, observed, false);
@@ -83,7 +108,7 @@ public final class QueenFoundingGameTest {
         if (f.plan() != null) {
             for (BlockPos p : f.plan().deposits()) if (c.getLevel().getBlockState(p).is(dev.primeants.brood.NurseryBlocks.NEST_SOIL)) blocks++;
             c.assertTrue(blocks == f.deposited(), "Recorded deposits must be real blocks");
-            for (BlockPos p : f.plan().plugs().subList(0, f.plugged())) if (c.getLevel().getBlockState(p).is(Blocks.DIRT))
+            for (BlockPos p : f.plan().plugs().subList(0, f.plugged())) if (ColonyPlugs.material(c.getLevel().getBlockState(p)))
                 c.assertTrue(!NaturalSoil.get(c.getLevel()).eligible(c.getLevel(), p), "Plugged recovered soil must remain non-natural");
         }
         int items = c.getLevel().getEntitiesOfClass(ItemEntity.class, c.getBounds()).stream().filter(i -> i.getItem().is(Items.DIRT)).mapToInt(i -> i.getItem().getCount()).sum();
@@ -142,8 +167,7 @@ public final class QueenFoundingGameTest {
             var f = queen.founding();
             if (!edited[0] && f.phase() == QueenFounding.Phase.SEALING && f.plugged() == (removePlug ? 2 : 1)) {
                 edited[0] = true; breach[0] = removePlug ? f.plan().plugs().getFirst() : f.plan().at(4, 2, -2);
-                c.assertTrue(c.getLevel().getBlockState(breach[0]).is(Blocks.DIRT)
-                        || !removePlug && c.getLevel().getBlockState(breach[0]).is(dev.primeants.brood.NurseryBlocks.NEST_SOIL), "Intervene on an existing physical soil block (plugs remain dirt)");
+                c.assertTrue(ColonyPlugs.material(c.getLevel().getBlockState(breach[0])), "Intervene on the existing physical dirt/nest-soil block before removing it");
                 c.getLevel().setBlock(breach[0], Blocks.AIR.defaultBlockState(), 3);
                 PrimeAnts.LOGGER.info("T06 intervention kind={} tick={} phase={} removed={} placedPlugs={} breach={} queen={}",
                         removePlug ? "plug" : "side_wall", c.getTick(), f.phase(), f.removed(), f.plugged(), breach[0], queen.getUUID());
@@ -151,7 +175,7 @@ public final class QueenFoundingGameTest {
             if (edited[0] && f.phase() == QueenFounding.Phase.SETTLED) {
                 PrimeAnts.LOGGER.error("T06 FALSE SETTLEMENT kind={} tick={} phase={} reason={} sealed={} livePlugs={} shell={}",
                         removePlug ? "plug" : "side_wall", c.getTick(), f.phase(), f.reason(), f.sealed(),
-                        f.plan().plugs().stream().filter(p -> c.getLevel().getBlockState(p).is(Blocks.DIRT)).count(), f.plan().enclosedChamber(c.getLevel()));
+                        f.plan().plugs().stream().filter(p -> ColonyPlugs.material(c.getLevel().getBlockState(p))).count(), f.plan().enclosedChamber(c.getLevel()));
             }
             c.assertTrue(f.phase() != QueenFounding.Phase.SETTLED, "Breached enclosure must not announce successful settlement: " + f.reason());
             if (!checked[0] && f.phase() == QueenFounding.Phase.FAILED) {
@@ -162,7 +186,7 @@ public final class QueenFoundingGameTest {
                     c.assertTrue(!f.sealed() && f.phase() == QueenFounding.Phase.FAILED, "Failed enclosure remains unready");
                     c.assertTrue(f.removed() == removed && f.carried() == carried && f.plugged() == placed && frozen.equals(snapshot(c)), "Failure must not excavate, refund soil or repair external edits");
                     balance(c, queen);
-                    long livePlugs = f.plan().plugs().stream().filter(p -> c.getLevel().getBlockState(p).is(Blocks.DIRT)).count();
+                    long livePlugs = f.plan().plugs().stream().filter(p -> ColonyPlugs.material(c.getLevel().getBlockState(p))).count();
                     int externallyRemoved = removePlug ? 1 : 0;
                     c.assertTrue(f.removed() == 24 && f.deposited() == 22 && f.released() == 0 && f.carried() == 0 && f.plugged() == 2
                             && livePlugs == 2 - externallyRemoved && 24 == 22 + 0 + livePlugs + externallyRemoved,

@@ -37,8 +37,39 @@ ext.validateClientEvidence = { Map request ->
     require(Instant.parse(capture.started_utc).toEpochMilli() >= request.started_epoch_ms, 'Stale capture start')
     long completed = Instant.parse(capture.completed_utc).toEpochMilli()
     boolean foraging = request.scenario == 'foraging'
-    def frames = capture.observations.findAll { it.event == (foraging ? 'foraging_frame' : 'brood_frame') }
-    if (!foraging) {
+    boolean growth = request.scenario == 'growth'
+    def frames = capture.observations.findAll { it.event == (growth?'growth_frame':foraging ? 'foraging_frame' : 'brood_frame') }
+    if(growth){
+        require(frames.size()==4&&frames.collect{it.stage}==['nurse-carrying','nurse-feeding','new-brood','additional-callow'],'Missing physical growth sequence')
+        require(capture.queen_uuid&&capture.food_source&&capture.staged_terrain_edits==0&&capture.ant_teleports==0&&!capture.ai_disabled&&!capture.animation_poses_forced&&capture.injected_brood==0&&capture.injected_food==0&&capture.summoned_workers==0&&capture.reserve_edits==0,'Staged growth evidence')
+        require(capture.stage_ticks==Math.ceil(12000/capture.brood_multiplier)&&capture.callow_ticks==Math.ceil(4800/capture.brood_multiplier)&&capture.laying_cadence==Math.ceil(1200/capture.brood_multiplier)&&capture.initial_body_reserve==39000&&capture.egg_cost==1000&&capture.larva_cost==12000&&capture.adult_capacity==30&&capture.nursery_capacity==3,'Wrong production durations, reserve or capacity')
+        def sources=capture.observations.findAll{it.source_uuid}
+        require(sources.size()==2&&sources.collect{it.source_uuid}.toSet().size()==2&&sources.every{it.method=='creative inventory -> ordinary client DROP_ALL_ITEMS packet'}&&sources.find{it.item=='minecraft:apple'}?.count==6&&sources.find{it.item=='minecraft:chicken'}?.count==8,'Supplied stacks must be 6 apples and 8 raw chicken from ordinary player packets')
+        def original=capture.first_generation.original_brood_ids.toSet()
+        def firstWorkers=capture.first_generation.workers.collect{it.uuid}.toSet()
+        require(original.size()==3&&firstWorkers.size()==3&&capture.first_generation.workers.every{it.alive&&it.callow_visual==1000&&it.queen_id==capture.queen_uuid}&&capture.first_generation.workers.collect{it.brood_id}.toSet()==original,'First generation must remain identifiable')
+        frames.eachWithIndex{frame,n->
+            require(frame.uuid==capture.queen_uuid&&frame.form=='queen'&&frame.ready&&!frame.sealed&&frame.phase=='SETTLED'&&frame.lifecycle=='OPEN'&&frame.owned_openings==2&&frame.live_plugs==0&&frame.mound_blocks==24&&frame.worker_soil==0&&frame.underground_grass==0,'Invalid real growth habitat')
+            require(frame.original_brood_ids.toSet()==original&&frame.consumed_brood_ids.toSet().containsAll(original)&&frame.workers.collect{it.uuid}.toSet().containsAll(firstWorkers)&&frame.workers.collect{it.uuid}.toSet().size()==frame.workers.size()&&frame.workers.every{it.alive&&it.queen_id==capture.queen_uuid}&&frame.body_reserve==0&&frame.live_worker_count==frame.workers.size()&&frame.live_adult_count==frame.live_worker_count+1,'Changed lineage, duplicate body or replenished reserve')
+            require(frame.brood.size()<=3&&frame.occupied_worker_identities>=frame.live_worker_count&&frame.occupied_worker_identities+frame.brood.size()<=29,'Capacity must count real identities including unavailable members')
+            require(frame.world_food+frame.custody_food+frame.cache_contents.sum(0){it.count}+frame.workers.findAll{it.cargo_item in ['minecraft:apple','minecraft:sweet_berries','minecraft:chicken']}.sum(0){it.cargo_count}+frame.queen_consumed+frame.larva_consumed==14,'Physical stock plus genuine terminal consumption must conserve all 14 supplied units')
+            def q=frame.queen_nutrition;def l=frame.larva_receipts
+            require(q.gained_sugar==q.apples*4000+q.berries*2000&&q.gained_protein==q.chickens*8000&&q.gained_sugar==q.sugar+q.spent_sugar&&q.gained_protein==q.protein+q.spent_protein&&q.sugar<=8000&&q.protein<=16000&&frame.queen_consumed==q.apples+q.berries+q.chickens,'Queen credit or finite storage disagrees with actual consumed yields')
+            require(l.gained_sugar==l.apples*4000+l.berries*2000&&l.gained_protein==l.chickens*8000&&frame.larva_consumed==l.apples+l.berries+l.chickens,'Larval terminal consumption yields mismatch')
+            def newIds=(frame.brood.collect{it.id}+frame.consumed_brood_ids.findAll{!original.contains(it)}).toSet()
+            require(!frame.brood.any{original.contains(it.id)||it.founding}&&q.spent_sugar==newIds.size()*1000&&q.spent_protein==newIds.size()*2000,'New egg costs and distinct generation IDs disagree')
+            frame.brood.each{r->require(r.gained_sugar==r.apples*4000+r.berries*2000&&r.gained_protein==r.chickens*8000&&r.gained_sugar==r.sugar+r.spent_sugar&&r.gained_protein==r.protein+r.spent_protein&&r.nourishment==r.spent_sugar+r.spent_protein,'Larva must own its finite nutrition')}
+            if(n<2){
+                def nurse=frame.workers.find{it.uuid==frame.subject_uuid}
+                require(nurse&&nurse.uuid!=frame.worker_claim&&nurse.nursing&&nurse.task=='NURSE_FEED'&&nurse.cargo_count==1&&nurse.callow_visual==1000,'Missing eligible physical nurse cargo')
+                if(n==1)require(nurse.feeding_ticks>0&&nurse.feeding_ticks<20,'Missing real loaded-tick feeding action')
+                require(frame.screenshot_render_extractions.any{it.uuid==nurse.uuid&&it.carried_soil_rendered&&it.carried_item==nurse.cargo_item&&it.client_carried_soil_units==1},'Actual nurse mandible food is not rendered')
+            }
+            if(n==2)require(frame.brood.any{it.stage=='LARVA'}&&frame.workers.findAll{firstWorkers.contains(it.uuid)}.every{it.callow_visual==1000},'New brood must coexist with mature first generation')
+            if(n==3){def pale=frame.workers.find{it.uuid==frame.subject_uuid};require(frame.live_worker_count>3&&pale&&!firstWorkers.contains(pale.uuid)&&!original.contains(pale.brood_id)&&pale.callow_visual<1000&&frame.consumed_brood_ids.contains(pale.brood_id)&&frame.screenshot_render_extractions.any{it.uuid==pale.uuid&&it.callow_visual<1000},'Additional pale worker must emerge from identified new brood')}
+        }
+        require(capture.final.live_worker_count>3&&capture.final.queen_consumed>0&&capture.final.larva_consumed>0,'Food-fed real growth did not complete')
+    }else if (!foraging) {
     require(request.scenario == 'brood', 'Expected first-clutch capture contract')
     require(frames.size() == 5 && frames.collect { it.stage } == ['eggs','larvae','cocoons','callows','mound'], 'Missing captures')
     require(capture.queen_uuid && frames.every { it.uuid == capture.queen_uuid && it.form == 'queen' }, 'Queen identity changed')
@@ -242,6 +273,52 @@ tasks.register('testForagingEvidenceValidator') {
     }
 }
 tasks.named('check') {dependsOn tasks.named('testForagingEvidenceValidator')}
+
+tasks.register('testGrowthEvidenceValidator') {
+    dependsOn tasks.named('testForagingEvidenceValidator')
+    doLast {
+        File dir=layout.buildDirectory.dir('growth-validator-fixtures').get().asFile;dir.mkdirs()
+        long started=System.currentTimeMillis()-5000
+        def request=[run_id:'fixture-growth',capture_prefix:'fixture',started_epoch_ms:started,scenario:'growth',capture_directory:dir.absolutePath,model_report:new File(dir,'model.xml').absolutePath,provenance:new File(dir,'capture.json').absolutePath]
+        file(request.model_report).text=file('build/test-results/client-model/headless.xml').text.replaceFirst(/name="run_id" value="[^"]*"/,'name="run_id" value="fixture-growth"')
+        def emptyNutrition=[sugar:0,protein:0,apples:0,berries:0,chickens:0,gained_sugar:0,gained_protein:0,spent_sugar:0,spent_protein:0]
+        def original=['old-0','old-1','old-2'];def originalWorkers=(0..2).collect{[uuid:"worker-${it}".toString(),brood_id:original[it],queen_id:'queen',alive:true,callow_visual:1000,cargo_count:0,cargo_item:'minecraft:air',task:'NURSE_CACHE',nursing:true,feeding_ticks:0]}
+        def capture=[run_id:request.run_id,capture_prefix:'fixture',entrypoint:'dev.primeants.gametest.AntCaptureTest',status:'success',started_utc:Instant.ofEpochMilli(started).toString(),queen_uuid:'queen',food_source:'ordinary drops',staged_terrain_edits:0,ant_teleports:0,ai_disabled:false,animation_poses_forced:false,injected_brood:0,injected_food:0,summoned_workers:0,reserve_edits:0,work_multiplier:20,brood_multiplier:100,stage_ticks:120,callow_ticks:48,laying_cadence:12,adult_capacity:30,nursery_capacity:3,initial_body_reserve:39000,egg_cost:1000,larva_cost:12000,first_generation:[original_brood_ids:original,workers:originalWorkers],observations:[]]
+        ['nurse-carrying','nurse-feeding','new-brood','additional-callow'].eachWithIndex{stage,n->
+            File png=new File(dir,"fixture-${stage}.png");ImageIO.write(new java.awt.image.BufferedImage(1600,1000,java.awt.image.BufferedImage.TYPE_INT_RGB),'png',png)
+            def workers=originalWorkers.collect{new LinkedHashMap(it)}
+            if(n<2)workers[1]=workers[1]+[cargo_count:1,cargo_item:'minecraft:apple',task:'NURSE_FEED',feeding_ticks:n==1?5:0]
+            if(n==3)workers.add([uuid:'worker-new',brood_id:'new-brood',queen_id:'queen',alive:true,callow_visual:20,cargo_count:0,cargo_item:'minecraft:air',nursing:false,task:'NURSERY',feeding_ticks:0])
+            def q=n<2?emptyNutrition:(emptyNutrition+[sugar:3000,protein:6000,apples:1,chickens:1,gained_sugar:4000,gained_protein:8000,spent_sugar:1000,spent_protein:2000])
+            def l=[apples:n==3?1:0,berries:0,chickens:n==3?1:0,gained_sugar:n==3?4000:0,gained_protein:n==3?8000:0]
+            def brood=[]
+            if(n==2)brood=[emptyNutrition + [id:'new-brood',queen_id:'queen',stage:'LARVA',founding:false,progress:0,nourishment:0]]
+            def subject=n<2?'worker-1':n==3?'worker-new':'queen'
+            def renders=[[uuid:'queen',form:'queen',callow_visual:1000],[uuid:subject,form:'worker',callow_visual:n==3?20:1000,carried_item:n<2?'minecraft:apple':'minecraft:air',carried_soil_rendered:n<2,client_carried_soil_units:n<2?1:0]]
+            def frame=[event:'growth_frame',stage:stage,subject_uuid:subject,uuid:'queen',form:'queen',phase:'SETTLED',lifecycle:'OPEN',ready:true,sealed:false,owned_openings:2,live_plugs:0,mound_blocks:24,worker_soil:0,underground_grass:0,live_worker_count:workers.size(),live_adult_count:workers.size()+1,workers:workers,original_brood_ids:original,consumed_brood_ids:n==3?original+['new-brood']:original,brood:brood,body_reserve:0,world_food:[13,13,12,10][n],custody_food:0,cache_contents:[],worker_claim:'worker-0',queen_nutrition:q,queen_consumed:n<2?0:2,larva_consumed:n==3?2:0,larva_receipts:l,occupied_worker_identities:workers.size(),ai_enabled:true,normal_physics:true,work_multiplier:20,removed:24,carried:0,deposited:22,released:0,plugged:2,run_id:request.run_id,image:png.absolutePath,modified_epoch_ms:png.lastModified(),capture_started_utc:Instant.ofEpochMilli(started).toString(),width:1600,height:1000,sha256:MessageDigest.getInstance('SHA-256').digest(png.bytes).encodeHex().toString(),screenshot_render_extractions:renders]
+            capture.observations.add(frame)
+        }
+        ['minecraft:apple','minecraft:chicken'].eachWithIndex{item,n->capture.observations.add([source_uuid:"drop-${n}".toString(),item:item,count:n==0?6:8,method:'creative inventory -> ordinary client DROP_ALL_ITEMS packet'])}
+        capture.final=capture.observations[3];capture.completed_utc=Instant.now().toString()
+        file(request.provenance).text=JsonOutput.toJson(capture);def results=[[fixture:'valid-growth',result:validateClientEvidence(request).status]]
+        def reject={String name,Closure mutate->def bad=new JsonSlurper().parseText(JsonOutput.toJson(capture));mutate(bad);file(request.provenance).text=JsonOutput.toJson(bad);boolean rejected=false;try{validateClientEvidence(request)}catch(GradleException e){rejected=true;results.add([fixture:name,result:'rejected',message:e.message])};if(!rejected)throw new GradleException('Growth fixture incorrectly passed: '+name)}
+        reject('remote-cache-injection'){it.injected_food=14}
+        reject('food-duplication'){it.observations[0].world_food=14}
+        reject('incorrect-yield-credit'){it.observations[2].queen_nutrition.gained_sugar=5000}
+        reject('unfunded-new-egg'){it.observations[2].queen_nutrition.spent_protein=0}
+        reject('nurse-steals-forager-claim'){it.observations[0].subject_uuid='worker-0'}
+        reject('callow-nurse'){it.observations[0].workers[1].callow_visual=20}
+        reject('unrendered-nurse-cargo'){it.observations[0].screenshot_render_extractions=[]}
+        reject('missing-feeding-action'){it.observations[1].workers[1].feeding_ticks=0}
+        reject('relabelled-first-clutch'){it.observations[2].brood[0].id='old-0'}
+        reject('relabelled-original-worker'){it.observations[3].subject_uuid='worker-1'}
+        reject('unloaded-members-free-capacity'){it.observations[3].occupied_worker_identities=3}
+        reject('supply-count-mismatch'){it.observations[4].count=7}
+        reject('stale-growth-image'){it.observations[0].modified_epoch_ms=0}
+        new File(dir,'results.json').text=JsonOutput.prettyPrint(JsonOutput.toJson(results))
+    }
+}
+tasks.named('check'){dependsOn tasks.named('testGrowthEvidenceValidator')}
 
 tasks.register('validateClientEvidenceFile') {
     doLast {

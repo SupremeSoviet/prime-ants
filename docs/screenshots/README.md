@@ -186,3 +186,13 @@ A1 stopped during protected founding; A2 stopped before an egg. Their failure pr
 - [t08-a4-sugar.png](t08-a4-sugar.png) ? Forager carrying the ordinary player-dropped apple unit; Final current-run production capture.
 - [t08-a4-protein.png](t08-a4-protein.png) ? Forager carrying the ordinary player-dropped raw chicken unit; Final current-run production capture.
 - [t08-a4-cache.png](t08-a4-cache.png) ? Canonical food cache inside the nest with its queen and genuine workers; Final current-run production capture.
+
+
+## T10 physical nurse feeding and continued growth
+
+- `t10-a3-nurse-carrying.png`: nurse-carrying, actual subject cca19ffc-a2c6-3263-b439-59879f2097e6; new brood and extra pale worker correlate to 7177a838-67b3-45d8-adf5-f9ebce1ac7da; run e530f5cf-9ac5-491b-8675-fdd87c044293.
+- `t10-a3-nurse-feeding.png`: nurse-feeding, actual subject cca19ffc-a2c6-3263-b439-59879f2097e6; new brood and extra pale worker correlate to 7177a838-67b3-45d8-adf5-f9ebce1ac7da; run e530f5cf-9ac5-491b-8675-fdd87c044293.
+- `t10-a3-new-brood.png`: new-brood, actual subject 7177a838-67b3-45d8-adf5-f9ebce1ac7da; new brood and extra pale worker correlate to 7177a838-67b3-45d8-adf5-f9ebce1ac7da; run e530f5cf-9ac5-491b-8675-fdd87c044293.
+- `t10-a3-additional-callow.png`: additional-callow, actual subject 5635da1f-0d5b-367d-a204-a159149bac68; new brood and extra pale worker correlate to 7177a838-67b3-45d8-adf5-f9ebce1ac7da; run e530f5cf-9ac5-491b-8675-fdd87c044293.
+
+A1 files are provisional: real growth captured, then habitat validation rejected exact wall contact. A2 has failed provenance and no PNGs after native grass broke the claustral seal. Accepted A3 supplies 6 apples / 8 chickens through ordinary player drops; saved audit confirms 8 consumed and four live workers. Spectator/night vision only; no staged ants, AI pause, forced brood or inventory injection.

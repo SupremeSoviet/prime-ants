@@ -65,12 +65,16 @@ public final class WorkerForagingGameTest {
     private int foodTotal(GameTestHelper c,LasiusNigerEntity q) {
         int world=c.getLevel().getEntitiesOfClass(ItemEntity.class,c.getBounds().inflate(8),i->i.isAlive()&&WorkerTasks.food(i.getItem())).stream().mapToInt(i->i.getItem().getCount()).sum();
         int held=workers(c,q).stream().filter(w->WorkerTasks.food(w.getMainHandItem())).mapToInt(w->w.getMainHandItem().getCount()).sum();
-        return world+held+(cache(c,q)==null?0:cache(c,q).size());
+        var p=q.founding().plan()!=null&&c.getLevel().getBlockEntity(q.founding().plan().nursery()) instanceof dev.primeants.brood.BroodPile b?b:null;
+        int custody=TransferCustody.get(c.getLevel()).contents().stream().filter(t->c.getBounds().inflate(8).contains(t.position())&&WorkerTasks.food(t.stack())).mapToInt(t->t.stack().getCount()).sum();
+        return world+held+custody+(cache(c,q)==null?0:cache(c,q).size())+(int)q.nutrition().consumedUnits()+(p==null?0:(int)p.consumedFood());
     }
+    // Transfer-specific fixtures establish legitimate caregiver absence, keeping canonical stock reviewable.
+    void absentCaregivers(GameTestHelper c,LasiusNigerEntity q){if(q.founding().workerClaim()!=null)for(var w:workers(c,q))if(!w.isCallow()&&!q.founding().claimedBy(w))w.setNoAi(true);}
     private long mound(GameTestHelper c,NestPlan p) { return p.deposits().stream().filter(b->c.getLevel().getBlockState(b).is(NurseryBlocks.NEST_SOIL)).count(); }
     private void soilBalance(GameTestHelper c,LasiusNigerEntity q) {
         var p=q.founding().plan();if(p==null||q.founding().phase()!=QueenFounding.Phase.SETTLED)return;
-        long plugs=p.plugs().stream().filter(b->c.getLevel().getBlockState(b).is(Blocks.DIRT)).count();
+        long plugs=p.plugs().stream().filter(b->ColonyPlugs.material(c.getLevel().getBlockState(b))).count();
         long held=workers(c,q).stream().filter(w->w.getMainHandItem().is(Items.DIRT)).mapToInt(w->w.getMainHandItem().getCount()).sum();
         long drops=c.getLevel().getEntitiesOfClass(ItemEntity.class,c.getBounds().inflate(8),i->i.isAlive()&&i.getItem().is(Items.DIRT)).stream().mapToInt(i->i.getItem().getCount()).sum();
         c.assertTrue(mound(c,p)+plugs+held+drops==24,"Actual soil objects conserve 24: mound="+mound(c,p)+" plugs="+plugs+" held="+held+" dropped="+drops);
@@ -93,12 +97,12 @@ public final class WorkerForagingGameTest {
             if(dropped[0])c.assertTrue(foodTotal(c,q)==2,"World + mandibles + canonical cache conserve two food units");
             soilBalance(c,q);
             if(c.getTick()%300==0)PrimeAnts.LOGGER.info("T08 trace tick={} lifecycle={} ready={} workers={}",c.getTick(),f.lifecycle(),f.ready(),ws.stream().map(w->w.position()+" "+w.workerTasks().phase()+" "+w.workerTasks().reason()+" "+w.getMainHandItem()).toList());
-            var n=cache(c,q);if(n!=null&&n.size()==2) {
+            var n=cache(c,q);if(n!=null&&n.size()+q.nutrition().consumedUnits()==2) {
                 c.assertTrue(callow[0]&&sugar[0]&&protein[0]&&outside[0]&&ws.size()==3,"Observe genuine callows, crossing and both carried foods");
                 c.assertTrue(f.ready()&&!f.sealed()&&f.lifecycle()==QueenFounding.Lifecycle.OPEN&&p.nurseryProblem(c.getLevel(),q.getUUID())!=null&&p.nurseryProblem(c.getLevel(),q.getUUID(),true)==null,"Operational opening is admitted; strict claustral validation still rejects open plugs");
                 c.assertTrue(mound(c,p)==24&&p.plugs().stream().allMatch(b->c.getLevel().getBlockState(b).isAir()),"24 physical mound units");
                 for(int step=0;step<3;step++)c.assertTrue(NestPlan.walkable(c.getLevel(),p.at(step,0,-step)),"Opened two-high supported entrance route");
-                c.assertTrue(n.contents().stream().anyMatch(s->s.is(Items.APPLE))&&n.contents().stream().anyMatch(s->s.is(Items.CHICKEN))&&q.bodyReserve()==0,"Canonical sugary/protein storage does not refill reserves");
+                c.assertTrue((n.contents().stream().anyMatch(s->s.is(Items.APPLE))||q.nutrition().apples()>0)&&(n.contents().stream().anyMatch(s->s.is(Items.CHICKEN))||q.nutrition().chickens()>0)&&q.bodyReserve()==0,"Physical storage or verified terminal consumption of both types; founding reserve stays exhausted");
                 PrimeAnts.LOGGER.info("T08 TRIP COMPLETE soil=24 mound/0 plugs/0 held/0 dropped food=0 world/0 held/2 cache capacity={} workers={}",NestCache.CAPACITY,ws.stream().map(LasiusNigerEntity::getUUID).toList());c.succeed();
             }
         });
@@ -113,9 +117,9 @@ public final class WorkerForagingGameTest {
         var q=start(c);boolean[] checked={false};
         c.onEachTick(()->{
             if(!checked[0]&&q.founding().sealed()&&workers(c,q).size()==3&&workers(c,q).stream().allMatch(LasiusNigerEntity::isCallow)) {
-                checked[0]=true;var p=q.founding().plan();var target=p.plugs().getLast();
+                checked[0]=true;var p=q.founding().plan();var target=p.plugs().getLast();var originalPlug=c.getLevel().getBlockState(target);
                 c.assertTrue(ColonyPlugs.get(c.getLevel()).owned(c.getLevel(),target,q.getUUID()),"Actual successful queen placement owns plug");
-                if(mode==0)c.getLevel().setBlock(target,Blocks.DIRT.defaultBlockState(),3);
+                if(mode==0)c.getLevel().setBlock(target,originalPlug,3);
                 if(mode==1)p.plugs().forEach(ColonyPlugs.get(c.getLevel())::invalidate);
                 if(mode==2)c.getLevel().setBlock(target,Blocks.AIR.defaultBlockState(),3);
                 c.getLevel().getDataStorage().saveAndJoin();
@@ -128,7 +132,7 @@ public final class WorkerForagingGameTest {
                     c.assertTrue(workers(c,q).size()==3&&workers(c,q).stream().allMatch(w->w.workerTasks().opened()==0&&w.getMainHandItem().isEmpty())&&mound(c,p)==22,"Mature workers never remove unowned plug or mint soil");
                     c.assertTrue(q.founding().lifecycle()==QueenFounding.Lifecycle.CLAUSTRAL&&!ColonyPlugs.get(c.getLevel()).opened(c.getLevel(),target,q.getUUID()),"No inferred operational opening");
                     if(mode==2)c.assertTrue(!q.founding().ready()&&!q.founding().sealed(),"Premature player opening revokes readiness");
-                    else c.assertTrue(c.getLevel().getBlockState(target).is(Blocks.DIRT),"Player/legacy dirt retained untouched");c.succeed();
+                    else c.assertTrue(c.getLevel().getBlockState(target).equals(originalPlug),"Player/legacy plug retained untouched");c.succeed();
                 });
             }
         });
@@ -171,7 +175,7 @@ public final class WorkerForagingGameTest {
             }
         });
     }
-    private LasiusNigerEntity restore(GameTestHelper c,LasiusNigerEntity ant) {
+    LasiusNigerEntity restore(GameTestHelper c,LasiusNigerEntity ant) {
         var out=net.minecraft.world.level.storage.TagValueOutput.createWithContext(net.minecraft.util.ProblemReporter.DISCARDING,c.getLevel().registryAccess());c.assertTrue(ant.save(out),"Normal canonical entity serialization");var tag=out.buildResult();UUID id=ant.getUUID();var stack=ant.getMainHandItem().copy();var phase=ant.workerTasks().phase();ant.discard();
         var loaded=(LasiusNigerEntity)net.minecraft.world.entity.EntityType.loadEntityRecursive(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING,c.getLevel().registryAccess(),tag),c.getLevel(),net.minecraft.world.entity.EntitySpawnReason.LOAD,e->e);
         c.assertTrue(loaded!=null&&loaded.getUUID().equals(id)&&ItemStack.matches(stack,loaded.getMainHandItem())&&loaded.workerTasks().phase()==phase&&c.getLevel().tryAddFreshEntityWithPassengers(loaded),"One original identity, phase and component-preserving canonical cargo restored");return loaded;
@@ -181,6 +185,7 @@ public final class WorkerForagingGameTest {
         var q=start(c);boolean[] dropped={false},blocked={false},released={false};
         c.onEachTick(()->{
             var p=q.founding().plan();if(p==null)return;
+            if(c.getTick()%500==0)PrimeAnts.LOGGER.info("T10 blocked-cache diagnosis tick={} queen={} ready={} reason={} cache={} consumed={} total={} workers={}",c.getTick(),q.position(),q.founding().ready(),q.founding().reason(),cache(c,q)==null?null:cache(c,q).contents(),q.nutrition().consumedUnits(),foodTotal(c,q),workers(c,q).stream().map(w->w.position()+" "+w.workerTasks().phase()+" "+w.workerTasks().reason()+" "+w.getMainHandItem()).toList());
             if(!dropped[0]&&q.founding().sealed()){dropped[0]=true;drop(c,p.at(-3,0,1),new ItemStack(Items.APPLE,2));}
             if(dropped[0])c.assertTrue(foodTotal(c,q)==2,"Blocked/restored cache conserves actual food objects");
             if(!blocked[0]) {
@@ -193,7 +198,8 @@ public final class WorkerForagingGameTest {
                     });
                 }
             }
-            var n=cache(c,q);if(released[0]&&n!=null&&n.size()==2) {c.assertTrue(q.founding().ready()&&foodTotal(c,q)==2&&workers(c,q).size()==3,"Physical retry after explicit obstacle removal delivers same two units");c.succeed();}
+            var n=cache(c,q);long withdrawn=workers(c,q).stream().filter(w->w.workerTasks().nursing()&&WorkerTasks.food(w.getMainHandItem())).mapToInt(w->w.getMainHandItem().getCount()).sum();
+            if(released[0]&&n!=null&&n.size()+q.nutrition().consumedUnits()+withdrawn==2) {c.assertTrue(q.founding().ready()&&foodTotal(c,q)==2&&workers(c,q).size()==3,"Physical retry delivers both units; ownership may subsequently pass to a real nurse or terminal consumption");c.succeed();}
         });
     }
     @GameTest(maxTicks=18000,structure="prime_ants_test:idle_ground")
@@ -201,6 +207,7 @@ public final class WorkerForagingGameTest {
         LasiusNigerEntity[] q={start(c)};boolean[] soil={false},food={false},saved={false},dropped={false};
         var named=new ItemStack(Items.SWEET_BERRIES,2);named.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("physical berries"));
         c.onEachTick(()->{
+            absentCaregivers(c,q[0]);
             var p=q[0].founding().plan();if(p==null)return;
             if(!dropped[0]&&q[0].founding().sealed()) {dropped[0]=true;drop(c,p.at(-3,0,1),named.copy());}
             for(var w:workers(c,q[0])) {
@@ -231,6 +238,7 @@ public final class WorkerForagingGameTest {
         var q=start(c);boolean[] dropped={false},checked={false},done={false};
         c.onEachTick(()->{
             if(done[0])return; // succeed() clears entities before other due callbacks finish this same tick.
+            if(!checked[0])absentCaregivers(c,q);
             var p=q.founding().plan();if(p==null)return;
             if(!dropped[0]&&q.founding().sealed()) {dropped[0]=true;drop(c,p.at(-3,0,1),new ItemStack(Items.APPLE,7));}
             if(dropped[0])c.assertTrue(foodTotal(c,q)==7,"All seven source units remain physical total="+foodTotal(c,q)+" world="+c.getLevel().getEntitiesOfClass(ItemEntity.class,c.getBounds().inflate(8),i->i.isAlive()&&WorkerTasks.food(i.getItem())).stream().map(i->i.getItem()+" at "+i.position()).toList()+" cache="+(cache(c,q)==null?List.of():cache(c,q).contents())+" workers="+workers(c,q).stream().map(w->w.getMainHandItem()+" at "+w.position()).toList());soilBalance(c,q);
@@ -238,7 +246,7 @@ public final class WorkerForagingGameTest {
                 var actor=workers(c,q).stream().filter(w->w.getMainHandItem().is(Items.APPLE)&&w.workerTasks().reason().equals("cache_full_blocked_or_foreign_cargo_retained")).findFirst();
                 if(actor.isEmpty())return;checked[0]=true;UUID dead=actor.get().getUUID();var worker=actor.get();Set<UUID> survivors=new HashSet<>();workers(c,q).stream().filter(w->w!=worker).forEach(w->survivors.add(w.getUUID()));
                 c.runAfterDelay(80,()->{
-                    c.assertTrue(worker.getMainHandItem().getCount()==1&&n.size()==6&&foodTotal(c,q)==7,"Full cache retains real cargo through bounded retries");worker.hurtServer(c.getLevel(),worker.damageSources().generic(),1000);worker.die(worker.damageSources().generic());
+                    c.assertTrue(worker.getMainHandItem().getCount()==1&&n.size()==6&&foodTotal(c,q)==7,"Full cache retains real cargo through bounded retries");worker.hurtServer(c.getLevel(),worker.damageSources().generic(),1000);worker.die(worker.damageSources().generic());workers(c,q).forEach(w->w.setNoAi(false));
                     c.runAfterDelay(120,()->{c.assertTrue(worker.isRemoved()&&worker.getMainHandItem().isEmpty()&&worker.workerTasks().phase()==WorkerTasks.Phase.DEAD&&foodTotal(c,q)==7&&workers(c,q).size()==2&&workers(c,q).stream().allMatch(w->survivors.contains(w.getUUID()))&&q.founding().workerClaim()!=null&&!dead.equals(q.founding().workerClaim()),"Single death cargo release and assignment to another existing living worker, no replacement spawn");PrimeAnts.LOGGER.info("T08 DEATH BALANCE source=7 actualTotal={} cache={} livingWorkers={} claim={}",foodTotal(c,q),n.size(),workers(c,q).size(),q.founding().workerClaim());done[0]=true;c.succeed();});
                 });
             }

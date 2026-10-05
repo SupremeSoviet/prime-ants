@@ -59,7 +59,7 @@ def captureRunId = java.util.UUID.randomUUID().toString()
 def captureStart = System.currentTimeMillis()
 def currentModelReport = file("build/test-results/client-model/${capturePrefix}-model.xml")
 def captureRequest = [run_id:captureRunId, capture_prefix:capturePrefix, started_epoch_ms:captureStart,
-                      scenario:'foraging', capture_directory:file('docs/screenshots').absolutePath,
+                      scenario:'growth', capture_directory:file('docs/screenshots').absolutePath,
                       model_report:currentModelReport.absolutePath,
                       provenance:file("docs/screenshots/${capturePrefix}-provenance.json").absolutePath]
 loom.runs.named('clientGameTest') {
@@ -178,7 +178,7 @@ tasks.named('runGameTest') {
          'unknown_origin_soil_remains_untouched','pre_queen_player_placed_matching_soil_remains_untouched',
          'unsuitable_substrates_remain_untouched','ordinary_player_replacement_invalidates_planned_task',
          'genuine_generation_and_chunk_reload_cannot_grant_unknown_origin','interrupted_founding_and_protection_persist_through_save_load',
-         'queen_death_releases_carried_soil_once_and_stops_work'].each { name ->
+         'queen_death_releases_carried_soil_once_and_stops_work','settled_queen_may_touch_enclosure_face_without_crossing_it','compacted_seal_keeps_owned_soil_beside_grass_over_real_ticks'].each { name ->
             if (!cases.any { it.@name.text() == "prime_ants_test:queen_founding_game_test_${name}" }) throw new GradleException("Missing founding test: ${name}")
         }
         def broodNames = (file('src/gametest/java/dev/primeants/gametest/BroodGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect { it[1].replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase() }
@@ -196,6 +196,13 @@ tasks.named('runGameTest') {
         transferNames.each { name ->
             if (!cases.any { it.@name.text() == "prime_ants_test:transfer_game_test_${name}" }) throw new GradleException("Missing transfer test: ${name}")
         }
+        ['NursingGameTest':1,'NursingGuardGameTest':9].each { className,count ->
+            def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+            if(names.size()!=count)throw new GradleException('Nursing test discovery incomplete: '+className)
+            def prefix=className.replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()
+            names.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:${prefix}_${name}"})throw new GradleException('Missing nursing test: '+name)}
+        }
+        if(cases.size()!=77)throw new GradleException('Expected all 65 retained, 10 nursing and two enclosure server cases')
         if (report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] }) {
             throw new GradleException('Server GameTest report contains a failure or skipped test')
         }

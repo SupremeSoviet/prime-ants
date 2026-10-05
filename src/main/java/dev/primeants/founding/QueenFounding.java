@@ -74,7 +74,10 @@ public final class QueenFounding {
                 Math.max(a.getX(), b.getX()) + 1, b.getY() + 1, Math.max(a.getZ(), b.getZ()) + 1);
         AABB body = queen.getBoundingBox();
         if (!queen.isAlive() || queen.isRemoved() || !queen.onGround() || queen.isInWater()
-                || !interior.contains(body.getMinPosition()) || !interior.contains(body.getMaxPosition())
+                // AABB.contains is half-open for POINTS and rejects max-face contact. A physical body
+                // may touch the wall without crossing it: use inclusive box containment, with no epsilon.
+                || body.minX < interior.minX || body.minY < interior.minY || body.minZ < interior.minZ
+                || body.maxX > interior.maxX || body.maxY > interior.maxY || body.maxZ > interior.maxZ
                 || !level.noCollision(queen, body.deflate(0.001))) return "enclosure_queen_not_inside";
         return null;
     }
@@ -103,7 +106,7 @@ public final class QueenFounding {
             if (workerClaim == null && ready()) {
                 var workers = level.getEntitiesOfClass(LasiusNigerEntity.class, new AABB(plan.chamber()).inflate(4),
                         w -> w.isAlive() && !w.isRemoved() && !w.isCallow() && !w.isNoAi() && queen.getUUID().equals(w.queenId())
-                                && plan.chamber().equals(w.nurseryHome()));
+                                && plan.chamber().equals(w.nurseryHome()) && w.getMainHandItem().isEmpty());
                 if (!workers.isEmpty()) {
                     // Prefer a free side-row worker over the central worker boxed in by the two nurses.
                     // This is a physical assignment choice among living adults, never a replacement spawn.
@@ -118,6 +121,10 @@ public final class QueenFounding {
                         worker.workerTasks().assign(plan);
                     } else reason = "settled_opening_refused_plug_ownership_missing_or_revoked";
                 }
+            }
+            if(lifecycle==Lifecycle.OPEN&&ready()){
+                for(var w:level.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(plan.chamber()).inflate(4),w->w.isAlive()&&!w.isRemoved()&&!w.isCallow()&&!w.isNoAi()))
+                    if(!claimedBy(w)&&dev.primeants.worker.ColonyMembers.get(level).belongs(w,queen.getUUID(),plan.chamber()))w.workerTasks().assignNurse(plan);
             }
             return;
         }
@@ -272,7 +279,9 @@ public final class QueenFounding {
             if (carried() < 1 || !level.getBlockState(p).isAir() || !level.getFluidState(p).isEmpty()
                     || !level.getEntities(queen, new AABB(p)).isEmpty() || queen.getBoundingBox().intersects(new AABB(p))
                     || queen.position().distanceToSqr(Vec3.atCenterOf(p)) > 5.0) { fail("plug_revalidation_failed"); return; }
-            if (!level.setBlock(p, Blocks.DIRT.defaultBlockState(), 3)) { fail("plug_placement_failed"); return; }
+            // One recovered soil unit becomes a compacted plug, just as mound deposition does.
+            // Vanilla grass targets minecraft:dirt and must not erase a legitimate claustral seal.
+            if (!level.setBlock(p, dev.primeants.brood.NurseryBlocks.NEST_SOIL.defaultBlockState(), 3)) { fail("plug_placement_failed"); return; }
             ColonyPlugs.get(level).placed(p, queen.getUUID());
             carry(carried() - 1); plugged++; cooldown = cadence(); stalled = 0;
             return;
