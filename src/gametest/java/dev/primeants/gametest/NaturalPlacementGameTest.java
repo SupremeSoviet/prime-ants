@@ -75,7 +75,8 @@ public final class NaturalPlacementGameTest {
         }
         // Negative occupancy only: ordinary stationary armor stands occupy every bounded search column.
         var occupantIds=new ArrayList<UUID>();
-        for(int[] offset:new int[][]{{7,7},{8,8},{6,8},{9,7},{7,9},{8,6},{6,6},{9,9}}) {
+        for(int index=0;index<NaturalPlacement.COLUMNS;index++) {
+            int[] offset={4+index/8,4+index%8};
             var stand=net.minecraft.world.entity.EntityTypes.ARMOR_STAND.create(l,net.minecraft.world.entity.EntitySpawnReason.EVENT);
             c.assertTrue(stand!=null,"Negative occupant factory");stand.setPos(actors.getMinBlockX()+offset[0]+.5,y+1,actors.getMinBlockZ()+offset[1]+.5);
             c.assertTrue(l.addFreshEntity(stand),"Negative occupant insertion accepted before chunk becomes accessible");occupantIds.add(stand.getUUID());
@@ -128,8 +129,20 @@ public final class NaturalPlacementGameTest {
         });
     }
     @GameTest(maxTicks=20)
-    public void productionPlacementIsDisabledByDefault(GameTestHelper c) {
-        c.assertTrue(!NaturalPlacement.enabled(c.getLevel()) && !Boolean.getBoolean("prime_ants.experimentalNaturalPlacement"),"Production placement remains disabled by default");
+    public void productionPlacementDefaultsEnabledWithExplicitOptOut(GameTestHelper c) {
+        String canonical=System.getProperty("prime_ants.naturalPlacement"),legacy=System.getProperty("prime_ants.experimentalNaturalPlacement");
+        try {
+            System.clearProperty("prime_ants.naturalPlacement");System.clearProperty("prime_ants.experimentalNaturalPlacement");
+            c.assertTrue(NaturalPlacement.productionEnabled() && NaturalPlacement.enabled(c.getLevel()),"Unconfigured production overworld enables natural placement by default after native founding promotion");
+            System.setProperty("prime_ants.naturalPlacement","false");
+            c.assertTrue(!NaturalPlacement.productionEnabled() && !NaturalPlacement.enabled(c.getLevel()),"Explicit canonical false opts out");
+            System.clearProperty("prime_ants.naturalPlacement");System.setProperty("prime_ants.experimentalNaturalPlacement","false");
+            c.assertTrue(!NaturalPlacement.productionEnabled(),"Existing explicit legacy opt-out remains compatible");
+            System.setProperty("prime_ants.naturalPlacement","true");c.assertTrue(NaturalPlacement.productionEnabled(),"Canonical setting takes precedence");
+        } finally {
+            if(canonical==null)System.clearProperty("prime_ants.naturalPlacement");else System.setProperty("prime_ants.naturalPlacement",canonical);
+            if(legacy==null)System.clearProperty("prime_ants.experimentalNaturalPlacement");else System.setProperty("prime_ants.experimentalNaturalPlacement",legacy);
+        }
         c.succeed();
     }
 }

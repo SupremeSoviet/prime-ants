@@ -329,6 +329,166 @@
           ]
         }
       }
+    },
+    "prime_ants_test:t16_plants": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:flat",
+        "settings": {
+          "biome": "minecraft:plains",
+          "features": false,
+          "lakes": false,
+          "structure_overrides": [],
+          "layers": [
+            {
+              "block": "minecraft:bedrock",
+              "height": 1
+            },
+            {
+              "block": "minecraft:dirt",
+              "height": 6
+            },
+            {
+              "block": "minecraft:grass_block",
+              "height": 1
+            }
+          ]
+        }
+      }
+    },
+    "prime_ants_test:t16_protected": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:flat",
+        "settings": {
+          "biome": "minecraft:plains",
+          "features": false,
+          "lakes": false,
+          "structure_overrides": [],
+          "layers": [
+            {
+              "block": "minecraft:bedrock",
+              "height": 1
+            },
+            {
+              "block": "minecraft:dirt",
+              "height": 6
+            },
+            {
+              "block": "minecraft:grass_block",
+              "height": 1
+            }
+          ]
+        }
+      }
+    },
+    "prime_ants_test:t16_step": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:flat",
+        "settings": {
+          "biome": "minecraft:plains",
+          "features": false,
+          "lakes": false,
+          "structure_overrides": [],
+          "layers": [
+            {
+              "block": "minecraft:bedrock",
+              "height": 1
+            },
+            {
+              "block": "minecraft:dirt",
+              "height": 6
+            },
+            {
+              "block": "minecraft:grass_block",
+              "height": 1
+            }
+          ]
+        }
+      }
+    },
+    "prime_ants_test:t16_thin": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:flat",
+        "settings": {
+          "biome": "minecraft:plains",
+          "features": false,
+          "lakes": false,
+          "structure_overrides": [],
+          "layers": [
+            {
+              "block": "minecraft:bedrock",
+              "height": 1
+            },
+            {
+              "block": "minecraft:stone",
+              "height": 4
+            },
+            {
+              "block": "minecraft:dirt",
+              "height": 2
+            },
+            {
+              "block": "minecraft:grass_block",
+              "height": 1
+            }
+          ]
+        }
+      }
+    },
+    "prime_ants_test:t16_unsafe": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:flat",
+        "settings": {
+          "biome": "minecraft:plains",
+          "features": false,
+          "lakes": false,
+          "structure_overrides": [],
+          "layers": [
+            {
+              "block": "minecraft:bedrock",
+              "height": 1
+            },
+            {
+              "block": "minecraft:dirt",
+              "height": 6
+            },
+            {
+              "block": "minecraft:grass_block",
+              "height": 1
+            }
+          ]
+        }
+      }
+    },
+    "prime_ants_test:t16_legacy": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:flat",
+        "settings": {
+          "biome": "minecraft:plains",
+          "features": false,
+          "lakes": false,
+          "structure_overrides": [],
+          "layers": [
+            {
+              "block": "minecraft:bedrock",
+              "height": 1
+            },
+            {
+              "block": "minecraft:dirt",
+              "height": 6
+            },
+            {
+              "block": "minecraft:grass_block",
+              "height": 1
+            }
+          ]
+        }
+      }
     }
   }
 }

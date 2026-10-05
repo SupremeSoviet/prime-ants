@@ -45,6 +45,7 @@ loom.runs.named('gameTest') {
     // Loom's deleteGameTestRunDir clears the CLIENT directory only. Preserve prior
     // server worlds as evidence; each invocation gets genuinely new generation.
     runDirectory.set(layout.buildDirectory.dir('run/serverGameTest/' + java.util.UUID.randomUUID().toString()))
+    systemProperties.put('prime_ants.naturalPlacement','false') // Ordinary fixtures explicitly opt out; separate test checks unconfigured production default.
     systemProperties.put('prime_ants.broodMultiplier', providers.gradleProperty('primeAntsBroodMultiplier').getOrElse('100'))
     systemProperties.put('prime_ants.foundingWorkMultiplier', providers.gradleProperty('primeAntsFoundingMultiplier').getOrElse('20'))
     if (providers.gradleProperty('primeAntsOriginDiagnostics').isPresent()) systemProperties.put('prime_ants.originDiagnostics', 'true')
@@ -209,7 +210,13 @@ tasks.named('runGameTest') {
         def durabilityNames = (file('src/gametest/java/dev/primeants/gametest/PlacementDurabilityGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect { it[1].replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase() }
         if(durabilityNames.size()!=3)throw new GradleException('Placement durability discovery incomplete')
         durabilityNames.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:placement_durability_game_test_${name}"})throw new GradleException('Missing placement durability test '+name)}
-        if(cases.size()!=108)throw new GradleException('Expected all 105 retained cases and three placement durability regressions')
+        ['TerrainRulesGameTest':9,'NestmateGameTest':3].each { className,count ->
+            def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+            if(names.size()!=count)throw new GradleException('T16 required discovery incomplete: '+className)
+            def prefix=className.replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()
+            names.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:${prefix}_${name}"})throw new GradleException('Missing T16 test: '+name)}
+        }
+        if(cases.size()!=120)throw new GradleException('Expected all 108 baseline cases and twelve T16 boundary regressions')
         if (report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] }) {
             throw new GradleException('Server GameTest report contains a failure or skipped test')
         }

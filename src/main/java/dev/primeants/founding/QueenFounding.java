@@ -28,6 +28,8 @@ public final class QueenFounding {
     private NestPlan plan;
     private int progress, deposited, released, plugged, cooldown, stalled, converted;
     private long loadedTicks;
+    private final java.util.List<BlockPos> removedPlants = new java.util.ArrayList<>();
+    public List<BlockPos> removedPlants() { return List.copyOf(removedPlants); }
     private String reason = "not_requested";
     public enum Lifecycle { CLAUSTRAL, OPENING, OPEN }
     private Lifecycle lifecycle = Lifecycle.CLAUSTRAL;
@@ -158,7 +160,15 @@ public final class QueenFounding {
                 for (int dz = -r; dz <= r && plan == null; dz++) {
                     if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
                     for (Direction d : Direction.Plane.HORIZONTAL) {
-                        NestPlan candidate = NestPlan.candidate(level, ground.offset(dx, 0, dz), d);
+                        BlockPos column=ground.offset(dx,0,dz);
+                        if(!NestPlan.loaded(level,column))continue;
+                        // Founding starts at the physical queen's ground, including legacy underground fixtures.
+                        // A heightmap may include an unrelated overhead block; only placement searches the world surface.
+                        NestPlan candidate=null;
+                        for(int dy=0;dy<=2 && candidate==null;dy++) {
+                            int delta=dy==0?0:dy==1?1:-1;
+                            candidate=NestPlan.candidate(level,column.offset(0,delta,0),d);
+                        }
                         if (candidate != null) { plan = candidate; break; }
                     }
                 }
@@ -197,7 +207,8 @@ public final class QueenFounding {
         BlockPos best = null; double distance = Double.MAX_VALUE;
         for (Direction d : Direction.Plane.HORIZONTAL) for (int dy = -1; dy <= 1; dy++) {
             BlockPos feet = target.relative(d).offset(0, dy, 0);
-            if (!NestPlan.walkable(level, feet) || !exposed(level, target, feet)) continue;
+            if (!NestPlan.walkable(level, feet) || !exposed(level, target, feet)
+                || !dev.primeants.entity.Nestmates.movementClear(level,queen,queen.getBoundingBox().move(Vec3.atBottomCenterOf(feet).subtract(queen.position())))) continue;
             double dist = queen.position().distanceToSqr(Vec3.atBottomCenterOf(feet));
             if (dist < distance) { best = feet; distance = dist; }
         }
@@ -206,7 +217,7 @@ public final class QueenFounding {
     private boolean exposed(ServerLevel level, BlockPos target, BlockPos feet) {
         BlockPos face = new BlockPos(feet.getX(), target.getY(), feet.getZ());
         return target.distManhattan(face) == 1
-                && (level.getBlockState(face).isAir() || (feet.getY() == target.getY() + 1 && level.getBlockState(target.above()).isAir()))
+                && (NestPlan.traversable(level,face) || (feet.getY() == target.getY() + 1 && NestPlan.traversable(level,target.above())))
                 && Vec3.atCenterOf(target).distanceToSqr(Vec3.atBottomCenterOf(feet).add(0, 0.5, 0)) <= 3.0;
     }
     private Vec3 depositDestination(BlockPos target, BlockPos stand) {
@@ -216,9 +227,10 @@ public final class QueenFounding {
         BlockPos best = null; double distance = Double.MAX_VALUE;
         for (Direction d : Direction.Plane.HORIZONTAL) for (int dy = -1; dy <= 1; dy++) {
             BlockPos feet = target.relative(d).offset(0, dy, 0);
-            if (!NestPlan.walkable(level, feet) || !exposed(level, target, feet)) continue;
+            if (!NestPlan.walkable(level, feet) || !exposed(level, target, feet)
+                || !dev.primeants.entity.Nestmates.movementClear(level,queen,queen.getBoundingBox().move(Vec3.atBottomCenterOf(feet).subtract(queen.position())))) continue;
             Vec3 dest = depositDestination(target, feet);
-            if (!level.noCollision(queen, queen.getBoundingBox().move(dest.subtract(queen.position())))) continue;
+            if (!dev.primeants.entity.Nestmates.movementClear(level,queen,queen.getBoundingBox().move(dest.subtract(queen.position())))) continue;
             double dist = queen.position().distanceToSqr(dest);
             if (dist < distance) { best = feet; distance = dist; }
         }
@@ -252,6 +264,31 @@ public final class QueenFounding {
         BlockPos target = plan.tasks().get(progress);
         if (!NaturalSoil.get(level).eligible(level, target) || !level.getBlockState(target).equals(plan.expected().get(progress))) {
             fail("planned_soil_replaced_or_origin_revoked_at_" + target); return;
+        }
+        for(int i=0;i<plan.plants().size();i++) {
+            var plant=plan.plants().get(i);if(!plant.below().equals(target)) continue;
+            if(removedPlants.contains(plant)) {
+                if(!level.getBlockState(plant).isAir()) {fail("cleared_plant_cell_replaced_at_"+plant);return;}
+                continue;
+            }
+            if(!NativeVegetation.get(level).eligible(level,plant) || !level.getBlockState(plant).equals(plan.plantExpected().get(i))) {
+                fail("planned_plant_replaced_or_authority_revoked_at_"+plant);return;
+            }
+            // The supported soil work face may be one block lower and out of reach of its flower.
+            // Reach the plant itself from an existing surface stand before descending to dig the soil.
+            var plantStand=workStand(level,plant);
+            if(plantStand==null) {fail("no_supported_plant_work_face_at_"+plant);return;}
+            if(!arrive(level,plantStand) || cooldown>0)return;
+            if(queen.form()!=dev.primeants.entity.AntForm.QUEEN || level.getEntity(queen.getUUID())!=queen
+                || !queen.isAlive() || !level.mayInteract(queen,plant)
+                || queen.position().distanceToSqr(Vec3.atCenterOf(plant))>5.0 || !exposed(level,plant,plantStand)
+                || !NativeVegetation.get(level).eligible(level,plant) || !level.getBlockState(plant).equals(plan.plantExpected().get(i))) {
+                fail("plant_work_revalidation_failed_at_"+plant);return;
+            }
+            if(!level.setBlock(plant,Blocks.AIR.defaultBlockState(),3)) {fail("plant_removal_failed_at_"+plant);return;}
+            removedPlants.add(plant);cooldown=cadence();stalled=0; // No soil, cargo, drops or nutrition.
+            PrimeAnts.LOGGER.info("Founding plant removal queen={} tick={} plant={} declared={} soilRemoved={}",queen.getUUID(),loadedTicks,plant,plan.plants(),progress);
+            return;
         }
         BlockPos stand = workStand(level, target);
         if (stand == null) { fail("no_exposed_supported_work_face_at_" + target); return; }
@@ -348,9 +385,13 @@ public final class QueenFounding {
         out.putInt("Progress", progress); out.putInt("Deposited", deposited); out.putInt("Released", released); out.putInt("Plugged", plugged);
         out.putInt("Cooldown", cooldown); out.putInt("Stalled", stalled); out.putLong("LoadedTicks", loadedTicks);
         out.putInt("Converted", converted);
+        out.store("RemovedPlants",BlockPos.CODEC.listOf(),removedPlants);
         if (plan != null) {
             out.store("Entrance", BlockPos.CODEC, plan.entrance()); out.putString("Direction", plan.direction().getName());
             out.store("Tasks", BlockPos.CODEC.listOf(), plan.tasks()); out.store("Expected", BlockState.CODEC.listOf(), plan.expected());
+            out.store("Plants",BlockPos.CODEC.listOf(),plan.plants());out.store("PlantExpected",BlockState.CODEC.listOf(),plan.plantExpected());
+            out.store("SurfaceDeposits",BlockPos.CODEC.listOf(),plan.surfaceDeposits());
+            if(plan.exteriorStand()!=null)out.store("ExteriorStand",BlockPos.CODEC,plan.exteriorStand());
         }
         // Mainhand soil uses vanilla Mob equipment persistence and synchronization.
     }
@@ -371,7 +412,11 @@ public final class QueenFounding {
                     || expected.size() != targets.size() || progress < 0 || progress > targets.size()
                     || deposited < 0 || released < 0 || plugged < 0 || plugged > 2 || carried() > CARRY_CAPACITY
                     || progress != deposited + released + plugged + carried()) { fail("invalid_saved_plan_or_soil_balance"); return; }
-            plan = new NestPlan(e.get(), d, targets, expected);
+            plan = new NestPlan(e.get(), d, targets, expected,
+                in.read("Plants",BlockPos.CODEC.listOf()).orElse(List.of()),in.read("PlantExpected",BlockState.CODEC.listOf()).orElse(List.of()),
+                in.read("SurfaceDeposits",BlockPos.CODEC.listOf()).orElse(List.of()),in.read("ExteriorStand",BlockPos.CODEC).orElse(null));
+            removedPlants.clear();removedPlants.addAll(in.read("RemovedPlants",BlockPos.CODEC.listOf()).orElse(List.of()));
+            if(!plan.validAdaptation() || !plan.plants().containsAll(removedPlants) || new java.util.HashSet<>(removedPlants).size()!=removedPlants.size()) fail("invalid_saved_adaptation");
         } else if (phase != Phase.NONE && phase != Phase.SEEKING && phase != Phase.FAILED && phase != Phase.DEAD) fail("missing_saved_plan");
     }
 }

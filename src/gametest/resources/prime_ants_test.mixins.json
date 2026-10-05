@@ -12,7 +12,9 @@
     "PlacementInsertionMixin",
     "PlacementWriteMixin",
     "PlacementFinalGateMixin",
-    "PlacementTraceMixin"
+    "PlacementTraceMixin",
+    "TerrainGenerationFixtureMixin",
+    "PlacementFullBudgetMixin"
   ],
   "injectors": {
     "defaultRequire": 1

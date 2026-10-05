@@ -19,6 +19,7 @@ public abstract class LevelChunkMixin {
     @Inject(method = "<init>(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ProtoChunk;Lnet/minecraft/world/level/chunk/LevelChunk$PostLoadProcessor;)V", at = @At("RETURN"))
     private void primeAntsObserve(ServerLevel level, ProtoChunk proto, LevelChunk.PostLoadProcessor post, CallbackInfo ci) {
         NaturalSoil.get(level).observeGenerated(proto);
+        dev.primeants.founding.NativeVegetation.get(level).observeGenerated(proto);
         dev.primeants.founding.NaturalPlacement.get(level).observeGenerated(level, proto);
     }
     // Includes ordinary placement, breaking/replacement, piston writes and ant deposits.
@@ -27,6 +28,7 @@ public abstract class LevelChunkMixin {
     private void primeAntsRevoke(BlockPos pos, BlockState state, int flags, CallbackInfoReturnable<BlockState> cir) {
         if (level instanceof ServerLevel server) {
             NaturalSoil.get(server).invalidate(pos);
+            dev.primeants.founding.NativeVegetation.get(server).invalidate(pos);
             dev.primeants.founding.ColonyPlugs.get(server).invalidate(pos);
             dev.primeants.founding.ColonyTerrain.get(server).invalidate(pos);
         }

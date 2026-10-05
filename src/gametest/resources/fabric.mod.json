@@ -29,7 +29,9 @@
       "dev.primeants.gametest.ExpansionGameTest",
       "dev.primeants.gametest.RoleConflictGameTest",
       "dev.primeants.gametest.NaturalPlacementGameTest",
-      "dev.primeants.gametest.PlacementDurabilityGameTest"
+      "dev.primeants.gametest.PlacementDurabilityGameTest",
+      "dev.primeants.gametest.TerrainRulesGameTest",
+      "dev.primeants.gametest.NestmateGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

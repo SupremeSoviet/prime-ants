@@ -10,6 +10,7 @@ import dev.primeants.founding.NestExpansion;
 import dev.primeants.founding.QueenFounding;
 import dev.primeants.founding.ColonyTerrain;
 import java.util.UUID;
+import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -84,7 +85,7 @@ public final class WorkerTasks {
         &&eligible(l,p)&&nursingAuthorized(l)&&plan.entrance().equals(p.entrance())&&plan.direction()==p.direction();}
     public boolean assignConstruction(NestPlan p){
         if(!canConstruct(p)||NestExpansion.remainingCaregivers((ServerLevel)worker.level(),worker.queenId(),p,worker)<2)return false;
-        plan=NestPlan.geometry(p.entrance(),p.direction());next(Phase.DIG,"assigned_bounded_extension");return true;
+        plan=p.routeGeometry();next(Phase.DIG,"assigned_bounded_extension");return true;
     }
     public boolean construction(){return phase==Phase.DIG||phase==Phase.DIG_OUT;}
     private boolean constructionAuthorized(ServerLevel l){
@@ -94,12 +95,12 @@ public final class WorkerTasks {
     }
     public boolean assignNurse(NestPlan p){
         if(phase!=Phase.NURSERY||!(worker.level() instanceof ServerLevel l)||!eligible(l,p)||!worker.getMainHandItem().isEmpty()||constructionClaim(l)||foragerClaim(l))return false;
-        plan=NestPlan.geometry(p.entrance(),p.direction());next(Phase.NURSE_CACHE,"mature_member_nursing");
+        plan=p.routeGeometry();next(Phase.NURSE_CACHE,"mature_member_nursing");
         return true;
     }
     public boolean assign(NestPlan p) {
         if(!canForage(p))return false;
-        plan=NestPlan.geometry(p.entrance(),p.direction());
+        plan=p.routeGeometry();
         next(Phase.OPENING,"assigned_free_forager");return true;
     }
     private void next(Phase p,String why) { phase=p;phaseTicks=0;reason=why;worker.getNavigation().stop(); }
@@ -207,12 +208,12 @@ public final class WorkerTasks {
             if(toQueen){
                 var stands=new java.util.ArrayList<BlockPos>(space);
                 for(int f=3;f<=5;f++)for(int s=-1;s<=1;s++)stands.add(plan.at(f,s,-2));
-                var stand=stands.stream().filter(feet->NestPlan.walkable(l,feet)&&l.getEntities(worker,worker.getBoundingBox().move(Vec3.atBottomCenterOf(feet).subtract(worker.position()))).isEmpty()
+                var stand=stands.stream().filter(feet->NestPlan.walkable(l,feet)&&dev.primeants.entity.Nestmates.movementClear(l,worker,worker.getBoundingBox().move(Vec3.atBottomCenterOf(feet).subtract(worker.position())))
                     &&Vec3.atBottomCenterOf(feet).add(0,0.25,0).distanceToSqr(target)<=1.6)
                     .min(java.util.Comparator.comparingDouble(feet->worker.position().distanceToSqr(Vec3.atBottomCenterOf(feet)))).orElse(null);
                 if(stand!=null){arriveSupported(l,Vec3.atBottomCenterOf(stand));return;}
             }
-            // Walk around the queen along the rear row instead of pushing through her body.
+            // The fallback follows supported chamber rows to reach the brood pile.
             var delta=worker.position().subtract(Vec3.atBottomCenterOf(plan.entrance()));double forward=delta.x*plan.direction().getStepX()+delta.z*plan.direction().getStepZ();
             if(!toQueen&&forward<4.8)arriveSupported(l,Vec3.atBottomCenterOf(plan.at(5,-1,-2)));
             else if(!toQueen&&NestExpansion.get(l).circulationSpace(l,worker.queenId()).contains(plan.at(5,2,-2))
@@ -261,7 +262,7 @@ public final class WorkerTasks {
             for(int n=1;n<=10;n++){
                 var step=delta.scale(n/10.0);var p=BlockPos.containing(worker.position().add(step));
                 if(!NestPlan.loaded(l,p)||!l.getBlockState(p.below()).isSolidRender()||!l.getFluidState(p.below()).isEmpty()
-                    ||!l.noCollision(worker,worker.getBoundingBox().move(step))){clear=false;break;}
+                    ||!dev.primeants.entity.Nestmates.movementClear(l,worker,worker.getBoundingBox().move(step))){clear=false;break;}
             }
             if(clear){worker.getNavigation().stop();worker.getMoveControl().setWantedPosition(dest.x,dest.y,dest.z,1.0);return delta.lengthSqr()<0.01;}
         }
@@ -310,7 +311,7 @@ public final class WorkerTasks {
             for(var d:Direction.Plane.HORIZONTAL)for(int y=-1;y<=0;y++){
                 var stand=p.relative(d).offset(0,y,0);if(!NestPlan.loaded(l,stand)||!NestPlan.walkable(l,stand)||Vec3.atCenterOf(p).distanceToSqr(Vec3.atBottomCenterOf(stand).add(0,0.5,0))>3.0)continue;
                 var v=Vec3.atBottomCenterOf(stand).add(0.35*d.getStepX(),0,0.35*d.getStepZ());
-                if(!l.noCollision(worker,worker.getBoundingBox().move(v.subtract(worker.position()))))continue;
+                if(!dev.primeants.entity.Nestmates.movementClear(l,worker,worker.getBoundingBox().move(v.subtract(worker.position()))))continue;
                 target=p;dest=v;break;
             }
             if(target!=null)break;
@@ -348,7 +349,7 @@ public final class WorkerTasks {
             for(Direction d:Direction.Plane.HORIZONTAL) {
                 BlockPos stand=p.relative(d);if(!NestPlan.loaded(l,stand)||!NestPlan.walkable(l,stand))continue;
                 Vec3 v=Vec3.atBottomCenterOf(stand).add(0.35*d.getStepX(),0,0.35*d.getStepZ());
-                if(!l.noCollision(worker,worker.getBoundingBox().move(v.subtract(worker.position()))))continue;
+                if(!dev.primeants.entity.Nestmates.movementClear(l,worker,worker.getBoundingBox().move(v.subtract(worker.position()))))continue;
                 target=p;dest=v;break;
             }
             if(target!=null)break;
@@ -412,7 +413,9 @@ public final class WorkerTasks {
     }
     public void save(ValueOutput out) {
         out.putString("Phase",phase.name());out.putString("Reason",reason);out.putInt("Opened",opened);out.putInt("Placed",placed);out.putInt("PhaseTicks",phaseTicks);out.putInt("Cooldown",cooldown);
-        if(plan!=null) {out.store("Entrance",BlockPos.CODEC,plan.entrance());out.putString("Direction",plan.direction().getName());}
+        if(plan!=null) {out.store("Entrance",BlockPos.CODEC,plan.entrance());out.putString("Direction",plan.direction().getName());
+            out.store("SurfaceDeposits",BlockPos.CODEC.listOf(),plan.surfaceDeposits());
+            if(plan.exteriorStand()!=null)out.store("ExteriorStand",BlockPos.CODEC,plan.exteriorStand());}
         if(source!=null)out.putString("Source",source.toString());
         if(recipient!=null)out.putString("Recipient",recipient.toString());out.putInt("FeedingTicks",feedingTicks);
         // Cargo is canonical vanilla Mob mainhand equipment, not duplicated here.
@@ -421,7 +424,9 @@ public final class WorkerTasks {
         phase=Phase.valueOf(in.getStringOr("Phase","NURSERY"));reason=in.getStringOr("Reason","restored");opened=in.getIntOr("Opened",0);placed=in.getIntOr("Placed",0);phaseTicks=in.getIntOr("PhaseTicks",0);cooldown=in.getIntOr("Cooldown",0);
         source=in.getString("Source").map(UUID::fromString).orElse(null);
         recipient=in.getString("Recipient").map(UUID::fromString).orElse(null);feedingTicks=in.getIntOr("FeedingTicks",0);
-        if(in.read("Entrance",BlockPos.CODEC).isPresent()) {Direction d=Direction.byName(in.getStringOr("Direction",""));if(d==null||d.getAxis().isVertical())throw new IllegalArgumentException("Invalid task home");plan=NestPlan.geometry(in.read("Entrance",BlockPos.CODEC).orElseThrow(),d);}
+        if(in.read("Entrance",BlockPos.CODEC).isPresent()) {Direction d=Direction.byName(in.getStringOr("Direction",""));if(d==null||d.getAxis().isVertical())throw new IllegalArgumentException("Invalid task home");var g=NestPlan.geometry(in.read("Entrance",BlockPos.CODEC).orElseThrow(),d);
+            plan=new NestPlan(g.entrance(),d,g.tasks(),g.expected(),List.of(),List.of(),in.read("SurfaceDeposits",BlockPos.CODEC.listOf()).orElse(List.of()),in.read("ExteriorStand",BlockPos.CODEC).orElse(null));
+            if(!plan.validAdaptation())throw new IllegalArgumentException("Invalid saved worker exterior bounds");}
         if(opened<0||opened>2||placed<0||placed>opened||phaseTicks<0||cooldown<0||feedingTicks<0||feedingTicks>=FEEDING_TICKS)throw new IllegalArgumentException("Invalid worker progress");
     }
 }

@@ -84,10 +84,10 @@ public final class PlacementDurabilityGameTest {
                 snapshot(l,p,"final-refusal-partway");reload(l);restored[0]=true;
                 c.assertTrue(decision(l,p).get("column").getAsInt()==4,"Disk restore must retain half of finite final-gate budget");
             }
-            if(++wait[0]==50 || status(l,p).equals("REJECTED")) {
+            if(++wait[0]==100 || status(l,p).equals("REJECTED")) {
                 l.getDataStorage().saveAndJoin();snapshot(l,p,"final-refusal-terminal");
-                c.assertTrue(restored[0] && status(l,p).equals("REJECTED") && calls==8 && decision(l,p).get("column").getAsInt()==8,"Exactly eight final refusals reach persisted terminal search bound");
-                var r=decision(l,p);c.assertTrue(r.get("evaluations").getAsInt()==8 && r.get("preliminaryPlans").getAsInt()==8 && r.get("temporaryQueens").getAsInt()==8 && r.get("immediateValidations").getAsInt()==8,"Actual refused work counts stay bounded across reload");
+                c.assertTrue(restored[0] && status(l,p).equals("REJECTED") && calls==64 && decision(l,p).get("column").getAsInt()==64,"Exactly sixty-four final refusals reach persisted terminal search bound");
+                var r=decision(l,p);c.assertTrue(r.get("evaluations").getAsInt()==64 && r.get("preliminaryPlans").getAsInt()==64 && r.get("temporaryQueens").getAsInt()==64 && r.get("immediateValidations").getAsInt()==64,"Actual refused work counts stay bounded across reload");
                 c.assertTrue(PlacementFault.insertionCalls(id)==0 && l.getEntity(id)==null && before.equals(NaturalPlacement.terrain(l,surface)),"Negative final gate performs no insertion or terrain edit");c.succeed();
             }
         });

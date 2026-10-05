@@ -47,6 +47,14 @@ public final class NaturalSoil extends SavedData {
         BlockState s = level.getBlockState(pos);
         return material(s) && type(s).equals(observed.get(key(pos)));
     }
+    public static boolean mineral(BlockState s) {
+        return s.getFluidState().isEmpty() && s.isSolidRender() && !s.hasBlockEntity() &&
+            (s.is(Blocks.STONE) || s.is(Blocks.DEEPSLATE) || s.is(Blocks.GRANITE) || s.is(Blocks.DIORITE) || s.is(Blocks.ANDESITE));
+    }
+    public boolean floorSupport(ServerLevel level, BlockPos pos) {
+        return eligible(level,pos) || NestPlan.loaded(level,pos) && mineral(level.getBlockState(pos))
+            && ("support:"+type(level.getBlockState(pos))).equals(observed.get(key(pos)));
+    }
     public void invalidate(BlockPos pos) { if (observed.remove(key(pos)) != null) setDirty(); }
     /** Called ONLY on main-thread ProtoChunk -> LevelChunk conversion with a genuine new-generation witness.
      * Observes at most the top eight layers; deeper/old/retrogen terrain stays unknown. No world edits. */
@@ -60,6 +68,7 @@ public final class NaturalSoil extends SavedData {
                 for (int y = top; y >= Math.max(chunk.getMinY(), top - 8); y--) {
                     BlockPos p = new BlockPos(x, y, z); BlockState s = chunk.getBlockState(p);
                     if (material(s)) observed.put(key(p), type(s));
+                    else if (mineral(s)) observed.put(key(p), "support:"+type(s));
                 }
             }
         setDirty();

@@ -15,7 +15,7 @@ public final class PlacementTerrainTrace {
     public static final JsonArray INSERTION_TERRAIN=new JsonArray();
     private static final Map<UUID,JsonObject> snapshots=new HashMap<>();
     public static void insertionBegin(ServerLevel l,net.minecraft.world.entity.Entity e) {
-        if(!PlacementSettings.biomeExperiment() || !(e instanceof dev.primeants.entity.LasiusNigerEntity))return;
+        if(!(PlacementSettings.biomeExperiment() || PlacementSettings.frozenExperiment()) || !(e instanceof dev.primeants.entity.LasiusNigerEntity))return;
         var r=NaturalPlacement.get(l).decisions().asMap().values().stream().map(JsonElement::getAsJsonObject).filter(d->d.get("queen").getAsString().equals(e.getUUID().toString())).findFirst().orElse(null);if(r==null || !r.has("surface"))return;
         var surface=BlockPos.of(r.get("surface").getAsLong());var out=new JsonObject();out.addProperty("uuid",e.getUUID().toString());out.addProperty("surface",surface.asLong());out.add("before",states(l,surface));snapshots.put(e.getUUID(),out);
     }
@@ -27,12 +27,11 @@ public final class PlacementTerrainTrace {
     private static JsonObject active;
     private static int beforeEvaluations;
     public static void begin(ServerLevel l,JsonObject r,ChunkPos chunk) {
-        active=null;if(!PlacementSettings.biomeExperiment())return;
-        int column=r.get("column").getAsInt();if(column>=8)return;
+        active=null;if(!(PlacementSettings.biomeExperiment() || PlacementSettings.frozenExperiment()))return;
+        int column=r.get("column").getAsInt();if(column>=r.get("searchColumns").getAsInt())return;
         if(r.has("retryAfter") && l.getGameTime()<r.get("retryAfter").getAsLong())return;
-        long salt=l.getSeed()^UUID.nameUUIDFromBytes(l.dimension().identifier().toString().getBytes(StandardCharsets.UTF_8)).getMostSignificantBits();
-        int[][] offsets={{7,7},{8,8},{6,8},{9,7},{7,9},{8,6},{6,6},{9,9}};var offset=offsets[(column+(int)(salt&7))%8];
-        var p=new BlockPos(chunk.getMinBlockX()+offset[0],0,chunk.getMinBlockZ()+offset[1]);p=p.atY(l.getHeight(Heightmap.Types.WORLD_SURFACE,p.getX(),p.getZ())-1);
+        var offset=NaturalPlacement.searchOffset(l,r,column);
+        var p=NestPlan.soilSurface(l,new BlockPos(chunk.getMinBlockX()+offset[0],0,chunk.getMinBlockZ()+offset[1]));
         active=new JsonObject();active.addProperty("chunk_x",chunk.x());active.addProperty("chunk_z",chunk.z());active.addProperty("column",column);active.addProperty("biome",l.getBiome(p).getRegisteredName());active.addProperty("eligible_biome",l.getBiome(p).is(NaturalPlacement.BIOMES));active.add("surface",block(l,p));active.add("above",block(l,p.above()));active.add("plans",new JsonArray());
         beforeEvaluations=r.has("evaluations")?r.get("evaluations").getAsInt():0;
     }
@@ -66,18 +65,19 @@ public final class PlacementTerrainTrace {
     private static JsonObject failure(ServerLevel l,NestPlan g) {
         var soil=NaturalSoil.get(l);
         for(var p:g.tasks())if(!soil.eligible(l,p))return fail(l,"excavation_task",p);
-        for(int f=0;f<3;f++)if(!soil.eligible(l,g.at(f,0,-f-1)))return fail(l,"shell_support",g.at(f,0,-f-1));
-        for(int f=3;f<=5;f++)for(int s=-1;s<=1;s++)for(int dy:new int[]{-3,0})if(!soil.eligible(l,g.at(f,s,dy)))return fail(l,"shell_floor_roof",g.at(f,s,dy));
+        for(int f=0;f<3;f++)if(!soil.floorSupport(l,g.at(f,0,-f-1)))return fail(l,"shell_support",g.at(f,0,-f-1));
+        for(int f=3;f<=5;f++)for(int s=-1;s<=1;s++)for(int dy:new int[]{-3,0})if(!(dy==-3?soil.floorSupport(l,g.at(f,s,dy)):soil.eligible(l,g.at(f,s,dy))))return fail(l,"shell_floor_roof",g.at(f,s,dy));
         for(int f=3;f<=5;f++)for(int s=-1;s<=1;s++)for(int dy=-2;dy<=-1;dy++)for(var d:Direction.Plane.HORIZONTAL) {
             var n=g.at(f,s,dy).relative(d);if(!g.tasks().contains(n) && !soil.eligible(l,n))return fail(l,"shell_wall",n);
         }
         for(int f=-3;f<=-1;f++)for(int s=-1;s<=1;s++) {
-            var p=g.at(f,s,1);if(!soil.eligible(l,p.below()))return fail(l,"approach_support",p.below());if(!NestPlan.walkable(l,p))return fail(l,"approach_body",p);
+            var anchor=g.at(f,s,1);var p=anchor;for(int dy=1;dy>=-1;dy--){var n=anchor.offset(0,dy,0);if(soil.eligible(l,n.below())&&NestPlan.walkable(l,n)){p=n;break;}}if(!soil.eligible(l,p.below()))return fail(l,"approach_support",p.below());if(!NestPlan.walkable(l,p))return fail(l,"approach_body",p);
         }
         var deposits=new JsonArray();int count=0;
-        for(var p:g.deposits())if(soil.eligible(l,p.below()) && NestPlan.walkable(l,p))count++;else {var row=fail(l,"deposit_space",soil.eligible(l,p.below())?p:p.below());deposits.add(row);}
+        for(var anchor:g.deposits()){var p=anchor;for(int dy=1;dy>=-1;dy--){var n=anchor.offset(0,dy,0);if(soil.eligible(l,n.below())&&NestPlan.walkable(l,n)){p=n;break;}}if(l.getBlockState(p).isAir() && soil.eligible(l,p.below()) && NestPlan.walkable(l,p))count++;else {var row=fail(l,"deposit_space",soil.eligible(l,p.below())?p:p.below());deposits.add(row);}}
         if(count<NestPlan.HARD_CAP-2) {var r=new JsonObject();r.addProperty("stage","deposit_space");r.addProperty("category","deposit_space");r.addProperty("supported_walkable",count);r.add("failed_cells",deposits);return r;}
         for(var p:g.tasks())for(var d:Direction.values())if(!l.getFluidState(p.relative(d)).isEmpty())return fail(l,"adjacent_fluid",p.relative(d));
-        var r=new JsonObject();r.addProperty("category","inspector_disagreed_with_production");return r;
+        for(var p:g.tasks())if(!g.tasks().contains(p.above()) && NativeVegetation.material(l.getBlockState(p.above())) && !NativeVegetation.get(l).eligible(l,p.above()))return fail(l,"excavation_plant_authority",p.above());
+        var r=new JsonObject();r.addProperty("category","surface_connectivity_or_deposit_stand");return r;
     }
 }

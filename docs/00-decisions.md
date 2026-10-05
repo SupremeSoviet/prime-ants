@@ -288,3 +288,10 @@
 2. Написать короткий GDD v2 на основе этого документа (он заменит описания старого мода в разделах 01–08).
 3. Создать проект на 26.3 и начать с вертикального среза: **одна колония Lasius niger** — матка, выводок, рабочие, гнездо
    в земле, фуражировка, брачный лёт.
+
+
+## Implementation notes - 2026-10-05 (T16 owner-authorized terrain and nestmate rules)
+
+The latest owner terrain/pass-through decisions permit bounded removal of witnessed short native plants only in declared queen excavation columns, untouched witnessed mineral floor support, one-block supported exterior adaptation and a 64-column (offsets 4..11) search. Excavation remains 24 soil cells, a connected two-high chamber and intact dry shell; plants provide no material/food. Exact native generation authority is revoked by later writes. Matching queen/worker and worker/worker lineage pairs pass without pushing/cramming; foreign contacts, terrain, gravity, damage, death and occupied-body block placement stay physical.
+
+Five automatic queens began protected soil excavation in all three fixed sample regions. Production overworld placement is therefore enabled by default as instructed; explicit opt-out is JVM option -Dprime_ants.naturalPlacement=false (legacy explicit setting compatible). This promotes early founding, not the complete unattended life cycle. Two native queens later stop conservatively on changed soil. Fresh full acceptance passes 15 unit/120 server/24 model cases; the two retained traffic reproducers recover without a wider throat. Details and limitations are in natural-placement-feasibility.md and T16/report.md; earlier design text remains historical.

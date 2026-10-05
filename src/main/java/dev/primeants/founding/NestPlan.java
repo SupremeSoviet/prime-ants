@@ -9,19 +9,29 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
 
 /** Describes actual work targets, never places geometry. Coordinates are bounded relative to the entrance. */
-public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> tasks, List<BlockState> expected) {
+public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> tasks, List<BlockState> expected,
+        List<BlockPos> plants, List<BlockState> plantExpected, List<BlockPos> surfaceDeposits, BlockPos exteriorStand) {
+    public NestPlan(BlockPos entrance, Direction direction, List<BlockPos> tasks, List<BlockState> expected) {
+        this(entrance,direction,tasks,expected,List.of(),List.of(),List.of(),null);
+    }
     public static final int HARD_CAP = 24; // below the 48-block contract maximum
     public static final int MAX_RADIUS = 5, MAX_DEPTH = 3;
     public BlockPos at(int forward, int side, int dy) {
         return entrance.relative(direction, forward).relative(direction.getClockWise(), side).offset(0, dy, 0);
     }
     public BlockPos chamber() { return at(4, 0, -2); }
-    public BlockPos outside() { return at(-2, 0, 1); }
+    public BlockPos outside() { return exteriorStand == null ? at(-2, 0, 1) : exteriorStand; }
     /** Bounded 40-cell area for 22 units: five exterior rows, four cells to either side; central route stays clear. */
     public List<BlockPos> deposits() {
+        if (!surfaceDeposits.isEmpty()) return surfaceDeposits;
         List<BlockPos> result = new ArrayList<>();
         for (int f = -5; f <= -1; f++) for (int s : new int[]{-4, 4, -3, 3, -2, 2, -1, 1}) result.add(at(f, s, 1));
         return List.copyOf(result);
+    }
+    /** Worker routes retain the queen's declared exterior heights without acquiring plant/soil authority. */
+    public NestPlan routeGeometry() {
+        var g=geometry(entrance,direction);
+        return new NestPlan(entrance,direction,g.tasks(),g.expected(),List.of(),List.of(),surfaceDeposits,exteriorStand);
     }
     public BlockPos nursery() { return at(4, 1, -2); }
     public BlockPos cache() { return at(3, -1, -2); }
@@ -38,34 +48,83 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
         return List.copyOf(result);
     }
     public List<BlockPos> plugs() { return List.of(at(2, 0, -2), at(2, 0, -1)); }
+    /** WORLD_SURFACE includes short plants. Descend at most two cells, never through trees/crops. */
+    public static BlockPos soilSurface(ServerLevel level, BlockPos column) {
+        int y=level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE,column.getX(),column.getZ())-1;
+        var p=column.atY(y);
+        for(int i=0;i<2 && NativeVegetation.material(level.getBlockState(p));i++) p=p.below();
+        return p;
+    }
+    public static boolean traversable(ServerLevel level, BlockPos p) {
+        var state=level.getBlockState(p);
+        return level.getFluidState(p).isEmpty() && (state.isAir() || NativeVegetation.material(state))
+            && state.getCollisionShape(level,p).isEmpty();
+    }
+    private static BlockPos exteriorFeet(ServerLevel level, BlockPos original) {
+        for(int dy=1;dy>=-1;dy--) {
+            var p=original.offset(0,dy,0);
+            if (loaded(level,p) && NaturalSoil.get(level).eligible(level,p.below()) && walkable(level,p)) return p;
+        }
+        return null;
+    }
     public static NestPlan candidate(ServerLevel level, BlockPos entrance, Direction direction) {
-        NestPlan geometry = geometry(entrance, direction);
-        NaturalSoil soil = NaturalSoil.get(level);
-        for (BlockPos p : geometry.tasks) if (!soil.eligible(level, p)) return null;
-        // Natural roof and stable native floors; no fluids/trees/falling or unknown supports.
-        for (int f = 0; f < 3; f++) if (!soil.eligible(level, geometry.at(f, 0, -f - 1))) return null;
-        for (int f = 3; f <= 5; f++) for (int s = -1; s <= 1; s++) {
-            if (!soil.eligible(level, geometry.at(f, s, -3)) || !soil.eligible(level, geometry.at(f, s, 0))) return null;
+        NestPlan geometry=geometry(entrance,direction);var soil=NaturalSoil.get(level);
+        for(var p:geometry.tasks) if(!soil.eligible(level,p)) return null;
+        // Untouched witnessed mineral is allowed ONLY as support beneath the floor, never a target/roof/wall.
+        for(int f=0;f<3;f++) if(!soil.floorSupport(level,geometry.at(f,0,-f-1))) return null;
+        for(int f=3;f<=5;f++) for(int side=-1;side<=1;side++) {
+            if(!soil.floorSupport(level,geometry.at(f,side,-3)) || !soil.eligible(level,geometry.at(f,side,0))) return null;
         }
-        for (int f = 3; f <= 5; f++) for (int side = -1; side <= 1; side++) for (int dy = -2; dy <= -1; dy++) {
-            BlockPos p = geometry.at(f, side, dy);
-            for (Direction d : Direction.Plane.HORIZONTAL) {
-                BlockPos n = p.relative(d);
-                if (!geometry.tasks.contains(n) && !soil.eligible(level, n)) return null;
+        for(int f=3;f<=5;f++) for(int side=-1;side<=1;side++) for(int dy=-2;dy<=-1;dy++)
+            for(var d:Direction.Plane.HORIZONTAL) {
+                var n=geometry.at(f,side,dy).relative(d);
+                if(!geometry.tasks.contains(n) && !soil.eligible(level,n)) return null;
             }
+        var plants=new ArrayList<BlockPos>();var plantStates=new ArrayList<BlockState>();
+        // Only plants directly supported by declared excavation soil are affected by that excavation.
+        for(var p:geometry.tasks) {
+            var above=p.above();if(geometry.tasks.contains(above)) continue;
+            if(NativeVegetation.material(level.getBlockState(above))) {
+                if(!NativeVegetation.get(level).eligible(level,above)) return null;
+                plants.add(above);plantStates.add(level.getBlockState(above));
+            } else if(p.getY()==entrance.getY() && !traversable(level,above)) return null;
         }
-        for (int f = -3; f <= -1; f++) for (int s = -1; s <= 1; s++) {
-            BlockPos p = geometry.at(f, s, 1);
-            if (!soil.eligible(level, p.below()) || !walkable(level, p)) return null;
+        var exterior=new LinkedHashSet<BlockPos>();
+        for(int f=-5;f<=-1;f++) for(int side=-4;side<=4;side++) {
+            var feet=exteriorFeet(level,geometry.at(f,side,1));if(feet!=null) exterior.add(feet);
         }
-        if (geometry.deposits().stream().filter(p -> soil.eligible(level, p.below()) && walkable(level, p)).count() < HARD_CAP - 2) return null;
-        // Avoid leaking into pre-existing cavities or liquid adjacent to the envelope.
-        for (BlockPos p : geometry.tasks) for (Direction d : Direction.values()) {
-            BlockPos n = p.relative(d);
-            if (!level.getFluidState(n).isEmpty()) return null;
+        // Connected supported stands at actual heights. No lane clearing or relaxed enclosure.
+        var start=entrance.above();if(!walkable(level,start)) return null;
+        var reached=new LinkedHashSet<BlockPos>();var queue=new java.util.ArrayDeque<BlockPos>();queue.add(start);
+        while(!queue.isEmpty()) {
+            var p=queue.remove();if(!reached.add(p)) continue;
+            for(var n:exterior) if(Math.abs(p.getX()-n.getX())+Math.abs(p.getZ()-n.getZ())==1
+                && Math.abs(p.getY()-n.getY())<=1 && !reached.contains(n)) queue.add(n);
         }
+        for(int f=-3;f<=-1;f++) for(int side=-1;side<=1;side++) {
+            var feet=exteriorFeet(level,geometry.at(f,side,1));if(feet==null || !reached.contains(feet)) return null;
+        }
+        var deposits=new ArrayList<BlockPos>();
+        for(var anchor:geometry.deposits()) {
+            var p=exteriorFeet(level,anchor);
+            if(p!=null && level.getBlockState(p).isAir() && reached.contains(p)
+                && reached.stream().anyMatch(n -> Math.abs(p.getX()-n.getX())+Math.abs(p.getZ()-n.getZ())==1 && Math.abs(p.getY()-n.getY())<=1)) deposits.add(p);
+        }
+        if(deposits.size()<HARD_CAP-2) return null;
+        for(var p:geometry.tasks) for(var d:Direction.values()) if(!level.getFluidState(p.relative(d)).isEmpty()) return null;
         var work=bottomFirst(entrance,direction).tasks();
-        return new NestPlan(entrance,direction,work,work.stream().map(level::getBlockState).toList());
+        return new NestPlan(entrance,direction,work,work.stream().map(level::getBlockState).toList(),
+            List.copyOf(plants),List.copyOf(plantStates),List.copyOf(deposits),exteriorFeet(level,geometry.at(-2,0,1)));
+    }
+    /** Saved adaptations confer no permission: live origin/reach checks remain mandatory at each action. */
+    public boolean validAdaptation() {
+        if(plants.size()!=plantExpected.size() || plants.size()>3 || new java.util.HashSet<>(plants).size()!=plants.size()) return false;
+        for(int i=0;i<plants.size();i++) if(!tasks.contains(plants.get(i).below()) || plants.get(i).getY()!=entrance.getY()+1 || !NativeVegetation.material(plantExpected.get(i))) return false;
+        var legacy=new NestPlan(entrance,direction,List.of(),List.of()).deposits();
+        if(surfaceDeposits.size()>40 || new java.util.HashSet<>(surfaceDeposits).size()!=surfaceDeposits.size()) return false;
+        for(var p:surfaceDeposits) if(legacy.stream().noneMatch(a -> a.getX()==p.getX() && a.getZ()==p.getZ() && Math.abs(a.getY()-p.getY())<=1)) return false;
+        var anchor=at(-2,0,1);
+        return exteriorStand==null || exteriorStand.getX()==anchor.getX() && exteriorStand.getZ()==anchor.getZ() && Math.abs(exteriorStand.getY()-anchor.getY())<=1;
     }
     public static NestPlan geometry(BlockPos e, Direction d) {
         NestPlan p = new NestPlan(e.immutable(), d, List.of(), List.of());
@@ -85,7 +144,7 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
         return new NestPlan(e.immutable(),d,List.copyOf(tasks),List.of());
     }
     public static boolean walkable(ServerLevel level, BlockPos feet) {
-        return level.getBlockState(feet).isAir() && level.getBlockState(feet.above()).isAir()
+        return traversable(level,feet) && traversable(level,feet.above())
                 && level.getBlockState(feet.below()).isSolidRender()
                 && level.getFluidState(feet.below()).isEmpty();
     }

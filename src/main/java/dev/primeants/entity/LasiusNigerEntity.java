@@ -35,6 +35,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 public final class LasiusNigerEntity extends PathfinderMob {
     private final AntForm form;
     private long elapsedAgeTicks;
+    private static final EntityDataAccessor<String> LINEAGE = SynchedEntityData.defineId(LasiusNigerEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Integer> CALLOW = SynchedEntityData.defineId(LasiusNigerEntity.class, EntityDataSerializers.INT);
     private long bodyReserve = initialReserve(), callowAgeTicks, callowDuration;
     private UUID broodId, queenId;
@@ -62,6 +63,24 @@ public final class LasiusNigerEntity extends PathfinderMob {
     public long callowDuration() { return callowDuration; }
     public UUID broodId() { return broodId; }
     public UUID queenId() { return queenId; }
+    public UUID colonyIdentity() {
+        if (form == AntForm.QUEEN) return getUUID();
+        if (!level().isClientSide()) return broodId != null ? queenId : null;
+        String value = entityData.get(LINEAGE);
+        return value.isEmpty() ? null : UUID.fromString(value);
+    }
+    @Override public void push(net.minecraft.world.entity.Entity other) {
+        if (!Nestmates.matching(this, other)) super.push(other);
+    }
+    @Override protected void doPush(net.minecraft.world.entity.Entity other) {
+        if (!Nestmates.matching(this, other)) super.doPush(other);
+    }
+    @Override public boolean canCollideWith(net.minecraft.world.entity.Entity other) {
+        return !Nestmates.matching(this, other) && super.canCollideWith(other);
+    }
+    @Override public boolean canBeCollidedWith(net.minecraft.world.entity.Entity other) {
+        return !Nestmates.matching(this, other) && super.canBeCollidedWith(other);
+    }
     public int callowVisual() { return entityData.get(CALLOW); }
     public boolean isCallow() { return callowVisual() < 1000; }
     public boolean spendReserve(long units) {
@@ -71,7 +90,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
     public void initializeCallow(UUID brood, UUID queen, BlockPos home) {
         if (form != AntForm.WORKER || broodId != null) throw new IllegalStateException("Callow must be a new worker");
         broodId = brood; queenId = queen; nurseryHome = home.immutable(); callowDuration = BroodPile.callowTicks(); callowAgeTicks = 0;
-        entityData.set(CALLOW, 0);
+        entityData.set(CALLOW, 0); entityData.set(LINEAGE, queen.toString());
     }
     public void prepareNursery(ServerLevel level, NestPlan plan) {
         if (nurseryClaimed || !founding.sealed() || position().distanceToSqr(Vec3.atBottomCenterOf(plan.nursery())) > BroodPile.CARE_REACH_SQUARED
@@ -92,7 +111,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
 
     public AntForm form() { return form; }
     public long elapsedAgeTicks() { return elapsedAgeTicks; }
-    @Override protected void defineSynchedData(SynchedEntityData.Builder builder) { super.defineSynchedData(builder); builder.define(CALLOW, 1000); }
+    @Override protected void defineSynchedData(SynchedEntityData.Builder builder) { super.defineSynchedData(builder); builder.define(CALLOW, 1000); builder.define(LINEAGE, ""); }
 
     @Override protected PathNavigation createNavigation(Level level) { return new AntGroundNavigation(this, level); }
 
@@ -175,13 +194,15 @@ public final class LasiusNigerEntity extends PathfinderMob {
         bodyReserve = form == AntForm.QUEEN ? Math.max(0, Math.min(BroodPile.MAX_RESERVE, input.getLongOr("QueenBodyReserve", initialReserve()))) : 0;
         nurseryClaimed = input.getBooleanOr("NurseryClaimed", false);
         nutrition.load(input.childOrEmpty("Nutrition"),dev.primeants.worker.Nutrition.QUEEN_SUGAR_CAPACITY,dev.primeants.worker.Nutrition.QUEEN_PROTEIN_CAPACITY);
+        broodId=null; queenId=null; nurseryHome=null; callowAgeTicks=0; callowDuration=0;
+        entityData.set(LINEAGE, ""); entityData.set(CALLOW,1000);
         if (input.getString("BroodId").isPresent()) {
             if (form != AntForm.WORKER) throw new IllegalArgumentException("Queen cannot be a callow");
             broodId = UUID.fromString(input.getStringOr("BroodId", "")); queenId = UUID.fromString(input.getStringOr("QueenId", ""));
             nurseryHome = input.read("NurseryHome", BlockPos.CODEC).orElseThrow();
             callowDuration = Math.max(1, input.getLongOr("CallowDuration", BroodPile.callowTicks()));
             callowAgeTicks = Math.max(0, Math.min(callowDuration, input.getLongOr("CallowTicks", 0)));
-            entityData.set(CALLOW, (int)(callowAgeTicks * 1000 / callowDuration));
+            entityData.set(CALLOW, (int)(callowAgeTicks * 1000 / callowDuration)); entityData.set(LINEAGE, queenId.toString());
         }
         setPersistenceRequired();
     }

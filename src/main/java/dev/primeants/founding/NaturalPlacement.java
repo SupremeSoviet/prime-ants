@@ -22,10 +22,10 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.saveddata.*;
 import net.minecraft.world.phys.AABB;
 
-/** Experimental placement EVENT ledger. Never counts population or replaces missing actors. */
+/** Generation-triggered placement EVENT ledger. Never counts population or replaces missing actors. */
 public final class NaturalPlacement extends SavedData {
-    public static final int COLUMNS = 8, PER_TICK = 2, RETRIES = 3, MIN_SPACING = 56;
-    // Eight columns plus at most two same-column insertion retries. Checkpoint BEFORE any plan/factory call.
+    public static final int COLUMNS = 64, PER_TICK = 2, RETRIES = 3, MIN_SPACING = 56;
+    // Sixty-four columns plus at most two same-column insertion retries. Checkpoint BEFORE any plan/factory call.
     public static final int MAX_EVALUATIONS = COLUMNS + RETRIES - 1;
     public static final String AUTHORITY = "new_terrain_v1";
     public static final TagKey<Biome> BIOMES = TagKey.create(Registries.BIOME,
@@ -39,6 +39,10 @@ public final class NaturalPlacement extends SavedData {
                 r.addProperty("status", "INDETERMINATE"); r.addProperty("reason", "interrupted_insertion_no_replacement");
             }
             data.records.put(k.asString().getOrThrow(), r);
+            if (r.get("status").getAsString().equals("PENDING") && !r.has("searchVersion")) {
+                r.addProperty("searchVersion",1);r.addProperty("searchColumns",8);r.addProperty("evaluationLimit",10);
+                r.addProperty("searchMin",6);r.addProperty("searchMax",9);
+            }
             if (r.get("status").getAsString().equals("PENDING")) data.queue.add(k.asString().getOrThrow());
         });
         return data;
@@ -51,9 +55,12 @@ public final class NaturalPlacement extends SavedData {
     private final Map<String,JsonObject> records = new LinkedHashMap<>();
     private final ArrayDeque<String> queue = new ArrayDeque<>();
     public static NaturalPlacement get(ServerLevel l) { return l.getDataStorage().computeIfAbsent(TYPE); }
-    /** Off by default. The second clause is a development provider, never an ordinary dimension override. */
+    /** Promoted after protected native soil excavation. Explicit opt-out; legacy explicit setting remains compatible. */
+    public static boolean productionEnabled() {
+        return Boolean.parseBoolean(System.getProperty("prime_ants.naturalPlacement",System.getProperty("prime_ants.experimentalNaturalPlacement","true")));
+    }
     public static boolean enabled(ServerLevel l) {
-        return Boolean.getBoolean("prime_ants.experimentalNaturalPlacement") && l.dimension().equals(Level.OVERWORLD)
+        return productionEnabled() && l.dimension().equals(Level.OVERWORLD)
             || net.fabricmc.loader.api.FabricLoader.getInstance().isDevelopmentEnvironment()
                 && Arrays.asList(System.getProperty("prime_ants.developmentPlacementDimensions", "").split(","))
                     .contains(l.dimension().identifier().toString());
@@ -83,6 +90,8 @@ public final class NaturalPlacement extends SavedData {
         r.addProperty("dimension",l.dimension().identifier().toString()); r.addProperty("x",proto.getPos().x()); r.addProperty("z",proto.getPos().z());
         r.addProperty("queen",identity(l,proto.getPos()).toString()); r.addProperty("status","PENDING");
         r.addProperty("reason","awaiting_full_entity_ticking"); r.addProperty("column",0); r.addProperty("attempts",0);
+        r.addProperty("searchVersion",2);r.addProperty("searchColumns",COLUMNS);r.addProperty("evaluationLimit",MAX_EVALUATIONS);
+        r.addProperty("searchMin",4);r.addProperty("searchMax",11);
         r.add("rejections",new JsonObject()); records.put(key,r); queue.add(key); setDirty();
     }
     public static void tick(ServerLevel l) { if (enabled(l)) get(l).evaluate(l); }
@@ -94,6 +103,7 @@ public final class NaturalPlacement extends SavedData {
             if (!"PENDING".equals(r.get("status").getAsString())) continue;
             var p=new ChunkPos(r.get("x").getAsInt(),r.get("z").getAsInt());
             if (!authority(l,r,p,key)) finish(r,"REJECTED","missing_or_mismatched_generation_authority");
+            else if (!searchValid(r)) finish(r,"REJECTED","unsupported_or_mismatched_search_version");
             else if (PlacementReservation.fenced(l,r)) finish(r,"INDETERMINATE","persisted_insertion_fence_no_replacement");
             else if (ready(l,p)) evaluateColumn(l,r,p);
             if ("PENDING".equals(r.get("status").getAsString())) queue.add(key);
@@ -105,7 +115,7 @@ public final class NaturalPlacement extends SavedData {
                 && key.equals(Long.toString(p.pack())) && selected(l,p) && identity(l,p).toString().equals(r.get("queen").getAsString());
     }
     public static boolean ready(ServerLevel l,ChunkPos p) {
-        // Search offsets 6..9 keep every prospective founding cell (+/-6) inside the candidate chunk.
+        // Search offsets 4..11 may cross the candidate boundary; inspect a FULL halo without acquiring tickets.
         // A loaded halo also covers the larger read-only insertion snapshot; never request missing neighbors.
         for(int x=p.x()-1;x<=p.x()+1;x++) for(int z=p.z()-1;z<=p.z()+1;z++) {
             var q=new ChunkPos(x,z);
@@ -114,7 +124,20 @@ public final class NaturalPlacement extends SavedData {
         return l.areEntitiesActuallyLoadedAndTicking(p)
             && l.isPositionEntityTicking(new BlockPos(p.getMinBlockX()+8,l.getMinY()+8,p.getMinBlockZ()+8));
     }
-    private static final int[][] OFFSETS={{7,7},{8,8},{6,8},{9,7},{7,9},{8,6},{6,6},{9,9}};
+    private static final int[][] LEGACY_OFFSETS={{7,7},{8,8},{6,8},{9,7},{7,9},{8,6},{6,6},{9,9}};
+    private static boolean searchValid(JsonObject r) {
+        int v=r.has("searchVersion")?r.get("searchVersion").getAsInt():0;
+        int columns=v==1?8:v==2?64:0;
+        return columns>0 && r.has("searchColumns") && r.get("searchColumns").getAsInt()==columns
+            && r.has("evaluationLimit") && r.get("evaluationLimit").getAsInt()==columns+2
+            && r.has("searchMin") && r.get("searchMin").getAsInt()==(v==1?6:4)
+            && r.has("searchMax") && r.get("searchMax").getAsInt()==(v==1?9:11);
+    }
+    public static int[] searchOffset(ServerLevel l,JsonObject r,int column) {
+        if(r.get("searchVersion").getAsInt()==1) return LEGACY_OFFSETS[(column+(int)(salt(l)&7))%8].clone();
+        int index=(column+(int)(salt(l)&63))%64;
+        return new int[]{4+index/8,4+index%8}; // rotated x-major grid; direction order is vanilla HORIZONTAL.
+    }
     private void reject(JsonObject r,String why) {
         var counts=r.getAsJsonObject("rejections"); counts.addProperty(why,counts.has(why)?counts.get(why).getAsInt()+1:1);
         r.addProperty("reason",why); setDirty();
@@ -132,15 +155,16 @@ public final class NaturalPlacement extends SavedData {
     private void evaluateColumn(ServerLevel l,JsonObject r,ChunkPos p) {
         if(r.has("retryAfter") && l.getGameTime()<r.get("retryAfter").getAsLong()) return;
         int column=r.get("column").getAsInt();
-        if(column<0 || column>=COLUMNS) {finish(r,"REJECTED","bounded_search_exhausted");return;}
+        int columns=r.get("searchColumns").getAsInt();
+        if(column<0 || column>=columns) {finish(r,"REJECTED","bounded_search_exhausted");return;}
         int evaluations=r.has("evaluations")?r.get("evaluations").getAsInt():0;
-        if(evaluations>=MAX_EVALUATIONS || r.get("attempts").getAsInt()>=RETRIES) {finish(r,"REJECTED","evaluation_or_insertion_budget_exhausted");return;}
+        if(evaluations>=r.get("evaluationLimit").getAsInt() || r.get("attempts").getAsInt()>=RETRIES) {finish(r,"REJECTED","evaluation_or_insertion_budget_exhausted");return;}
         count(r,"evaluations");setDirty();
-        String checkpoint=saveVerified(l,r,"evaluations","column","attempts");
+        String checkpoint=saveVerified(l,r,"evaluations","column","attempts","searchVersion","searchColumns","evaluationLimit","searchMin","searchMax");
         if(checkpoint!=null) {storageDiagnostic(r,"search_checkpoint",checkpoint);finish(r,"INDETERMINATE","unverified_search_progress_no_insertion");return;}
-        int[] offset=OFFSETS[(column+(int)(salt(l)&7))%COLUMNS];
+        int[] offset=searchOffset(l,r,column);
         var surface=new BlockPos(p.getMinBlockX()+offset[0],0,p.getMinBlockZ()+offset[1]);
-        surface=surface.atY(l.getHeight(Heightmap.Types.WORLD_SURFACE,surface.getX(),surface.getZ())-1);
+        surface=NestPlan.soilSurface(l,surface);
         r.addProperty("biome",l.getBiome(surface).getRegisteredName());
         String problem=null; NestPlan plan=null;
         if(!l.getBiome(surface).is(BIOMES)) problem="unsupported_biome";
@@ -151,13 +175,13 @@ public final class NaturalPlacement extends SavedData {
             for(Direction d:Direction.Plane.HORIZONTAL) {count(r,"preliminaryPlans");plan=NestPlan.candidate(l,surface,d);if(plan!=null)break;}
             if(plan==null) problem="protected_footprint_or_support_roof_floor";
         }
-        if(problem!=null) {reject(r,problem);r.addProperty("column",column+1);if(column+1==COLUMNS)finish(r,"REJECTED","bounded_search_exhausted");return;}
+        if(problem!=null) {reject(r,problem);r.addProperty("column",column+1);if(column+1==columns)finish(r,"REJECTED","bounded_search_exhausted");return;}
         var feet=surface.above();
         var box=AntEntities.QUEEN.getSpawnAABB(feet.getX()+.5,feet.getY(),feet.getZ()+.5);
         if(!l.getWorldBorder().isWithinBounds(feet) || !NestPlan.walkable(l,feet) || !l.noCollision(box)
                 || !l.getEntities(null,box).isEmpty()) problem="occupied_or_obstructed_space";
-        // Selected chunks are separated by >=64 blocks on a fixed lattice; offsets 6..9
-        // reduce the nearest possible separation to 61, exceeding MIN_SPACING. No historical-ledger scan.
+        // Selected chunks are separated by >=64 blocks on a fixed lattice; offsets 4..11
+        // reduce the nearest possible separation to 57, exceeding MIN_SPACING. No historical-ledger scan.
         if(!l.getEntitiesOfClass(dev.primeants.entity.LasiusNigerEntity.class,new AABB(feet).inflate(MIN_SPACING),
                 q->q.form()==dev.primeants.entity.AntForm.QUEEN && q.isAlive()).isEmpty()) problem="existing_queen_spacing";
         if(problem!=null) {reject(r,problem);r.addProperty("column",column+1);return;}
@@ -173,7 +197,7 @@ public final class NaturalPlacement extends SavedData {
                 || !l.getBiome(surface).is(BIOMES) || !l.noCollision(queen,queen.getBoundingBox())
                 || !l.getEntities(queen,queen.getBoundingBox()).isEmpty()) {
             reject(r,"immediate_revalidation_failed");r.addProperty("column",column+1);
-            if(column+1==COLUMNS)finish(r,"REJECTED","bounded_search_exhausted");
+            if(column+1==columns)finish(r,"REJECTED","bounded_search_exhausted");
             String progress=saveVerified(l,r,"evaluations","column");
             if(progress!=null) {storageDiagnostic(r,"final_refusal_progress",progress);finish(r,"INDETERMINATE","unverified_search_progress_no_insertion");}
             return;
