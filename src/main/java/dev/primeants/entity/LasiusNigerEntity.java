@@ -35,6 +35,10 @@ import net.minecraft.world.level.storage.ValueOutput;
 public final class LasiusNigerEntity extends PathfinderMob {
     private final AntForm form;
     private final AdultLife adultLife=new AdultLife();
+    private long broodNeglectGrace=dev.primeants.brood.BroodRecord.selectedDuration("prime_ants.broodNeglectTicks",dev.primeants.brood.BroodRecord.DEFAULT_NEGLECT);
+    private long cocoonWaitingBound=dev.primeants.brood.BroodRecord.selectedDuration("prime_ants.cocoonWaitingTicks",dev.primeants.brood.BroodRecord.DEFAULT_COCOON_WAIT);
+    public long broodNeglectGrace(){return broodNeglectGrace;} public long cocoonWaitingBound(){return cocoonWaitingBound;}
+    public boolean nurseryClaimed(){return nurseryClaimed;}
     public AdultLife adultLife(){return adultLife;}
     private int colonyAdultCapacity=Integer.getInteger("prime_ants.colonyAdultCapacity",30);
     public int colonyAdultCapacity(){return colonyAdultCapacity;}
@@ -181,6 +185,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
         output.putLong("AntElapsedAgeTicks", elapsedAgeTicks);
         adultLife.save(output.child("AdultLife"));
         output.putInt("ColonyAdultCapacity",colonyAdultCapacity);
+        output.putLong("BroodNeglectGrace",broodNeglectGrace);output.putLong("CocoonWaitingBound",cocoonWaitingBound);
         founding.save(output.child("Founding"));
         workerTasks.save(output.child("WorkerTask"));
         output.putLong("QueenBodyReserve", bodyReserve); output.putBoolean("NurseryClaimed", nurseryClaimed);
@@ -203,6 +208,8 @@ public final class LasiusNigerEntity extends PathfinderMob {
         elapsedAgeTicks = Math.max(0, input.getLongOr("AntElapsedAgeTicks", 0));
         founding.load(input.childOrEmpty("Founding"));
         adultLife.load(input.childOrEmpty("AdultLife"),this);
+        broodNeglectGrace=input.getLongOr("BroodNeglectGrace",dev.primeants.brood.BroodRecord.DEFAULT_NEGLECT);cocoonWaitingBound=input.getLongOr("CocoonWaitingBound",dev.primeants.brood.BroodRecord.DEFAULT_COCOON_WAIT);
+        if(broodNeglectGrace<1||cocoonWaitingBound<1)throw new IllegalArgumentException("Invalid brood birth policy");
         colonyAdultCapacity=input.getIntOr("ColonyAdultCapacity",30);
         if(colonyAdultCapacity<4||colonyAdultCapacity>30)throw new IllegalArgumentException("Invalid saved adult capacity");
         workerTasks.load(input.childOrEmpty("WorkerTask"));

@@ -16,7 +16,7 @@ public final class PlacementSettings implements ModInitializer {
     public static final Set<String> ALL_FULL=new HashSet<>();
     public static final Set<ChunkPos> DECLARED_FULL=new HashSet<>();
     public static final Set<String> EXISTING_FULL=new HashSet<>();
-    public static boolean replayExperiment(){return "t18-replay-v1".equals(System.getProperty("prime_ants.placementMode"));}
+    public static boolean replayExperiment(){return Set.of("t18-replay-v1","t19-replay-v1").contains(System.getProperty("prime_ants.placementMode",""));}
     public static int replayBudget(){return EXISTING_FULL.size()+Integer.getInteger("prime_ants.placementPriorFull",0)+(int)ALL_FULL.stream().filter(p->!EXISTING_FULL.contains(p)).count();}
     public static boolean integrationExperiment() {return "t17-nectar-v1".equals(System.getProperty("prime_ants.placementMode"));}
     public static boolean frozenExperiment() {return integrationExperiment() || "t16-frozen-v1".equals(System.getProperty("prime_ants.placementMode"));}

@@ -27,7 +27,7 @@ public final class AdultLife {
     }
     public boolean mealAction(){return ++mealTicks>=20;}
     public void tick(ServerLevel level,LasiusNigerEntity ant){
-        if(!started&&(ant.form()==AntForm.WORKER||ant.founding().lifecycle()!=QueenFounding.Lifecycle.CLAUSTRAL))started=true;
+        if(!started&&(ant.form()==AntForm.WORKER||!ant.founding().reserveOnlyFounding(level)))started=true;
         if(!started)return; // First-clutch queen uses only the unchanged 39,000 reserve budget.
         activeTicks++;
         if(ant.nutrition().spend(1,0)){maintenanceTicks++;fasting=0;}else if(fasting<Long.MAX_VALUE)fasting++;

@@ -41,6 +41,12 @@ public final class BroodPile extends BlockEntity {
     // Bounded consumed identities prevent replacement after death and reconcile saved-cocoon/live-adult overlap.
     private final Set<UUID> consumed = new HashSet<>();
     private final Set<UUID> original=new HashSet<>();
+    private final java.util.Map<UUID,String> expired=new java.util.HashMap<>();
+    private long neglectGrace=BroodRecord.DEFAULT_NEGLECT,waitingBound=BroodRecord.DEFAULT_COCOON_WAIT;
+    public java.util.Map<UUID,String> expired(){return java.util.Map.copyOf(expired);}
+    private long terminalUnits(String item){return expired.values().stream().mapToLong(r->BroodHistory.units(r,item)).sum();}
+    public boolean firstClutchViable(ServerLevel server){return records.stream().anyMatch(r->original.contains(r.id())&&!expired.containsKey(r.id())&&BroodHistory.get(server).terminal(r.id())==null);}
+    private boolean originalTerminal(){return original.stream().allMatch(id->consumed.contains(id)||expired.containsKey(id));}
     private boolean operational;
     private long adultLifespan=dev.primeants.entity.AdultLife.DEFAULT_LIFESPAN,fastingGrace=dev.primeants.entity.AdultLife.DEFAULT_FASTING;
     private int adultCapacity=ADULT_CAPACITY;
@@ -49,11 +55,11 @@ public final class BroodPile extends BlockEntity {
     public Set<UUID> original(){return Set.copyOf(original);}
     public boolean operational(){return operational;}
     public long lastLayingTick(){return lastLayingTick;}
-    public long consumedApples(){return archivedApples+records.stream().mapToLong(r->r.nutrition().apples()).sum();}
-    public long consumedBerries(){return archivedBerries+records.stream().mapToLong(r->r.nutrition().berries()).sum();}
-    public long consumedChickens(){return archivedChickens+records.stream().mapToLong(r->r.nutrition().chickens()).sum();}
-    public long consumedNectar(){return archivedNectar+records.stream().mapToLong(r->r.nutrition().nectar()).sum();}
-    public long consumedFlesh(){return archivedFlesh+records.stream().mapToLong(r->r.nutrition().flesh()).sum();}
+    public long consumedApples(){return archivedApples+terminalUnits("apples")+records.stream().mapToLong(r->r.nutrition().apples()).sum();}
+    public long consumedBerries(){return archivedBerries+terminalUnits("berries")+records.stream().mapToLong(r->r.nutrition().berries()).sum();}
+    public long consumedChickens(){return archivedChickens+terminalUnits("chickens")+records.stream().mapToLong(r->r.nutrition().chickens()).sum();}
+    public long consumedNectar(){return archivedNectar+terminalUnits("nectar")+records.stream().mapToLong(r->r.nutrition().nectar()).sum();}
+    public long consumedFlesh(){return archivedFlesh+terminalUnits("flesh")+records.stream().mapToLong(r->r.nutrition().flesh()).sum();}
     public long consumedFood(){return consumedApples()+consumedBerries()+consumedChickens()+consumedNectar()+consumedFlesh();}
     public long gainedSugar(){return consumedApples()*Nutrition.APPLE_SUGAR+consumedBerries()*Nutrition.BERRY_SUGAR+consumedNectar()*Nutrition.NECTAR_SUGAR;}
     public long gainedProtein(){return consumedChickens()*Nutrition.CHICKEN_PROTEIN+consumedFlesh()*Nutrition.FLESH_PROTEIN;}
@@ -79,10 +85,11 @@ public final class BroodPile extends BlockEntity {
     public boolean establish(LasiusNigerEntity queen, NestPlan p) {
         if (queenId != null || !getBlockPos().equals(p.nursery())) return false;
         queenId = queen.getUUID(); plan = NestPlan.geometry(p.entrance(), p.direction());
+        neglectGrace=queen.broodNeglectGrace();waitingBound=queen.cocoonWaitingBound();
         adultLifespan=queen.adultLife().lifespan();fastingGrace=queen.adultLife().grace();adultCapacity=queen.colonyAdultCapacity();
         if (!queen.founding().sealed() || queen.position().distanceToSqr(Vec3.atBottomCenterOf(getBlockPos())) > CARE_REACH_SQUARED
                 || !queen.spendReserve(CAPACITY * EGG_COST)) { queenId = null; plan = null; return false; }
-        for (int slot = 0; slot < CAPACITY; slot++) {var r=new BroodRecord(UUID.randomUUID(), queenId, slot);records.add(r);original.add(r.id());}
+        for (int slot = 0; slot < CAPACITY; slot++) {var r=new BroodRecord(UUID.randomUUID(), queenId, slot,neglectGrace,waitingBound);records.add(r);original.add(r.id());}
         condition = "eggs_laid"; changed();
         PrimeAnts.LOGGER.info("Nursery established queen={} pile={} brood={} reserve={} multiplier={} stageTicks={}", queenId, getBlockPos(), records.stream().map(BroodRecord::id).toList(), queen.bodyReserve(), multiplier(), stageTicks());
         return true;
@@ -103,12 +110,12 @@ public final class BroodPile extends BlockEntity {
         consumed.add(r.id());records.remove(r);archivedApples+=r.nutrition().apples();archivedBerries+=r.nutrition().berries();archivedChickens+=r.nutrition().chickens();archivedNectar+=r.nutrition().nectar();archivedFlesh+=r.nutrition().flesh();
     }
     private boolean lay(ServerLevel l,LasiusNigerEntity q,boolean care){
-        if(!care||!operational||!consumed.containsAll(original)||loadedTicks-lastLayingTick<layingCadence())return false;
+        if(!care||!operational||!originalTerminal()||loadedTicks-lastLayingTick<layingCadence())return false;
         if(records.size()>=CAPACITY){if(!condition.equals("larva_sugar_or_protein_exhausted"))condition="nursery_slots_full";return false;}
         if(ColonyMembers.get(l).occupied(queenId)+records.size()>=adultCapacity-1){condition="colony_capacity_full_or_unloaded";return false;}
         if(!q.nutrition().spend(Nutrition.EGG_SUGAR,Nutrition.EGG_PROTEIN)){condition="queen_ingested_nutrition_exhausted";return false;}
         int slot=0;while(true){final int index=slot;if(records.stream().noneMatch(r->r.slot()==index))break;slot++;}
-        var r=new BroodRecord(UUID.randomUUID(),queenId,slot);r.founding=false;records.add(r);lastLayingTick=loadedTicks;condition="food_fed_egg_laid";
+        var r=new BroodRecord(UUID.randomUUID(),queenId,slot,neglectGrace,waitingBound);r.founding=false;records.add(r);lastLayingTick=loadedTicks;condition="food_fed_egg_laid";
         PrimeAnts.LOGGER.info("Food-fed egg queen={} brood={} slot={} pileTicks={} cadence={} sugarCost={} proteinCost={}",queenId,r.id(),slot,loadedTicks,layingCadence(),Nutrition.EGG_SUGAR,Nutrition.EGG_PROTEIN);return true;
     }
     private void changed() {
@@ -124,39 +131,71 @@ public final class BroodPile extends BlockEntity {
         if (!next.equals(before)) level.setBlock(getBlockPos(), next, 3);
         level.sendBlockUpdated(getBlockPos(), before, next, 3);
     }
+    private boolean reconcileMember(ServerLevel server,BroodRecord r){
+        var member=ColonyMembers.get(server).member(r.workerId());var existing=server.getEntity(r.workerId());
+        if(member!=null){
+            if(!member.brood().equals(r.id())||!member.queen().equals(queenId)||!member.home().equals(plan.chamber())){condition="emergence_identity_conflict";return false;}
+            expired.remove(r.id());retire(r);condition=member.dead()?"emerged_worker_dead_no_respawn":"emergence_recorded_or_unloaded";return true;
+        }
+        if(existing instanceof LasiusNigerEntity ant&&r.id().equals(ant.broodId())&&queenId.equals(ant.queenId())&&plan.chamber().equals(ant.nurseryHome())){
+            ColonyMembers.get(server).record(r.id(),queenId,plan.chamber());expired.remove(r.id());retire(r);condition="emergence_reconciled";return true;
+        }
+        return false;
+    }
+    private void expire(ServerLevel server,BroodRecord r,String reason){
+        expired.put(r.id(),BroodHistory.get(server).expire(r,plan.chamber(),loadedTicks,reason));records.remove(r);condition="brood_expired_"+reason;
+    }
+    private boolean unsupported(ServerLevel server,BroodRecord r,String reason){
+        r.neglectReason=reason;
+        if(r.stage()==BroodStage.COCOON){if(r.waitingTicks<Long.MAX_VALUE)r.waitingTicks++;if(r.waitingTicks>=r.waitingBound()){expire(server,r,"cocoon_wait_"+reason);return true;}}
+        else{if(r.neglectTicks<Long.MAX_VALUE)r.neglectTicks++;if(r.neglectTicks>=r.neglectGrace()){expire(server,r,"neglect_"+reason);return true;}}
+        return false;
+    }
     void serverTick(ServerLevel server) {
         if (queenId == null || plan == null || !ownedBy(queenId, plan)) return;
         loadedTicks++;
         var owner = server.getEntity(queenId);
         if(owner instanceof LasiusNigerEntity q && q.founding().lifecycle()!=dev.primeants.founding.QueenFounding.Lifecycle.CLAUSTRAL)operational=true;
-        // Preserve historical open habitat after queen death. A missing queen cannot reseal recorded openings.
         for(UUID id:consumed)ColonyMembers.get(server).record(id,queenId,plan.chamber());
+        expired.replaceAll((id,row)->BroodHistory.get(server).retain(id,row));
         String habitat = plan.nurseryProblem(server, queenId, operational);
-        if (habitat != null) { condition = habitat; setChanged(); return; }
-        var actor = server.getEntity(queenId);
-        LasiusNigerEntity queen = actor instanceof LasiusNigerEntity q && q.isAlive() && !q.isRemoved() ? q : null;
-        boolean care = queen != null && !queen.isNoAi() && queen.founding().ready()
+        LasiusNigerEntity queen = owner instanceof LasiusNigerEntity q && q.isAlive() && !q.isRemoved() ? q : null;
+        boolean care = habitat==null && queen != null && !queen.isNoAi() && queen.founding().ready()
                 && queen.position().distanceToSqr(Vec3.atBottomCenterOf(getBlockPos())) <= CARE_REACH_SQUARED;
-        condition = care ? "cared" : "caregiver_absent_or_out_of_reach";
+        condition = habitat!=null?habitat:care?"cared":"caregiver_absent_or_out_of_reach";
         boolean visual = false;
         for (BroodRecord record : List.copyOf(records)) {
             if (consumed.contains(record.id())) { records.remove(record); visual = true; continue; }
+            // Verified real workers take precedence, before habitat failure and before terminal inference.
+            if(reconcileMember(server,record)){visual=true;continue;}
+            if(ColonyMembers.get(server).member(record.workerId())!=null||server.getEntity(record.workerId())!=null){condition="emergence_identity_conflict";visual|=unsupported(server,record,condition);continue;}
+            String terminal=BroodHistory.get(server).terminal(record.id());
+            if(terminal!=null){var row=com.google.gson.JsonParser.parseString(terminal).getAsJsonObject();if(!row.get("queen").getAsString().equals(queenId.toString())||row.get("home").getAsLong()!=plan.chamber().asLong())throw new IllegalStateException("Terminal brood lineage conflict");expired.put(record.id(),terminal);records.remove(record);visual=true;continue;}
+            if(habitat!=null){visual|=unsupported(server,record,habitat);continue;}
+            if(record.stage==BroodStage.EGG){
+                if(!care){visual|=unsupported(server,record,"egg_care_missing");continue;}
+                // Actual valid care and development, never mere caregiver presence.
+                record.neglectTicks=0;record.neglectReason="";
+            }
             if (record.stage == BroodStage.LARVA) {
                 long next = Math.min(stageDuration, record.progress + 1);
-                // Cumulative integer accounting: EXACT 12,000 per larva even when accelerated/rounded.
                 long required = (next * LARVA_COST / stageDuration) - record.nourishment;
                 if(record.founding){
-                    if (!care || queen.bodyReserve() == 0 || !queen.spendReserve(required)) { if (care) condition = "queen_reserve_exhausted"; continue; }
+                    if(required>0||record.nourishment<LARVA_COST){
+                        if(!care||queen.bodyReserve()==0||!queen.spendReserve(required)){condition=care?"queen_reserve_exhausted":"larva_care_missing";visual|=unsupported(server,record,condition);continue;}
+                    }
                 }else{
                     long sugar=next*Nutrition.LARVA_SUGAR/stageDuration-record.nutrition().spentSugar();
                     long protein=next*Nutrition.LARVA_PROTEIN/stageDuration-record.nutrition().spentProtein();
-                    if(record.nutrition().sugar()==0||record.nutrition().protein()==0||!record.nutrition().spend(sugar,protein)){condition="larva_sugar_or_protein_exhausted";continue;}
+                    if(record.nourishment<LARVA_COST&&(record.nutrition().sugar()==0||record.nutrition().protein()==0||!record.nutrition().spend(sugar,protein))){condition="larva_sugar_or_protein_exhausted";visual|=unsupported(server,record,condition);continue;}
                 }
                 record.nourishment = record.founding?record.nourishment+required:record.nutrition().spentSugar()+record.nutrition().spentProtein();
+                // Zero-cost rounding and failed feeds do not renew neglected viability.
+                if(required>0){record.neglectTicks=0;record.neglectReason="";}
             }
-            if (record.progress < stageDuration) record.progress++;
+            if (record.progress < stageDuration) {record.progress++;if(record.stage==BroodStage.COCOON)record.waitingTicks=0;}
             if (record.progress < stageDuration) continue;
-            if (record.stage == BroodStage.COCOON) { if (emerge(server, record)) visual = true; }
+            if (record.stage == BroodStage.COCOON) { if (emerge(server, record)) visual = true;else visual|=unsupported(server,record,condition); }
             else {
                 if (record.stage == BroodStage.LARVA && record.nourishment != LARVA_COST) continue;
                 record.stage = record.stage == BroodStage.EGG ? BroodStage.LARVA : BroodStage.COCOON;
@@ -206,6 +245,8 @@ public final class BroodPile extends BlockEntity {
         out.putString("Queen", queenId.toString()); out.store("Entrance", BlockPos.CODEC, plan.entrance()); out.putString("Direction", plan.direction().getName());
         out.putLong("LoadedTicks", loadedTicks); out.putString("Condition", condition);
         out.putLong("StageDuration", stageDuration);
+        out.putLong("NeglectGrace",neglectGrace);out.putLong("WaitingBound",waitingBound);
+        out.store("Expired",com.mojang.serialization.Codec.unboundedMap(com.mojang.serialization.Codec.STRING,com.mojang.serialization.Codec.STRING),expired.entrySet().stream().collect(java.util.stream.Collectors.toMap(e->e.getKey().toString(),java.util.Map.Entry::getValue)));
         out.putLong("AdultLifespan",adultLifespan);out.putLong("AdultFastingGrace",fastingGrace);out.putInt("AdultCapacity",adultCapacity);
         out.putBoolean("Operational",operational);out.putLong("LastLayingTick",lastLayingTick);out.putLong("ConsumedApples",archivedApples);out.putLong("ConsumedBerries",archivedBerries);out.putLong("ConsumedChickens",archivedChickens);out.putLong("ConsumedNectar",archivedNectar);out.putLong("ConsumedFlesh",archivedFlesh);
         out.store("Original",com.mojang.serialization.Codec.STRING.listOf(),original.stream().map(UUID::toString).sorted().toList());
@@ -213,9 +254,12 @@ public final class BroodPile extends BlockEntity {
         out.store("Consumed", com.mojang.serialization.Codec.STRING.listOf(), consumed.stream().map(UUID::toString).sorted().toList());
     }
     @Override protected void loadAdditional(ValueInput in) {
-        super.loadAdditional(in); records.clear(); consumed.clear();original.clear(); queenId = null; plan = null;
+        super.loadAdditional(in); records.clear(); consumed.clear();original.clear();expired.clear(); queenId = null; plan = null;
         adultLifespan=in.getLongOr("AdultLifespan",dev.primeants.entity.AdultLife.DEFAULT_LIFESPAN);fastingGrace=in.getLongOr("AdultFastingGrace",dev.primeants.entity.AdultLife.DEFAULT_FASTING);adultCapacity=in.getIntOr("AdultCapacity",ADULT_CAPACITY);
         if(adultLifespan<1||fastingGrace<1||adultCapacity<4||adultCapacity>ADULT_CAPACITY)throw new IllegalArgumentException("Invalid saved birth policy");
+        neglectGrace=in.getLongOr("NeglectGrace",BroodRecord.DEFAULT_NEGLECT);waitingBound=in.getLongOr("WaitingBound",BroodRecord.DEFAULT_COCOON_WAIT);
+        if(neglectGrace<1||waitingBound<1)throw new IllegalArgumentException("Invalid saved brood policy");
+        in.read("Expired",com.mojang.serialization.Codec.unboundedMap(com.mojang.serialization.Codec.STRING,com.mojang.serialization.Codec.STRING)).orElse(java.util.Map.of()).forEach((k,v)->expired.put(UUID.fromString(k),v));
         if (in.getString("Queen").isEmpty()) return;
         UUID id = UUID.fromString(in.getStringOr("Queen", "")); BlockPos entrance = in.read("Entrance", BlockPos.CODEC).orElseThrow();
         Direction direction = Direction.byName(in.getStringOr("Direction", ""));
@@ -231,8 +275,8 @@ public final class BroodPile extends BlockEntity {
             records.add(r);
         }
         for (String s : in.read("Consumed", com.mojang.serialization.Codec.STRING.listOf()).orElse(List.of())) consumed.add(UUID.fromString(s));
-        original.addAll(in.read("Original",com.mojang.serialization.Codec.STRING.listOf()).orElseGet(()->java.util.stream.Stream.concat(consumed.stream(),records.stream().filter(BroodRecord::founding).map(BroodRecord::id)).map(UUID::toString).toList()).stream().map(UUID::fromString).toList());
-        if (records.size() > CAPACITY || ids.stream().anyMatch(consumed::contains)||original.size()!=CAPACITY||!java.util.stream.Stream.concat(ids.stream(),consumed.stream()).toList().containsAll(original)) throw new IllegalArgumentException("Invalid reusable nursery ownership");
+        original.addAll(in.read("Original",com.mojang.serialization.Codec.STRING.listOf()).orElseGet(()->java.util.stream.Stream.concat(java.util.stream.Stream.concat(consumed.stream(),expired.keySet().stream()),records.stream().filter(BroodRecord::founding).map(BroodRecord::id)).map(UUID::toString).toList()).stream().map(UUID::fromString).toList());
+        if (records.size() > CAPACITY || ids.stream().anyMatch(consumed::contains)||original.size()!=CAPACITY||expired.keySet().stream().anyMatch(consumed::contains)||!java.util.stream.Stream.concat(java.util.stream.Stream.concat(ids.stream(),consumed.stream()),expired.keySet().stream()).toList().containsAll(original)) throw new IllegalArgumentException("Invalid reusable nursery ownership");
         operational=in.getBooleanOr("Operational",false);lastLayingTick=in.getLongOr("LastLayingTick",0);archivedApples=in.getLongOr("ConsumedApples",0);archivedBerries=in.getLongOr("ConsumedBerries",0);archivedChickens=in.getLongOr("ConsumedChickens",0);archivedNectar=in.getLongOr("ConsumedNectar",0);archivedFlesh=in.getLongOr("ConsumedFlesh",0);
         if(lastLayingTick<0||lastLayingTick>in.getLongOr("LoadedTicks",0)||archivedApples<0||archivedBerries<0||archivedChickens<0||archivedNectar<0||archivedFlesh<0)throw new IllegalArgumentException("Invalid nutrition history");
         queenId = id; plan = p; loadedTicks = Math.max(0, in.getLongOr("LoadedTicks", 0)); condition = in.getStringOr("Condition", "restored");

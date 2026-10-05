@@ -35,6 +35,18 @@ public final class QueenFounding {
     private Lifecycle lifecycle = Lifecycle.CLAUSTRAL;
     private java.util.UUID workerClaim;
     public Lifecycle lifecycle() { return lifecycle; }
+    /** No queen age limit: reserve-only care lasts while actual founding/first-clutch viability lasts.
+     * A missing lookup in unloaded terrain remains unknown. AdultLife latches the first loss of exemption. */
+    public boolean reserveOnlyFounding(ServerLevel level) {
+        if(lifecycle!=Lifecycle.CLAUSTRAL)return false;
+        if(phase==Phase.FAILED||phase==Phase.DEAD||phase==Phase.NONE)return false;
+        if(phase!=Phase.SETTLED)return true; // Existing bounded physical controller decides failure.
+        if(plan==null)return false;
+        if(!level.hasChunkAt(plan.nursery()))return true;
+        if(!queen.nurseryClaimed())return sealed(); // Single normal preparation handoff, never a replacement.
+        return level.getBlockEntity(plan.nursery()) instanceof dev.primeants.brood.BroodPile b
+            &&b.ownedBy(queen.getUUID(),plan)&&b.firstClutchViable(level);
+    }
     public java.util.UUID workerClaim() { return workerClaim; }
     public boolean ready() { return phase == Phase.SETTLED && queen.level() instanceof ServerLevel level && enclosureProblem(level, lifecycle != Lifecycle.CLAUSTRAL) == null; }
     public boolean claimedBy(LasiusNigerEntity worker) { return worker.getUUID().equals(workerClaim) && queen.getUUID().equals(worker.queenId()); }
