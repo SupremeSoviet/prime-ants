@@ -14,7 +14,7 @@ Drop apples/sweet berries for sweetness and raw chicken/rotten flesh for protein
 
 Watching and feeding do not raise an alarm. Actual survival-player harm or breaking an owned component can provoke mature workers: half a heart per visible close bite, about one second cooldown, thirty loaded seconds of alarm, response within twelve blocks and pursuit limited to sixteen. Ordinary hostile mobs remain dangerous to observers.
 
-Only Lasius niger and early colony life are implemented. Established-colony generation, nuptial flights and active fruit harvesting are deferred. Terrain, food and crowding can stall colonies. Native Java/C2 reliability, long sessions and broader compatibility remain qualified; final fresh-world verification of the updated candidate is pending.
+Only Lasius niger and early colony life are implemented. Established-colony generation, nuptial flights and active fruit harvesting are deferred. Terrain, food and crowding can stall colonies. Native Java/C2 reliability, long sessions and broader compatibility remain qualified; T30 passed fresh full acceptance and one ordinary clean-client fresh-world check of the delivered JAR, including advancing natural queens and normal saving/exit. This short check does not establish continuing sustainability or long-session stability.
 
 ## Русский: краткие напоминания
 
@@ -26,6 +26,6 @@ Only Lasius niger and early colony life are implemented. Established-colony gene
 
 Наблюдение и подкормка не вызывают тревогу. Настоящий вред от игрока в выживании или разрушение принадлежащей колонии части гнезда может вызвать защиту зрелых рабочих: половина сердца за близкий укус при наличии видимости, примерно секунда между укусами, тридцать загруженных секунд тревоги, отклик в пределах двенадцати блоков и предел преследования шестнадцать. Обычные враждебные мобы остаются опасными для наблюдателя.
 
-Реализованы только Lasius niger и ранняя жизнь колонии. Генерация развитых колоний, брачные лёты и активный сбор плодов отложены. Рельеф, пища и теснота могут остановить рост. Надёжность Java/C2, долгие сеансы и широкая совместимость остаются ограничениями; заключительная проверка обновлённого кандидата в новом мире ещё предстоит.
+Реализованы только Lasius niger и ранняя жизнь колонии. Генерация развитых колоний, брачные лёты и активный сбор плодов отложены. Рельеф, пища и теснота могут остановить рост. Надёжность Java/C2, долгие сеансы и широкая совместимость остаются ограничениями; T30 прошёл свежую полную приёмку и одну проверку выдаваемого JAR в обычном чистом клиенте с новым миром, развивающимися естественными матками и нормальным сохранением и выходом. Короткая проверка не подтверждает дальнейшую жизнеспособность и устойчивость долгих сеансов.
 
 [Current gallery / Текущая галерея](screenshots/t28-release.md) contains three accepted current views and a historical queen illustration labelled **T25 — previous model revision**; current queen visual acceptance remains incomplete. В галерее три принятых текущих вида и историческая иллюстрация матки с пометкой **T25 — предыдущая редакция модели**; визуальная приёмка нынешней матки остаётся незавершённой. [Technical report / Технический отчёт](slice-1-report.md).

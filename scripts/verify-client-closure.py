@@ -65,6 +65,16 @@ def check_process_and_log(record, text, worlds, console=""):
         match = LINE.fullmatch(line)
         if match:
             events.append((number, *match.groups()))
+    # These 26.3 messages precede a rethrown storage-flush exception and the
+    # client's emergency-save/crash path respectively. Trailing stop/save lines
+    # cannot repair either failure. Match real formatted logger events, so chat
+    # quoting these words and ordinary network/Realms warnings remain harmless.
+    for number, thread, level, message in events:
+        if level in {"WARN", "ERROR", "FATAL"}:
+            if re.fullmatch(r"IO-Worker-\d+", thread) and message == "Failed to synchronize chunks":
+                errors.append(f"Line {number}: storage flush failed ({thread}/{level})")
+            if thread == "Render thread" and message == "Reported exception thrown!":
+                errors.append(f"Line {number}: reported runtime exception ({thread}/{level})")
     starts = [i for i, (_, thread, level, message) in enumerate(events)
               if thread == "Server thread" and level == "INFO"
               and message == "Starting integrated minecraft server version 26.3"]

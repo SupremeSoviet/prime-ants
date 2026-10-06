@@ -11,11 +11,11 @@ An early release about wild **Lasius niger** colonies that excavate, carry food 
 Use **Minecraft Java Edition 26.3**, **64-bit Java 25**, **Fabric Loader 0.19.5** and **Fabric API 0.161.0+26.3**. The supported runtime is Java 25.0.3+9. Other Minecraft versions and modpacks have not been verified.
 
 1. Install a Fabric profile for Minecraft 26.3 and select Java 25 in its launcher settings.
-2. Copy the supplied runtime **`prime_ants-0.1.0.jar`** and the matching Fabric API JAR into that profile's `mods` folder. The candidate in this checkout is [here](build/libs/prime_ants-0.1.0.jar).
+2. Copy the supplied runtime **`prime_ants-0.1.0.jar`** and the matching Fabric API JAR into that profile's `mods` folder. The verified release is [here](build/releases/t30/prime_ants-0.1.0.jar).
 3. Launch the Fabric profile and start a world. A new world is the clearest way to encounter natural founding sites. Back up an existing save before adding the mod; natural placement is tied to newly generated terrain.
 4. For multiplayer, install matching versions of the mod and Fabric API on the server and each client. Broad multiplayer and modpack compatibility remain unverified.
 
-The updated candidate still awaits its final fresh-world client verification. See the technical report for release status.
+T30 completed fresh acceptance: **15 unit / 201 server / 26 model**, with no failures, errors or skips. This exact JAR passed one ordinary clean-client fresh Survival world at default timing, natural queen placement and advancing loaded activity, then normal saving and exit with a settled, matching CRC-valid archive. **SHA-256:** `6cab3264ecf1e3c34ce7a3edcfc5ef2937eba5b845e8bce890f91fd68692f367`. Generation lag was observed at the ordinary 20 TPS target; this is not client performance acceptance. This short startup check does not establish long-session stability or continuing colony sustainability. [Final evidence](../turnloop/directions/prime-ants-slice1/turns/T30/report.md).
 
 ### What is implemented
 
@@ -70,11 +70,11 @@ Three original game images below show naturally founded colonies with current pr
 Нужны **Minecraft Java Edition 26.3**, **64-разрядная Java 25**, **Fabric Loader 0.19.5** и **Fabric API 0.161.0+26.3**. Поддерживаемая среда — Java 25.0.3+9. Другие версии Minecraft и сборки модов не проверены.
 
 1. Установите профиль Fabric для Minecraft 26.3 и выберите Java 25 в настройках его запуска.
-2. Поместите выданный основной файл **`prime_ants-0.1.0.jar`** и соответствующий JAR Fabric API в папку `mods` этого профиля. Файл кандидата в этой рабочей копии находится [здесь](build/libs/prime_ants-0.1.0.jar).
+2. Поместите выданный основной файл **`prime_ants-0.1.0.jar`** и соответствующий JAR Fabric API в папку `mods` этого профиля. Проверенный выпуск находится [здесь](build/releases/t30/prime_ants-0.1.0.jar).
 3. Запустите профиль Fabric и откройте мир. В новом мире проще встретить естественные места основания колоний. Перед добавлением мода в существующий мир сделайте резервную копию: естественное появление связано с генерацией новых участков.
 4. Для сетевой игры установите одинаковые версии мода и Fabric API на сервер и каждому игроку. Широкая совместимость сетевой игры и сборок модов ещё не проверена.
 
-Обновлённому кандидату ещё предстоит заключительная клиентская проверка в новом мире. Статус выпуска указан в техническом отчёте.
+T30 завершил свежую приёмку: **15 модульных тестов, 201 серверный случай и 26 модельных случаев**, без ошибок, сбоев и пропусков. Именно этот JAR прошёл один запуск обычного чистого клиента с новым миром в выживании и стандартными таймингами: естественное размещение маток и развитие их загруженного состояния, затем нормальное сохранение и выход со стабильными файлами и совпадающим архивом с корректным CRC. **SHA-256:** `6cab3264ecf1e3c34ce7a3edcfc5ef2937eba5b845e8bce890f91fd68692f367`. При обычной цели 20 TPS наблюдались задержки генерации; это не приёмка производительности клиента. Короткая проверка запуска не подтверждает устойчивость долгих сеансов и дальнейшую жизнеспособность колоний. [Итоговые доказательства](../turnloop/directions/prime-ants-slice1/turns/T30/report.md).
 
 ### Что уже работает
 

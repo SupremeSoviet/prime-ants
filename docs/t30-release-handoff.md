@@ -1,4 +1,6 @@
-# T30 final verification and delivery handoff
+# T30 historical verification and delivery handoff
+
+**Historical pre-execution instructions. T30 completed verification and delivery; see the [actual final report](../../turnloop/directions/prime-ants-slice1/turns/T30/report.md) and [current release status](slice-1-report.md). The remaining-check wording below records the original handoff and is not an open work queue.**
 
 T29 makes no production behavior, dependency, biological timing or asset change. It consolidates the [slice report](slice-1-report.md), preserves the [entire prior status chronology](slice-1-status-through-T28.md), fixes the external closure helper and adds the explicitly authorized historical fourth illustration. No client or biological workload ran in T29.
 
