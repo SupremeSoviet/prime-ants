@@ -1,0 +1,19 @@
+{
+  "attempt": "t24-before-interior-a3",
+  "raw_exit": 0,
+  "normal_close": true,
+  "additional_ticks": 29,
+  "opened_original_resolution": true,
+  "images": {
+    "queen-interior": {
+      "path": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t24-before-interior-a3-queen-interior.png",
+      "dimensions": [
+        1600,
+        1000
+      ],
+      "sha256": "b87dccdc133eb471fd155399dd39c5cdeddf36ca6f53c3c50d7b8875136a66c5",
+      "accepted": false,
+      "reason": "Queen body is fully framed, but a foreground worker body/legs reach the bottom boundary; rejected as an unclipped comparison scene."
+    }
+  }
+}

@@ -71,6 +71,18 @@ def captureRequest = [run_id:captureRunId, capture_prefix:capturePrefix, started
 loom.runs.named('clientGameTest') {
     systemProperties.put('prime_ants.clientWorkload','true')
     if(providers.gradleProperty('primeAntsClientScenario').isPresent()){
+        if(providers.gradleProperty('primeAntsClientScenario').get()=='appearance-t24'){
+            systemProperties.put('prime_ants.clientScenario','appearance-t24')
+            ['primeAntsAppearanceSource':'prime_ants.appearanceSource','primeAntsAppearanceRoot':'prime_ants.appearanceRoot','primeAntsAppearanceSpecimen':'prime_ants.appearanceSpecimen','primeAntsAppearancePriorTicks':'prime_ants.appearancePriorTicks'].each { property,key ->
+                if(!providers.gradleProperty(property).isPresent())throw new GradleException('Appearance mode requires '+property)
+                systemProperties.put(key,providers.gradleProperty(property).get())
+            }
+            ['primeAntsAppearanceSecondSource':'prime_ants.appearanceSecondSource','primeAntsAppearanceSecondRoot':'prime_ants.appearanceSecondRoot'].each { property,key ->
+                if(providers.gradleProperty('primeAntsAppearanceSpecimen').get()=='comparisons'&&!providers.gradleProperty(property).isPresent())throw new GradleException('Combined appearance mode requires '+property)
+                if(providers.gradleProperty(property).isPresent())systemProperties.put(key,providers.gradleProperty(property).get())
+            }
+            if(providers.gradleProperty('primeAntsAppearanceFirstSpecimen').isPresent())systemProperties.put('prime_ants.appearanceFirstSpecimen',providers.gradleProperty('primeAntsAppearanceFirstSpecimen').get())
+        }else{
         if(providers.gradleProperty('primeAntsClientScenario').get()!='fresh-survival'||providers.gradleProperty('primeAntsPlayerBasicsWorld').isPresent())throw new GradleException('Fresh survival requires client-generated overworld without imported playerBasicsWorld')
         systemProperties.put('prime_ants.clientScenario','fresh-survival')
         systemProperties.put('prime_ants.freshLoadingOnly',providers.gradleProperty('primeAntsFreshLoadingOnly').getOrElse('false'))
@@ -81,6 +93,7 @@ loom.runs.named('clientGameTest') {
         systemProperties.put('prime_ants.priorScenarioTicks',providers.gradleProperty('primeAntsPriorScenarioTicks').getOrElse('0'))
         ['primeAntsFreshWorldArchive':'prime_ants.freshWorldArchive','primeAntsKnownSiteRoute':'prime_ants.knownSiteRoute','primeAntsFreshArchiveWorld':'prime_ants.freshArchiveWorld'].each { property,key ->
             if(providers.gradleProperty(property).isPresent())systemProperties.put(key,providers.gradleProperty(property).get())
+        }
         }
     }
     if(providers.gradleProperty('primeAntsPlayerBasicsWorld').isPresent()){
@@ -155,6 +168,13 @@ tasks.named('runClientGameTest') {
         def currentLog=file('build/run/clientGameTest/logs/latest.log').getText('UTF-8')
         if(currentLog.contains('Rejecting block model prime_ants:block/cache_') || currentLog.contains('Missing texture references in model prime_ants:block/cache_'))
             throw new GradleException('Current cache visuals contain an atlas/model failure')
+        if(providers.gradleProperty('primeAntsClientScenario').getOrElse('')=='appearance-t24'){
+            def a=new groovy.json.JsonSlurper().parse(file("docs/screenshots/${capturePrefix}-appearance.json"))
+            if(a.run_id!=captureRunId||a.status!='closed'||!a.normal_close||!a.normal_server_stop||a.accumulated_ticks>12000||a.captures.size()<1)throw new GradleException('Appearance capture/closure incomplete')
+            def model=new groovy.xml.XmlSlurper().parse(currentModelReport)
+            if(model.depthFirst().findAll{it.name()=='testcase'}.size()!=26||model.depthFirst().any{it.name() in ['failure','error','skipped']})throw new GradleException('Appearance launch requires all 26 model cases')
+            logger.lifecycle('Appearance observation saved/closed; manual image review remains separate from raw task exit');return
+        }
         if(providers.gradleProperty('primeAntsClientScenario').getOrElse('')=='fresh-survival'){
             def f=new groovy.json.JsonSlurper().parse(file("docs/screenshots/${capturePrefix}-fresh.json"))
             if(f.run_id!=captureRunId)throw new GradleException('Stale fresh client evidence')

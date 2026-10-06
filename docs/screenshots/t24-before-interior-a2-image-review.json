@@ -1,0 +1,19 @@
+{
+  "attempt": "t24-before-interior-a2",
+  "raw_exit": 0,
+  "normal_close": true,
+  "additional_ticks": 29,
+  "opened_original_resolution": true,
+  "images": {
+    "queen-interior": {
+      "path": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t24-before-interior-a2-queen-interior.png",
+      "dimensions": [
+        1600,
+        1000
+      ],
+      "sha256": "d0fcd791944c394bbba350105c0d703031fbbf71529cd5953188a46c283944cd",
+      "accepted": false,
+      "reason": "Rejected: foreground queen gaster/tail is clipped by bottom edge at FOV70. Wall obstruction recovered, but raw task success is not image acceptance."
+    }
+  }
+}

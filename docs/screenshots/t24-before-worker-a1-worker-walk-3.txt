@@ -1,0 +1,1 @@
+Rejected T24 real client capture. Rejected: bottom-edge viewport discontinuity; not used as stance/comparison evidence. Original native1600x1000 PNG; source/identity/lens in appearance JSON; no editing.

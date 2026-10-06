@@ -1,3 +1,13 @@
+# Current slice status - T24, 2026-10-06
+
+**The first worker/queen appearance pass is reviewable and settled with matched real-client captures.** [Worker/queen daylight and existing nest before/after](screenshots/t24-appearance-comparisons.md) show rounder connected bodies, a narrow single-node waist, queen-specific proportions/scars and a closer raised-knee stance. Baked body lengths1.097/2.227blocks retain decision13; all rendered UV edges verify32texels/block. Mature cuticle has mapped shading/bands/pubescence and warmer appendages; existing callow maturation remains. Actual queen dirt equipment follows the animated jaw grip.
+
+Current exact unfiltered rerun build exits0:15 unit/195 server/26 model, zero failures/errors/skips, every baseline name retained, both production JAR helper exclusions. Six client launches/2145 additional appearance ticks are separate from T23 ecology accounting. All15 new PNGs opened,10 accepted/5 rejected; three accepted before/after pairs plus readable natural walking frames. Eight save copies close normally and are archived immediately after client exit.
+
+T25 refinements: visible body terraces, subdued/fleck-like hairs/highlights, rigid antenna/jaw motion, straight distal tarsi/abrupt stride reversals and bulky carried-item presentation. The auxiliary walk3 bottom-edge defect remains rejected and diagnosed from the archive; do not repeat unchanged capture failures. See [appearance note](t24-appearance-note.md) and [T24 report](../../turnloop/directions/prime-ants-slice1/turns/T24/report.md). T23's player checkpoint and its limits remain accepted; appearance T25-T26 and later performance/persistence/release T27-T30 remain.
+
+---
+
 # Current slice status - T23, 2026-10-06
 
 **The real-client player checkpoint is complete on one naturally placed colony.**

@@ -38,6 +38,10 @@ public final class AntRenderRecorder {
         frame.put("carried_item", net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(ant.getMainHandItem().getItem()).toString());
         frame.put("carried_soil_rendered", !state.carriedSoil.isEmpty());
         frame.put("client_carried_soil_units", ant.getMainHandItem().getCount());
+        if(!state.carriedSoil.isEmpty()){
+            var bounds=state.carriedSoil.getModelBoundingBox();
+            frame.put("carried_display_bounds",List.of(bounds.minX,bounds.minY,bounds.minZ,bounds.maxX,bounds.maxY,bounds.maxZ));
+        }
         frame.put("partial_ticks", partial);
         List<List<Float>> contacts = new ArrayList<>();
         List<Integer> support = new ArrayList<>();

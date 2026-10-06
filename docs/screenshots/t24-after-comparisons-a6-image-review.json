@@ -1,0 +1,73 @@
+{
+  "attempt": "t24-after-comparisons-a6",
+  "raw_exit": 0,
+  "normal_close": true,
+  "additional_ticks": 402,
+  "segments_ticks": [
+    126,
+    276
+  ],
+  "opened_original_resolution": true,
+  "images": {
+    "worker-daylight": {
+      "path": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t24-after-comparisons-a6-nest-worker-daylight.png",
+      "dimensions": [
+        1600,
+        1000
+      ],
+      "sha256": "34854d729bc89ace37da626607a121dc31a62d545ba34fa20beb5589be4e9666",
+      "accepted": true,
+      "reason": "Complete low three-quarter worker, rounder head/gaster, narrow waist, visibly raised knees and attached descending shins; dark cuticle/warmer appendages."
+    },
+    "worker-walk-1": {
+      "path": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t24-after-comparisons-a6-nest-worker-walk-1.png",
+      "dimensions": [
+        1600,
+        1000
+      ],
+      "sha256": "a30cc011b00123c20c57c4aa222235197d0358a8052a7849e09f3aa66c4a00b5",
+      "accepted": true,
+      "reason": "Unedited actual walking frame; planted/returning legs connected and clear of native floor."
+    },
+    "worker-walk-2": {
+      "path": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t24-after-comparisons-a6-nest-worker-walk-2.png",
+      "dimensions": [
+        1600,
+        1000
+      ],
+      "sha256": "29e1f86e0a08be4b58116dca5c162c8ed87b52389553b95695a998179951a18c",
+      "accepted": true,
+      "reason": "Unedited actual walking frame; full body and connected bent stance readable."
+    },
+    "worker-walk-3": {
+      "path": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t24-after-comparisons-a6-nest-worker-walk-3.png",
+      "dimensions": [
+        1600,
+        1000
+      ],
+      "sha256": "aab672c83bda85a0c5919667fbedd4ec291dd78467f3c4f8be9e49df41e730f6",
+      "accepted": false,
+      "reason": "Rejected: recurrent thin bottom-edge viewport/terrain discontinuity; no use as motion evidence and no further client retry."
+    },
+    "queen-interior": {
+      "path": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t24-after-comparisons-a6-nest-queen-interior.png",
+      "dimensions": [
+        1600,
+        1000
+      ],
+      "sha256": "76d34c598457e30c17ec8f2e60629e8f59892b10c3ac89a965a7a78e0c0f06bb",
+      "accepted": true,
+      "reason": "Complete larger oval queen, massive mesosoma, narrow node, warmer bent legs in existing native chamber; no brood/discovery claim."
+    },
+    "queen-daylight": {
+      "path": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t24-after-comparisons-a6-queen-queen-daylight.png",
+      "dimensions": [
+        1600,
+        1000
+      ],
+      "sha256": "a58c9f8014994bbe0f66313d50a358c553f2882a877f31bb4b0e221221f53c3c",
+      "accepted": true,
+      "reason": "Full mature naturally placed queen with compact head, eyes, elbowed antennae, jaw/actual dirt grip, massive mesosoma/scars and larger oval banded gaster; anatomy unoccluded."
+    }
+  }
+}

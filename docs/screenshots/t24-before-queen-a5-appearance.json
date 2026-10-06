@@ -1,0 +1,122 @@
+{
+  "run_id": "42249913-f7c1-4f08-a25b-8eac424500a9",
+  "scenario": "appearance-t24",
+  "status": "closed",
+  "prior_ticks": 1477,
+  "total_tick_bound": 12000,
+  "attempt_tick_bound": 1800,
+  "attempt_ticks_already_spent": 0,
+  "captures": [
+    {
+      "name": "queen-daylight",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t24-before-queen-a5-queen-daylight.png",
+      "subject_uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "server_tick": 265,
+      "recipe": {
+        "side": 3.1,
+        "fov": 55,
+        "target_height": 0.35,
+        "forward": 1.1,
+        "height": 1.6
+      },
+      "camera": {
+        "yaw": 18.130405,
+        "pitch": 20.807352,
+        "eye": [
+          170.1210030015198,
+          68.6,
+          151.37637971691657
+        ]
+      },
+      "rendered_ants": [
+        {
+          "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+          "form": "queen",
+          "callow_visual": 1000,
+          "render_extraction_utc": "2026-10-06T08:50:45.069283600Z",
+          "render_entity_tick": 220,
+          "render_position": [
+            169.033935546875,
+            67.0,
+            154.502685546875
+          ],
+          "body_yaw": -91.40625,
+          "walk_animation_position": 17.084415,
+          "walk_animation_speed": 0.12614326,
+          "visual_age_ticks": 221.0,
+          "moving": true,
+          "carried_item": "minecraft:dirt",
+          "carried_soil_rendered": true,
+          "client_carried_soil_units": 1,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.46437496,
+              1.4818535,
+              -0.48586404
+            ],
+            [
+              0.545625,
+              1.4999999,
+              -0.295386
+            ],
+            [
+              0.46437505,
+              1.4818535,
+              0.20163597
+            ],
+            [
+              -0.46437502,
+              1.5,
+              -0.63913596
+            ],
+            [
+              -0.54562503,
+              1.4818535,
+              -0.14211403
+            ],
+            [
+              -0.464375,
+              1.5000001,
+              0.048364036
+            ]
+          ],
+          "support_legs": [
+            1,
+            3,
+            5
+          ],
+          "support_tripod": "B"
+        }
+      ]
+    }
+  ],
+  "ant_position_edits": 0,
+  "ai_pauses": 0,
+  "forced_poses": 0,
+  "terrain_edits": 0,
+  "supplied_ants": 0,
+  "supplied_food": 0,
+  "render_distance": 8,
+  "simulation_distance": 8,
+  "native_frame": [
+    1600,
+    1000
+  ],
+  "camera_policy": "Living spectator on verified dry FULL support; separate observer lens follows natural body heading. No actor or animation writes.",
+  "source_archive": "C:\\Users\\user\\Documents\\turnloop\\directions\\prime-ants-slice1\\turns\\T22\\t22-fresh-a4-world.zip",
+  "archive_root": "New World",
+  "save": "C:\\Users\\user\\Documents\\prime-ants\\build\\run\\clientGameTest\\saves\\t24-before-queen-a5",
+  "respawn_recovery": "ordinary respawn button",
+  "safe_observer_feet": [
+    165,
+    68,
+    146
+  ],
+  "safe_observer_checks": "FULL, build height/border, dry solid support, complete body space, alive and ticks advancing",
+  "queen_identity": "9c71829b-25f1-3b96-acbb-96252228271d",
+  "additional_ticks": 266,
+  "accumulated_ticks": 1743,
+  "normal_server_stop": true,
+  "normal_close": true
+}

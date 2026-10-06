@@ -10,9 +10,10 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 /** Read-only observer geometry; never changes terrain or an actor. */
 public final class CargoView {
     public static Vec3 target(Vec3 position,double yaw){
-        // Pinned LivingEntityRenderer flip/translation, AntModel root/head and AntSoilLayer
-        // put the actual worker item centre 10.5/32 + .40/2 forward, at 1.501-24/16+8/32-1.2/32 high.
-        double angle=Math.toRadians(yaw);return position.add(-Math.sin(angle)*0.528125,0.2135,Math.cos(angle)*0.528125);
+        // Pinned renderer flip/translation and the production worker jaw-tip dimensions.
+        double reach=(10.75+3.75+2.3*Math.cos(.22))/32;
+        double height=1.501-24/16.0+(8.5-.65)/32;
+        double angle=Math.toRadians(yaw);return position.add(-Math.sin(angle)*reach,height,Math.cos(angle)*reach);
     }
     public static Vec3 eye(BlockGetter level,Vec3 position,double yaw){
         double angle=Math.toRadians(yaw);var forward=new Vec3(-Math.sin(angle),0,Math.cos(angle));var side=new Vec3(forward.z,0,-forward.x);

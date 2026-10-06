@@ -2,6 +2,6 @@
   "required": true,
   "package": "dev.primeants.gametest.mixin",
   "compatibilityLevel": "JAVA_25",
-  "client": ["AntRendererCaptureMixin"],
+  "client": ["AntRendererCaptureMixin", "AppearanceCameraMixin"],
   "injectors": { "defaultRequire": 1 }
 }

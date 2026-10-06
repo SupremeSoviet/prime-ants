@@ -1,0 +1,1 @@
+Accepted T24 real client capture. Complete queen body/legs with native room/workers, no viewport clipping or darkness issue; scene context only, no brood assessment. Original native1600x1000 PNG; source/identity/lens in appearance JSON; no editing.

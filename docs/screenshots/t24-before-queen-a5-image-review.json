@@ -1,0 +1,19 @@
+{
+  "attempt": "t24-before-queen-a5",
+  "raw_exit": 0,
+  "normal_close": true,
+  "additional_ticks": 266,
+  "opened_original_resolution": true,
+  "images": {
+    "queen-daylight": {
+      "path": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t24-before-queen-a5-queen-daylight.png",
+      "dimensions": [
+        1600,
+        1000
+      ],
+      "sha256": "e816963c74389f139a5d2d596d19f33a7ca6863592cad2fa934de734f47eeb4a",
+      "accepted": true,
+      "reason": "Full mature natural queen, unobscured antennae/mandibles/eyes/mesosoma/scars/gaster/feet; actual dirt at the mouth in client extraction; no clipping or viewport discontinuity."
+    }
+  }
+}

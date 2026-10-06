@@ -1,0 +1,15 @@
+# T24 first adult appearance pass
+
+**A reviewable first model pass is settled by three matched real-client pairs.** [Worker/queen daylight and existing nest comparisons](screenshots/t24-appearance-comparisons.md). Current unfiltered rerun build passes15 unit/195 server/26 model with zero failures/errors/skips and production helper exclusions. This closes the first pass, not the whole T24-T26 appearance checkpoint.
+
+The first model pass replaces crossed slabs with connected elliptical profiles: nine axial slices and five transverse tiers. Worker head7.3x6.8x7.5 and gaster9x7.4x12.5 raw units surround a narrower5-wide mesosoma and1.3-wide single petiole. Queen head10.5-wide is proportionally smaller than her13-wide,12-high mesosoma; gaster19x15x31 and exposed wing scars differ from worker anatomy.
+
+Model units are1/32 block: vanilla1/16 multiplied by ant subtree0.5. Every cube UV edge spans one texel per raw unit; retained baked UV tests verify32 texels/world block across every rendered face, including eyes and limbs. The512 atlas separates surface islands; PNG size is not the density proof. Shading/hair strokes/gaster bands are painted from actual face coordinates. Mature dark brown-black cuticle and warmer legs/antennae share one style; existing callow tint/maturation logic is unchanged.
+
+Femurs rise toward knees, tibiae descend, and vertical distal tarsi keep the full foot face clear of the floor. Foot span0.600->0.444 worker and1.091->0.841 queen; body length1.097/2.227 blocks. Original tripod cadence and distance-based stance sweep remain. Tests retain26 names and their scale, anatomy, connectivity, floor-contact and motion assertions, adding corner contact and caste/UV/grip checks.
+
+Carried-item attachment follows the current animated head and jaw dimensions. Vanilla transformed item bounds position the upper grip at the jaw midpoint for block/flat equipment. Actual main-hand item rendering, callow state, bite/sharing hooks and gameplay ownership remain. No server Java, collision dimensions, speed, biology, mound or soil-accounting changes.
+
+T25 should refine the visible stepped head/gaster edges, particularly the queen's transverse terraces; the fine pubescence/highlights are subdued on the shaded worker and occasionally read as sparse flecks on the queen. The antenna/jaw animation remains rigid, and the straight distal tarsi/abrupt stride reversals remain mechanical. The real queen dirt grip is connected, but bulky equipment can hide teeth; worker food carrying was not newly pictured. No source or guard should be changed merely to improve a scene.
+
+Evidence: [T24 report](../../turnloop/directions/prime-ants-slice1/turns/T24/report.md), [camera matching](../../turnloop/directions/prime-ants-slice1/turns/T24/matched-camera-verification.json), [existing trace summary](../../turnloop/directions/prime-ants-slice1/turns/T24/geometry-trace-summary.json). T23 player-checkpoint qualifications and T27-T30 performance/persistence/release work remain unchanged.

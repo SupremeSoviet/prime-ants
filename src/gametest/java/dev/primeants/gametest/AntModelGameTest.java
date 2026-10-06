@@ -141,6 +141,25 @@ public final class AntModelGameTest implements FabricClientGameTest {
             model.setupAnim(state);var head=model.root().getChild("ant").getChild("head");float left=head.getChild("mandible_left").yRot,right=head.getChild("mandible_right").yRot;
             state.social=true;state.yRot=30;state.ageInTicks=4;model.setupAnim(state);
             require(head.getChild("mandible_left").yRot>left&&head.getChild("mandible_right").yRot<right,"Actual synchronized social state opens both existing mandibles");near(head.yRot,(float)Math.PI/6);
+            Vector3f[] attachment = new Vector3f[3];
+            model.root().visit(new PoseStack(), (pose,path,index,cube) -> {
+                if(index!=0)return;
+                if(path.equals("/ant/head")) attachment[0]=pose.pose().transformPosition(new Vector3f(0,AntModel.MANDIBLE_HEIGHT/16F,AntModel.carriedItemForward(form==AntForm.QUEEN)/16F));
+                if(path.equals("/ant/head/mandible_left")||path.equals("/ant/head/mandible_right")) {
+                    int slot=path.endsWith("left")?1:2;
+                    attachment[slot]=pose.pose().transformPosition(new Vector3f((cube.minX+cube.maxX)/32F,(cube.minY+cube.maxY)/32F,cube.minZ/16F));
+                }
+            });
+            require(attachment[0].distance(new Vector3f(attachment[1]).add(attachment[2]).mul(.5F))<.04F,"Carried-item attachment follows animated head to actual mandible midpoint");
+            for(var bounds:new net.minecraft.world.phys.AABB[]{
+                    new net.minecraft.world.phys.AABB(-.125,.0625,-.125,.125,.3125,.125),
+                    new net.minecraft.world.phys.AABB(-.25,-.125,-.03125,.25,.375,.03125)}){
+                var itemPose=new PoseStack();
+                dev.primeants.client.AntSoilLayer.attachToMandibles(itemPose,model,form==AntForm.QUEEN,bounds,form==AntForm.QUEEN?.75F:.60F);
+                var centre=bounds.getCenter();
+                var grip=itemPose.last().pose().transformPosition(new Vector3f((float)centre.x,(float)bounds.minY,(float)centre.z));
+                require(grip.distance(new Vector3f(attachment[1]).add(attachment[2]).mul(.5F))<.04F,"Actual display-bound upper grip stays at animated mandibles for block and flat item bounds");
+            }
             state.social=false;state.yRot=0;model.setupAnim(state);near(head.getChild("mandible_left").yRot,left);near(head.getChild("mandible_right").yRot,right);near(head.xRot,0);near(head.yRot,0);
         });
         AntModel model = new AntModel(AntModel.createBodyLayer(form).bakeRoot());
@@ -190,7 +209,18 @@ public final class AntModelGameTest implements FabricClientGameTest {
                             && hip.y >= b[2]-0.000001 && hip.y <= b[3]+0.000001 && hip.z >= b[4]-0.000001 && hip.z <= b[5]+0.000001), "Hip must attach inside rendered mesosoma");
                     require(endpoints.get(base)[1].distance(endpoints.get(base + "/tibia")[0]) < 0.000001F, "Connected knee geometry");
                     require(endpoints.get(base + "/tibia")[1].distance(endpoints.get(base + "/tibia/tarsus")[0]) < 0.000001F, "Connected ankle geometry");
+                    Vector3f knee = endpoints.get(base)[1], ankle = endpoints.get(base + "/tibia")[1];
+                    require(knee.y < hip.y - 0.003F, "Femur must rise visibly toward the knee: " + name);
+                    require(ankle.y > knee.y + 0.12F, "Tibia must descend toward the foot: " + name);
+                    Vector3f foot = endpoints.get(base + "/tibia/tarsus")[1];
+                    require(Math.abs(foot.x) < (form == AntForm.QUEEN ? 0.46F : 0.25F), "Moderate body-relative foot spread: " + name);
                 }
+                model.root().visit(new PoseStack(), (pose, path, index, cube) -> {
+                    if (path.endsWith("/tarsus")) for (var polygon : cube.polygons) for (var vertex : polygon.vertices()) {
+                        Vector3f point = pose.pose().transformPosition(new Vector3f(vertex.worldX(), vertex.worldY(), vertex.worldZ()));
+                        require(point.y <= 1.500001F, "No rendered foot corner may penetrate the floor");
+                    }
+                });
             }
             model.resetPose();
         });
@@ -250,6 +280,7 @@ public final class AntModelGameTest implements FabricClientGameTest {
                     var vertices = polygon.vertices();
                     for (int i = 0; i < 4; i++) {
                         var a = vertices[i];
+                        require(a.u() >= 0 && a.u() <= 1 && a.v() >= 0 && a.v() <= 1, "Every rendered face must stay inside the cuticle atlas");
                         var b = vertices[(i + 1) % 4];
                         Vector3f wa = pose.pose().transformPosition(new Vector3f(a.worldX(), a.worldY(), a.worldZ()));
                         Vector3f wb = pose.pose().transformPosition(new Vector3f(b.worldX(), b.worldY(), b.worldZ()));
@@ -270,6 +301,7 @@ public final class AntModelGameTest implements FabricClientGameTest {
                     bounds[2] = Math.min(bounds[2], p.y); bounds[3] = Math.max(bounds[3], p.y);
                 }
             });
+            require(1.5 - bounds[3] > (form == AntForm.QUEEN ? 0.17 : 0.11), "Body must clear the floor");
             double length = bounds[1] - bounds[0];
             require(form == AntForm.WORKER ? length > 0.95 && length < 1.1 : length >= 2 && length <= 2.5, "Rendered body length " + length);
             require(bounds[3] - bounds[2] < 1, "Low anatomy compatible with a future two-block-high passage");
@@ -319,6 +351,9 @@ public final class AntModelGameTest implements FabricClientGameTest {
         }
         require(dimensions.get("petiole")[2] < 0.45 * dimensions.get("mesosoma")[2]
                 && dimensions.get("petiole")[2] < 0.45 * dimensions.get("gaster")[2], "Waist must be constricted in baked geometry");
+        require(form == AntForm.QUEEN ? dimensions.get("mesosoma")[2] > dimensions.get("head")[2] * 1.15
+                : dimensions.get("mesosoma")[2] < dimensions.get("head")[2] * .75, "Caste-specific head/mesosoma proportions");
+        require(dimensions.get("gaster")[1] - dimensions.get("gaster")[0] > dimensions.get("gaster")[2] * 1.2, "Long oval gaster profile");
         // Intersecting cuboids make one physically connected body; no floating gap hidden by overall bounds.
         var all = boxes.values().stream().flatMap(java.util.Collection::stream).toList();
         boolean[] reached = new boolean[all.size()]; reached[0] = true;

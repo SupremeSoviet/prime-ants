@@ -1,0 +1,1 @@
+Rejected T24 real client capture. Rejected: foreground queen gaster/tail is clipped by bottom edge at FOV70. Wall obstruction recovered, but raw task success is not image acceptance. Original native1600x1000 PNG; source/identity/lens in appearance JSON; no editing.
