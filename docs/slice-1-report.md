@@ -1,3 +1,13 @@
+# Current slice status - T28, 2026-10-06
+
+**Nursery occupied-target overwrite fixed; bilingual player README and three accepted release views.** A real-tick regression reproduces the torch overwrite before the air-target write guard, then verifies80 settled ticks of torch/full-reserve preservation and three paid emergences after explicit removal. Traversal and all original authority/support/fluid guards remain. [T28 checkpoint](t28-release-check.md), [player README](../README.md), [current gallery](screenshots/t28-release.md).
+
+Gallery: entrance/mound, genuine forager and fresh living egg under normally placed torch light. Readable natural queen remains missing; clipped original rejected. One populated production documentation client exits0 with three saved/closed worlds;20,075 ticks exceed20,000 by75. Food-drop immediate ordinary retreat failed. Both deviations are retained. No further client launches, appearance/transition campaign or renewed performance/persistence work.
+
+Current completed unfiltered acceptance: **15 unit /201 server /26 model**, all200 server baseline and26 model names retained, both jars exclude helpers; exit0/891.371s, all21 tasks executed. Runtime candidate SHA-256 `6cab3264ecf1e3c34ce7a3edcfc5ef2937eba5b845e8bce890f91fd68692f367` equals the screenshot jar. One stale generated sources archive changed as expected; source/runtime/class/resource hashes remained unchanged and the original acceptance validator passed. Replacement clean-client verification remains **pending T30**; T27 smoke belongs only to its exact predecessor jar. T29 consolidates the report and small fixes. Historical sections below retain their qualifications.
+
+---
+
 # Current slice status - T27, 2026-10-06
 
 **Bounded tested release candidate:** supported room floor/wall torches preserve genuine paid brood development and subsequent nursing/expansion. Stone, fluid, foreign components and all baseline authority/support guards remain. Production jar `dbc40379edeab3f148ccb6d91cf0f7eb1b65972e36222d7b5ba340e7d4b795ae` passes an isolated ordinary26.3/Loader0.19.5/API0.161.0 client without the dev JIT exclusion: fresh survival seed2026100501,8 naturally placed queens, advancing clocks/work, normal save/quit. Local offline profile; startup generation lag and historical C2 uncertainty retained.

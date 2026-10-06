@@ -1,3 +1,7 @@
+# Current player release gallery
+
+[Current release illustrations](t28-release.md): three accepted views and an explicit missing queen close-up. Historical images below retain their original qualifications.
+
 # Infrastructure captures
 
 ![T01 infrastructure capture; colony not implemented](t01-infrastructure.png)

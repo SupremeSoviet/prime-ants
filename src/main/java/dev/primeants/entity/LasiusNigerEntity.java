@@ -111,7 +111,9 @@ public final class LasiusNigerEntity extends PathfinderMob {
     }
     public void prepareNursery(ServerLevel level, NestPlan plan) {
         if (nurseryClaimed || !founding.sealed() || position().distanceToSqr(Vec3.atBottomCenterOf(plan.nursery())) > BroodPile.CARE_REACH_SQUARED
-                || bodyReserve < BroodPile.CAPACITY * BroodPile.EGG_COST || !NestPlan.walkable(level, plan.nursery())) return;
+                || bodyReserve < BroodPile.CAPACITY * BroodPile.EGG_COST || !NestPlan.walkable(level, plan.nursery())
+                // Traversable decorations are not empty targets: never replace player lighting.
+                || !level.getBlockState(plan.nursery()).isAir()) return;
         if (!level.setBlock(plan.nursery(), NurseryBlocks.BROOD_PILE.defaultBlockState(), 3)) return;
         if (level.getBlockEntity(plan.nursery()) instanceof BroodPile pile && pile.establish(this, plan)) nurseryClaimed = true;
         else level.setBlock(plan.nursery(), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);

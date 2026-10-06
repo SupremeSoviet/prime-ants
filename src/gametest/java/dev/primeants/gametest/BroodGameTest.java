@@ -52,6 +52,50 @@ public final class BroodGameTest {
     }
 
     @GameTest(maxTicks=30000, structure="prime_ants_test:idle_ground")
+    public void occupiedNurseryPreservesTorchAndReserveUntilPlayerRemoval(GameTestHelper c) {
+        var q=start(c);boolean[] placed={false},removed={false},finished={false};long[] sealedAt={-1};
+        Set<UUID> ids=new HashSet<>();
+        c.onEachTick(()->{
+            var f=q.founding();var plan=f.plan();var p=pile(c,q);
+            if(!placed[0]&&f.phase()==QueenFounding.Phase.ENTERING) {
+                c.assertTrue(f.removed()==NestPlan.HARD_CAP&&p==null&&!q.nurseryClaimed(),"Queen genuinely excavates before the unclaimed nursery intervention");
+                var torch=Blocks.TORCH.defaultBlockState();
+                c.assertTrue(c.getLevel().getBlockState(plan.nursery()).isAir()&&torch.canSurvive(c.getLevel(),plan.nursery()),"Unclaimed nursery has the actual excavated floor support");
+                // Declared player lighting intervention; normal block placement/neighbor updates only.
+                c.assertTrue(c.getLevel().setBlock(plan.nursery(),torch,3),"Player places a supported torch at the future nursery");
+                c.assertTrue(NestPlan.walkable(c.getLevel(),plan.nursery()),"Traversal permission remains independent of replacement authority");
+                placed[0]=true;
+                PrimeAnts.LOGGER.info("T28 NURSERY TORCH placed queen={} removedSoil={} target={} reserve={}",q.getUUID(),f.removed(),plan.nursery(),q.bodyReserve());
+            }
+            if(placed[0]&&!removed[0]) {
+                c.assertTrue(c.getLevel().getBlockState(plan.nursery()).is(Blocks.TORCH),"Normal queen ticks must preserve the occupied nursery torch");
+                c.assertTrue(p==null&&!q.nurseryClaimed()&&q.bodyReserve()==BroodPile.MAX_RESERVE&&workers(c).isEmpty(),"No phantom nursery, brood, adults or repeated reserve spending while blocked");
+                if(f.sealed()) {
+                    if(sealedAt[0]<0)sealedAt[0]=q.elapsedAgeTicks();
+                    if(q.elapsedAgeTicks()-sealedAt[0]>=80) {
+                        PrimeAnts.LOGGER.info("T28 NURSERY TORCH preserved queen={} sealedTicks={} claimed={} reserve={} brood=0 workers=0",q.getUUID(),q.elapsedAgeTicks()-sealedAt[0],q.nurseryClaimed(),q.bodyReserve());
+                        // Explicit declared player removal, never automatic relocation/removal by the queen.
+                        c.assertTrue(c.getLevel().destroyBlock(plan.nursery(),false)&&c.getLevel().getBlockState(plan.nursery()).isAir(),"Player explicitly removes the blocking torch");
+                        removed[0]=true;
+                    }
+                }
+                return;
+            }
+            if(!removed[0]||p==null||finished[0])return;
+            c.assertTrue(q.nurseryClaimed()&&p.ownedBy(q.getUUID(),plan),"Normal ticks establish the original owned nursery after removal");
+            p.records().forEach(r->ids.add(r.id()));
+            long spent=BroodPile.CAPACITY*BroodPile.EGG_COST+p.records().stream().mapToLong(BroodRecord::nourishment).sum()+p.consumed().size()*BroodPile.LARVA_COST;
+            c.assertTrue(q.bodyReserve()==BroodPile.MAX_RESERVE-spent&&p.records().size()+workers(c).size()==3,"Resumed founding pays every cost once and preserves population accounting");
+            if(workers(c).size()==3) {
+                finished[0]=true;
+                c.assertTrue(ids.size()==3&&p.records().isEmpty()&&p.consumed().equals(ids)&&workers(c).stream().allMatch(w->ids.contains(w.broodId()))&&q.bodyReserve()==0,"Exactly the paid original clutch emerges after player removal");
+                PrimeAnts.LOGGER.info("T28 NURSERY TORCH resumed queen={} brood={} workers={} reserve={}",q.getUUID(),ids,workers(c).stream().map(LasiusNigerEntity::getUUID).toList(),q.bodyReserve());
+                c.runAfterDelay(80,()->{c.assertTrue(workers(c).size()==3&&p.records().isEmpty()&&p.consumed().equals(ids)&&q.bodyReserve()==0,"No repeated founding or spending after resumption");c.succeed();});
+            }
+        });
+    }
+
+    @GameTest(maxTicks=30000, structure="prime_ants_test:idle_ground")
     public void floorAndWallTorchesKeepGenuineBroodDeveloping(GameTestHelper c) {
         var q=start(c);boolean[] lit={false};
         c.onEachTick(()->{
