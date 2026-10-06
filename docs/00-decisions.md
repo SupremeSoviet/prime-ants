@@ -308,3 +308,20 @@ Recent receipts remain a separate laying-rate observation; only current stores f
 Actual accepted survival-player ant damage or a successful break of a currently owned component signals that colony. Mature registered workers respond within 12 blocks of the current harm anchor, pursue only its provoking player within 16, and bite at physical reach/visibility for one normal health point with a 20-loaded-tick cooldown. Alarm duration is 600 loaded ticks; repeated genuine harm may renew it. Ownership is captured before block mutation and consumed only after successful break. The existing worker owner suspends/resumes tasks and retains equipment/claims; no reputation, automatic repair or resource credit is introduced.
 
 Fresh-client checks use ordinary vanilla overworld generation/survival, seed 2026100501 declared in advance, render/simulation 8/8 and no experiment FULL limits. Imported dimension-transfer recovery is excluded. The current report records actual acceptance/client results and their limits; performance, feeding and broad restart remain T23.
+
+## Решения 22–28 (06.10.2026): фэнтези-слой, «цивилизация из экологии»
+
+После выпуска 0.1.0 пользователь выбрал вариант «Millénaire на муравьях» с фэнтези-слоем. Подробности, игровой цикл и этапы —
+в [`12-gdd-v2-civilization.md`](12-gdd-v2-civilization.md). Где эти решения расходятся с 1–21, главнее они.
+
+| # | Решение | Что меняет |
+|---|---|---|
+| 22 | **Фэнтези-слой поверх реалистичного движка.** Правило: фэнтези можно, абстракции нельзя. Всё, что есть у колонии, физически лежит в мире; у каждой системы есть исход; у каждого эффекта один владелец | смягчает «главный принцип: реализм»; решения 1, 4, 5, 6, 18 остаются в силе |
+| 23 | **Развитие стадиями:** основание → молодая → зрелая → великая колония. Переход по реальным порогам (население, построенные камеры, запасы на складах), возможен откат назад | уточняет 14: дерева исследований и «очков знаний» по-прежнему нет |
+| 24 | **Камеры с назначением и уровнями** (земляная → глина/смола → камень) и **наземные постройки по планам гнёзд**; лимит взрослых растёт со стадией до 120 | уточняет 6 и 17 |
+| 25 | **Добыча ресурсов:** камень, глина, гравий, песок; руда (уголь, медь, железо, позже золото) как физический ресурс | меняет 5: руда возвращается |
+| 26 | **Ремесло и броня:** кузнечная камера, плавка, видимая броня на солдатах, которая реально меняет бой | меняет 21: броня возвращается для муравьёв; игрок может получить муравьиную броню через обмен |
+| 27 | **Дипломатия:** отношения между колониями (вражда → настороженность → нейтралитет → дружба → союз) от событий и действий — послы с дарами, дань, союзы, войны | меняет 10 и 21; дипломатия держится на дарах и поступках, без валюты |
+| 28 | **Игрок:** отношение у каждой колонии своё, обмен натурой на изделия колонии, гостевой дом от колонии-союзника | дополняет 9 и 15; жетоны, валюта, лавки с ценами и планшет-пульт по-прежнему убраны (21 в этой части в силе) |
+
+Порядок работ: этап 1 «Развитие и дома» (20 ходов turnloop) → этап 2 «Шахты, кузница, броня» → этап 3 «Дипломатия и игрок».
