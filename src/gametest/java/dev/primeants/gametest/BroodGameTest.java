@@ -50,6 +50,50 @@ public final class BroodGameTest {
         var restored = (BroodPile)BlockEntity.loadStatic(pos, block, tag, c.getLevel().registryAccess());
         c.assertTrue(restored != null, "Normal block entity deserialization"); c.getLevel().setBlockEntity(restored); return restored;
     }
+
+    @GameTest(maxTicks=30000, structure="prime_ants_test:idle_ground")
+    public void floorAndWallTorchesKeepGenuineBroodDeveloping(GameTestHelper c) {
+        var q=start(c);boolean[] lit={false};
+        c.onEachTick(()->{
+            var p=pile(c,q);if(lit[0] || !stage(p,BroodStage.LARVA) || p.records().getFirst().progress()<8)return;
+            lit[0]=true;var plan=q.founding().plan();var floor=plan.at(3,1,-2);var wall=plan.at(5,-1,-1);
+            var direction=plan.direction().getClockWise();
+            var wallState=Blocks.WALL_TORCH.defaultBlockState().setValue(net.minecraft.world.level.block.WallTorchBlock.FACING,direction);
+            c.assertTrue(Blocks.TORCH.defaultBlockState().canSurvive(c.getLevel(),floor)&&wallState.canSurvive(c.getLevel(),wall),"Torches have actual existing floor/wall supports");
+            c.assertTrue(c.getLevel().setBlock(floor,Blocks.TORCH.defaultBlockState(),3)&&c.getLevel().setBlock(wall,wallState,3),"Player lighting intervention with neighbor updates");
+            var ids=p.records().stream().map(BroodRecord::id).collect(java.util.stream.Collectors.toSet());
+            long reserve=q.bodyReserve();
+            c.assertTrue(NestPlan.walkable(c.getLevel(),floor)&&NestPlan.traversable(c.getLevel(),wall),"Shared supported traversal accepts dry collision-free torches");
+            c.runAfterDelay(80,()->{
+                c.assertTrue(c.getLevel().getBlockState(floor).is(Blocks.TORCH)&&c.getLevel().getBlockState(wall).is(Blocks.WALL_TORCH),"Lighting persists on actual supports");
+                c.assertTrue(q.founding().sealed()&&p.records().stream().allMatch(r->r.stage()==BroodStage.LARVA&&r.progress()>=88&&r.nourishment()>=8800)&&q.bodyReserve()<reserve,"Normal paid care and development continue with lighting");
+                c.runAfterDelay(180,()->{
+                    c.assertTrue(c.getLevel().getBlockState(floor).is(Blocks.TORCH)&&c.getLevel().getBlockState(wall).is(Blocks.WALL_TORCH),"No automatic torch removal after emergence");
+                    c.assertTrue(workers(c).size()==3&&p.records().isEmpty()&&p.consumed().equals(ids)&&workers(c).stream().allMatch(w->ids.contains(w.broodId()))&&q.bodyReserve()==0,"Exactly three genuine emerged lineages and all original costs");
+                    PrimeAnts.LOGGER.info("T27 TORCH EMERGENCE queen={} brood={} workers={} duration={} reserve={}",q.getUUID(),ids,workers(c).stream().map(LasiusNigerEntity::getUUID).toList(),p.stageDuration(),q.bodyReserve());c.succeed();
+                });
+            });
+        });
+    }
+
+    @GameTest(maxTicks=30000, structure="prime_ants_test:idle_ground")
+    public void solidChamberObstacleStillStallsGenuineBrood(GameTestHelper c) { chamberBlocker(c,Blocks.STONE.defaultBlockState()); }
+    @GameTest(maxTicks=30000, structure="prime_ants_test:idle_ground")
+    public void chamberFluidStillStallsGenuineBrood(GameTestHelper c) { chamberBlocker(c,Blocks.WATER.defaultBlockState()); }
+    @GameTest(maxTicks=30000, structure="prime_ants_test:idle_ground")
+    public void collisionFreeForeignComponentsStillRequireCanonicalOwnership(GameTestHelper c) { chamberBlocker(c,NurseryBlocks.NEST_CACHE.defaultBlockState()); }
+    private void chamberBlocker(GameTestHelper c,net.minecraft.world.level.block.state.BlockState block) {
+        var q=start(c);boolean[] blocked={false};
+        c.onEachTick(()->{
+            var p=pile(c,q);if(blocked[0]||!stage(p,BroodStage.LARVA)||p.records().getFirst().progress()<8)return;
+            blocked[0]=true;var pos=q.founding().plan().at(3,1,-2);var before=state(p);long reserve=q.bodyReserve();
+            c.assertTrue(c.getLevel().setBlock(pos,block,3)&&!NestPlan.traversable(c.getLevel(),pos),"Actual obstruction/fluid/foreign block entity rejected by shared traversal");
+            c.runAfterDelay(60,()->{
+                c.assertTrue(before.equals(state(p))&&q.bodyReserve()==reserve&&!q.founding().sealed()&&workers(c).isEmpty()&&q.founding().plan().nurseryProblem(c.getLevel(),q.getUUID())!=null,"Negative habitat keeps genuine care and development stalled");
+                PrimeAnts.LOGGER.info("T27 NEGATIVE GUARD block={} condition={} brood={}",block,p.condition(),state(p));c.succeed();
+            });
+        });
+    }
     @GameTest(maxTicks=65000, structure="prime_ants_test:idle_ground")
     public void authorizedQueenRaisesIdentifiedFirstClutchThroughEveryStage(GameTestHelper c) {
         var queen = start(c); Set<BroodStage> seen = EnumSet.noneOf(BroodStage.class); Set<UUID> ids = new HashSet<>(); boolean[] finished = {false};

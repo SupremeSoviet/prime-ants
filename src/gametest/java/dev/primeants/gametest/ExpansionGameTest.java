@@ -32,6 +32,31 @@ public final class ExpansionGameTest {
         if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;food.supply(c,q,6,8);}
         if(supplied[0]){c.assertTrue(food.total(c,q)==14,"Fourteen real supplied units conserved through nursing/growth");food.yields(c,q);}
     }
+
+    @GameTest(maxTicks=26000,structure="prime_ants_test:idle_ground")
+    public void chamberLightingSurvivesRealNursingAndSharedExpansionGuards(GameTestHelper c){
+        var q=f.start(c);boolean[] supplied={false},lit={false};BlockPos[] torches=new BlockPos[2];Set<UUID> original=new HashSet<>();
+        c.onEachTick(()->{
+            var p=q.founding().plan();if(p==null)return;
+            if(!lit[0]&&c.getLevel().getBlockEntity(p.nursery()) instanceof BroodPile pile
+                    &&pile.records().stream().anyMatch(r->r.stage()==BroodStage.LARVA&&r.progress()>=8)){
+                lit[0]=true;pile.records().forEach(r->original.add(r.id()));
+                torches[0]=p.at(3,1,-2);torches[1]=p.at(5,-1,-1);
+                var wall=Blocks.WALL_TORCH.defaultBlockState().setValue(net.minecraft.world.level.block.WallTorchBlock.FACING,p.direction().getClockWise());
+                c.assertTrue(Blocks.TORCH.defaultBlockState().canSurvive(c.getLevel(),torches[0])&&wall.canSurvive(c.getLevel(),torches[1]),"Lighting uses original dry chamber supports");
+                c.getLevel().setBlock(torches[0],Blocks.TORCH.defaultBlockState(),3);c.getLevel().setBlock(torches[1],wall,3);
+            }
+            growth(c,q,supplied);balance(c,q);var j=NestExpansion.get(c.getLevel()).job(q.getUUID());
+            if(j==null)return;
+            c.assertTrue(lit[0]&&q.founding().ready()&&j.problem(c.getLevel(),q.getUUID())==null,"Actual partial expansion retains shell, support, completed-opening ownership and dry shared traversal with chamber lights");
+            c.assertTrue(c.getLevel().getBlockState(torches[0]).is(Blocks.TORCH)&&c.getLevel().getBlockState(torches[1]).is(Blocks.WALL_TORCH),"Workers never remove player lighting");
+            if(j.complete()&&!j.usedBy.isEmpty()){
+                var ws=f.workers(c,q);c.assertTrue(j.removed()==12&&j.deposited==12&&j.released==0&&j.usable(c.getLevel(),q.getUUID()).size()==6,"Twelve real paid removals/deposits yield six supported connected owned floors");
+                c.assertTrue(ws.size()>3&&original.stream().allMatch(id->ws.stream().anyMatch(w->id.equals(w.broodId())))&&q.bodyReserve()==0&&food.consumed(c,q)>0,"Identified first clutch and additional physically fed worker develop without biological/cost edits");
+                PrimeAnts.LOGGER.info("T27 LIT SHARED EXPANSION queen={} workers={} removed={} deposited={} usable={} use={}",q.getUUID(),ws.stream().map(LasiusNigerEntity::getUUID).toList(),j.removed(),j.deposited,j.usable(c.getLevel(),q.getUUID()).size(),j.use);c.succeed();
+            }
+        });
+    }
     @GameTest(maxTicks=100,structure="prime_ants_test:idle_ground")
     public void cargoObserverCanSeeOverheadBetweenOpaqueMoundBlocks(GameTestHelper c){
         // Read-only camera reproducer: controlled opaque terrain around a one-cell air column, no actors.

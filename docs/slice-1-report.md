@@ -1,3 +1,15 @@
+# Current slice status - T27, 2026-10-06
+
+**Bounded tested release candidate:** supported room floor/wall torches preserve genuine paid brood development and subsequent nursing/expansion. Stone, fluid, foreign components and all baseline authority/support guards remain. Production jar `dbc40379edeab3f148ccb6d91cf0f7eb1b65972e36222d7b5ba340e7d4b795ae` passes an isolated ordinary26.3/Loader0.19.5/API0.161.0 client without the dev JIT exclusion: fresh survival seed2026100501,8 naturally placed queens, advancing clocks/work, normal save/quit. Local offline profile; startup generation lag and historical C2 uncertainty retained.
+
+Two natural T21-source colonies actually tick2 queens/28 workers for600 warm-up +2400 ordinary20 TPS ticks. Native tick-work mean/median/p95/max11.027/10.670/14.315/21.832ms;0 over50ms, cadence19.9998 TPS. Dedicated diagnostic dimension/persisted work20/brood100 explicitly qualified. Whole-world flush/close plus two reopens preserves30 adults,1 ready cocoon,28 completed births, membership, nutrition, caches and claims; one genuine nectar consumption reconciled. In-flight cargo/terminal expiry/death histories were empty and their nonempty paths remain untested.
+
+**Current completed unfiltered acceptance:15 unit/200 server/26 model**, all195/26 baseline names retained,5 new cases executed,464 matching inputs, both production jars exclude helpers. Final jar equals the clean-tested candidate. First full run's obsolete discovery gate and two diagnosed loading failures are preserved; targeted recovery precedes the rerun. [T27 release checklist](t27-release-candidate-check.md), [turn report](../../turnloop/directions/prime-ants-slice1/turns/T27/report.md).
+
+**T26 lighting correction:** four capture records are block13/sky12 at the sampling position above the pile, not sky0. Original records/rejections remain. Appearance stays closed with missing queen/brood/transition acceptance and unverified recorder recovery; no new appearance pass. Normally closed A5 source retained for T28 preparation. T28 README/screenshots, T29 report/small fixes, T30 verification/delivery remain.
+
+---
+
 # Current slice status - T26, 2026-10-06
 
 **Final appearance checkpoint closes with explicit unmet predicates.** [T26 original-image review](screenshots/t26-appearance-review.md) accepts two daylight worker frames, including ordinary FOV70 flat-ground support. Rounded-profile eyes,15% thicker tibiae, a bounded13x9 gaster and coherent modest highlights retain anatomy/32 texels-per-block. Ordinary gloss remains partial; current queen capture is missing.

@@ -15,7 +15,8 @@
     "main": [
       "dev.primeants.gametest.RestartHarness",
       "dev.primeants.gametest.PlacementSettings",
-      "dev.primeants.gametest.PlacementDiagnosticHarness"
+      "dev.primeants.gametest.PlacementDiagnosticHarness",
+      "dev.primeants.gametest.T27ReleaseHarness"
     ],
     "fabric-gametest": [
       "dev.primeants.gametest.BootstrapGameTest",

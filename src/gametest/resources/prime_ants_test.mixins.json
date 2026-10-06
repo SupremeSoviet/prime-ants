@@ -18,7 +18,8 @@
     "PlacementFullBudgetMixin",
     "GrassNestedWriteMixin",
     "BambooStageFixtureMixin",
-    "GameTestHelperAccessor"
+    "GameTestHelperAccessor",
+    "T27PileLoadMixin"
   ],
   "injectors": {
     "defaultRequire": 1

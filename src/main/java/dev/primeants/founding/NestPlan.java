@@ -57,7 +57,9 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
     }
     public static boolean traversable(ServerLevel level, BlockPos p) {
         var state=level.getBlockState(p);
-        return level.getFluidState(p).isEmpty() && (state.isAir() || NativeVegetation.material(state))
+        // Dry collision-free decorations occupy no walking space. Block entities still require
+        // their canonical ownership exception; this grants no removal/soil permission.
+        return level.getFluidState(p).isEmpty() && !state.hasBlockEntity()
             && state.getCollisionShape(level,p).isEmpty();
     }
     private static BlockPos exteriorFeet(ServerLevel level, BlockPos original) {
@@ -193,7 +195,7 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
             boolean owned = p.equals(nursery()) && level.getBlockEntity(p) instanceof dev.primeants.brood.BroodPile pile
                     && pile.ownedBy(owner, this);
             owned |= p.equals(cache()) && level.getBlockEntity(p) instanceof dev.primeants.worker.NestCache cache && cache.ownedBy(owner, this);
-            if ((!level.getBlockState(p).isAir() && !owned) || !level.getBlockState(p.above()).isAir()
+            if ((!traversable(level,p) && !owned) || !traversable(level,p.above())
                     || !level.getBlockState(p.below()).isSolidRender() || !level.getFluidState(p).isEmpty()
                     || !level.getFluidState(p.below()).isEmpty()) return "enclosure_chamber_obstructed";
         }

@@ -54,7 +54,7 @@ public final class RestartHarness implements ModInitializer {
     private JsonObject baseline;
     private final Set<ChunkPos> held=new HashSet<>();
     @Override public void onInitialize() {
-        if(phase.isEmpty())return;
+        if(phase.isEmpty()||phase.startsWith("t27-"))return;
         ticket=Registry.register(BuiltInRegistries.TICKET_TYPE,Identifier.fromNamespaceAndPath("prime_ants_test","restart"),new TicketType(0,14));
         ServerLifecycleEvents.SERVER_STARTED.register(s->{
             write(phase+"-process",process(s));
