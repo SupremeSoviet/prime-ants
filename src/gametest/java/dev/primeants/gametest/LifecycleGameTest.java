@@ -42,6 +42,7 @@ public final class LifecycleGameTest {
                 }
             }
             if(!supplied[0])return;
+            if(c.getTick()%1000==0)dev.primeants.PrimeAnts.LOGGER.info("T21 lifecycle growth diagnosis tick={} queenAlive={} queenHealth={} gate={} window={} recentSugar={} supply={} records={} workers={}",c.getTick(),q.isAlive(),q.getHealth(),b.growth().reason(),b.growth().observedTicks(),b.growth().recentSugar(),b.supply(c.getLevel()),b.records().stream().map(r->r.stage()+" "+r.nutrition().sugar()+"/"+r.nutrition().protein()).toList(),ws.stream().map(w->w.getUUID()+" age="+w.elapsedAgeTicks()+" fast="+w.adultLife().fasting()+" sugar="+w.nutrition().sugar()+" role="+w.workerTasks().phase()+" cargo="+w.getMainHandItem()).toList());
             for(var item:c.getLevel().getEntitiesOfClass(ItemEntity.class,c.getBounds().inflate(8),i->i.isAlive()&&i.getItem().is(Items.CHICKEN))){
                 observedWorld.putIfAbsent(item.getUUID(),item);if(!lootClosed[0])loot.putIfAbsent(item.getUUID(),item.getItem().copy());
             }
@@ -67,23 +68,32 @@ public final class LifecycleGameTest {
         });
     }
     @GameTest(maxTicks=22000,structure="prime_ants_test:idle_ground")
-    public void restoredProteinCarrierStarvesReleasesCargoAndKeepsDeathReceipts(GameTestHelper c){
-        var q=start(c,10000,6000,30);boolean[] supplied={false},saved={false},finished={false};UUID[] id={null};
+    public void restoredProteinCarrierStarvesReleasesCargoAndKeepsDeathReceipts(GameTestHelper c){carrier(c,false);}
+    @GameTest(maxTicks=22000,structure="prime_ants_test:idle_ground")
+    public void carrierReleaseAccountingIgnoresForeignFixtureDrop(GameTestHelper c){carrier(c,true);}
+    private void carrier(GameTestHelper c,boolean overlap){
+        var q=start(c,10000,6000,30);boolean[] supplied={false},saved={false},dead={false},ready={false},finished={false};UUID[] id={null};
+        var food=new ItemStack(Items.CHICKEN,7);food.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("T21 carrier "+UUID.randomUUID()));
+        java.util.function.Predicate<ItemStack> own=s2->ItemStack.isSameItemSameComponents(food,s2);
         c.onEachTick(()->{
+            if(finished[0])return;
             var p=q.founding().plan();var ws=f.workers(c,q);if(p==null)return;
-            if(!supplied[0]&&ws.size()==3&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;ws.stream().filter(w->!q.founding().claimedBy(w)).forEach(w->w.setNoAi(true));f.drop(c,p.at(-3,0,1),new ItemStack(Items.CHICKEN,7));}
-            if(!saved[0]&&f.cache(c,q)!=null&&f.cache(c,q).size()==6)for(var w:ws)if(w.getMainHandItem().is(Items.CHICKEN)){
-                saved[0]=true;id[0]=w.getUUID();var copy=restore(c,w);c.assertTrue(copy!=null&&copy.elapsedAgeTicks()==w.elapsedAgeTicks()&&copy.adultLife().fasting()==w.adultLife().fasting()&&ItemStack.matches(copy.getMainHandItem(),w.getMainHandItem()),"Real physical carrier restores exact clocks and cargo");w.discard();c.assertTrue(c.getLevel().tryAddFreshEntityWithPassengers(copy),"Same carrier identity reinserted for real mortality ticks");
+            if(!supplied[0]&&ws.size()==3&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;ws.stream().filter(w->!q.founding().claimedBy(w)).forEach(w->w.setNoAi(true));f.drop(c,p.at(-3,0,1),food.copy());}
+            if(!saved[0]&&f.cache(c,q)!=null&&f.cache(c,q).size()==6)for(var w:ws)if(own.test(w.getMainHandItem())){
+                saved[0]=true;id[0]=w.getUUID();var copy=restore(c,w);c.assertTrue(copy!=null&&copy.elapsedAgeTicks()==w.elapsedAgeTicks()&&copy.adultLife().fasting()==w.adultLife().fasting()&&ItemStack.matches(copy.getMainHandItem(),w.getMainHandItem()),"Real physical carrier restores exact clocks and cargo/components");w.discard();c.assertTrue(c.getLevel().tryAddFreshEntityWithPassengers(copy),"Same carrier identity reinserted for real mortality ticks");
             }
-            if(saved[0]&&!finished[0]&&ColonyMembers.get(c.getLevel()).member(id[0]).dead()){
-                finished[0]=true;c.assertTrue(q.founding().workerClaim()==null&&AdultHistory.get(c.getLevel()).records().containsKey(id[0].toString()),"Normal starvation releases forager claim, tombstone and terminal history");
-                c.runAfterDelay(30,()->{
-                    long world=c.getLevel().getEntitiesOfClass(ItemEntity.class,c.getBounds().inflate(8),i->i.isAlive()&&i.getItem().is(Items.CHICKEN)).stream().mapToInt(i->i.getItem().getCount()).sum();
-                    long custody=TransferCustody.get(c.getLevel()).contents().stream().filter(t->t.stack().is(Items.CHICKEN)&&c.getBounds().inflate(8).contains(t.position())).mapToInt(t->t.stack().getCount()).sum();
-                    c.assertTrue(c.getLevel().getEntity(id[0])==null&&f.cache(c,q).size()==6&&world+custody==1,"After ordinary body removal seven physical protein units remain six cached plus one custody/world release; never consumed as adult sugar");
-                    var r=com.google.gson.JsonParser.parseString(AdultHistory.get(c.getLevel()).records().get(id[0].toString())).getAsJsonObject();c.assertTrue(r.get("cause").getAsString().equals("starvation")&&r.getAsJsonObject("nutrition").get("chickens").getAsLong()==0,"Terminal receipts survive body removal and distinguish cargo from ingestion");c.succeed();
-                });
+            if(saved[0]&&!dead[0]&&ColonyMembers.get(c.getLevel()).member(id[0]).dead()){
+                dead[0]=true;c.assertTrue(q.founding().workerClaim()==null&&AdultHistory.get(c.getLevel()).records().containsKey(id[0].toString()),"Normal starvation releases forager claim, tombstone and terminal history");
+                if(overlap)f.drop(c,p.at(4,1,-2),new ItemStack(Items.CHICKEN)); // Explicit foreign fixture unit, never part of the seven owned units.
+                c.runAfterDelay(30,()->ready[0]=true);
             }
+            if(!ready[0]||c.getLevel().getEntity(id[0])!=null)return; // Actual loaded body removal, within unchanged 22,000 test bound.
+            long world=c.getLevel().getEntitiesOfClass(ItemEntity.class,c.getBounds().inflate(8),i->i.isAlive()&&own.test(i.getItem())).stream().mapToInt(i->i.getItem().getCount()).sum();
+            long custody=TransferCustody.get(c.getLevel()).contents().stream().filter(t->own.test(t.stack())&&c.getBounds().inflate(8).contains(t.position())).mapToInt(t->t.stack().getCount()).sum();
+            var cache=f.cache(c,q);
+            c.assertTrue(cache!=null&&cache.size()==6&&cache.contents().stream().allMatch(own)&&world+custody==1,"Seven original physical protein units remain six owned cached plus one owned custody/world release; no adult ingestion or foreign-food substitution");
+            if(overlap){long unscoped=c.getLevel().getEntitiesOfClass(ItemEntity.class,c.getBounds().inflate(8),i->i.isAlive()&&i.getItem().is(Items.CHICKEN)).stream().mapToInt(i->i.getItem().getCount()).sum();c.assertTrue(unscoped==world+1,"Old unscoped query counts the independent foreign item; owned accounting isolates exact components");}
+            var r=com.google.gson.JsonParser.parseString(AdultHistory.get(c.getLevel()).records().get(id[0].toString())).getAsJsonObject();c.assertTrue(r.get("cause").getAsString().equals("starvation")&&r.getAsJsonObject("nutrition").get("chickens").getAsLong()==0,"Terminal receipts survive removal and distinguish exact cargo from ingestion");finished[0]=true;c.succeed();
         });
     }
     @GameTest(maxTicks=18000,structure="prime_ants_test:idle_ground")

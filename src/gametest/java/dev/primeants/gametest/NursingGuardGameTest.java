@@ -67,14 +67,16 @@ public final class NursingGuardGameTest {
     @GameTest(maxTicks=18000,structure="prime_ants_test:idle_ground")
     public void exhaustedFoodNutritionStopsUnsupportedLarvae(GameTestHelper c){stall(c,1,1,false);}
     private void stall(GameTestHelper c,int apples,int chickens,boolean sugarPresent){
-        var q=f.start(c);boolean[] supplied={false},checked={false};
+        var q=f.start(c);boolean[] supplied={false},checked={false},legacy={false},finished={false};
         c.onEachTick(()->{
+            if(finished[0])return;
             var p=audit.pile(c,q);if(p==null)return;if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;audit.supply(c,q,apples,chickens);}
-            if(supplied[0]){c.assertTrue(audit.total(c,q)==apples+chickens,"Accounting includes terminal consumption");audit.yields(c,q);}
+            if(supplied[0]){c.assertTrue(audit.total(c,q)==apples+chickens,"Accounting includes terminal consumption: expected="+(apples+chickens)+" actual="+audit.total(c,q)+" queen="+q.nutrition().consumedUnits()+" brood="+p.consumedFood());audit.yields(c,q);}
+            if(supplied[0]&&!legacy[0])legacy[0]=PaidLegacyBrood.restoreEggs(c,q,p,3);
             var larvae=p.records().stream().filter(r->!r.founding()&&r.stage()==BroodStage.LARVA).toList();
             if(!checked[0]&&larvae.size()==3&&(!sugarPresent||larvae.stream().anyMatch(r->r.nutrition().sugar()>0))&&p.condition().equals("larva_sugar_or_protein_exhausted")){
                 checked[0]=true;var ids=larvae.stream().map(BroodRecord::id).toList();long laying=p.lastLayingTick();
-                c.runAfterDelay(250,()->{c.assertTrue(p.records().stream().map(BroodRecord::id).toList().equals(ids)&&p.records().stream().allMatch(r->r.progress()==0&&r.stage()==BroodStage.LARVA&&r.nutrition().protein()==0)&&p.lastLayingTick()==laying&&f.workers(c,q).size()==3,"Eggs hatch, but larvae cannot develop without their own protein; full slots preserve IDs");c.succeed();});
+                c.runAfterDelay(250,()->{c.assertTrue(p.records().stream().map(BroodRecord::id).toList().equals(ids)&&p.records().stream().allMatch(r->r.progress()==0&&r.stage()==BroodStage.LARVA&&r.nutrition().protein()==0)&&p.lastLayingTick()==laying&&f.workers(c,q).size()==3,"Eggs hatch, but larvae cannot develop without their own protein; full slots preserve IDs");finished[0]=true;c.succeed();});
             }
         });
     }

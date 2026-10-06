@@ -27,16 +27,22 @@ final class PlayerBasicsScenario {
     private final String prefix=System.getProperty("prime_ants.capturePrefix"),runId=System.getProperty("prime_ants.runId");
     private final UUID queen=UUID.fromString("fcbd4373-abaf-3eb3-bb01-c1281fc43fba");
     void run(ClientGameTestContext c){
-        record.put("run_id",runId);record.put("capture_prefix",prefix);record.put("entrypoint","dev.primeants.gametest.AntCaptureTest");record.put("scenario","player_basics");record.put("started_utc",Instant.now().toString());record.put("observations",observations);record.put("queen_uuid",queen.toString());
-        record.put("source_world",System.getProperty("prime_ants.playerBasicsWorld"));record.put("native_balance","FAILED: original primary worker took starvation damage; this local smoke cannot satisfy the requested balanced-world predicate");record.put("setup_player_moves",1);record.put("measured_teleports",0);record.put("terrain_edits",0);record.put("ant_position_edits",0);record.put("ai_pauses",0);record.put("supplied_food","1 apple + 1 raw chicken; separate from native evidence");record.put("limit","Copied diagnostic dimension proves local interaction, not ordinary overworld-spawn discovery.");
+        boolean probe=Boolean.getBoolean("prime_ants.playerLoadingProbe");
+        record.put("run_id",runId);record.put("capture_prefix",prefix);record.put("entrypoint","dev.primeants.gametest.AntCaptureTest");record.put("scenario",probe?"loading_probe":"player_basics");record.put("started_utc",Instant.now().toString());record.put("observations",observations);record.put("queen_uuid",queen.toString());
+        record.put("source_world",System.getProperty("prime_ants.playerBasicsWorld"));record.put("native_balance","T21 independent closed stability trial; player food and probe time are later evidence");record.put("setup_player_moves",1);record.put("measured_teleports",0);record.put("terrain_edits",0);record.put("ant_position_edits",0);record.put("ai_pauses",0);record.put("supplied_food",probe?"none (loading-only probe)":"1 apple + 1 raw chicken; separate from native evidence");record.put("limit","Copied diagnostic dimension proves local interaction, not ordinary overworld-spawn discovery.");
         Path save=Path.of("saves",prefix).toAbsolutePath();
         try{
             require(!Files.exists(save),"Fresh owned player world required");Files.createDirectories(save);
-            try(var zip=new ZipFile(System.getProperty("prime_ants.playerBasicsWorld"))){for(var entry:zip.stream().toList()){
-                Path target=save.resolve(entry.getName()).normalize();require(target.startsWith(save),"Safe archive member");
+            try(var zip=new ZipFile(System.getProperty("prime_ants.playerBasicsWorld"))){
+                var levels=zip.stream().filter(entry->entry.getName().equals("level.dat")||entry.getName().endsWith("/level.dat")).toList();require(levels.size()==1,"One closed saved world required");
+                String archiveRoot=levels.getFirst().getName().substring(0,levels.getFirst().getName().length()-"level.dat".length());
+                record.put("archive_world_root",archiveRoot);
+                for(var entry:zip.stream().toList()){
+                if(!entry.getName().startsWith(archiveRoot))continue;
+                Path target=save.resolve(entry.getName().substring(archiveRoot.length())).normalize();require(target.startsWith(save),"Safe archive member");
                 if(entry.isDirectory())Files.createDirectories(target);else{Files.createDirectories(target.getParent());try(var in=zip.getInputStream(entry)){Files.copy(in,target);}}
             }}
-            c.runOnClient(client->{client.options.renderDistance().set(2);client.options.simulationDistance().set(2);}); // Bounded copied-site loading, before opening the world.
+            c.runOnClient(client->{client.options.renderDistance().set(2);client.options.simulationDistance().set(2);client.getWindow().setWindowed(1600,1000);client.options.guiScale().set(2);}); // Bounded copied-site loading, before opening the world.
             try(TestSingleplayerContext world=new TestWorldSaveImpl(c,save).open()){
                 var dimension=ResourceKey.create(Registries.DIMENSION,Identifier.fromNamespaceAndPath("prime_ants_test","placement_native"));
                 NestPlan plan=world.getServer().computeOnServer(s->{var l=s.getLevel(dimension);var q=(LasiusNigerEntity)l.getEntity(queen);
@@ -51,6 +57,9 @@ final class PlayerBasicsScenario {
                 world.getConnection().waitForClientboundPackets();world.getConnection().waitForChunksRender();c.waitForScreen(null);c.waitTicks(5);
                 require(c.computeOnClient(client->!client.player.isSpectator()&&!client.player.getAbilities().flying&&!client.player.noPhysics),"Ordinary survival physics throughout measured walk");
                 c.runOnClient(client->{client.options.fov().set(80);client.player.lookAt(EntityAnchorArgument.Anchor.EYES,Vec3.atCenterOf(p.entrance()));});
+                world.getServer().runOnServer(s->{var l=s.getLevel(dimension);l.clockManager().setTotalTicks(l.dimensionType().defaultClock().orElseThrow(),6000);});
+                c.waitTicks(40); // Window/framebuffer and camera stable well before any PNG.
+                if(probe){c.waitTicks(240);require(world.getServer().computeOnServer(s->PlacementSettings.replayBudget()<=300),"Enforced all-dimension loading bound");record.put("status","success");record.put("completed_utc",Instant.now().toString());return;}
                 record.put("start",List.of(start.getX(),start.getY(),start.getZ()));record.put("local_visible_mound",world.getServer().computeOnServer(s->p.deposits().stream().anyMatch(pos->ColonyTerrain.get(s.getLevel(dimension)).mound(s.getLevel(dimension),pos,queen))));
                 walk(c,Vec3.atBottomCenterOf(p.at(0,0,0)),180);
                 walk(c,Vec3.atBottomCenterOf(p.at(1,0,-1)),100);
@@ -58,20 +67,44 @@ final class PlayerBasicsScenario {
                 require(c.computeOnClient(client->client.player.getY()<p.entrance().getY()-1&&client.player.position().distanceToSqr(Vec3.atBottomCenterOf(p.at(2,0,-2)))<1),"Survival input enters existing two-high tunnel");record.put("entered",true);
                 // Walk the same stairs back; jump is ordinary player input for each one-block rise.
                 walk(c,Vec3.atBottomCenterOf(p.at(2,0,-2)),100);walkUp(c,Vec3.atBottomCenterOf(p.at(1,0,-1)),100);walkUp(c,Vec3.atBottomCenterOf(p.at(0,0,0)),100);walkUp(c,Vec3.atBottomCenterOf(p.outside()),150);
-                capture(c,"entrance");
+                walk(c,Vec3.atBottomCenterOf(start),180);
+                c.runOnClient(client->client.player.lookAt(EntityAnchorArgument.Anchor.EYES,Vec3.atCenterOf(p.entrance())));c.waitTicks(15);capture(c,"entrance");
+                walk(c,Vec3.atBottomCenterOf(p.outside()),180);
                 var drops=new ArrayList<Map<String,Object>>();
                 for(var item:List.of(Items.APPLE,Items.CHICKEN)){
                     world.getServer().runOnServer(s->world.getConnection().getServerPlayer().setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(item)));
                     world.getConnection().waitForClientboundPackets();c.waitFor(client->client.player.getMainHandItem().is(item));
-                    c.runOnClient(client->{client.player.setXRot(65);client.gameMode.dropItem(client.player,true);});world.getConnection().waitForServerboundPackets();
-                    var drop=world.getServer().computeOnServer(s->{var l=world.getConnection().getServerLevel();require(world.getConnection().getServerPlayer().getMainHandItem().isEmpty(),"Survival inventory loses supplied unit");var items=l.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,new AABB(p.outside()).inflate(6),e->e.isAlive()&&e.getItem().is(item));require(items.size()==1,"One actual ordinary player world item");return items.getFirst().getUUID();});
+                    long intakeBefore=world.getServer().computeOnServer(s->actualIntake(world.getConnection().getServerLevel(),item));
+                    Vec3 dropOrigin=c.computeOnClient(client->client.player.position());
+                    c.runOnClient(client->{client.player.setYRot(p.direction().toYRot());client.player.setXRot(45);client.gameMode.dropItem(client.player,true);});
+                    // Start ordinary retreat immediately, before waiting for the drop packet response.
+                    c.getInput().holdKey(options->options.keyDown);c.getInput().holdKey(options->options.keyJump);
+                    UUID drop;
+                    try{
+                        world.getConnection().waitForServerboundPackets();
+                        drop=world.getServer().computeOnServer(s->{var l=world.getConnection().getServerLevel();require(world.getConnection().getServerPlayer().getMainHandItem().isEmpty(),"Survival inventory loses supplied unit");var items=l.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,new AABB(p.outside()).inflate(6),e->e.isAlive()&&e.getItem().is(item));require(items.size()==1,"One actual ordinary player world item");return items.getFirst().getUUID();});
+                        for(int t=0;t<80&&c.computeOnClient(client->horizontalDistanceSquared(client.player.position(),dropOrigin)<16);t++)c.waitTick();
+                    }finally{c.getInput().releaseKey(options->options.keyDown);c.getInput().releaseKey(options->options.keyJump);}
+                    require(c.computeOnClient(client->horizontalDistanceSquared(client.player.position(),dropOrigin)>=16),"At least four horizontal blocks of immediate ordinary survival retreat");
                     var trace=new LinkedHashMap<String,Object>();trace.put("item",net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item).toString());trace.put("world_uuid",drop.toString());trace.put("inventory_loss",1);trace.put("method","survival inventory -> ordinary client DROP_ALL_ITEMS packet");
+                    trace.put("step_away_blocks",Math.sqrt(c.computeOnClient(client->horizontalDistanceSquared(client.player.position(),dropOrigin))));
+                    trace.put("intake_before",intakeBefore);
                     UUID carrier=null;
-                    for(int t=0;carrier==null&&t<2200;t++){c.waitTick();carrier=world.getServer().computeOnServer(s->{var l=world.getConnection().getServerLevel();for(var e:l.getAllEntities())if(e instanceof LasiusNigerEntity w&&w.isAlive()&&queen.equals(w.queenId())&&w.getMainHandItem().is(item)&&w.founding().phase()==QueenFounding.Phase.NONE&&!w.workerTasks().nursing())return w.getUUID();return null;});}
+                    for(int t=0;carrier==null&&t<2200;t++){c.waitTick();require(world.getServer().computeOnServer(s->world.getConnection().getServerPlayer().getInventory().countItem(item)==0),"Food never returns to player inventory");carrier=world.getServer().computeOnServer(s->{var l=world.getConnection().getServerLevel();for(var e:l.getAllEntities())if(e instanceof LasiusNigerEntity w&&w.isAlive()&&queen.equals(w.queenId())&&w.getMainHandItem().is(item)&&w.founding().phase()==QueenFounding.Phase.NONE&&!w.workerTasks().nursing())return w.getUUID();return null;});}
                     require(carrier!=null,"Genuine forager collects ordinary survival drop");trace.put("carrier",carrier.toString());trace.put("carried_units",1);
-                    if(item==Items.APPLE){world.getConnection().waitForClientboundPackets();c.waitTicks(2);final UUID id=carrier;c.runOnClient(client->{for(var e:client.level.entitiesForRendering())if(e.getUUID().equals(id))client.player.lookAt(EntityAnchorArgument.Anchor.EYES,e.position().add(0,.25,0));});capture(c,"feeding");}
-                    boolean delivered=false;for(int t=0;!delivered&&t<1500;t++){c.waitTick();delivered=world.getServer().computeOnServer(s->{var l=world.getConnection().getServerLevel();return l.getBlockEntity(p.cache()) instanceof NestCache n&&n.ownedBy(queen,p)&&n.contents().stream().anyMatch(stack->stack.is(item))||actualIntake(l,item)>0;});}
-                    require(delivered,"Supplied unit follows carried -> owned cache or actual feeding path");trace.put("owned_cache",world.getServer().computeOnServer(server->world.getConnection().getServerLevel().getBlockEntity(p.cache()) instanceof NestCache n&&n.ownedBy(queen,p)&&n.contents().stream().anyMatch(stack->stack.is(item))));trace.put("actual_feeding",world.getServer().computeOnServer(server->actualIntake(world.getConnection().getServerLevel(),item)>0));drops.add(trace);
+                    if(item==Items.APPLE){
+                        final UUID id=carrier;
+                        for(int t=0;t<200;t++){
+                            Vec3 subject=world.getServer().computeOnServer(s->{var e=s.getLevel(dimension).getEntity(id);return e==null?null:e.position();});
+                            require(subject!=null,"Actual carrier remains loaded for readable view");
+                            c.runOnClient(client->client.player.lookAt(EntityAnchorArgument.Anchor.EYES,subject.add(0,.25,0)));
+                            if(c.computeOnClient(client->client.player.position().distanceToSqr(subject)<36))break;
+                            c.getInput().holdKey(options->options.keyUp);c.waitTick();c.getInput().releaseKey(options->options.keyUp);
+                        }
+                        world.getConnection().waitForClientboundPackets();c.waitTicks(2);capture(c,"feeding");
+                    }
+                    boolean delivered=false;for(int t=0;!delivered&&t<1500;t++){c.waitTick();delivered=world.getServer().computeOnServer(s->{var l=world.getConnection().getServerLevel();return l.getBlockEntity(p.cache()) instanceof NestCache n&&n.ownedBy(queen,p)&&n.contents().stream().anyMatch(stack->stack.is(item))||actualIntake(l,item)>intakeBefore;});}
+                    require(delivered,"Supplied unit follows carried -> owned cache or actual feeding path");trace.put("owned_cache",world.getServer().computeOnServer(server->world.getConnection().getServerLevel().getBlockEntity(p.cache()) instanceof NestCache n&&n.ownedBy(queen,p)&&n.contents().stream().anyMatch(stack->stack.is(item))));trace.put("actual_feeding",world.getServer().computeOnServer(server->actualIntake(world.getConnection().getServerLevel(),item)>intakeBefore));trace.put("inventory_final",world.getServer().computeOnServer(server->world.getConnection().getServerPlayer().getInventory().countItem(item)));drops.add(trace);
                 }
                 record.put("drops",drops);record.put("status","success");record.put("completed_utc",Instant.now().toString());
             }
@@ -95,9 +128,10 @@ final class PlayerBasicsScenario {
     }
     private void capture(ClientGameTestContext c,String stage)throws Exception{
         var frame=new LinkedHashMap<String,Object>();frame.put("stage",stage);frame.put("event","player_frame");frame.put("capture_started_utc",Instant.now().toString());
-        var png=c.takeScreenshot(TestScreenshotOptions.of(prefix+"-"+stage).disableCounterPrefix().withDeltaTicks(1).withSize(1600,1000).withDestinationDir(Path.of(System.getProperty("prime_ants.captureDir"))));
+        var png=c.takeScreenshot(TestScreenshotOptions.of(prefix+"-"+stage).disableCounterPrefix().withDeltaTicks(1).withDestinationDir(Path.of(System.getProperty("prime_ants.captureDir"))));
         var im=javax.imageio.ImageIO.read(png.toFile());frame.put("image",png.toAbsolutePath().toString());frame.put("width",im.getWidth());frame.put("height",im.getHeight());frame.put("modified_epoch_ms",Files.getLastModifiedTime(png).toMillis());frame.put("sha256",HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(png))));observations.add(frame);
-        Files.writeString(png.resolveSibling(png.getFileName()+".md"),"T20 survival "+stage+" in an owned natural-colony checkpoint copy; normal movement/drop inputs, one disclosed exterior setup move; supplied food separate from native balance.\n");
+        Files.writeString(png.resolveSibling(png.getFileName()+".md"),"T21 survival "+stage+" in an owned natural-colony checkpoint copy; normal movement/drop inputs, one disclosed exterior setup move; supplied food separate from native balance.\n");
     }
+    private static double horizontalDistanceSquared(Vec3 a,Vec3 b){double x=a.x-b.x,z=a.z-b.z;return x*x+z*z;}
     private static void require(boolean ok,String why){if(!ok)throw new AssertionError(why);}
 }

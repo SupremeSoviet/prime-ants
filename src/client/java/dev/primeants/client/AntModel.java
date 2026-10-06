@@ -178,6 +178,14 @@ public final class AntModel extends EntityModel<AntRenderState> {
             femur.zRot = angles[1];
             femur.getChild("tibia").zRot = angles[2];
         }
+        if(state.social){
+            var head=root().getChild("ant").getChild("head");
+            head.yRot=state.yRot*(float)Math.PI/180;
+            head.xRot+=0.08F;
+            float pulse=(float)Math.sin(state.ageInTicks*.5F)*.10F;
+            head.getChild("mandible_left").yRot+=.18F+pulse;
+            head.getChild("mandible_right").yRot-=.18F+pulse;
+        }
         leftAntenna.yRot += (float)Math.sin(state.ageInTicks * 0.09F) * 0.12F;
         rightAntenna.yRot -= (float)Math.sin(state.ageInTicks * 0.09F + 0.7F) * 0.12F;
     }

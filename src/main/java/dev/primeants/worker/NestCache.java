@@ -54,7 +54,7 @@ public final class NestCache extends BlockEntity {
         return false;
     }
     public boolean withdrawMeal(LasiusNigerEntity w,NestPlan p){
-        if(!(level instanceof ServerLevel l)||!ownedBy(w.queenId(),p)||!w.isAlive()||w.isNoAi()||!w.adultLife().hungry()||!w.getMainHandItem().isEmpty()
+        if(!(level instanceof ServerLevel l)||!ownedBy(w.queenId(),p)||!w.isAlive()||w.isNoAi()||!(w.adultLife().hungry()||w.workerTasks().sharing().needsCrop(l))||!w.getMainHandItem().isEmpty()
             ||!ColonyMembers.get(l).belongs(w,w.queenId(),p.chamber())||p.nurseryProblem(l,colony,true)!=null
             ||!WorkerTasks.reaches(l,w,Vec3.atBottomCenterOf(getBlockPos()).add(0,0.15,0)))return false;
         for(int i=0;i<contents.size();i++)if(Nutrition.sugarYield(contents.get(i))>0&&w.nutrition().accepts(contents.get(i),Nutrition.QUEEN_SUGAR_CAPACITY,0)){

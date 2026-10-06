@@ -4,15 +4,16 @@ def placementAttempt=providers.gradleProperty('primeAntsPlacementAttempt').getOr
 def placementEvidence=providers.gradleProperty('primeAntsPlacementEvidence').getOrElse('unset')
 def placementMode=providers.gradleProperty('primeAntsPlacementMode').getOrElse('t14')
 def placementDeclaration=providers.gradleProperty('primeAntsPlacementDeclaration').getOrElse('unset')
+def isT21=placementMode=='t21-policy-v1'
 def isT20=placementMode=='t20-tuned-v1'
 def isT19=placementMode=='t19-replay-v1'
-def isReplay=isT20||isT19||placementMode=='t18-replay-v1'
-def replayLimit=isT20?(providers.gradleProperty('primeAntsPlacementTickLimit').getOrElse('32000') as int):isT19?12000:8000
+def isReplay=isT21||isT20||isT19||placementMode=='t18-replay-v1'
+def replayLimit=isT21?36000:isT20?(providers.gradleProperty('primeAntsPlacementTickLimit').getOrElse('32000') as int):isT19?12000:8000
 def isT15=placementMode=='t15-biome-v1'
 def isT17=placementMode=='t17-nectar-v1'
 def isT16=placementMode=='t16-frozen-v1'
-def fullLimit=isT20?200:(isT16||isT17||isReplay)?150:100
-def placementDirectory=layout.buildDirectory.dir('run/'+(isT20?'t20':isT19?'t19':isReplay?'t18':isT17?'t17':isT16?'t16':isT15?'t15':'t14')+'-placement/'+placementAttempt)
+def fullLimit=isT21?300:isT20?200:(isT16||isT17||isReplay)?150:100
+def placementDirectory=layout.buildDirectory.dir('run/'+(isT21?'t21':isT20?'t20':isT19?'t19':isReplay?'t18':isT17?'t17':isT16?'t16':isT15?'t15':'t14')+'-placement/'+placementAttempt)
 loom.runs.register('placementDiagnostic') {
     server()
     sourceSet.set('gametest')
@@ -28,7 +29,7 @@ loom.runs.register('placementDiagnostic') {
 }
 tasks.named('runPlacementDiagnostic') {
     doFirst {
-        if(!(placementSeed in ['2026100501','42','8675309']) || !(placementAttempt ==~ (isT20 ? /t20-replay-[a-z0-9-]+/ : isT19 ? /t19-replay-[a-z0-9-]+/ : isReplay ? /t18-replay-[a-z0-9-]+/ : isT17 ? /t17-seed-[a-z0-9-]+/ : isT16 ? /t16-seed-[a-z0-9-]+/ : isT15 ? /t15-seed-[a-z0-9-]+/ : /t14-seed-[a-z0-9-]+/)) || placementEvidence=='unset')
+        if(!(placementSeed in ['2026100501','42','8675309']) || !(placementAttempt ==~ (isT21 ? /t21-replay-[a-z0-9-]+/ : isT20 ? /t20-replay-[a-z0-9-]+/ : isT19 ? /t19-replay-[a-z0-9-]+/ : isReplay ? /t18-replay-[a-z0-9-]+/ : isT17 ? /t17-seed-[a-z0-9-]+/ : isT16 ? /t16-seed-[a-z0-9-]+/ : isT15 ? /t15-seed-[a-z0-9-]+/ : /t14-seed-[a-z0-9-]+/)) || placementEvidence=='unset')
             throw new GradleException('Explicit predeclared seed, owned turn-specific attempt and evidence required')
         if(isT17) {
             if(placementDeclaration=='unset' || !file(placementDeclaration).isFile())throw new GradleException('Frozen T17 declaration required')
@@ -64,12 +65,12 @@ tasks.named('runPlacementDiagnostic') {
         if(isReplay) {
             if(placementDeclaration=='unset' || !file(placementDeclaration).isFile())throw new GradleException('Replay declaration required')
             def d=new groovy.json.JsonSlurper().parse(file(placementDeclaration))
-            if(isT19||isT20){
+            if(isT21||isT19||isT20){
                 def expected=[adult_lifespan:144000,adult_fasting:24000,brood_neglect:24000,cocoon_waiting:24000,founding_multiplier:20,brood_multiplier:100,nectar_duration_multiplier:1,sprint:true,production_tickets:false,animals_supplied:0,food_supplied:0,plants_supplied:0,terrain_edits:0,actor_position_edits:0,policy_shortening:false]
                 expected.each{k,v->if(d[k]!=v)throw new GradleException('T19 unchanged replay setting required: '+k)}
-                if((!isT20&&file(d.source_archive).name!='t18-native-replay-b-world.zip')||d.selected!=[[5,9],[9,5],[9,9]]||d.initial_actors.size()!=8||d.initial_nurseries.size()!=2)throw new GradleException('T19 closed B actors/region required')
+                if((!(isT21||isT20)&&file(d.source_archive).name!='t18-native-replay-b-world.zip')||d.selected!=[[5,9],[9,5],[9,9]]||d.initial_actors.size()!=8||d.initial_nurseries.size()!=2)throw new GradleException('T19 closed B actors/region required')
             }
-            if(d.mode!=placementMode||d.max_full_chunks!=fullLimit||d.existing_full_count!=106||d.server_tick_limit!=replayLimit||d.max_biome_queries!=0||d.halo_radius!=(isT20?4:3))throw new GradleException('Replay bounds mismatch')
+            if(d.mode!=placementMode||d.max_full_chunks!=fullLimit||d.existing_full_count!=106||d.server_tick_limit!=replayLimit||d.max_biome_queries!=0||d.halo_radius!=((isT21||isT20)?4:3))throw new GradleException('Replay bounds mismatch')
             if(isT20 && replayLimit+(d.prior_server_ticks?:0)!=32000)throw new GradleException('T20 cumulative tick budget mismatch')
             def marker=new File(dir,'owned-copy.json')
             if(!marker.isFile()||!new File(dir,'world/level.dat').isFile()||new File(dir,'logs').exists())throw new GradleException('Untouched owned replay copy required; never reopen an attempted directory')

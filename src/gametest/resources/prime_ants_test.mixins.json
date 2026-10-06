@@ -16,7 +16,8 @@
     "TerrainGenerationFixtureMixin",
     "PlacementFullBudgetMixin",
     "GrassNestedWriteMixin",
-    "BambooStageFixtureMixin"
+    "BambooStageFixtureMixin",
+    "GameTestHelperAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

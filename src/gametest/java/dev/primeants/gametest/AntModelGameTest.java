@@ -136,6 +136,13 @@ public final class AntModelGameTest implements FabricClientGameTest {
     }
 
     private void checkForm(AntForm form) {
+        test(form, "trophallaxisUsesExistingHeadAndMandiblesAndClears", () -> {
+            var model=new AntModel(AntModel.createBodyLayer(form).bakeRoot());var state=new AntRenderState();
+            model.setupAnim(state);var head=model.root().getChild("ant").getChild("head");float left=head.getChild("mandible_left").yRot,right=head.getChild("mandible_right").yRot;
+            state.social=true;state.yRot=30;state.ageInTicks=4;model.setupAnim(state);
+            require(head.getChild("mandible_left").yRot>left&&head.getChild("mandible_right").yRot<right,"Actual synchronized social state opens both existing mandibles");near(head.yRot,(float)Math.PI/6);
+            state.social=false;state.yRot=0;model.setupAnim(state);near(head.getChild("mandible_left").yRot,left);near(head.getChild("mandible_right").yRot,right);near(head.xRot,0);near(head.yRot,0);
+        });
         AntModel model = new AntModel(AntModel.createBodyLayer(form).bakeRoot());
         ModelPart ant = model.root().getChild("ant");
         ModelPart head = ant.getChild("head");

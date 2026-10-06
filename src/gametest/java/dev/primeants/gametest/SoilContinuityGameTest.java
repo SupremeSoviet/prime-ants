@@ -31,7 +31,7 @@ public final class SoilContinuityGameTest {
             if(!(l.getEntity(uuid(l,chunk)) instanceof LasiusNigerEntity q)||q.founding().plan()==null||placed[0])return;
             placed[0]=true;var p=q.founding().plan();var support=p.at(1,1,-1);var plant=support.above();
             c.assertTrue(!p.tasks().contains(support)&&p.undergroundSurfaces().contains(support),"Lowered support outside excavation columns");
-            BambooStageFixture.watch(l,plant); // One explicit stage-stable fixture, not a production random-tick disable.
+            BambooStageFixture.watch(c,l,plant); // One explicit stage-stable fixture, not a production random-tick disable.
             var soil=l.getBlockState(support);l.setBlock(plant,Blocks.AIR.defaultBlockState(),3);l.setBlock(plant,Blocks.BAMBOO_SAPLING.defaultBlockState(),3);
             c.assertTrue(NaturalSoil.get(l).eligible(l,support)&&l.getBlockState(plant).canSurvive(l,plant),"Late bamboo has still-authorized vanilla support");
             c.runAfterDelay(400,()->{
@@ -43,7 +43,7 @@ public final class SoilContinuityGameTest {
                 var copy=(LasiusNigerEntity)net.minecraft.world.entity.EntityType.loadEntityRecursive(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING,l.registryAccess(),out.buildResult()),l,net.minecraft.world.entity.EntitySpawnReason.LOAD,e->e);
                 c.assertTrue(copy!=null&&copy.founding().removed()==q.founding().removed()&&copy.founding().carried()==q.founding().carried()&&copy.founding().deposited()==q.founding().deposited()&&copy.founding().converted()==q.founding().converted(),"Read-only uninserted restoration retains material and preparation progress");
                 c.assertTrue(NaturalSoil.get(l).compatible(l,support,soil)&&l.getBlockState(plant).is(Blocks.BAMBOO_SAPLING)&&!ColonyTerrain.get(l).prepare(l,support,q.getUUID()),"Restored authority cannot renew permission or destroy bamboo");
-                c.assertTrue(q.founding().removed()==q.founding().carried()+q.founding().deposited()+q.founding().plugged()+q.founding().released(),"Material balance unchanged by refusal");BambooStageFixture.clear();c.succeed();
+                c.assertTrue(q.founding().removed()==q.founding().carried()+q.founding().deposited()+q.founding().plugged()+q.founding().released(),"Material balance unchanged by refusal");c.succeed();
             });
         });
     }
@@ -185,7 +185,6 @@ public final class SoilContinuityGameTest {
             if(!(l.getEntity(uuid(l,chunk)) instanceof LasiusNigerEntity q) || q.founding().plan()==null || placed[0])return;
             placed[0]=true;var p=q.founding().plan();var support=p.at(1,1,-1);var plant=support.above();
             c.assertTrue(!p.tasks().contains(support) && p.undergroundSurfaces().contains(support),"Lowered support is beside stair, outside all excavation columns");
-            BambooStageFixture.watch(l,plant); // One explicit stage-stable fixture, not a production random-tick disable.
             var soil=l.getBlockState(support);l.setBlock(plant,Blocks.AIR.defaultBlockState(),3);l.setBlock(plant,Blocks.POPPY.defaultBlockState(),3);
             c.assertTrue(NaturalSoil.get(l).eligible(l,support) && l.getBlockState(plant).canSurvive(l,plant),"Controlled lowered plant has still-authorized support");
             c.runAfterDelay(400,()->{

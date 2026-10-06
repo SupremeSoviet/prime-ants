@@ -11,9 +11,12 @@ public final class AdultLife {
     private long lifespan=duration("prime_ants.adultLifespanTicks",DEFAULT_LIFESPAN);
     private long grace=duration("prime_ants.adultFastingTicks",DEFAULT_FASTING);
     private long fasting,maintenanceTicks,activeTicks;
-    private int damageTicks,mealTicks;
+    private int damageTicks,mealTicks,coverageRemaining;
+    private long coveredTicks;
+    public int coverageRemaining(){return coverageRemaining;} public long coveredTicks(){return coveredTicks;}
     private boolean started;
     private String death="";
+    public static int maintenancePeriod(){return 4;}
     private static long duration(String key,long fallback){long n=Long.parseLong(System.getProperty(key,Long.toString(fallback)));if(n<1)throw new IllegalArgumentException("Adult duration must be positive: "+key);return n;}
     public long lifespan(){return lifespan;} public long grace(){return grace;}
     public long fasting(){return fasting;} public long maintenanceTicks(){return maintenanceTicks;}
@@ -30,7 +33,10 @@ public final class AdultLife {
         if(!started&&(ant.form()==AntForm.WORKER||!ant.founding().reserveOnlyFounding(level)))started=true;
         if(!started)return; // First-clutch queen uses only the unchanged 39,000 reserve budget.
         activeTicks++;
-        if(ant.nutrition().spend(1,0)){maintenanceTicks++;fasting=0;}else if(fasting<Long.MAX_VALUE)fasting++;
+        boolean covered=coverageRemaining>0;
+        if(covered)coverageRemaining--;
+        else if(ant.nutrition().spend(1,0)){maintenanceTicks++;coverageRemaining=maintenancePeriod()-1;covered=true;}
+        if(covered){coveredTicks++;fasting=0;}else if(fasting<Long.MAX_VALUE)fasting++;
         boolean old=ant.form()==AntForm.WORKER&&ant.elapsedAgeTicks()>=lifespan;
         boolean starving=fasting>=grace;
         if(!old&&!starving){damageTicks=0;return;}
@@ -39,7 +45,7 @@ public final class AdultLife {
         ant.hurtServer(level,ant.damageSources().starve(),1.0F);
         if(ant.isAlive())death="";
     }
-    public void save(ValueOutput o){o.putLong("Lifespan",lifespan);o.putLong("FastingGrace",grace);o.putLong("Fasting",fasting);o.putLong("Maintenance",maintenanceTicks);o.putLong("ActiveTicks",activeTicks);o.putInt("DamageTicks",damageTicks);o.putInt("MealTicks",mealTicks);o.putBoolean("Started",started);o.putString("Death",death);}
+    public void save(ValueOutput o){o.putInt("CoverageRemaining",coverageRemaining);o.putLong("CoveredTicks",coveredTicks);o.putLong("Lifespan",lifespan);o.putLong("FastingGrace",grace);o.putLong("Fasting",fasting);o.putLong("Maintenance",maintenanceTicks);o.putLong("ActiveTicks",activeTicks);o.putInt("DamageTicks",damageTicks);o.putInt("MealTicks",mealTicks);o.putBoolean("Started",started);o.putString("Death",death);}
     public void load(ValueInput i,LasiusNigerEntity ant){
         // Legacy duration defaults are stable production values, never current test configuration.
         // Preserve age; conservatively count existing worker age as fasting rather than renew grace.
@@ -48,7 +54,8 @@ public final class AdultLife {
         started=i.getBooleanOr("Started",ant.form()==AntForm.WORKER||ant.founding().lifecycle()!=QueenFounding.Lifecycle.CLAUSTRAL);
         activeTicks=i.getLongOr("ActiveTicks",legacy&&ant.form()==AntForm.WORKER?ant.elapsedAgeTicks():0);
         fasting=i.getLongOr("Fasting",legacy&&ant.form()==AntForm.WORKER?ant.elapsedAgeTicks():0);
+        coverageRemaining=i.getIntOr("CoverageRemaining",0);coveredTicks=i.getLongOr("CoveredTicks",i.getLongOr("Maintenance",0));
         maintenanceTicks=i.getLongOr("Maintenance",0);damageTicks=i.getIntOr("DamageTicks",0);mealTicks=i.getIntOr("MealTicks",0);death=i.getStringOr("Death","");
-        if(lifespan<1||grace<1||fasting<0||activeTicks<0||maintenanceTicks<0||damageTicks<0||damageTicks>=20||mealTicks<0||mealTicks>=20)throw new IllegalArgumentException("Invalid persisted adult life");
+        if(coverageRemaining<0||coverageRemaining>=maintenancePeriod()||coveredTicks<0||lifespan<1||grace<1||fasting<0||activeTicks<0||maintenanceTicks<0||damageTicks<0||damageTicks>=20||mealTicks<0||mealTicks>=20)throw new IllegalArgumentException("Invalid persisted adult life");
     }
 }

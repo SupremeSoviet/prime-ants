@@ -28,7 +28,7 @@ public final class NursingGameTest {
     void yields(GameTestHelper c,LasiusNigerEntity q){
         var p=pile(c,q);var n=q.nutrition();
         c.assertTrue(Nutrition.APPLE_SUGAR==4000&&Nutrition.BERRY_SUGAR==2000&&Nutrition.CHICKEN_PROTEIN==8000,"Declared yields are explicit");
-        c.assertTrue(n.gainedSugar()==n.apples()*4000+n.berries()*2000&&n.gainedProtein()==n.chickens()*8000&&n.gainedSugar()==n.sugar()+n.spentSugar()&&n.gainedProtein()==n.protein()+n.spentProtein(),"Queen credit independently equals actual terminal units times declared yields");
+        c.assertTrue(n.gainedSugar()==n.apples()*4000+n.berries()*2000&&n.gainedProtein()==n.chickens()*8000&&n.gainedSugar()+n.receivedSugar()==n.sugar()+n.spentSugar()+n.givenSugar()&&n.gainedProtein()==n.protein()+n.spentProtein(),"Queen credit independently equals actual terminal units times declared yields");
         if(p!=null)for(var r:p.records()){var v=r.nutrition();c.assertTrue(v.gainedSugar()==v.apples()*4000+v.berries()*2000&&v.gainedProtein()==v.chickens()*8000&&v.gainedSugar()==v.sugar()+v.spentSugar()&&v.gainedProtein()==v.protein()+v.spentProtein(),"Each larva owns finite persisted credited nutrition");}
     }
     @GameTest(maxTicks=24000,structure="prime_ants_test:idle_ground")

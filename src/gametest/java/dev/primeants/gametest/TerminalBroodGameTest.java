@@ -20,8 +20,9 @@ import net.minecraft.util.ProblemReporter;
 /** Birth-selected policies; all biology advances through actual server tick owners. */
 public final class TerminalBroodGameTest {
     private final WorkerForagingGameTest f=new WorkerForagingGameTest();
-    private LasiusNigerEntity start(GameTestHelper c,long neglect,long waiting,long fasting){
-        var props=Map.of("prime_ants.broodNeglectTicks",Long.toString(neglect),"prime_ants.cocoonWaitingTicks",Long.toString(waiting),"prime_ants.adultFastingTicks",Long.toString(fasting),"prime_ants.adultLifespanTicks","20000");
+    private LasiusNigerEntity start(GameTestHelper c,long neglect,long waiting,long fasting){return start(c,neglect,waiting,fasting,20000);}
+    private LasiusNigerEntity start(GameTestHelper c,long neglect,long waiting,long fasting,long lifespan){
+        var props=Map.of("prime_ants.broodNeglectTicks",Long.toString(neglect),"prime_ants.cocoonWaitingTicks",Long.toString(waiting),"prime_ants.adultFastingTicks",Long.toString(fasting),"prime_ants.adultLifespanTicks",Long.toString(lifespan));
         var old=new HashMap<String,String>();props.keySet().forEach(k->old.put(k,System.getProperty(k)));
         try{props.forEach(System::setProperty);return f.start(c);}finally{old.forEach((k,v)->{if(v==null)System.clearProperty(k);else System.setProperty(k,v);});}
     }
@@ -151,11 +152,12 @@ public final class TerminalBroodGameTest {
     }
     @GameTest(maxTicks=20000,structure="prime_ants_test:idle_ground")
     public void queenDiesWithUnderfedLarvaeAndAdultsThenColonyExpires(GameTestHelper c){
-        var q=start(c,800,800,3500);boolean[] supplied={false},killed={false},finished={false};var deadBrood=new HashSet<UUID>();var adults=new HashSet<UUID>();long[] laying={0};
+        var q=start(c,800,800,3500,8000);boolean[] supplied={false},killed={false},finished={false},legacy={false};var deadBrood=new HashSet<UUID>();var adults=new HashSet<UUID>();long[] laying={0};
         c.onEachTick(()->{if(finished[0])return;var b=pile(c,q);if(b==null)return;var ws=f.workers(c,q);ws.forEach(w->adults.add(w.getUUID()));
             if(!supplied[0]&&ws.size()==3&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;f.drop(c,q.founding().plan().at(-3,0,1),new ItemStack(Items.APPLE,6));f.drop(c,q.founding().plan().at(-4,0,1),new ItemStack(Items.CHICKEN));}
+            if(supplied[0]&&!legacy[0])legacy[0]=PaidLegacyBrood.restoreEggs(c,q,b,3);
             if(!killed[0]&&b.records().stream().anyMatch(r->!r.founding()&&r.stage()==BroodStage.LARVA&&r.nourishment()<BroodPile.LARVA_COST)){
-                killed[0]=true;laying[0]=b.lastLayingTick();b.records().forEach(r->deadBrood.add(r.id()));c.assertTrue(ws.size()==3&&q.nutrition().chickens()==1,"Actual fed laying leaves real underfed dependent brood with three genuine living adults");q.hurtServer(c.getLevel(),q.damageSources().genericKill(),1000);
+                killed[0]=true;laying[0]=b.lastLayingTick();b.records().forEach(r->deadBrood.add(r.id()));c.assertTrue(ws.size()==3&&q.nutrition().chickens()==1,"Physically paid legacy egg restoration leaves underfed dependent brood with three genuine living adults");q.hurtServer(c.getLevel(),q.damageSources().genericKill(),1000);
                 dev.primeants.PrimeAnts.LOGGER.info("T19 QUEEN KILLED WITH DEPENDENTS queen={} workers={} brood={} receiptsQueen={} receiptsBrood={}",q.getUUID(),adults,deadBrood,q.nutrition().consumedUnits(),b.consumedFood());
             }
             if(killed[0])c.assertTrue(b.lastLayingTick()==laying[0]&&b.records().stream().allMatch(r->deadBrood.contains(r.id())),"Dead queen cannot lay or create replacement brood");
@@ -167,20 +169,21 @@ public final class TerminalBroodGameTest {
     }
     @GameTest(maxTicks=24000,structure="prime_ants_test:idle_ground")
     public void expiredStaleRecordsStayTerminalAndFreedSlotsRequireFundedNewIdentity(GameTestHelper c){
-        var q=start(c,800,800,24000);boolean[] supplied={false},snapshot={false},restored={false},funded={false},finished={false};CompoundTag[] stale={null};var ids=new HashSet<UUID>();long[] receipt={0};
+        var q=start(c,800,800,24000);boolean[] supplied={false},snapshot={false},restored={false},funded={false},finished={false},legacy={false};CompoundTag[] stale={null};var ids=new HashSet<UUID>();long[] receipt={0},paidBeforeFunding={0};
         c.onEachTick(()->{if(finished[0])return;var b=pile(c,q);if(b==null)return;
             if(!supplied[0]&&f.workers(c,q).size()==3&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;f.drop(c,q.founding().plan().at(-3,0,1),new ItemStack(Items.APPLE,4));f.drop(c,q.founding().plan().at(-4,0,1),new ItemStack(Items.CHICKEN));}
+            if(supplied[0]&&!legacy[0])legacy[0]=PaidLegacyBrood.restoreEggs(c,q,b,3);
             if(!snapshot[0]&&b.records().size()==3&&b.records().stream().allMatch(r->!r.founding()&&r.stage()==BroodStage.LARVA)&&b.records().stream().anyMatch(r->r.nutrition().consumedUnits()>0)){
                 snapshot[0]=true;b.records().forEach(r->ids.add(r.id()));stale[0]=b.saveWithFullMetadata(c.getLevel().registryAccess());q.setNoAi(true); // Declared care/laying interruption isolates the three stale identities.
             }
             if(snapshot[0]&&!restored[0]&&b.records().isEmpty()){
                 restored[0]=true;q.setNoAi(true);c.assertTrue(b.expired().keySet().equals(ids)&&b.consumed().equals(b.original()),"Actual expiry releases only brood reservations and preserves emergence set");receipt[0]=b.consumedFood();restore(c,b,stale[0]);
                 c.runAfterDelay(2,()->{var now=pile(c,q);c.assertTrue(now.records().isEmpty()&&now.expired().keySet().equals(ids)&&now.consumedFood()==receipt[0]&&ColonyMembers.get(c.getLevel()).occupied(q.getUUID())==3,"Stale older saved live records reconcile against terminal identity/nutrition history without resurrection, phantom adults or duplicate/lost ingestion");restore(c,now,now.saveWithFullMetadata(c.getLevel().registryAccess()));
-                    c.runAfterDelay(2,()->{c.assertTrue(pile(c,q).consumedFood()==receipt[0]&&pile(c,q).records().isEmpty(),"Repeated terminal restore is once-only");q.setNoAi(false);f.drop(c,q.founding().plan().at(-3,0,1),new ItemStack(Items.APPLE,4));f.drop(c,q.founding().plan().at(-4,0,1),new ItemStack(Items.CHICKEN,3));funded[0]=true;});
+                    c.runAfterDelay(2,()->{c.assertTrue(pile(c,q).consumedFood()==receipt[0]&&pile(c,q).records().isEmpty(),"Repeated terminal restore is once-only");paidBeforeFunding[0]=q.nutrition().spentProtein();q.setNoAi(false);f.drop(c,q.founding().plan().at(-3,0,1),new ItemStack(Items.APPLE,4));f.drop(c,q.founding().plan().at(-4,0,1),new ItemStack(Items.CHICKEN,3));funded[0]=true;});
                 });
             }
             if(funded[0]&&q.nutrition().chickens()>1&&!b.records().isEmpty()){
-                finished[0]=true;c.assertTrue(b.records().stream().allMatch(r->!ids.contains(r.id())&&!b.original().contains(r.id())&&!r.founding())&&q.nutrition().spentProtein()>=10000&&b.expired().keySet().containsAll(ids)&&b.records().stream().noneMatch(r->b.expired().containsKey(r.id()))&&ColonyMembers.get(c.getLevel()).occupied(q.getUUID())==3,"Freed capacity needs new physical nursing, real egg debit and new identity; expired identities/investment never refunded");dev.primeants.PrimeAnts.LOGGER.info("T19 TERMINAL RESTORE queen={} expired={} new={} broodReceipts={} queenProteinSpent={}",q.getUUID(),ids,b.records().stream().map(BroodRecord::id).toList(),b.consumedFood(),q.nutrition().spentProtein());c.succeed();
+                finished[0]=true;c.assertTrue(b.records().stream().allMatch(r->!ids.contains(r.id())&&!b.original().contains(r.id())&&!r.founding())&&q.nutrition().spentProtein()>=paidBeforeFunding[0]+Nutrition.EGG_PROTEIN&&b.expired().keySet().containsAll(ids)&&b.records().stream().noneMatch(r->b.expired().containsKey(r.id()))&&ColonyMembers.get(c.getLevel()).occupied(q.getUUID())==3,"Freed capacity needs new physical nursing, real egg debit and new identity; expired identities/investment never refunded");dev.primeants.PrimeAnts.LOGGER.info("T19 TERMINAL RESTORE queen={} expired={} new={} broodReceipts={} queenProteinSpent={}",q.getUUID(),ids,b.records().stream().map(BroodRecord::id).toList(),b.consumedFood(),q.nutrition().spentProtein());c.succeed();
             }
         });
     }

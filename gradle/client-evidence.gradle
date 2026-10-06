@@ -19,7 +19,7 @@ ext.validateClientEvidence = { Map request ->
     require(props.run_id == request.run_id, 'Mismatched model run ID')
     require(props.entrypoint == 'dev.primeants.gametest.AntModelGameTest', 'Missing named model entrypoint')
     def names = (file('src/gametest/java/dev/primeants/gametest/AntModelGameTest.java').text =~ /(?m)^\s*test\(form,\s*"([^"]+)"/).collect { it[1] }
-    def required = ['sixArticulatedLegsOnMesosoma', 'articulatedLegGeometryStaysConnected', 'elbowedAntennaeMandiblesAndEyes', 'onePetioleAndBodySegments',
+    def required = ['trophallaxisUsesExistingHeadAndMandiblesAndClears', 'sixArticulatedLegsOnMesosoma', 'articulatedLegGeometryStaysConnected', 'elbowedAntennaeMandiblesAndEyes', 'onePetioleAndBodySegments',
                     'lowAmplitudeTransformedFootMotion', 'normalAmplitudeTransformedFootMotion', 'amplitudeOneMirroringRegression',
                     'stanceContactTracksVanillaWalkDistance',
                     'stationaryLegsStopWhileAntennaeAnimate', 'bakedUvDensityIs32TexelsPerWorldBlock',

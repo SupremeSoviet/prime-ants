@@ -44,6 +44,9 @@ public final class LasiusNigerEntity extends PathfinderMob {
     public int colonyAdultCapacity(){return colonyAdultCapacity;}
     private long elapsedAgeTicks;
     private static final EntityDataAccessor<String> LINEAGE = SynchedEntityData.defineId(LasiusNigerEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Boolean> SOCIAL = SynchedEntityData.defineId(LasiusNigerEntity.class, EntityDataSerializers.BOOLEAN);
+    public boolean socialAction(){return entityData.get(SOCIAL);}
+    public void setSocialAction(boolean value){entityData.set(SOCIAL,value);}
     private static final EntityDataAccessor<Integer> CALLOW = SynchedEntityData.defineId(LasiusNigerEntity.class, EntityDataSerializers.INT);
     private long bodyReserve = initialReserve(), callowAgeTicks, callowDuration;
     private UUID broodId, queenId;
@@ -55,7 +58,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
     public boolean feedBy(LasiusNigerEntity nurse,NestPlan p){
         if(!(level() instanceof ServerLevel l)||!isAlive()||isRemoved()||isNoAi()||!founding.ready()||!getUUID().equals(nurse.queenId())
                 ||nurse.workerTasks().phase()!=dev.primeants.worker.WorkerTasks.Phase.NURSE_FEED||!getUUID().equals(nurse.workerTasks().recipientId())||nurse.workerTasks().feedingTicks()<dev.primeants.worker.WorkerTasks.FEEDING_TICKS
-                ||!nurse.workerTasks().nursingAuthorized(l)||!dev.primeants.worker.WorkerTasks.reaches(l,nurse,position().add(0,0.25,0))||!acceptsFood(nurse.getMainHandItem()))return false;
+                ||!nurse.workerTasks().nursingAuthorized(l)||!dev.primeants.worker.WorkerTasks.reaches(l,nurse,position().add(0,0.25,0))||!dev.primeants.worker.WorkerTasks.queenNeedsFood(this,nurse.getMainHandItem()))return false;
         if(!nutrition.ingest(nurse.getMainHandItem(),dev.primeants.worker.Nutrition.QUEEN_SUGAR_CAPACITY,dev.primeants.worker.Nutrition.QUEEN_PROTEIN_CAPACITY))return false;
         dev.primeants.PrimeAnts.LOGGER.info("Physical queen feeding queen={} nurse={} consumed={} sugar={} protein={}",getUUID(),nurse.getUUID(),nurse.getMainHandItem(),nutrition.sugar(),nutrition.protein());
         nurse.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND,net.minecraft.world.item.ItemStack.EMPTY);return true;
@@ -123,7 +126,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
 
     public AntForm form() { return form; }
     public long elapsedAgeTicks() { return elapsedAgeTicks; }
-    @Override protected void defineSynchedData(SynchedEntityData.Builder builder) { super.defineSynchedData(builder); builder.define(CALLOW, 1000); builder.define(LINEAGE, ""); }
+    @Override protected void defineSynchedData(SynchedEntityData.Builder builder) { super.defineSynchedData(builder); builder.define(SOCIAL,false); builder.define(CALLOW, 1000); builder.define(LINEAGE, ""); }
 
     @Override protected PathNavigation createNavigation(Level level) { return new AntGroundNavigation(this, level); }
 
@@ -169,7 +172,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
             elapsedAgeTicks++;
             adultLife.tick((ServerLevel)level(),this);
             if(!isAlive())return;
-            founding.tick((ServerLevel)level());
+            if(form!=AntForm.QUEEN||!workerTasks.sharing().tick((ServerLevel)level()))founding.tick((ServerLevel)level());
             if (broodId != null) {
                 if (callowAgeTicks < callowDuration) callowAgeTicks++;
                 entityData.set(CALLOW, (int)Math.min(1000, callowAgeTicks * 1000 / Math.max(1, callowDuration)));

@@ -30,6 +30,11 @@ import net.minecraft.world.phys.Vec3;
 public final class WorkerTasks {
     public enum Phase { NURSERY, OPENING, SOIL_OUT, EXIT, SEARCH, APPROACH, NECTAR_APPROACH, HARVEST, RETURN, DEPOSIT, NURSE_CACHE, NURSE_FEED, NURSE_RETURN, DIG, DIG_OUT, DEAD }
     private final LasiusNigerEntity worker;
+    private final CropSharing sharing;
+    public CropSharing sharing(){return sharing;}
+    private final java.util.ArrayList<UUID> droppedQueue=new java.util.ArrayList<>();
+    private int droppedCursor;
+    public static final int DROPPED_TOTAL=96, DROPPED_PER_PULSE=8;
     private NestPlan plan;
     private Phase phase=Phase.NURSERY;
     private UUID source;
@@ -55,7 +60,7 @@ public final class WorkerTasks {
     public boolean foraging(){return switch(phase){case OPENING,SOIL_OUT,EXIT,SEARCH,APPROACH,NECTAR_APPROACH,HARVEST,RETURN,DEPOSIT->true;default->false;};}
     private int opened, placed, phaseTicks, cooldown;
     private String reason="nursery_shelter";
-    public WorkerTasks(LasiusNigerEntity worker) { this.worker=worker; }
+    public WorkerTasks(LasiusNigerEntity worker) { this.worker=worker;this.sharing=new CropSharing(worker); }
     public Phase phase() { return phase; }
     public String reason() { return reason; }
     public int opened() { return opened; }
@@ -81,7 +86,7 @@ public final class WorkerTasks {
                 &&l.getBlockEntity(plan.nursery()) instanceof dev.primeants.brood.BroodPile p&&p.ownedBy(worker.queenId(),plan)&&p.operational()
                 &&plan.nurseryProblem(l,worker.queenId(),true)==null;
     }
-    public boolean freeForConstruction(){return phase==Phase.NURSERY||phase==Phase.NURSE_CACHE;}
+    public boolean freeForConstruction(){return !sharing.busy()&&(phase==Phase.NURSERY||phase==Phase.NURSE_CACHE);}
     private boolean constructionClaim(ServerLevel l){var j=NestExpansion.get(l).job(worker.queenId());return j!=null&&worker.getUUID().equals(j.claim);}
     private boolean foragerClaim(ServerLevel l){var q=queen(l);return q!=null&&q.founding().claimedBy(worker);}
     private boolean eligible(ServerLevel l,NestPlan p){
@@ -107,7 +112,7 @@ public final class WorkerTasks {
             &&ColonyMembers.get(l).belongs(worker,worker.queenId(),plan.chamber())&&j.home.entrance().equals(plan.entrance())&&j.home.direction()==plan.direction()&&q!=null&&q.isAlive()&&q.founding().ready();
     }
     public boolean assignNurse(NestPlan p){
-        if(phase!=Phase.NURSERY||!(worker.level() instanceof ServerLevel l)||!eligible(l,p)||!worker.getMainHandItem().isEmpty()||constructionClaim(l)||foragerClaim(l))return false;
+        if(sharing.busy()||phase!=Phase.NURSERY||!(worker.level() instanceof ServerLevel l)||!eligible(l,p)||!worker.getMainHandItem().isEmpty()||constructionClaim(l)||foragerClaim(l))return false;
         plan=p.routeGeometry();next(Phase.NURSE_CACHE,"mature_member_nursing");
         return true;
     }
@@ -141,6 +146,7 @@ public final class WorkerTasks {
     }
     public void tick(ServerLevel l) {
         if(phase==Phase.DEAD || !worker.isAlive())return;
+        if(sharing.tick(l))return;
         if(adultMeal(l))return;
         if(worker.isCallow() || phase==Phase.NURSERY) {hold(worker.isCallow()?"callow_shelter":"nursery_shelter");return;}
         if(!(construction()?constructionAuthorized(l):nursing()?nursingAuthorized(l):!constructionClaim(l)&&authorized(l))) {hold("home_unavailable_or_invalid_cargo_retained");feedingTicks=0;harvestingTicks=0;return;}
@@ -185,7 +191,7 @@ public final class WorkerTasks {
     }
     private boolean adultMeal(ServerLevel l){
         var life=worker.adultLife();
-        if(!life.hungry()||worker.isNoAi()||plan==null||!ColonyMembers.get(l).belongs(worker,worker.queenId(),plan.chamber())
+        if(!(life.hungry()||sharing.needsCrop(l))||worker.isNoAi()||plan==null||!ColonyMembers.get(l).belongs(worker,worker.queenId(),plan.chamber())
             ||plan.nurseryProblem(l,worker.queenId(),true)!=null){life.resetMeal();return false;}
         if(worker.getMainHandItem().isEmpty()&&l.getBlockEntity(plan.cache()) instanceof NestCache cache&&cache.ownedBy(worker.queenId(),plan)
             &&cache.contents().stream().anyMatch(s->Nutrition.sugarYield(s)>0)){
@@ -202,11 +208,16 @@ public final class WorkerTasks {
         }
         life.resetMeal();return true;
     }
+    public static boolean queenNeedsFood(LasiusNigerEntity q,ItemStack food){
+        // Protein cannot be exported from the queen's ingested store to larvae. Keep
+        // further physical portions in cache for outstanding/future brood once an egg is funded.
+        return q.acceptsFood(food)&&(Nutrition.proteinYield(food)==0||q.nutrition().protein()<Nutrition.EGG_PROTEIN);
+    }
     private UUID chooseRecipient(ServerLevel l,ItemStack s){
         if(l.getBlockEntity(plan.nursery()) instanceof dev.primeants.brood.BroodPile p){
             var larva=p.records().stream().filter(r->p.accepts(r,s)).findFirst();if(larva.isPresent())return larva.get().id();
         }
-        var q=queen(l);return q!=null&&q.isAlive()&&!q.isNoAi()&&q.founding().ready()&&q.acceptsFood(s)?q.getUUID():null;
+        var q=queen(l);return q!=null&&q.isAlive()&&!q.isNoAi()&&q.founding().ready()&&queenNeedsFood(q,s)?q.getUUID():null;
     }
     public boolean hasRecipient(ServerLevel l,ItemStack s){return nursingAuthorized(l)&&chooseRecipient(l,s)!=null;}
     private void nurseCache(ServerLevel l){
@@ -238,7 +249,7 @@ public final class WorkerTasks {
         // Revalidate the exact recipient; a changed/refusing recipient never consumes cargo.
         var q=queen(l);boolean toQueen=recipient!=null&&recipient.equals(worker.queenId());
         var p=l.getBlockEntity(plan.nursery()) instanceof dev.primeants.brood.BroodPile b?b:null;
-        boolean accepts=toQueen?q!=null&&q.isAlive()&&!q.isNoAi()&&q.founding().ready()&&q.acceptsFood(worker.getMainHandItem()):p!=null&&p.records().stream().anyMatch(r->r.id().equals(recipient)&&p.accepts(r,worker.getMainHandItem()));
+        boolean accepts=toQueen?q!=null&&q.isAlive()&&!q.isNoAi()&&q.founding().ready()&&queenNeedsFood(q,worker.getMainHandItem()):p!=null&&p.records().stream().anyMatch(r->r.id().equals(recipient)&&p.accepts(r,worker.getMainHandItem()));
         if(!accepts){feedingTicks=0;next(Phase.NURSE_RETURN,"recipient_refused_food_retained");return;}
         Vec3 target=toQueen?q.position().add(0,0.25,0):Vec3.atBottomCenterOf(plan.nursery()).add(0,0.15,0);
         if(!reaches(l,worker,target)){
@@ -409,19 +420,26 @@ public final class WorkerTasks {
     private void search(ServerLevel l) {
         if(phaseTicks>240) {next(Phase.RETURN,"bounded_search_finished");cooldown=40;return;}
         if(worker.tickCount%20!=0)return;
-        var candidates=l.getEntitiesOfClass(ItemEntity.class,new AABB(plan.outside()).inflate(SEARCH_RADIUS,3,SEARCH_RADIUS),
-                i->i.isAlive() && !i.isRemoved() && !i.hasPickUpDelay() && food(i.getItem()) && NestPlan.loaded(l,i.blockPosition()));
-        // Preserve ordinary dropped-food ordering. Every reachable drop (including protein)
-        // is considered before nectar; the nectar-only two-sweet-slot limit leaves storage room.
-        candidates.sort(java.util.Comparator.comparingDouble(i->worker.distanceToSqr(i)));
-        int droppedPathTrials=0;
-        for(var item:candidates) {
-            if(!withinSearch(item.blockPosition())||!NestPlan.walkable(l,item.blockPosition()))continue;
-            if(++droppedPathTrials>8)break;
+        // Snapshot at most 96 identities. Continue across pulses and SEARCH windows; removed or
+        // changed entries consume one bounded inspection, never restart the nearer eight.
+        if(droppedCursor>=droppedQueue.size()){
+            droppedQueue.clear();droppedCursor=0;
+            var candidates=new java.util.ArrayList<ItemEntity>();
+            l.getEntities(net.minecraft.world.level.entity.EntityTypeTest.forClass(ItemEntity.class),new AABB(plan.outside()).inflate(SEARCH_RADIUS,3,SEARCH_RADIUS),
+                i->i.isAlive()&&!i.isRemoved()&&!i.hasPickUpDelay()&&food(i.getItem())&&NestPlan.loaded(l,i.blockPosition()),candidates,DROPPED_TOTAL);
+            candidates.stream().limit(DROPPED_TOTAL).sorted(java.util.Comparator.comparingDouble(worker::distanceToSqr))
+                .forEach(i->droppedQueue.add(i.getUUID()));
+        }
+        int endDrops=Math.min(droppedQueue.size(),droppedCursor+DROPPED_PER_PULSE);
+        while(droppedCursor<endDrops){
+            var e=l.getEntity(droppedQueue.get(droppedCursor++));
+            if(!(e instanceof ItemEntity item)||!item.isAlive()||item.isRemoved()||item.hasPickUpDelay()||!food(item.getItem())
+                ||!withinSearch(item.blockPosition())||!NestPlan.walkable(l,item.blockPosition()))continue;
             var path=worker.getNavigation().createPath(item.blockPosition(),0,48);
-            if(path==null || !path.canReach())continue;
+            if(path==null||!path.canReach())continue;
             source=item.getUUID();next(Phase.APPROACH,"supported_dropped_food_found");return;
         }
+        if(droppedCursor<droppedQueue.size())return; // Drops receive their full bounded turn before native fallback.
         // Discovery only reads loaded cells. At most 1536 inspections and 8 path trials per pulse;
         // 12 pulses cover the full 16807-cell box when no eligible reachable source is found.
         int end=Math.min(FLOWER_INSPECTION_BUDGET,flowerInspections+FLOWER_INSPECTIONS_PER_PULSE);
@@ -526,6 +544,8 @@ public final class WorkerTasks {
         clearFlower();
     }
     public void save(ValueOutput out) {
+        sharing.save(out.child("CropSharing"));
+        out.store("DroppedQueue",com.mojang.serialization.Codec.STRING.listOf(),droppedQueue.stream().map(UUID::toString).toList());out.putInt("DroppedCursor",droppedCursor);
         out.putString("Phase",phase.name());out.putString("Reason",reason);out.putInt("Opened",opened);out.putInt("Placed",placed);out.putInt("PhaseTicks",phaseTicks);out.putInt("Cooldown",cooldown);
         if(plan!=null) {out.store("Entrance",BlockPos.CODEC,plan.entrance());out.putString("Direction",plan.direction().getName());
             out.store("SurfaceDeposits",BlockPos.CODEC.listOf(),plan.surfaceDeposits());
@@ -537,6 +557,9 @@ public final class WorkerTasks {
         // Cargo is canonical vanilla Mob mainhand equipment, not duplicated here.
     }
     public void load(ValueInput in) {
+        sharing.load(in.childOrEmpty("CropSharing"));
+        droppedQueue.clear();in.read("DroppedQueue",com.mojang.serialization.Codec.STRING.listOf()).orElse(List.of()).forEach(v->droppedQueue.add(UUID.fromString(v)));droppedCursor=in.getIntOr("DroppedCursor",0);
+        if(droppedQueue.size()>DROPPED_TOTAL||droppedCursor<0||droppedCursor>droppedQueue.size())throw new IllegalArgumentException("Invalid dropped continuation");
         phase=Phase.valueOf(in.getStringOr("Phase","NURSERY"));reason=in.getStringOr("Reason","restored");opened=in.getIntOr("Opened",0);placed=in.getIntOr("Placed",0);phaseTicks=in.getIntOr("PhaseTicks",0);cooldown=in.getIntOr("Cooldown",0);
         source=in.getString("Source").map(UUID::fromString).orElse(null);
         flowerSource=in.read("FlowerSource",BlockPos.CODEC).orElse(null);flowerStand=in.read("FlowerStand",BlockPos.CODEC).orElse(null);flowerExpected=in.getString("FlowerExpected").orElse(null);

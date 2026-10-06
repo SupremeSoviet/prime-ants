@@ -38,22 +38,27 @@ public final class NectarGameTest {
         var records=NaturalSoil.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE,NaturalSoil.get(l)).getOrThrow().getAsJsonObject();
         for(int x=1;x<=30;x++)for(int z=1;z<=30;z++)for(int y=1;y<=4;y++) {c.setBlock(x,y,z,Blocks.DIRT);records.addProperty(Long.toString(c.absolutePos(new BlockPos(x,y,z)).asLong()),"minecraft:dirt");}
         l.getDataStorage().set(NaturalSoil.TYPE,NaturalSoil.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE,records).getOrThrow());
-        var a=f.pairEgg(c,new BlockPos(8,4,10));var b=f.pairEgg(c,new BlockPos(20,4,10));var source=c.absolutePos(new BlockPos(14,5,12));
+        var a=f.pairEgg(c,new BlockPos(8,4,10));var b=f.pairEgg(c,new BlockPos(20,4,10));BlockPos[] source={null};
         boolean[] supplied={false};var approached=new HashSet<UUID>();long[] firstHarvest={-1};
         c.onEachTick(()->{
-            if(!supplied[0]&&a.founding().lifecycle()==QueenFounding.Lifecycle.OPEN&&b.founding().lifecycle()==QueenFounding.Lifecycle.OPEN
-                &&f.workers(c,a).stream().anyMatch(w->w.workerTasks().phase()==WorkerTasks.Phase.SEARCH)
-                &&f.workers(c,b).stream().anyMatch(w->w.workerTasks().phase()==WorkerTasks.Phase.SEARCH)){
-                supplied[0]=true;l.setBlock(source,Blocks.POPPY.defaultBlockState(),3); // Explicit controlled source, no supplied adults/tasks.
+            if(!supplied[0]&&f.workers(c,a).stream().anyMatch(w->a.founding().claimedBy(w)&&FoodCompetitionWindow.fresh(c,w))
+                &&f.workers(c,b).stream().anyMatch(w->b.founding().claimedBy(w)&&FoodCompetitionWindow.fresh(c,w))){
+                var oa=a.founding().plan().outside();var ob=b.founding().plan().outside();
+                source[0]=new BlockPos(Math.floorDiv(oa.getX()+ob.getX(),2),oa.getY(),Math.floorDiv(oa.getZ()+ob.getZ(),2)+2);
+                c.assertTrue(oa.getY()==ob.getY()&&NestPlan.walkable(l,source[0]),"One supported controlled source near midpoint of actual search anchors");
+                dev.primeants.PrimeAnts.LOGGER.info("T21 competition publication anchors={}/{} source={} distances={}/{}",oa,ob,source[0],oa.distSqr(source[0]),ob.distSqr(source[0]));
+                supplied[0]=true;l.setBlock(source[0],Blocks.POPPY.defaultBlockState(),3); // Explicit controlled source, no supplied adults/tasks.
+                dev.primeants.PrimeAnts.LOGGER.info("T21 race publication ready={} claimants={}",FlowerNectar.get(l).ready(l,source[0]),java.util.stream.Stream.of(a,b).flatMap(q->f.workers(c,q).stream().filter(w->q.founding().claimedBy(w))).map(w->FoodCompetitionWindow.state(c,w,source[0])).toList());
             }
             if(!supplied[0])return;
-            java.util.stream.Stream.concat(f.workers(c,a).stream(),f.workers(c,b).stream()).filter(w->source.equals(w.workerTasks().flowerSource())).forEach(w->approached.add(w.getUUID()));
-            long count=FlowerNectar.get(l).harvestedSources().getOrDefault(source,0L);if(count>0&&firstHarvest[0]<0)firstHarvest[0]=l.getGameTime();
+            java.util.stream.Stream.concat(f.workers(c,a).stream(),f.workers(c,b).stream()).filter(w->source[0].equals(w.workerTasks().flowerSource())).forEach(w->approached.add(w.getUUID()));
+            if(c.getTick()%20==0&&approached.size()<2)dev.primeants.PrimeAnts.LOGGER.info("T21 race diagnosis tick={} ready={} claimants={}",c.getTick(),FlowerNectar.get(l).ready(l,source[0]),java.util.stream.Stream.of(a,b).flatMap(q->f.workers(c,q).stream().filter(w->q.founding().claimedBy(w))).map(w->FoodCompetitionWindow.state(c,w,source[0])).toList());
+            long count=FlowerNectar.get(l).harvestedSources().getOrDefault(source[0],0L);if(count>0&&firstHarvest[0]<0)firstHarvest[0]=l.getGameTime();
             long held=java.util.stream.Stream.concat(f.workers(c,a).stream(),f.workers(c,b).stream()).filter(w->w.getMainHandItem().is(AntItems.FLOWER_NECTAR_V2)).mapToInt(w->w.getMainHandItem().getCount()).sum();
             long cached=java.util.stream.Stream.of(f.cache(c,a),f.cache(c,b)).filter(Objects::nonNull).flatMap(n->n.contents().stream()).filter(s->s.is(AntItems.FLOWER_NECTAR_V2)).mapToInt(ItemStack::getCount).sum();
             long world=l.getEntitiesOfClass(ItemEntity.class,c.getBounds(),i->i.isAlive()&&i.getItem().is(AntItems.FLOWER_NECTAR_V2)).stream().mapToInt(i->i.getItem().getCount()).sum();
             c.assertTrue(count==held+cached+world+consumed(l,a)+consumed(l,b),"One shared source is counted once against both real colonies' cargo/cache/consumption");
-            if(firstHarvest[0]>=0&&l.getGameTime()-firstHarvest[0]>100){c.assertTrue(count==1&&approached.size()==2,"Two genuinely emerged mature foragers independently approached same ready flower; only one wins before cooldown");l.setBlock(source,Blocks.AIR.defaultBlockState(),3);c.succeed();}
+            if(firstHarvest[0]>=0&&l.getGameTime()-firstHarvest[0]>100){c.assertTrue(count==1&&approached.size()==2,"Two genuinely emerged mature foragers independently approached same ready source; only one wins before cooldown: approaches="+approached+" harvests="+count);l.setBlock(source[0],Blocks.AIR.defaultBlockState(),3);c.succeed();}
         });
     }
     @GameTest(maxTicks=18000)

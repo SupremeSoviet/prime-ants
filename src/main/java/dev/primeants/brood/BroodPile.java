@@ -35,6 +35,8 @@ public final class BroodPile extends BlockEntity {
     public static long layingCadence(){return new SimulationTimeScale(multiplier()).ticksForGameDays(BASE_LAYING_TICKS/24000.0);}
     public static final long EGG_COST = 1000, LARVA_COST = 12000, MAX_RESERVE = CAPACITY * (EGG_COST + LARVA_COST);
     public static final double CARE_REACH_SQUARED = 2.25 * 2.25;
+    private final dev.primeants.worker.FoodLimitedGrowth growth=new dev.primeants.worker.FoodLimitedGrowth();
+    public dev.primeants.worker.FoodLimitedGrowth growth(){return growth;}
     private UUID queenId;
     private NestPlan plan;
     private final List<BroodRecord> records = new ArrayList<>();
@@ -111,10 +113,33 @@ public final class BroodPile extends BlockEntity {
     private void retire(BroodRecord r){
         consumed.add(r.id());records.remove(r);archivedApples+=r.nutrition().apples();archivedBerries+=r.nutrition().berries();archivedChickens+=r.nutrition().chickens();archivedNectar+=r.nutrition().nectar();archivedNectarV2+=r.nutrition().nectarV2();archivedPrey+=r.nutrition().prey();archivedFlesh+=r.nutrition().flesh();
     }
+    public dev.primeants.worker.FoodLimitedGrowth.Supply supply(ServerLevel l){
+        boolean complete=true,hungry=false;long incomeS=gainedSugar(),incomeP=gainedProtein(),stockS=0,stockP=0,commitS=0,commitP=0;int adults=0;
+        var members=ColonyMembers.get(l);
+        var ids=new java.util.ArrayList<UUID>();ids.add(queenId);for(var m:members.members(queenId))if(!m.dead())ids.add(m.worker());
+        for(UUID id:ids){
+            if(!(l.getEntity(id) instanceof LasiusNigerEntity a)||!a.isAlive()||a.isRemoved()||a.isNoAi()
+                ||!NestPlan.loaded(l,a.blockPosition())||!l.isPositionEntityTicking(a.blockPosition())){complete=false;continue;}
+            adults++;hungry|=a.adultLife().fasting()>=Math.max(1,a.adultLife().grace()/4);
+            incomeS+=a.nutrition().gainedSugar();incomeP+=a.nutrition().gainedProtein();stockS+=a.nutrition().sugar();stockP+=a.nutrition().protein();
+            stockS+=Nutrition.sugarYield(a.getMainHandItem());stockP+=Nutrition.proteinYield(a.getMainHandItem());
+        }
+        for(var entry:dev.primeants.worker.AdultHistory.get(l).records().entrySet()){
+            var row=com.google.gson.JsonParser.parseString(entry.getValue()).getAsJsonObject();
+            if(row.get("queen").getAsString().equals(queenId.toString())&&!ids.contains(UUID.fromString(entry.getKey()))){var n=row.getAsJsonObject("nutrition");incomeS+=n.get("gainedSugar").getAsLong();incomeP+=n.get("gainedProtein").getAsLong();}
+        }
+        if(!NestPlan.loaded(l,plan.cache()))complete=false;
+        else if(l.getBlockEntity(plan.cache()) instanceof dev.primeants.worker.NestCache cache){
+            if(!cache.ownedBy(queenId,plan))complete=false;else for(var stack:cache.contents()){stockS+=Nutrition.sugarYield(stack);stockP+=Nutrition.proteinYield(stack);}
+        }else if(!l.getBlockState(plan.cache()).isAir())complete=false;
+        for(var r:records){stockS+=r.nutrition().sugar();stockP+=r.nutrition().protein();if(!r.founding()&&r.stage()!=BroodStage.COCOON){commitS+=Math.max(0,Nutrition.LARVA_SUGAR-r.nutrition().spentSugar());commitP+=Math.max(0,Nutrition.LARVA_PROTEIN-r.nutrition().spentProtein());}}
+        return new dev.primeants.worker.FoodLimitedGrowth.Supply(complete,hungry,incomeS,incomeP,stockS,stockP,commitS,commitP,adults,records.size());
+    }
     private boolean lay(ServerLevel l,LasiusNigerEntity q,boolean care){
         if(!care||!operational||!originalTerminal()||loadedTicks-lastLayingTick<layingCadence())return false;
         if(records.size()>=CAPACITY){if(!condition.equals("larva_sugar_or_protein_exhausted"))condition="nursery_slots_full";return false;}
         if(ColonyMembers.get(l).occupied(queenId)+records.size()>=adultCapacity-1){condition="colony_capacity_full_or_unloaded";return false;}
+        if(!growth.allows(supply(l))){condition=growth.reason();return false;}
         if(!q.nutrition().spend(Nutrition.EGG_SUGAR,Nutrition.EGG_PROTEIN)){condition="queen_ingested_nutrition_exhausted";return false;}
         int slot=0;while(true){final int index=slot;if(records.stream().noneMatch(r->r.slot()==index))break;slot++;}
         var r=new BroodRecord(UUID.randomUUID(),queenId,slot,neglectGrace,waitingBound);r.founding=false;records.add(r);lastLayingTick=loadedTicks;condition="food_fed_egg_laid";
@@ -156,6 +181,7 @@ public final class BroodPile extends BlockEntity {
     void serverTick(ServerLevel server) {
         if (queenId == null || plan == null || !ownedBy(queenId, plan)) return;
         loadedTicks++;
+        growth.observe(loadedTicks,supply(server));
         var owner = server.getEntity(queenId);
         if(owner instanceof LasiusNigerEntity q && q.founding().lifecycle()!=dev.primeants.founding.QueenFounding.Lifecycle.CLAUSTRAL)operational=true;
         for(UUID id:consumed)ColonyMembers.get(server).record(id,queenId,plan.chamber());
@@ -242,6 +268,7 @@ public final class BroodPile extends BlockEntity {
         condition = "emergence_space_blocked"; return false;
     }
     @Override protected void saveAdditional(ValueOutput out) {
+        growth.save(out.child("GrowthFlow"));
         super.saveAdditional(out);
         if (queenId == null || plan == null) return;
         out.putString("Queen", queenId.toString()); out.store("Entrance", BlockPos.CODEC, plan.entrance()); out.putString("Direction", plan.direction().getName());
@@ -256,6 +283,7 @@ public final class BroodPile extends BlockEntity {
         out.store("Consumed", com.mojang.serialization.Codec.STRING.listOf(), consumed.stream().map(UUID::toString).sorted().toList());
     }
     @Override protected void loadAdditional(ValueInput in) {
+        growth.load(in.childOrEmpty("GrowthFlow"));
         super.loadAdditional(in); records.clear(); consumed.clear();original.clear();expired.clear(); queenId = null; plan = null;
         adultLifespan=in.getLongOr("AdultLifespan",dev.primeants.entity.AdultLife.DEFAULT_LIFESPAN);fastingGrace=in.getLongOr("AdultFastingGrace",dev.primeants.entity.AdultLife.DEFAULT_FASTING);adultCapacity=in.getIntOr("AdultCapacity",ADULT_CAPACITY);
         if(adultLifespan<1||fastingGrace<1||adultCapacity<4||adultCapacity>ADULT_CAPACITY)throw new IllegalArgumentException("Invalid saved birth policy");

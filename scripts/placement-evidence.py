@@ -6,7 +6,7 @@ def quote(value): return "'"+str(value).replace("'","''")+"'"
 def main():
     p=argparse.ArgumentParser();p.add_argument('--evidence',required=True);p.add_argument('--name',required=True)
     group=p.add_mutually_exclusive_group(required=True);group.add_argument('--focus');group.add_argument('--case-id');group.add_argument('--seed',choices=['2026100501','42','8675309'])
-    p.add_argument('--mode',choices=['t14','t15-biome-v1','t16-frozen-v1','t17-nectar-v1','t18-replay-v1','t19-replay-v1','t20-tuned-v1'],default='t14');p.add_argument('--declaration');p.add_argument('--attempt');p.add_argument('--prior-full-count',type=int,default=0);a=p.parse_args()
+    p.add_argument('--mode',choices=['t14','t15-biome-v1','t16-frozen-v1','t17-nectar-v1','t18-replay-v1','t19-replay-v1','t20-tuned-v1','t21-policy-v1'],default='t14');p.add_argument('--declaration');p.add_argument('--attempt');p.add_argument('--prior-full-count',type=int,default=0);a=p.parse_args()
     evidence=pathlib.Path(a.evidence).resolve();evidence.mkdir(parents=True,exist_ok=True)
     if not re.fullmatch('[a-z0-9-]+',a.name):raise ValueError('Unsafe evidence name')
     if a.focus or a.case_id:
@@ -14,7 +14,7 @@ def main():
         if not re.fullmatch('prime_ants_test:[a-z0-9_]+',case):raise ValueError('Exact registered case ID required')
         args=['runGameTest','--console=plain','-PprimeAntsServerDiagnosticFilter='+case]
         report=ROOT/'build/test-results/gametest/server.xml'
-    elif a.mode in ['t18-replay-v1','t19-replay-v1','t20-tuned-v1']:
+    elif a.mode in ['t18-replay-v1','t19-replay-v1','t20-tuned-v1','t21-policy-v1']:
         if not a.declaration:raise ValueError('Replay declaration required')
         d=json.loads(pathlib.Path(a.declaration).read_text())
         if a.mode=='t19-replay-v1' and (d['mode']!=a.mode or pathlib.Path(d['source_archive']).name!='t18-native-replay-b-world.zip' or d['server_tick_limit']!=12000):raise ValueError('T19 requires the closed T18 B source and unchanged declared bounds')
@@ -23,11 +23,11 @@ def main():
         if any(not (f/'stopped.json').exists() and not (f/'startup-failure-audit.json').exists() for f in attempted):raise ValueError('Unaccounted replay attempt; diagnose before recovery')
         prior=sum(json.loads(f.read_text())['new_full_count'] for f in closed)
         if a.mode!='t20-tuned-v1' and any(json.loads(f.read_text())['server_ticks']>0 for f in closed):raise ValueError('Real replay ticks already consumed; refuse another original-archive copy or task renewal; inspect the closed owned state')
-        if prior!=a.prior_full_count or 106+prior>=(200 if a.mode=='t20-tuned-v1' else 150):raise ValueError('Replay cumulative generation allowance invalid')
+        if prior!=a.prior_full_count or 106+prior>=(300 if a.mode=='t21-policy-v1' else 200 if a.mode=='t20-tuned-v1' else 150):raise ValueError('Replay cumulative generation allowance invalid')
         # Recovery attempts count additional newly generated chunks; repeated loading of original
         # 106 chunks is not new generation. Never overwrite/reopen an attempted world.
-        turn='t20' if a.mode=='t20-tuned-v1' else 't19' if a.mode=='t19-replay-v1' else 't18'
-        limit=d['server_tick_limit'] if turn=='t20' else 12000 if turn=='t19' else 8000
+        turn='t21' if a.mode=='t21-policy-v1' else 't20' if a.mode=='t20-tuned-v1' else 't19' if a.mode=='t19-replay-v1' else 't18'
+        limit=d['server_tick_limit'] if turn in ['t20','t21'] else 12000 if turn=='t19' else 8000
         attempt=a.attempt or turn+'-replay-'+a.name
         if not re.fullmatch(turn+'-replay-[a-z0-9-]+',attempt):raise ValueError('Unsafe replay attempt')
         world=ROOT/('build/run/'+turn+'-placement')/attempt/'world'
@@ -40,6 +40,7 @@ def main():
             if 'Diagnostic loading must entity-tick' not in failed.get('failure',''):raise ValueError('Only diagnosed pre-verification loading recovery is authorized')
             latest=sorted(evidence.glob('t20-native-replay-*-world.zip'),key=lambda p:p.stat().st_mtime)[-1]
             if pathlib.Path(d['source_archive']).resolve()!=latest.resolve() or d.get('prior_server_ticks',0)!=sum(json.loads(f.read_text())['server_ticks'] for f in closed)+1:raise ValueError('T20 recovery must continue latest closed state with all prior ticks plus conservative closure tick')
+        if turn=='t21' and (closed or pathlib.Path(d['source_archive']).name!='t18-native-replay-b-world.zip' or d['server_tick_limit']!=36000):raise ValueError('T21 uses exactly one untouched closed T18B policy trial; no renewed biology')
         source=pathlib.Path(d['source_archive']);source_sha=hashlib.sha256(source.read_bytes()).hexdigest()
         if source_sha!=d['source_sha256']:raise ValueError('Original archive changed')
         world.mkdir(parents=True)
@@ -49,10 +50,10 @@ def main():
                 if n.endswith('/'):target.mkdir(parents=True,exist_ok=True)
                 else:target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(z.read(n))
         files={f.relative_to(world).as_posix():hashlib.sha256(f.read_bytes()).hexdigest() for f in world.rglob('*') if f.is_file()}
-        proof={'source_archive':str(source),'source_sha256':source_sha,'files':files,'existing_full':106,'prior_new_full':prior,'max_full':200 if turn=='t20' else 150,'max_additional_ticks':limit}
+        proof={'source_archive':str(source),'source_sha256':source_sha,'files':files,'existing_full':106,'prior_new_full':prior,'max_full':300 if turn=='t21' else 200 if turn=='t20' else 150,'max_additional_ticks':limit}
         (world.parent/'owned-copy.json').write_text(json.dumps(proof,indent=2));(evidence/(a.name+'-copy.json')).write_text(json.dumps(proof,indent=2))
         args=['runPlacementDiagnostic','--console=plain','-PprimeAntsPlacementSeed='+a.seed,'-PprimeAntsPlacementAttempt='+attempt,'-PprimeAntsPlacementEvidence='+str(native),'-PprimeAntsPlacementMode='+a.mode,'-PprimeAntsPlacementDeclaration='+str(pathlib.Path(a.declaration).resolve()),'-PprimeAntsPlacementPriorFull='+str(prior)]
-        if turn=='t20':args+=['-PprimeAntsPlacementTickLimit='+str(limit)]
+        if turn in ['t20','t21']:args+=['-PprimeAntsPlacementTickLimit='+str(limit)]
         report=native/'server.xml'
     else:
         if a.mode in ['t15-biome-v1','t16-frozen-v1','t17-nectar-v1'] and (not a.declaration or not pathlib.Path(a.declaration).is_file()):raise ValueError('Frozen declaration required')
@@ -103,11 +104,11 @@ def main():
             old=json.loads(previous.read_text());counts[old['seed']]+=old['total_full_chunks']
         metadata['cumulative_full_by_seed']=counts;metadata['cumulative_full_total']=sum(counts.values())
         if any(v>150 for v in counts.values()) or sum(counts.values())>(150 if a.mode=='t17-nectar-v1' else 450):raise ValueError('Cumulative T16 FULL budget breached')
-    if a.mode in ['t18-replay-v1','t19-replay-v1','t20-tuned-v1']:
+    if a.mode in ['t18-replay-v1','t19-replay-v1','t20-tuned-v1','t21-policy-v1']:
         row=json.loads((native/'stopped.json').read_text())
         metadata['new_full']=row['new_full_count'];metadata['budget_used']=row['budget_used'];metadata['server_ticks']=row['server_ticks'];metadata['initial_verified']=row['initial_verified']
         metadata['original_archive_preserved']=hashlib.sha256(source.read_bytes()).hexdigest()==source_sha
-        if row['budget_used']>(200 if turn=='t20' else 150) or row['server_ticks']>limit:raise ValueError('Replay bound exceeded')
+        if row['budget_used']>(300 if turn=='t21' else 200 if turn=='t20' else 150) or row['server_ticks']>limit:raise ValueError('Replay bound exceeded')
     metadata['checked_process_exit']=result.returncode
     (evidence/(a.name+'-archive.json')).write_text(json.dumps(metadata,indent=2),encoding='utf-8')
     print(json.dumps(metadata,indent=2))
