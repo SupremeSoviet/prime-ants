@@ -5,6 +5,7 @@ import dev.primeants.PrimeAnts;
 import dev.primeants.brood.BroodPile;
 import dev.primeants.colony.*;
 import dev.primeants.entity.LasiusNigerEntity;
+import dev.primeants.founding.NestPlan;
 import dev.primeants.founding.QueenFounding;
 import dev.primeants.worker.ColonyMembers;
 import java.util.*;
@@ -15,11 +16,14 @@ import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.phys.AABB;
 
 /** Production egg founding, dropped food and real loaded ticks. The stage is only ever evaluated by the colony's own
- * nursery; tests read the registry. Fixtures are real damage, entity/block-entity/SavedData restores and saved tags. */
+ * nursery; tests read the registry. Fixtures are real damage, entity/block-entity/SavedData restores, saved tags, real
+ * blocks and one injected unavailable cell (UnavailableCells). */
 public final class ColonyStageGameTest {
     private final WorkerForagingGameTest f=new WorkerForagingGameTest();
     private final NursingGameTest food=new NursingGameTest();
@@ -38,6 +42,14 @@ public final class ColonyStageGameTest {
         var json=ChamberRegistry.CODEC.encodeStart(JsonOps.INSTANCE,ChamberRegistry.get(c.getLevel())).getOrThrow().getAsJsonArray();
         for(var e:json)if(e.getAsJsonObject().get("queen").getAsString().equals(queen.toString()))e.getAsJsonObject().addProperty("stage",stage.serializedName());
         c.getLevel().getDataStorage().set(ChamberRegistry.TYPE,ChamberRegistry.CODEC.parse(JsonOps.INSTANCE,json).getOrThrow());
+    }
+    private static ColonyDevelopment.ChamberState founding(ColonyDevelopment.Evaluation e){return e.chambers().stream().filter(s->s.id().equals(ChamberRegistry.FOUNDING)).findFirst().orElseThrow();}
+    private static Map<ChamberFunction,ColonyDevelopment.Presence> both(ColonyDevelopment.Presence p){return Map.of(ChamberFunction.NURSERY,p,ChamberFunction.FOOD_STORE,p);}
+    /** Young by the nursery's latest evaluation, both founding functions confirmed, no callow worker still maturing. */
+    private boolean settledYoung(GameTestHelper c,LasiusNigerEntity q,BroodPile p){
+        var colony=colony(c,q);var e=p.stageEvaluation();
+        return colony!=null&&colony.stage()==ColonyStage.YOUNG&&e!=null&&e.result().certain()==ColonyStage.YOUNG&&founding(e).problem()==null
+            &&founding(e).functions().equals(both(ColonyDevelopment.Presence.CONFIRMED))&&f.workers(c,q).stream().noneMatch(LasiusNigerEntity::isCallow);
     }
 
     @GameTest(maxTicks=24000,structure="prime_ants_test:idle_ground")
@@ -154,6 +166,65 @@ public final class ColonyStageGameTest {
                     });
                 });
             });
+        });
+    }
+
+    @GameTest(maxTicks=24000,structure="prime_ants_test:idle_ground")
+    public void unavailableEntranceCellLeavesBothFunctionsUnknownAndTheColonyYoung(GameTestHelper c){
+        var q=f.start(c);boolean[] supplied={false};int[] step={0};ColonyDevelopment.Evaluation[] last={null};UnavailableCells[] hidden={null};
+        c.onEachTick(()->{
+            var l=c.getLevel();var p=food.pile(c,q);if(p==null||step[0]==3)return;
+            if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;food.supply(c,q,10,8);}
+            var e=p.stageEvaluation();var cell=q.founding().plan().entrance();
+            if(step[0]==0){
+                if(!settledYoung(c,q,p))return;
+                // Only availability changes: the real entrance cell stays an open, walkable block.
+                c.assertTrue(NestPlan.loaded(l,cell)&&NestPlan.walkable(l,cell),"The real entrance cell is loaded and open");
+                hidden[0]=UnavailableCells.hide(c,cell);last[0]=e;step[0]=1;return;
+            }
+            c.assertTrue(colony(c,q).stage()==ColonyStage.YOUNG,"Unavailable terrain never demotes the Young colony");
+            if(e==last[0])return; // the nursery's own next evaluation
+            var state=founding(e);last[0]=e;
+            if(step[0]==1){
+                c.assertTrue(!NestPlan.loaded(l,cell)&&NestPlan.walkable(l,cell)&&"enclosure_chunk_unavailable".equals(state.problem())&&state.tier()==0
+                    &&state.functions().equals(both(ColonyDevelopment.Presence.UNKNOWN))&&e.stage()==ColonyStage.YOUNG&&e.result().certain()==ColonyStage.FOUNDING
+                    &&e.result().possible()==ColonyStage.YOUNG&&e.inputs().adults().known()>=5&&e.cap()==ColonyStage.YOUNG.adultCap()
+                    &&e.result().missing(ColonyStage.YOUNG).toString().equals("[nursery 0(+1?)/1, food_store 0(+1?)/1]"),"An unavailable entrance cell leaves both functions unknown and the colony Young: "+e);
+                PrimeAnts.LOGGER.info("Stage-1 UNAVAILABLE ENTRANCE queen={} cell={} evaluation={}",q.getUUID(),cell,e);
+                hidden[0].close();step[0]=2;return;
+            }
+            c.assertTrue(state.problem()==null&&state.functions().equals(both(ColonyDevelopment.Presence.CONFIRMED))&&e.result().certain()==ColonyStage.YOUNG
+                &&e.result().missing(ColonyStage.YOUNG).isEmpty(),"The available cell confirms both functions again; nothing was lost: "+e);
+            PrimeAnts.LOGGER.info("Stage-1 ENTRANCE AVAILABLE AGAIN queen={} evaluation={}",q.getUUID(),e);step[0]=3;c.succeed();
+        });
+    }
+
+    @GameTest(maxTicks=24000,structure="prime_ants_test:idle_ground")
+    public void loadedObstructedEntranceCellLosesBothFunctionsAndTheColonyDropsToFounding(GameTestHelper c){
+        var q=f.start(c);boolean[] supplied={false};int[] step={0};ColonyDevelopment.Evaluation[] last={null};
+        c.onEachTick(()->{
+            var l=c.getLevel();var p=food.pile(c,q);if(p==null||step[0]==3)return;
+            if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;food.supply(c,q,10,8);}
+            var e=p.stageEvaluation();var cell=q.founding().plan().entrance();
+            if(step[0]==0){
+                // The same entrance cell, loaded, takes a real block once no ant body overlaps it.
+                if(!settledYoung(c,q,p)||!l.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(cell)).isEmpty())return;
+                c.assertTrue(l.getBlockState(cell).isAir()&&NestPlan.walkable(l,cell),"The entrance cell is open before the obstruction");
+                l.setBlock(cell,Blocks.STONE.defaultBlockState(),3);last[0]=e;step[0]=1;return;
+            }
+            if(e==last[0])return; // the nursery's own next evaluation
+            var state=founding(e);last[0]=e;
+            if(step[0]==1){
+                c.assertTrue(NestPlan.loaded(l,cell)&&!NestPlan.walkable(l,cell)&&"enclosure_route_obstructed".equals(state.problem())&&state.tier()==0
+                    &&state.functions().equals(both(ColonyDevelopment.Presence.ABSENT))&&e.stage()==ColonyStage.FOUNDING&&e.result().possible()==ColonyStage.FOUNDING
+                    &&colony(c,q).stage()==ColonyStage.FOUNDING&&e.inputs().adults().known()>=5&&e.cap()==ColonyStage.FOUNDING.adultCap()
+                    &&e.result().missing(ColonyStage.YOUNG).toString().equals("[nursery 0/1, food_store 0/1]"),"A loaded, really obstructed entrance cell loses both functions and the colony drops to Founding with its adults alive: "+e);
+                PrimeAnts.LOGGER.info("Stage-1 OBSTRUCTED ENTRANCE queen={} cell={} evaluation={}",q.getUUID(),cell,e);
+                l.setBlock(cell,Blocks.AIR.defaultBlockState(),3);step[0]=2;return;
+            }
+            c.assertTrue(state.problem()==null&&state.functions().equals(both(ColonyDevelopment.Presence.CONFIRMED))&&e.stage()==ColonyStage.YOUNG&&colony(c,q).stage()==ColonyStage.YOUNG,
+                "Clearing the obstruction confirms both functions and Young again: "+e);
+            PrimeAnts.LOGGER.info("Stage-1 ENTRANCE CLEARED queen={} evaluation={}",q.getUUID(),e);step[0]=3;c.succeed();
         });
     }
 }

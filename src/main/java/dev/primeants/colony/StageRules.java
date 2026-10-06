@@ -51,7 +51,9 @@ public final class StageRules {
         public boolean unknown() { return have.possible() >= requirement.need(); }
         @Override public String toString() { return requirement.name() + " " + have + "/" + requirement.need(); }
     }
-    /** Missing lists every stage above the resulting one; certain/possible are the evidence for holding a stage. */
+    /** missing(target) lists every requirement of the target and of each lower stage that confirmed state does not
+     * meet, lowest stage first. A stage with nothing missing is absent: every stage above the result is listed, and one
+     * at or below it only while unknowns hold it. certain/possible are the evidence for holding a stage. */
     public record Result(ColonyStage stage, ColonyStage certain, ColonyStage possible, Map<ColonyStage, List<Missing>> missing) {
         public List<Missing> missing(ColonyStage s) { return missing.getOrDefault(s, List.of()); }
     }
@@ -80,22 +82,22 @@ public final class StageRules {
         var from = previous == null ? ColonyStage.FOUNDING : previous;
         ColonyStage certain = ColonyStage.FOUNDING, possible = ColonyStage.FOUNDING;
         boolean certainChain = true, possibleChain = true;
-        var unmet = new EnumMap<ColonyStage, List<Missing>>(ColonyStage.class);
+        // Cumulative: a lower stage's gap stays in every higher target's list, ahead of that target's own rows.
+        var missing = new ArrayList<Missing>();
+        var report = new EnumMap<ColonyStage, List<Missing>>(ColonyStage.class);
         for (var s = ColonyStage.FOUNDING.next(); s != null; s = s.next()) {
-            var missing = new ArrayList<Missing>(); boolean possibleHere = true;
+            boolean metHere = true, possibleHere = true;
             for (var r : requirements(s)) {
                 var have = r.have(in);
-                if (have.known() < r.need()) missing.add(new Missing(r, have));
+                if (have.known() < r.need()) { missing.add(new Missing(r, have)); metHere = false; }
                 if (have.possible() < r.need()) possibleHere = false;
             }
-            certainChain &= missing.isEmpty(); possibleChain &= possibleHere;
+            certainChain &= metHere; possibleChain &= possibleHere;
             if (certainChain) certain = s;
             if (possibleChain) possible = s;
-            unmet.put(s, List.copyOf(missing));
+            if (!missing.isEmpty()) report.put(s, List.copyOf(missing));
         }
         var stage = from.compareTo(certain) < 0 ? certain : from.compareTo(possible) > 0 ? possible : from;
-        var report = new EnumMap<ColonyStage, List<Missing>>(ColonyStage.class);
-        for (var s = stage.next(); s != null; s = s.next()) report.put(s, unmet.get(s));
         return new Result(stage, certain, possible, Collections.unmodifiableMap(report));
     }
 }

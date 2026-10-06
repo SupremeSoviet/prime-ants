@@ -36,8 +36,10 @@ public final class LifecycleGameTest {
             var p=q.founding().plan();var b=pile(c,q);var ws=f.workers(c,q);if(p==null||b==null)return;ws.forEach(w->all.add(w.getUUID()));
             if(!supplied[0]&&ws.size()==3&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){
                 supplied[0]=true;ws.forEach(w->original.add(w.getUUID()));
+                // Hazard row in open pad with two clear pad cells on every side, away from edge, mound and trench: vanilla pushes a
+                // drop out of a solid block toward its nearest open face (never down) and it settles within one cell, on pad.
                 for(int i=-1;i<=1;i++){
-                    var cell=p.at(-6,i,1);c.assertTrue(c.getLevel().getBlockState(cell).isAir(),"Temporary controlled suffocation cell starts air");hazards.add(cell);c.getLevel().setBlock(cell,Blocks.STONE.defaultBlockState(),3);
+                    var cell=p.at(i,7,1);c.assertTrue(c.getLevel().getBlockState(cell).isAir(),"Temporary controlled suffocation cell starts air");hazards.add(cell);c.getLevel().setBlock(cell,Blocks.STONE.defaultBlockState(),3);
                     var mob=EntityTypes.CHICKEN.create(c.getLevel(),EntitySpawnReason.COMMAND);c.assertTrue(mob!=null,"Real vanilla chicken");var pos=Vec3.atBottomCenterOf(cell);mob.setPos(pos.x,pos.y,pos.z);mob.setNoAi(true);mob.setPersistenceRequired();c.assertTrue(c.getLevel().addFreshEntity(mob),"Uninjured real mob inserted into controlled physical hazard");mobs.add(mob);
                 }
             }

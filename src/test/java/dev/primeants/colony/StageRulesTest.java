@@ -96,10 +96,58 @@ class StageRulesTest {
         assertEquals(ColonyStage.YOUNG, result.stage());
         assertEquals(List.of(ColonyStage.MATURE, ColonyStage.GREAT), List.copyOf(result.missing().keySet()));
         assertEquals("[adults 5/25, queens_hall 0/1, material_store 0/1, food 2/4, clay 0/16]", result.missing(ColonyStage.MATURE).toString());
-        assertEquals("[adults 5/50, nursery_tier 1/2, food_store_tier 1/2, material_store_tier 0/2, queens_hall_tier 0/2, stone 0/32]", result.missing(ColonyStage.GREAT).toString());
+        assertEquals("[adults 5/25, queens_hall 0/1, material_store 0/1, food 2/4, clay 0/16, adults 5/50, nursery_tier 1/2, food_store_tier 1/2, material_store_tier 0/2, queens_hall_tier 0/2, stone 0/32]", result.missing(ColonyStage.GREAT).toString());
         var founding = StageRules.evaluate(ColonyStage.FOUNDING, inputs(1, 1, 0, 0, 0, 0, 0, 0));
         assertEquals("[adults 1/5, food_store 0/1]", founding.missing(ColonyStage.YOUNG).toString());
         assertTrue(StageRules.evaluate(ColonyStage.GREAT, meeting(ColonyStage.GREAT, 120)).missing().isEmpty(), "Nothing is missing at the top stage");
+    }
+
+    @Test
+    void aColonyWithEverythingMatureNeedsButNoNurseryIsFoundingAndMatureListsTheNursery() {
+        // Review counterexample: 25 adults, food store, material store, queen's hall, 4 food and 16 clay, no nursery.
+        var noNursery = inputs(25, 0, 1, 1, 1, 4, 16, 0);
+        for (var saved : ColonyStage.values()) {
+            var result = StageRules.evaluate(saved, noNursery);
+            assertEquals(ColonyStage.FOUNDING, result.stage(), "Saved " + saved);
+            assertEquals("[nursery 0/1]", result.missing(ColonyStage.YOUNG).toString());
+            assertEquals("[nursery 0/1]", result.missing(ColonyStage.MATURE).toString(), "Mature's own rows are met, so the Young gap is all it lacks");
+            assertEquals("[nursery 0/1, adults 25/50, nursery_tier 0/2, food_store_tier 1/2, material_store_tier 1/2, queens_hall_tier 1/2, stone 0/32]", result.missing(ColonyStage.GREAT).toString());
+        }
+    }
+
+    @ParameterizedTest(name = "a gap below {0} leads its missing list")
+    @EnumSource(value = ColonyStage.class, names = {"YOUNG", "MATURE", "GREAT"})
+    void aLowerStageGapLeadsTheMissingListOfEveryHigherTarget(ColonyStage boundary) {
+        // Each case meets every requirement of the boundary stage and above except one row below the boundary.
+        var in = switch (boundary) {
+            case YOUNG -> inputs(4, 2, 2, 2, 2, 4, 16, 32);   // a queen and three workers, every chamber, store and stock built
+            case MATURE -> inputs(25, 1, 0, 1, 1, 4, 16, 0);  // Mature's own rows met, the Young food store missing
+            case GREAT -> inputs(50, 2, 2, 2, 2, 3, 16, 32);  // Great's own rows met, Mature's food one unit short
+            case FOUNDING -> throw new IllegalArgumentException();
+        };
+        var expected = switch (boundary) {
+            case YOUNG -> Map.of(ColonyStage.YOUNG, "[adults 4/5]", ColonyStage.MATURE, "[adults 4/5, adults 4/25]", ColonyStage.GREAT, "[adults 4/5, adults 4/25, adults 4/50]");
+            case MATURE -> Map.of(ColonyStage.YOUNG, "[food_store 0/1]", ColonyStage.MATURE, "[food_store 0/1]", ColonyStage.GREAT, "[food_store 0/1, adults 25/50, nursery_tier 1/2, food_store_tier 0/2, material_store_tier 1/2, queens_hall_tier 1/2, stone 0/32]");
+            case GREAT -> Map.of(ColonyStage.MATURE, "[food 3/4]", ColonyStage.GREAT, "[food 3/4]");
+            case FOUNDING -> Map.<ColonyStage, String>of();
+        };
+        var result = StageRules.evaluate(boundary, in);
+        assertEquals(boundary == ColonyStage.GREAT ? ColonyStage.YOUNG : ColonyStage.FOUNDING, result.stage(), "The lower gap decides the stage");
+        assertEquals(expected.keySet(), result.missing().keySet());
+        expected.forEach((target, missing) -> assertEquals(missing, result.missing(target).toString(), "missing(" + target + ")"));
+    }
+
+    @Test
+    void aStageHeldByUnknownsListsItsUnconfirmedRequirements() {
+        Map<ChamberFunction, Bound> tiers = new EnumMap<>(ChamberFunction.class);
+        tiers.put(ChamberFunction.NURSERY, new Bound(0, 1)); tiers.put(ChamberFunction.FOOD_STORE, new Bound(0, 1));
+        var unloadedChamber = new Inputs(Bound.exactly(6), tiers, new Bound(0, 6), Bound.NONE, Bound.NONE);
+        var held = StageRules.evaluate(ColonyStage.YOUNG, unloadedChamber);
+        assertEquals(ColonyStage.YOUNG, held.stage());
+        assertEquals("[nursery 0(+1?)/1, food_store 0(+1?)/1]", held.missing(ColonyStage.YOUNG).toString(), "Held, not confirmed");
+        assertTrue(held.missing(ColonyStage.YOUNG).stream().allMatch(StageRules.Missing::unknown));
+        assertEquals("[nursery 0(+1?)/1, food_store 0(+1?)/1, adults 6/25, queens_hall 0/1, material_store 0/1, food 0(+6?)/4, clay 0/16]", held.missing(ColonyStage.MATURE).toString());
+        assertTrue(StageRules.evaluate(ColonyStage.YOUNG, inputs(6, 1, 1, 0, 0, 0, 0, 0)).missing(ColonyStage.YOUNG).isEmpty(), "A confirmed stage lacks nothing");
     }
 
     @Test

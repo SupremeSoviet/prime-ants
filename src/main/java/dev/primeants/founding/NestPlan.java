@@ -180,7 +180,8 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
                 && !ColonyPlugs.material(level.getBlockState(p)))) return "enclosure_plug_missing";
         if (operational) {
             if (plugs().stream().anyMatch(p -> !ColonyPlugs.get(level).opened(level,p,owner) && !ColonyPlugs.get(level).owned(level,p,owner))) return "enclosure_plug_ownership_revoked";
-            for (int f=0;f<2;f++) if (!loaded(level,at(f,0,-f)) || !walkable(level,at(f,0,-f))) return "enclosure_route_obstructed";
+            // The route leaves the corner-checked footprint: an unloaded cell is unknown, never an observed obstruction.
+            for (int f=0;f<2;f++) { if (!loaded(level,at(f,0,-f))) return "enclosure_chunk_unavailable"; if (!walkable(level,at(f,0,-f))) return "enclosure_route_obstructed"; }
             if (plugs().stream().allMatch(p -> ColonyPlugs.get(level).opened(level,p,owner)) && !walkable(level,at(2,0,-2))) return "enclosure_route_obstructed";
             // The recorded plugs are the only new opening. Retain the underground corridor's support/shell too.
             for (BlockPos p : undergroundSurfaces()) {

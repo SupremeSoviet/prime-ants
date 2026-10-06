@@ -19,7 +19,8 @@
     "GrassNestedWriteMixin",
     "BambooStageFixtureMixin",
     "GameTestHelperAccessor",
-    "T27PileLoadMixin"
+    "T27PileLoadMixin",
+    "UnavailableCellMixin"
   ],
   "injectors": {
     "defaultRequire": 1

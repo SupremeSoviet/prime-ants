@@ -1,4 +1,4 @@
-# Stage 1 design: colony stages (as built in T01)
+# Stage 1 design: colony stages (as built in T01–T02)
 
 A colony's stage comes only from live bodies and blocks (GDD v2 §1, decision 23), and the stage cap is the only adult
 limit. Code: `src/main/java/dev/primeants/colony/`.
@@ -10,11 +10,13 @@ limit. Code: `src/main/java/dev/primeants/colony/`.
   one marker block per function. A 0.1.0 founding room is registered as built: tier 1, markers at its pile and cache, no
   terrain change.
 - **`ColonyDevelopment`** reads the world. A function counts only while its owned marker (`BroodPile.ownedBy`,
-  `NestCache.ownedBy`) sits in an open, enclosed room (`NestPlan.nurseryProblem`). An adult counts only as a found living
-  body; a failed lookup is unknown.
+  `NestCache.ownedBy`) sits in an open, enclosed room (`NestPlan.nurseryProblem`). A check that fails only because a
+  cell's chunk is unavailable (`*_chunk_unavailable`, the entrance route included) leaves the function unknown; only
+  loaded blocks observed wrong count as loss. An adult counts only as a found living body; a failed lookup is unknown.
 - **`StageRules`** is one rule table over (known, possible) bounds. It promotes only to a stage that is certainly met
   and demotes only below one that its unknowns could not support. So unloaded members change nothing, and a stale saved
-  stage is recomputed once everything is loaded. Each transition is logged with its evidence.
+  stage is recomputed once everything is loaded. `missing(target)` is cumulative: every unconfirmed requirement of the
+  target and each lower stage, lowest first. Each transition is logged with its evidence.
 - **`BroodPile`** applies `min(stage cap, bound)` to laying and emergence.
   - The bound is the birth-selected `prime_ants.colonyAdultCapacity`: default 120, valid 4..120. The 0.1.0 fields
     migrate once: 30 → 120, and 4..29 are kept.
