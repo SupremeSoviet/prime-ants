@@ -40,7 +40,8 @@ public final class LasiusNigerEntity extends PathfinderMob {
     public long broodNeglectGrace(){return broodNeglectGrace;} public long cocoonWaitingBound(){return cocoonWaitingBound;}
     public boolean nurseryClaimed(){return nurseryClaimed;}
     public AdultLife adultLife(){return adultLife;}
-    private int colonyAdultCapacity=Integer.getInteger("prime_ants.colonyAdultCapacity",30);
+    // Birth-selected upper bound on the colony stage cap (decision 17); the stage cap owns the limit.
+    private int colonyAdultCapacity=Integer.getInteger(dev.primeants.colony.AdultBound.PROPERTY,dev.primeants.colony.AdultBound.MAX);
     public int colonyAdultCapacity(){return colonyAdultCapacity;}
     private long elapsedAgeTicks;
     private static final EntityDataAccessor<String> LINEAGE = SynchedEntityData.defineId(LasiusNigerEntity.class, EntityDataSerializers.STRING);
@@ -124,7 +125,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
     public LasiusNigerEntity(EntityType<? extends LasiusNigerEntity> type, Level level, AntForm form) {
         super(type, level);
         this.form = form;
-        if(colonyAdultCapacity<4||colonyAdultCapacity>30)throw new IllegalArgumentException("Colony adult capacity must be 4..30");
+        if(!dev.primeants.colony.AdultBound.valid(colonyAdultCapacity))throw new IllegalArgumentException("Colony adult capacity must be 4..120");
         if (form == AntForm.WORKER) bodyReserve = 0;
         setPersistenceRequired();
     }
@@ -192,7 +193,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
         output.putString("AntForm", form.serializedName());
         output.putLong("AntElapsedAgeTicks", elapsedAgeTicks);
         adultLife.save(output.child("AdultLife"));
-        output.putInt("ColonyAdultCapacity",colonyAdultCapacity);
+        output.putInt("ColonyAdultCapacityBound",colonyAdultCapacity);
         output.putLong("BroodNeglectGrace",broodNeglectGrace);output.putLong("CocoonWaitingBound",cocoonWaitingBound);
         founding.save(output.child("Founding"));
         workerTasks.save(output.child("WorkerTask"));
@@ -218,8 +219,10 @@ public final class LasiusNigerEntity extends PathfinderMob {
         adultLife.load(input.childOrEmpty("AdultLife"),this);
         broodNeglectGrace=input.getLongOr("BroodNeglectGrace",dev.primeants.brood.BroodRecord.DEFAULT_NEGLECT);cocoonWaitingBound=input.getLongOr("CocoonWaitingBound",dev.primeants.brood.BroodRecord.DEFAULT_COCOON_WAIT);
         if(broodNeglectGrace<1||cocoonWaitingBound<1)throw new IllegalArgumentException("Invalid brood birth policy");
-        colonyAdultCapacity=input.getIntOr("ColonyAdultCapacity",30);
-        if(colonyAdultCapacity<4||colonyAdultCapacity>30)throw new IllegalArgumentException("Invalid saved adult capacity");
+        // A 0.1.0 save has only the fixed ColonyAdultCapacity (4..30); it migrates once to an upper bound (AdultBound.fromLegacy).
+        var bound=input.getInt("ColonyAdultCapacityBound");int legacy=input.getIntOr("ColonyAdultCapacity",dev.primeants.colony.AdultBound.LEGACY_MAX);
+        if(bound.isPresent()?!dev.primeants.colony.AdultBound.valid(bound.get()):legacy<dev.primeants.colony.AdultBound.MIN||legacy>dev.primeants.colony.AdultBound.LEGACY_MAX)throw new IllegalArgumentException("Invalid saved adult capacity");
+        colonyAdultCapacity=bound.isPresent()?bound.get():dev.primeants.colony.AdultBound.fromLegacy(legacy);
         workerTasks.load(input.childOrEmpty("WorkerTask"));
         bodyReserve = form == AntForm.QUEEN ? Math.max(0, Math.min(BroodPile.MAX_RESERVE, input.getLongOr("QueenBodyReserve", initialReserve()))) : 0;
         nurseryClaimed = input.getBooleanOr("NurseryClaimed", false);

@@ -139,19 +139,22 @@ public final class NursingGuardGameTest {
     public void reusedSlotsRestoredRefusalAndDeadWorkerNeverDuplicateIdentities(GameTestHelper c){
         LasiusNigerEntity[] q={f.start(c)};boolean[] supplied={false},armed={false},restored={false},emerged={false};net.minecraft.nbt.CompoundTag[] stale={null};Set<UUID> newBrood=new HashSet<>();
         c.onEachTick(()->{
-            var p=audit.pile(c,q[0]);if(p==null||emerged[0])return;if(!supplied[0]&&q[0].founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;audit.supply(c,q[0],6,8);}
-            if(supplied[0])c.assertTrue(audit.total(c,q[0])==14,"Restoration retains physical and terminal units");
+            // Decision 23: queen + three workers is a Founding colony capped at five adults, so it holds one new egg at a
+            // time. Three concurrent new cocoons need the Young colony that egg's worker creates, and food for four new brood.
+            var p=audit.pile(c,q[0]);if(p==null||emerged[0])return;if(!supplied[0]&&q[0].founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;audit.supply(c,q[0],10,8);}
+            if(supplied[0])c.assertTrue(audit.total(c,q[0])==18,"Restoration retains physical and terminal units");
             var cocoons=p.records().stream().filter(r->!r.founding()&&r.stage()==BroodStage.COCOON).toList();
-            if(!armed[0]&&!cocoons.isEmpty()){armed[0]=true;EmergenceFault.block(q[0].getUUID());}
+            var colony=dev.primeants.colony.ChamberRegistry.get(c.getLevel()).colony(q[0].getUUID());
+            if(!armed[0]&&colony!=null&&colony.stage()==dev.primeants.colony.ColonyStage.YOUNG&&!cocoons.isEmpty()){armed[0]=true;EmergenceFault.block(q[0].getUUID());}
             if(armed[0]&&!restored[0]&&cocoons.size()==3&&EmergenceFault.attempts(q[0].getUUID())>=6){
                 restored[0]=true;p.records().forEach(r->newBrood.add(r.id()));q[0].setNoAi(true);f.workers(c,q[0]).forEach(w->{w.setNoAi(true);f.shelterDisabled(c,q[0],w);});stale[0]=p.saveWithFullMetadata(c.getLevel().registryAccess());restorePile(c,p,stale[0]);q[0]=f.restore(c,q[0]);
                 c.getLevel().getDataStorage().saveAndJoin();EmergenceFault.release(q[0].getUUID());
             }
-            if(restored[0]&&f.workers(c,q[0]).size()==6){
+            if(restored[0]&&f.workers(c,q[0]).size()==7){
                 emerged[0]=true;var adult=f.workers(c,q[0]).stream().filter(w->newBrood.contains(w.broodId())).findFirst().orElseThrow();UUID dead=adult.getUUID();adult.hurtServer(c.getLevel(),adult.damageSources().generic(),1000);
                 c.runAfterDelay(40,()->{
                     c.assertTrue(adult.isRemoved()&&ColonyMembers.get(c.getLevel()).member(dead).dead(),"Only actual death frees known identity capacity");
-                    restorePile(c,audit.pile(c,q[0]),stale[0]);c.runAfterDelay(BroodPile.stageTicks()+20,()->{var now=audit.pile(c,q[0]);c.assertTrue(now.records().isEmpty()&&now.consumed().size()==6&&now.original().size()==3&&f.workers(c,q[0]).size()==5&&c.getLevel().getEntity(dead)==null&&audit.total(c,q[0])==14,"Registry reconciles stale cocoons: records="+now.records().stream().map(r->r.stage()+"/"+r.progress()).toList()+" consumed="+now.consumed().size()+" workers="+f.workers(c,q[0]).size()+" food="+audit.total(c,q[0]));c.succeed();});
+                    restorePile(c,audit.pile(c,q[0]),stale[0]);c.runAfterDelay(BroodPile.stageTicks()+20,()->{var now=audit.pile(c,q[0]);c.assertTrue(now.records().isEmpty()&&now.consumed().size()==7&&now.original().size()==3&&f.workers(c,q[0]).size()==6&&c.getLevel().getEntity(dead)==null&&audit.total(c,q[0])==18,"Registry reconciles stale cocoons: records="+now.records().stream().map(r->r.stage()+"/"+r.progress()).toList()+" consumed="+now.consumed().size()+" workers="+f.workers(c,q[0]).size()+" food="+audit.total(c,q[0]));c.succeed();});
                 });
             }
         });

@@ -33,13 +33,15 @@ fabricApi {
 def gameTestReport = layout.buildDirectory.file('test-results/gametest/server.xml')
 def serverDiagnosticFilter = providers.gradleProperty('primeAntsServerDiagnosticFilter')
 def serverDiagnosticGroup = providers.gradleProperty('primeAntsServerDiagnosticGroup')
+// Diagnostic group -> the one GameTest class it runs concurrently. Never acceptance.
+def serverDiagnosticGroups = ['nectar':'NectarGameTest', 'colony_stage':'ColonyStageGameTest']
 // A focused diagnostic may validate one case; it must never make check/build green.
 gradle.taskGraph.whenReady { graph ->
     if ((serverDiagnosticFilter.isPresent() || serverDiagnosticGroup.isPresent()) && graph.hasTask(':check')) {
         throw new GradleException('Server diagnostic filter is forbidden in check/build; use runGameTest for an explicitly labelled single-case diagnosis')
     }
-    if (serverDiagnosticGroup.isPresent() && (serverDiagnosticGroup.get() != 'nectar' || serverDiagnosticFilter.isPresent()))
-        throw new GradleException('Only the explicit concurrent nectar diagnostic group is supported')
+    if (serverDiagnosticGroup.isPresent() && (!(serverDiagnosticGroup.get() in serverDiagnosticGroups.keySet()) || serverDiagnosticFilter.isPresent()))
+        throw new GradleException('Only the explicit concurrent nectar or colony_stage diagnostic groups are supported')
     if (providers.gradleProperty('primeAntsIdleSeed').isPresent() && !serverDiagnosticFilter.isPresent()) {
         throw new GradleException('Idle seed override is diagnostic only; acceptance uses the declared regression fixtures')
     }
@@ -53,7 +55,9 @@ loom.runs.named('gameTest') {
     systemProperties.put('prime_ants.foundingWorkMultiplier', providers.gradleProperty('primeAntsFoundingMultiplier').getOrElse('20'))
     if (providers.gradleProperty('primeAntsOriginDiagnostics').isPresent()) systemProperties.put('prime_ants.originDiagnostics', 'true')
     systemProperties.put('fabric-api.gametest.report-file', gameTestReport.get().asFile.absolutePath)
-    systemProperties.put('fabric-api.gametest.filter', serverDiagnosticGroup.isPresent() ? 'prime_ants_test:nectar_game_test_*' : serverDiagnosticFilter.getOrElse('prime_ants_test:*'))
+    def groupClass = serverDiagnosticGroup.isPresent() ? serverDiagnosticGroups[serverDiagnosticGroup.get()] : null
+    if (serverDiagnosticGroup.isPresent() && groupClass == null) throw new GradleException('Only the explicit concurrent nectar or colony_stage diagnostic groups are supported')
+    systemProperties.put('fabric-api.gametest.filter', groupClass != null ? 'prime_ants_test:' + groupClass.replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase() + '_*' : serverDiagnosticFilter.getOrElse('prime_ants_test:*'))
     if (providers.gradleProperty('primeAntsIdleSeed').isPresent()) systemProperties.put('prime_ants.idleSeed', providers.gradleProperty('primeAntsIdleSeed').get())
 }
 apply from: 'gradle/client-evidence.gradle'
@@ -217,13 +221,15 @@ tasks.named('runGameTest') {
         def report = new groovy.xml.XmlSlurper().parse(gameTestReport.get().asFile)
         def cases = report.depthFirst().findAll { it.name() == 'testcase' }
         if (serverDiagnosticGroup.isPresent()) {
-            def expected = (file('src/gametest/java/dev/primeants/gametest/NectarGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {
-                'prime_ants_test:nectar_game_test_' + it[1].replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase()
+            def groupClass = serverDiagnosticGroups[serverDiagnosticGroup.get()]
+            def groupPrefix = groupClass.replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase()
+            def expected = (file("src/gametest/java/dev/primeants/gametest/${groupClass}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {
+                "prime_ants_test:${groupPrefix}_" + it[1].replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase()
             }
             if (cases.collect { it.@name.text() }.toSet() != expected.toSet() || cases.size() != expected.size()
                     || report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] })
-                throw new GradleException('Concurrent nectar diagnostic did not execute all requested passing names')
-            logger.lifecycle("DIAGNOSTIC ONLY: ${cases.size()} concurrent nectar cases; acceptance not claimed")
+                throw new GradleException("Concurrent ${serverDiagnosticGroup.get()} diagnostic did not execute all requested passing names")
+            logger.lifecycle("DIAGNOSTIC ONLY: ${cases.size()} concurrent ${serverDiagnosticGroup.get()} cases; acceptance not claimed")
             return
         }
         if (serverDiagnosticFilter.isPresent()) {
@@ -311,7 +317,10 @@ tasks.named('runGameTest') {
         def defenseNames=(file('src/gametest/java/dev/primeants/gametest/DefenseGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
         if(defenseNames.size()!=10)throw new GradleException('Defense discovery incomplete')
         defenseNames.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:defense_game_test_'+n})throw new GradleException('Missing bounded defense regression '+n)}
-        if(cases.size()!=173+foodNames.size()+policyNames.size()+defenseNames.size())throw new GradleException('Expected complete baseline plus current additions')
+        def stageNames=(file('src/gametest/java/dev/primeants/gametest/ColonyStageGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+        if(stageNames.size()!=3)throw new GradleException('Colony stage discovery incomplete')
+        stageNames.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:colony_stage_game_test_'+n})throw new GradleException('Missing colony stage regression '+n)}
+        if(cases.size()!=173+foodNames.size()+policyNames.size()+defenseNames.size()+stageNames.size())throw new GradleException('Expected complete baseline plus current additions')
         if (report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] }) {
             throw new GradleException('Server GameTest report contains a failure or skipped test')
         }

@@ -56,7 +56,7 @@ public final class AntCaptureTest implements FabricClientGameTest {
         provenance.put("work_multiplier",QueenFounding.multiplier()); provenance.put("cadence_ticks",QueenFounding.cadence());
         provenance.put("brood_multiplier",BroodPile.multiplier()); provenance.put("stage_ticks",BroodPile.stageTicks()); provenance.put("callow_ticks",BroodPile.callowTicks());
         provenance.put("initial_body_reserve",BroodPile.MAX_RESERVE); provenance.put("egg_cost",BroodPile.EGG_COST); provenance.put("larva_cost",BroodPile.LARVA_COST);
-        provenance.put("laying_cadence",BroodPile.layingCadence());provenance.put("adult_capacity",BroodPile.ADULT_CAPACITY);provenance.put("nursery_capacity",BroodPile.CAPACITY);
+        provenance.put("laying_cadence",BroodPile.layingCadence());provenance.put("adult_capacity",dev.primeants.colony.ColonyStage.YOUNG.adultCap());provenance.put("stage_adult_caps",java.util.Arrays.stream(dev.primeants.colony.ColonyStage.values()).map(s->s.serializedName()+"="+s.adultCap()).toList());provenance.put("nursery_capacity",BroodPile.CAPACITY);
         provenance.put("apple_sugar_yield",4000);provenance.put("chicken_protein_yield",8000);provenance.put("egg_sugar_cost",1000);provenance.put("egg_protein_cost",2000);provenance.put("larva_sugar_requirement",4000);provenance.put("larva_protein_requirement",8000);
         provenance.put("injected_brood",0); provenance.put("injected_food",0); provenance.put("summoned_workers",0); provenance.put("reserve_edits",0);
         provenance.put("observer_effect","vanilla /effect give @p minecraft:night_vision 99999 0 true; spectator only");

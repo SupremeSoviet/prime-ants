@@ -163,14 +163,21 @@ public final class RoleConflictGameTest {
     }
     @GameTest(maxTicks=26000,structure="prime_ants_test:idle_ground")
     public void disabledNursingLabelsCannotReserveCareWithFourOtherMatureWorkers(GameTestHelper c){
-        var q=f.start(c);var funding=FundedPopulationFixture.hold(c,q);boolean[] supplied={false},checked={false};Set<UUID> initial=new HashSet<>(),held=new HashSet<>();
+        var q=f.start(c);var funding=FundedPopulationFixture.hold(c,q);boolean[] supplied={false},checked={false},capped={false};Set<UUID> initial=new HashSet<>(),held=new HashSet<>(),laid=new HashSet<>();
         c.onEachTick(()->{
             if(checked[0])return;
             if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;f.workers(c,q).forEach(w->initial.add(w.getUUID()));food.supply(c,q,10,8);}
             if(!supplied[0])return;c.assertTrue(food.total(c,q)==18,"Reservation fixture preserves ordinary food accounting");food.yields(c,q);soil.balance(c,q);
             if(c.getTick()%200==0){var pile=food.pile(c,q);PrimeAnts.LOGGER.info("T22 reservation funding tick={} condition={} supply={} held={}",c.getTick(),pile==null?"missing":pile.condition(),pile==null?"missing":pile.supply(c.getLevel()),held.size());}
             if(!funding.releaseIfStocked(food.pile(c,q)))return;
-            var ws=f.workers(c,q);for(var w:ws)if(!initial.contains(w.getUUID())){
+            // Decision 23: queen + three workers is a Founding colony capped at five adults, so only one new egg fits; its
+            // worker makes the colony Young. Each new callow stays enabled until just before it matures, because the actual
+            // supply gate pauses growth while any member is disabled. The same scheduling hold then stops laying at three
+            // new identities, the size of the former concurrent clutch. Construction still never sees a fourth mature
+            // enabled worker before the checked arrangement.
+            food.pile(c,q).records().stream().filter(r->!r.founding()).forEach(r->laid.add(r.id()));
+            if(!capped[0]&&laid.size()>=3){capped[0]=true;FundedPopulationFixture.hold(c,q);}
+            var ws=f.workers(c,q);for(var w:ws)if(!initial.contains(w.getUUID())&&(held.contains(w.getUUID())||w.callowAgeTicks()+2>=w.callowDuration())){
                 w.setNoAi(true);if(held.add(w.getUUID())){
                     // Negative reservation fixture: keep actual new bodies loaded on the existing
                     // supported exterior trail, leaving both original nurses' feeding stands clear.

@@ -1,6 +1,8 @@
 package dev.primeants.brood;
 
 import dev.primeants.PrimeAnts;
+import dev.primeants.colony.AdultBound;
+import dev.primeants.colony.ColonyDevelopment;
 import dev.primeants.entity.AntEntities;
 import dev.primeants.entity.LasiusNigerEntity;
 import dev.primeants.founding.NestPlan;
@@ -30,7 +32,6 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 /** Reusable physical nursery slots. Only the loaded server block-entity ticker advances brood or lays eggs. */
 public final class BroodPile extends BlockEntity {
     public static final int CAPACITY = 3;
-    public static final int ADULT_CAPACITY=30; // queen + at most 29 actual workers; unknown unloaded members occupy space
     public static final long BASE_LAYING_TICKS=1200;
     public static long layingCadence(){return new SimulationTimeScale(multiplier()).ticksForGameDays(BASE_LAYING_TICKS/24000.0);}
     public static final long EGG_COST = 1000, LARVA_COST = 12000, MAX_RESERVE = CAPACITY * (EGG_COST + LARVA_COST);
@@ -51,8 +52,24 @@ public final class BroodPile extends BlockEntity {
     private boolean originalTerminal(){return original.stream().allMatch(id->consumed.contains(id)||expired.containsKey(id));}
     private boolean operational;
     private long adultLifespan=dev.primeants.entity.AdultLife.DEFAULT_LIFESPAN,fastingGrace=dev.primeants.entity.AdultLife.DEFAULT_FASTING;
-    private int adultCapacity=ADULT_CAPACITY;
+    private int adultCapacity=AdultBound.MAX;
+    /** Birth-selected upper bound only. The colony stage cap owns the adult limit (queen + workers + brood). */
     public int adultCapacity(){return adultCapacity;}
+    // Transient evaluation cache: re-evaluated after a birth/death, a replaced registry, or INTERVAL loaded ticks.
+    private ColonyDevelopment.Evaluation stageEvaluation;
+    private long stageEvaluatedAt,stageMembersRevision;
+    private Object stageMembers,stageRegistry;
+    /** Last live stage evaluation, without evaluating; null before this pile's first decision or slow-cadence check. */
+    public ColonyDevelopment.Evaluation stageEvaluation(){return stageEvaluation;}
+    private ColonyDevelopment.Evaluation development(ServerLevel l){
+        var members=ColonyMembers.get(l);var registry=dev.primeants.colony.ChamberRegistry.get(l);
+        if(stageEvaluation==null||members!=stageMembers||members.revision()!=stageMembersRevision||registry!=stageRegistry||loadedTicks-stageEvaluatedAt>=ColonyDevelopment.INTERVAL){
+            stageEvaluation=ColonyDevelopment.evaluate(l,queenId,plan,operational,adultCapacity);
+            stageEvaluatedAt=loadedTicks;stageMembers=members;stageMembersRevision=members.revision();stageRegistry=registry;
+        }
+        return stageEvaluation;
+    }
+    private int adultCap(ServerLevel l){return AdultBound.effectiveCap(development(l).stage(),adultCapacity);}
     private long lastLayingTick,archivedApples,archivedBerries,archivedChickens,archivedNectar,archivedNectarV2,archivedPrey,archivedFlesh;
     public Set<UUID> original(){return Set.copyOf(original);}
     public boolean operational(){return operational;}
@@ -139,7 +156,7 @@ public final class BroodPile extends BlockEntity {
     private boolean lay(ServerLevel l,LasiusNigerEntity q,boolean care){
         if(!care||!operational||!originalTerminal()||loadedTicks-lastLayingTick<layingCadence())return false;
         if(records.size()>=CAPACITY){if(!condition.equals("larva_sugar_or_protein_exhausted"))condition="nursery_slots_full";return false;}
-        if(ColonyMembers.get(l).occupied(queenId)+records.size()>=adultCapacity-1){condition="colony_capacity_full_or_unloaded";return false;}
+        if(ColonyMembers.get(l).occupied(queenId)+records.size()>=adultCap(l)-1){condition="colony_capacity_full_or_unloaded";return false;}
         if(!growth.allows(supply(l))){condition=growth.reason();return false;}
         if(!q.nutrition().spend(Nutrition.EGG_SUGAR,Nutrition.EGG_PROTEIN)){condition="queen_ingested_nutrition_exhausted";return false;}
         int slot=0;while(true){final int index=slot;if(records.stream().noneMatch(r->r.slot()==index))break;slot++;}
@@ -185,6 +202,7 @@ public final class BroodPile extends BlockEntity {
         growth.observe(loadedTicks,supply(server));
         var owner = server.getEntity(queenId);
         if(owner instanceof LasiusNigerEntity q && q.founding().lifecycle()!=dev.primeants.founding.QueenFounding.Lifecycle.CLAUSTRAL)operational=true;
+        if(stageEvaluation==null||loadedTicks-stageEvaluatedAt>=ColonyDevelopment.INTERVAL)development(server); // slow cadence, never per tick
         for(UUID id:consumed)ColonyMembers.get(server).record(id,queenId,plan.chamber());
         expired.replaceAll((id,row)->BroodHistory.get(server).retain(id,row));
         String habitat = plan.nurseryProblem(server, queenId, operational);
@@ -249,7 +267,7 @@ public final class BroodPile extends BlockEntity {
             condition = "emergence_identity_conflict"; return false;
         }
         int queenSlot=dev.primeants.worker.AdultHistory.get(server).records().containsKey(queenId.toString())?0:1;
-        if(ColonyMembers.get(server).occupied(queenId)+queenSlot>=adultCapacity){condition="emergence_capacity_full_or_unloaded";return false;}
+        if(ColonyMembers.get(server).occupied(queenId)+queenSlot>=adultCap(server)){condition="emergence_capacity_full_or_unloaded";return false;}
         var worker = AntEntities.WORKER.create(server, EntitySpawnReason.BREEDING);
         if (worker == null) { condition = "worker_creation_failed"; return false; }
         worker.setUUID(r.workerId()); worker.initializeCallow(r.id(), queenId, plan.chamber(),adultLifespan,fastingGrace);
@@ -277,7 +295,7 @@ public final class BroodPile extends BlockEntity {
         out.putLong("StageDuration", stageDuration);
         out.putLong("NeglectGrace",neglectGrace);out.putLong("WaitingBound",waitingBound);
         out.store("Expired",com.mojang.serialization.Codec.unboundedMap(com.mojang.serialization.Codec.STRING,com.mojang.serialization.Codec.STRING),expired.entrySet().stream().collect(java.util.stream.Collectors.toMap(e->e.getKey().toString(),java.util.Map.Entry::getValue)));
-        out.putLong("AdultLifespan",adultLifespan);out.putLong("AdultFastingGrace",fastingGrace);out.putInt("AdultCapacity",adultCapacity);
+        out.putLong("AdultLifespan",adultLifespan);out.putLong("AdultFastingGrace",fastingGrace);out.putInt("AdultCapacityBound",adultCapacity);
         out.putBoolean("Operational",operational);out.putLong("LastLayingTick",lastLayingTick);out.putLong("ConsumedApples",archivedApples);out.putLong("ConsumedBerries",archivedBerries);out.putLong("ConsumedChickens",archivedChickens);out.putLong("ConsumedNectar",archivedNectar);out.putLong("ConsumedNectarV2",archivedNectarV2);out.putLong("ConsumedPrey",archivedPrey);out.putLong("ConsumedFlesh",archivedFlesh);
         out.store("Original",com.mojang.serialization.Codec.STRING.listOf(),original.stream().map(UUID::toString).sorted().toList());
         var list = out.childrenList("Brood"); for (BroodRecord r : records) r.save(list.addChild());
@@ -285,9 +303,12 @@ public final class BroodPile extends BlockEntity {
     }
     @Override protected void loadAdditional(ValueInput in) {
         growth.load(in.childOrEmpty("GrowthFlow"));
-        super.loadAdditional(in); records.clear(); consumed.clear();original.clear();expired.clear(); queenId = null; plan = null;
-        adultLifespan=in.getLongOr("AdultLifespan",dev.primeants.entity.AdultLife.DEFAULT_LIFESPAN);fastingGrace=in.getLongOr("AdultFastingGrace",dev.primeants.entity.AdultLife.DEFAULT_FASTING);adultCapacity=in.getIntOr("AdultCapacity",ADULT_CAPACITY);
-        if(adultLifespan<1||fastingGrace<1||adultCapacity<4||adultCapacity>ADULT_CAPACITY)throw new IllegalArgumentException("Invalid saved birth policy");
+        super.loadAdditional(in); records.clear(); consumed.clear();original.clear();expired.clear(); queenId = null; plan = null; stageEvaluation = null;
+        adultLifespan=in.getLongOr("AdultLifespan",dev.primeants.entity.AdultLife.DEFAULT_LIFESPAN);fastingGrace=in.getLongOr("AdultFastingGrace",dev.primeants.entity.AdultLife.DEFAULT_FASTING);
+        // A 0.1.0 pile has only the fixed AdultCapacity (4..30); it migrates once to an upper bound (AdultBound.fromLegacy).
+        var bound=in.getInt("AdultCapacityBound");int legacy=in.getIntOr("AdultCapacity",AdultBound.LEGACY_MAX);
+        if(adultLifespan<1||fastingGrace<1||(bound.isPresent()?!AdultBound.valid(bound.get()):legacy<AdultBound.MIN||legacy>AdultBound.LEGACY_MAX))throw new IllegalArgumentException("Invalid saved birth policy");
+        adultCapacity=bound.isPresent()?bound.get():AdultBound.fromLegacy(legacy);
         neglectGrace=in.getLongOr("NeglectGrace",BroodRecord.DEFAULT_NEGLECT);waitingBound=in.getLongOr("WaitingBound",BroodRecord.DEFAULT_COCOON_WAIT);
         if(neglectGrace<1||waitingBound<1)throw new IllegalArgumentException("Invalid saved brood policy");
         in.read("Expired",com.mojang.serialization.Codec.unboundedMap(com.mojang.serialization.Codec.STRING,com.mojang.serialization.Codec.STRING)).orElse(java.util.Map.of()).forEach((k,v)->expired.put(UUID.fromString(k),v));

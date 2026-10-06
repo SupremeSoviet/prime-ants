@@ -16,6 +16,7 @@ public final class AdultHistory extends SavedData {
     public AdultHistory(){this(Map.of());}private AdultHistory(Map<String,String> values){records=new HashMap<>(values);}
     public static AdultHistory get(ServerLevel l){return l.getDataStorage().computeIfAbsent(TYPE);}
     public Map<String,String> records(){return Map.copyOf(records);}
+    public boolean recorded(UUID id){return records.containsKey(id.toString());}
     public void died(LasiusNigerEntity ant){
         if(records.containsKey(ant.getUUID().toString()))return;
         var row=new com.google.gson.JsonObject();row.addProperty("queen",ant.colonyIdentity()==null?"":ant.colonyIdentity().toString());row.addProperty("age",ant.elapsedAgeTicks());row.addProperty("lifespan",ant.adultLife().lifespan());row.addProperty("fasting",ant.adultLife().fasting());row.addProperty("maintenance",ant.adultLife().maintenanceTicks());row.addProperty("cause",ant.adultLife().death().isEmpty()?"external_damage":ant.adultLife().death());

@@ -325,3 +325,33 @@ Fresh-client checks use ordinary vanilla overworld generation/survival, seed 202
 | 28 | **Игрок:** отношение у каждой колонии своё, обмен натурой на изделия колонии, гостевой дом от колонии-союзника | дополняет 9 и 15; жетоны, валюта, лавки с ценами и планшет-пульт по-прежнему убраны (21 в этой части в силе) |
 
 Порядок работ: этап 1 «Развитие и дома» (20 ходов turnloop) → этап 2 «Шахты, кузница, броня» → этап 3 «Дипломатия и игрок».
+
+## Implementation notes - 2026-10-07 (stage-1 T01 colony stages)
+
+Decision 23 is implemented as one live rule table, `dev.primeants.colony.StageRules`. The model and the extension plan are in [stage-1-design.md](stage-1-design.md).
+
+**Counting rule.** Every stage cap and adult threshold counts living adults including the queen. Brood reserves cap space exactly as in 0.1.0: laying is refused at workers + brood ≥ cap − 1, and emergence at workers + queen ≥ cap. The caps stay **5 / 30 / 60 / 120**, so 0.1.0's 30 keeps its meaning.
+
+**Deadlock fix.** The GDD's "Young: 5+ workers" was unreachable under a five-adult Founding cap, which holds at most four workers. The default fix is adopted:
+
+- **Young** needs **5 adults (queen + 4 workers)**, a confirmed nursery and a confirmed food store.
+- **Mature** needs 25 adults, a queen's hall, a material store, 4 stored food units and 16 clay units.
+- **Great** needs 50 adults, all four functions at tier 2 or higher, and 32 stone units, counted as stored or laid in the colony's own tier-3 walls.
+
+Stages are cumulative, and the stock numbers are starting values. Invariant: each next threshold fits under the current cap (5 ≤ 5, 25 ≤ 30, 50 ≤ 60), including right after a regression. It is checked at class load and by unit tests.
+
+**Only live state counts.**
+
+- A function needs its owned marker (brood pile or cache) in an open, enclosed chamber.
+- An adult needs a found, living body. A failed lookup is unknown: a colony is promoted only when confirmed state meets the stage, and demoted only when even its unknowns could not.
+- A lower cap never removes adults.
+- 0.1.0 founding chambers are recognized as built (tier 1, nursery and food store), with no terrain change.
+- Mature and Great stay unreachable until later turns add queen's halls, material stores and tiers.
+
+**Configured limit.** `prime_ants.colonyAdultCapacity` is now an upper bound (decision 17): default 120, valid 4..120, and the effective cap is min(stage cap, bound). A bound below a threshold deliberately holds that stage.
+
+**0.1.0 migration.**
+
+- New saves write `ColonyAdultCapacityBound` on the queen and `AdultCapacityBound` on the pile.
+- A 0.1.0 save's `ColonyAdultCapacity` or `AdultCapacity` is read only when the new key is absent, and is still validated 4..30.
+- It migrates once. A saved 30, the 0.1.0 default and maximum, becomes 120, so the colony can pass 30 once Mature is reachable. A saved 4..29 is kept as a deliberate reduction.
