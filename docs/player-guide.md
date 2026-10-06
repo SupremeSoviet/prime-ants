@@ -28,4 +28,4 @@ Only Lasius niger and early colony life are implemented. Established-colony gene
 
 Реализованы только Lasius niger и ранняя жизнь колонии. Генерация развитых колоний, брачные лёты и активный сбор плодов отложены. Рельеф, пища и теснота могут остановить рост. Надёжность Java/C2, долгие сеансы и широкая совместимость остаются ограничениями; заключительная проверка обновлённого кандидата в новом мире ещё предстоит.
 
-[Current gallery / Текущая галерея](screenshots/t28-release.md) contains three accepted views; a readable queen close-up remains missing. В текущей галерее три принятых вида; читаемого крупного плана матки нет. [Technical report / Технический отчёт](slice-1-report.md).
+[Current gallery / Текущая галерея](screenshots/t28-release.md) contains three accepted current views and a historical queen illustration labelled **T25 — previous model revision**; current queen visual acceptance remains incomplete. В галерее три принятых текущих вида и историческая иллюстрация матки с пометкой **T25 — предыдущая редакция модели**; визуальная приёмка нынешней матки остаётся незавершённой. [Technical report / Технический отчёт](slice-1-report.md).

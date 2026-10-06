@@ -43,9 +43,9 @@ Watching and feeding are benign. Hurting an ant in survival or successfully brea
 
 Only one species and early colony life are implemented. **Generation of already established colonies, nuptial flights and active harvesting of fruit plants are deferred.** There is no interface for assigning ant jobs. Conservative terrain checks, crowding, difficult routes and inadequate food can stall colonies; flooding or breaking the enclosure is not automatically repaired. Long sessions, abrupt-crash recovery and broader compatibility have not been established. An earlier native Java/C2 client crash remains a reliability concern; a successful startup is not a universal fix.
 
-### Current illustrations
+### Illustrations
 
-These original game images show naturally founded colonies with the current production code and assets. The colony was player-fed; camera relocation was used for framing. The source nursery retains accelerated brood timing. The pictures illustrate behavior, rather than default-speed discovery or unattended growth.
+Three original game images below show naturally founded colonies with current production code and assets; the fourth queen image uses a previous model revision. The colony was player-fed; camera relocation was used for framing. The source nursery retains accelerated brood timing. The pictures illustrate behavior, rather than default-speed discovery or unattended growth.
 
 ![Opened entrance and excavated soil mound in daylight](docs/screenshots/t28-release-entrance.png)
 
@@ -59,7 +59,9 @@ These original game images show naturally founded colonies with the current prod
 
 *The small white object near the center is a living egg. One normally placed wall torch lights this survival chamber view; ordinary brightness, no night vision, with possible daylight through the opened nest. The colony received four apples and two raw chicken from player inventory. Surrounding ants are partly cropped; the egg is unobscured.*
 
-**Queen close-up: missing from this candidate's gallery.** The attempted image was clipped and is excluded. [Gallery and capture qualifications](docs/screenshots/t28-release.md) · [Player guide](docs/player-guide.md) · [Technical report](docs/slice-1-report.md).
+![Natural founding queen in daylight — previous model revision](docs/screenshots/t25-appearance-a5-queen-queen-daylight.png)
+
+**T25 — previous model revision.** Historical daylight view of a naturally placed founding queen carrying excavated soil. This unchanged image supplies the fourth illustration; it does not establish current queen visual acceptance. The clipped current attempt remains rejected. [Gallery and capture qualifications](docs/screenshots/t28-release.md) · [Player guide](docs/player-guide.md) · [Technical report](docs/slice-1-report.md).
 
 ## Русский
 
@@ -100,12 +102,12 @@ These original game images show naturally founded colonies with the current prod
 
 Реализованы один вид и ранняя жизнь колонии. **Генерация уже развитых колоний, брачные лёты и активный сбор плодов с растений отложены.** Интерфейса для назначения муравьям заданий нет. Строгие проверки рельефа, теснота, сложные маршруты и недостаток питания могут остановить колонию; затопление и повреждение оболочки не исправляются автоматически. Долгие сеансы, восстановление после аварийного завершения и широкая совместимость ещё не подтверждены. Ранее происходил нативный клиентский сбой Java/C2; удачный запуск не означает универсального исправления.
 
-### Текущие иллюстрации
+### Иллюстрации
 
-Это оригинальные игровые снимки естественно основанных колоний с текущими основным кодом и ресурсами. Колонию подкармливали; для кадрирования перемещалась камера наблюдателя. Исходные ясли сохраняют ускоренное развитие выводка. Снимки показывают поведение, а не поиск на обычной скорости или рост без помощи игрока.
+Три оригинальных игровых снимка показывают естественно основанные колонии с текущими основным кодом и ресурсами; четвёртый снимок матки использует предыдущую редакцию модели. Колонию подкармливали; для кадрирования перемещалась камера наблюдателя. Исходные ясли сохраняют ускоренное развитие выводка. Снимки показывают поведение, а не поиск на обычной скорости или рост без помощи игрока.
 
 - [Вход и выброшенный грунт](docs/screenshots/t28-release-entrance.png): открытый вход и холмик, созданный маткой; дневной свет, скрытый интерфейс.
 - [Настоящий фуражир](docs/screenshots/t28-release-forager.png): один рабочий ищет пищу у входа; дневной свет, камера наблюдателя, скрытый интерфейс.
 - [Живое яйцо в освещённых яслях](docs/screenshots/t28-release-interior.png): небольшой белый предмет около центра — живое яйцо. Один факел нормально поставлен на стену; вид снят из камеры в выживании, с обычной яркостью и без ночного зрения. Через открытое гнездо может попадать дневной свет. Из инвентаря игрока брошены четыре яблока и две сырые курятины. Окружающие муравьи частично обрезаны, яйцо ничем не закрыто.
 
-**Крупный план матки отсутствует в галерее кандидата.** Попытка оказалась обрезанной и исключена. [Галерея и условия съёмки](docs/screenshots/t28-release.md) · [Руководство игрока](docs/player-guide.md) · [Технический отчёт](docs/slice-1-report.md).
+- [Естественная матка при дневном свете — предыдущая редакция модели](docs/screenshots/t25-appearance-a5-queen-queen-daylight.png): **T25 — previous model revision. / T25 — предыдущая редакция модели.** Исторический вид естественно появившейся матки, несущей выкопанный грунт. Неизменённый снимок даёт четвёртую иллюстрацию; он не подтверждает визуальную приёмку нынешней матки. Обрезанный текущий кадр остаётся отклонённым. [Галерея и условия съёмки](docs/screenshots/t28-release.md) · [Руководство игрока](docs/player-guide.md) · [Технический отчёт](docs/slice-1-report.md).

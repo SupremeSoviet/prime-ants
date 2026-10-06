@@ -1,6 +1,6 @@
 # Current player release gallery
 
-[Current release illustrations](t28-release.md): three accepted views and an explicit missing queen close-up. Historical images below retain their original qualifications.
+[Release illustrations / Иллюстрации выпуска](t28-release.md): three accepted current views and a fourth historical queen labelled **T25 — previous model revision / предыдущая редакция модели**. Current queen visual acceptance remains incomplete. Historical images below retain their original qualifications.
 
 # Infrastructure captures
 
