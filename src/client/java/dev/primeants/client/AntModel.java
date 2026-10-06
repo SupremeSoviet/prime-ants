@@ -59,10 +59,13 @@ public final class AntModel extends EntityModel<AntRenderState> {
                     PartPose.offset(-side * 0.55F, 0, -jawLength + 0.7F));
             float scapeLength = queen ? 11 : 6;
             PartDefinition antenna = head.addOrReplaceChild("antenna_" + name + "_scape",
-                    box(64, 400, -0.4F, -0.4F, -scapeLength, 0.8F, 0.8F, scapeLength),
+                    box(64, 400, -0.22F, -0.22F, -scapeLength, 0.44F, 0.44F, scapeLength),
                     PartPose.offsetAndRotation(side * headW * 0.16F, -headH * 0.23F, -headD * 0.28F, -0.15F, -side * 0.6F, 0));
-            antenna.addOrReplaceChild("funiculus", box(64, 400, -0.35F, -0.35F, -(queen ? 9 : 5), 0.7F, 0.7F, queen ? 9 : 5),
+            float funiculusLength = queen ? 9 : 5;
+            PartDefinition funiculus = antenna.addOrReplaceChild("funiculus",
+                    box(64, 400, -.17F, -.17F, -funiculusLength, .34F, .34F, funiculusLength),
                     PartPose.offsetAndRotation(0, 0, -scapeLength, 0.25F, side * 1.1F, 0));
+            funiculus.addOrReplaceChild("tip", box(64, 400, -.23F, -.23F, -funiculusLength, .46F, .46F, funiculusLength * .22F), PartPose.ZERO);
         }
 
         float thoraxY = queen ? -14 : -8.5F;
@@ -91,7 +94,7 @@ public final class AntModel extends EntityModel<AntRenderState> {
         float gasterH = queen ? 15 : 7.4F;
         float gasterD = queen ? 31 : 12.5F;
         PartDefinition gaster = ant.addOrReplaceChild("gaster",
-                ovoid(192, gasterW, gasterH, gasterD),
+                gasterOvoid(gasterW, gasterH, gasterD),
                 PartPose.offset(0, queen ? -14 : -8.5F, queen ? 22.5F : 11.25F));
         gaster.addOrReplaceChild("acidopore", box(380, 400, -0.7F, -0.7F, 0, 1.4F, 1.4F, 0.7F),
                 PartPose.offset(0, gasterH * 0.10F, gasterD / 2));
@@ -99,9 +102,9 @@ public final class AntModel extends EntityModel<AntRenderState> {
         for (int i = 0; i < 6; i++) {
             int side = i < 3 ? 1 : -1;
             int pair = i % 3;
-            float femurLength = queen ? 9 : 5.8F;
-            float tibiaLength = queen ? 14 : 9;
-            float thickness = queen ? 1.1F : 0.65F;
+            float femurLength = queen ? 9 : 5.3F;
+            float tibiaLength = queen ? 14 : 8.2F;
+            float thickness = queen ? 1.1F : 0.78F;
             float[] angles = jointAngles(queen, side, (pair - 1) * (queen ? 5 : 3), 0);
             PartDefinition hip = mesosoma.addOrReplaceChild(LEG_NAMES[i],
                     box(0, 400, -thickness / 2, -thickness / 2, -thickness / 2, thickness, thickness, thickness),
@@ -149,6 +152,21 @@ public final class AntModel extends EntityModel<AntRenderState> {
         return shape;
     }
 
+    /** Fixed 11 x 9 gaster mesh (99 cubes); finer terraces without changing body bounds. */
+    private static CubeListBuilder gasterOvoid(float w, float h, float d) {
+        float[] taper={.30F,.61F,.80F,.916F,.98F,1F,.98F,.916F,.80F,.61F,.30F};
+        float[] widths={.26F,.50F,.72F,.90F,1F,.90F,.72F,.50F,.26F};
+        float[] edges={-.50F,-.48F,-.42F,-.30F,-.12F,.12F,.30F,.42F,.48F,.50F};
+        CubeListBuilder shape=CubeListBuilder.create();
+        for(int slice=0;slice<taper.length;slice++)for(int tier=0;tier<widths.length;tier++) {
+            float width=w*taper[slice]*widths[tier],height=h*taper[slice];
+            shape.texOffs(slice*45,192+tier*10).addBox(-width/2,height*edges[tier],-d/2+slice*d/11,width,height*(edges[tier+1]-edges[tier]),d/11);
+        }
+        return shape;
+    }
+
+    public static double walkCadence(boolean queen) { return queen ? 2.8 : 3.3; }
+
     public static float headDepth(boolean queen) { return queen ? 11 : 7.5F; }
     public static float jawLength(boolean queen) { return queen ? 4 : 2.3F; }
     /** The midpoint of the real jaw tips, in animated head-local raw model units. */
@@ -159,11 +177,11 @@ public final class AntModel extends EntityModel<AntRenderState> {
     /** Two links to the ankle, with a vertical tarsus. Femur rises to a knee;
      * tibia descends. The flat distal face stays on the floor during stance. */
     private static float[] jointAngles(boolean queen, int side, float longitudinal, float lift) {
-        double lateral = queen ? 8 : 5;
+        double lateral = queen ? 8 : 4.6;
         double down = (queen ? 14 - 2 : 8.5 - 1.2) - lift;
         double radial = Math.hypot(lateral, longitudinal);
         double distance = Math.hypot(radial, down);
-        double femur = queen ? 9 : 5.8, distal = queen ? 14 : 9;
+        double femur = queen ? 9 : 5.3, distal = queen ? 14 : 8.2;
         double shoulder = Math.atan2(radial, down) + Math.acos((femur * femur + distance * distance - distal * distal) / (2 * femur * distance));
         double knee = Math.PI - Math.acos((femur * femur + distal * distal - distance * distance) / (2 * femur * distal));
         return new float[]{(float)(side * Math.atan2(-longitudinal, lateral)), (float)(-side * shoulder), (float)(side * knee)};
@@ -178,7 +196,8 @@ public final class AntModel extends EntityModel<AntRenderState> {
     public void setupAnim(AntRenderState state) {
         super.setupAnim(state);
         float amplitude = state.moving ? Math.min(1, state.walkAnimationSpeed) : 0;
-        double cycle = state.walkAnimationPos * 2.8 / (2 * Math.PI);
+        double cadence=walkCadence(queen);
+        double cycle = state.walkAnimationPos * cadence / (2 * Math.PI);
         cycle -= Math.floor(cycle);
         for (int i = 0; i < 6; i++) {
             if (amplitude == 0) continue;
@@ -188,9 +207,13 @@ public final class AntModel extends EntityModel<AntRenderState> {
             // Adult vanilla walk position advances at four times travelled distance.
             // A constant distance-based stride avoids multiplying speed twice;
             // slowing the ant slows cadence instead of making planted feet slide.
-            float stride = (float)((t < 0.5 ? -1 + 4 * t : 3 - 4 * t) * (4 * Math.PI / 2.8));
-            float lift = t < 0.5 ? 0 : (float)(Math.sin((t - 0.5) * 2 * Math.PI)
-                    * (queen ? 0.8 + 0.7 * amplitude : 0.6 + 0.4 * amplitude));
+            double u=2*t-1;
+            // Hermite return matches the stance velocity at liftoff/touchdown.
+            // The small airborne overshoot removes instantaneous reversals.
+            double sweep=t<.5 ? -1+4*t : 8*u*u*u-12*u*u+2*u+1;
+            float stride=(float)(sweep*(4*Math.PI/cadence));
+            float lift=t<.5 ? 0 : (float)(Math.pow(Math.sin(Math.PI*u),2)
+                    * (queen ? 0.8+0.9*amplitude : 0.7+1.0*amplitude));
             float[] angles = jointAngles(queen, i < 3 ? 1 : -1, (i % 3 - 1) * (queen ? 5 : 3) + stride, lift);
             legs[i].yRot = angles[0];
             ModelPart femur = legs[i].getChild("femur");
@@ -209,5 +232,7 @@ public final class AntModel extends EntityModel<AntRenderState> {
         }
         leftAntenna.yRot += (float)Math.sin(state.ageInTicks * 0.09F) * 0.12F;
         rightAntenna.yRot -= (float)Math.sin(state.ageInTicks * 0.09F + 0.7F) * 0.12F;
+        leftAntenna.getChild("funiculus").xRot += (float)Math.sin(state.ageInTicks*.11F)*.07F;
+        rightAntenna.getChild("funiculus").xRot += (float)Math.sin(state.ageInTicks*.11F+.7F)*.07F;
     }
 }

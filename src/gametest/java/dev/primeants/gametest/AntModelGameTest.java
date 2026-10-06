@@ -105,7 +105,7 @@ public final class AntModelGameTest implements FabricClientGameTest {
         final float tolerance = 0.000002F;
         for (int sample = 0; sample <= 64; sample++) {
             float fraction = sample / 64F;
-            state.walkAnimationPos = fraction * (float)(2 * Math.PI / 2.8);
+            state.walkAnimationPos = fraction * (float)(2 * Math.PI / AntModel.walkCadence(form==AntForm.QUEEN));
             model.setupAnim(state);
             Vector3f[] feet = contacts(model);
             for (int leg = 0; leg < 6; leg++) {
@@ -117,7 +117,11 @@ public final class AntModelGameTest implements FabricClientGameTest {
                 traces.append(String.format(java.util.Locale.ROOT, "%s,%.8f,%.8f,%.6f,%s,%s,%s,%.8f,%.8f,%.8f,%.8f,%.8f%n",
                         form, amplitude, state.walkAnimationPos, fraction, AntModel.LEG_NAMES[leg], tripodA ? "A" : "B",
                         stance ? "stance" : "return", feet[leg].x, feet[leg].y, feet[leg].z, dz, clearance));
-                if (sample > 0 && (stance ? dz <= tolerance : dz >= -tolerance))
+                double legPhase=(fraction+(tripodA?0:.5))%1;
+                double returnProgress=2*legPhase-1;
+                // C1 return briefly continues stance direction while airborne at both ends.
+                boolean middleReturn=!stance&&returnProgress>.13&&returnProgress<.87;
+                if (sample > 0 && (stance ? dz <= tolerance : middleReturn&&dz >= -tolerance))
                     errors.append("sample=").append(sample).append(" leg=").append(leg).append(" stance=").append(stance).append(" dz=").append(dz).append("; ");
                 // Independent gameplay contract from resolved LivingEntity.updateWalkAnimation:
                 // adult walk distance advances by 4 * horizontal body distance. Do not
@@ -133,6 +137,17 @@ public final class AntModelGameTest implements FabricClientGameTest {
             previousWalkPosition = state.walkAnimationPos;
         }
         require(errors.isEmpty(), "Transformed foot trajectory: " + errors);
+        float cycleLength=(float)(2*Math.PI/AntModel.walkCadence(form==AntForm.QUEEN));
+        for(float boundary:new float[]{.5F,1F}) {
+            float eps=.0001F;
+            Vector3f[][] points=new Vector3f[3][];
+            for(int j=0;j<3;j++){state.walkAnimationPos=(boundary+(j-1)*eps)*cycleLength;model.setupAnim(state);points[j]=contacts(model);}
+            for(int leg=0;leg<6;leg++) {
+                var before=new Vector3f(points[1][leg]).sub(points[0][leg]).div(eps);
+                var after=new Vector3f(points[2][leg]).sub(points[1][leg]).div(eps);
+                require(before.distance(after)<.02F,"No instantaneous foot velocity reversal at tripod exchange");
+            }
+        }
     }
 
     private void checkForm(AntForm form) {
@@ -179,6 +194,11 @@ public final class AntModelGameTest implements FabricClientGameTest {
                 ModelPart scape = head.getChild("antenna_" + side + "_scape");
                 require(Math.abs(scape.getChild("funiculus").yRot) > 0.8, "Rendered distal antenna must form an elbow");
                 require(cubes.containsKey("/ant/head/antenna_" + side + "_scape/funiculus"), "Antenna elbow must have geometry");
+                require(cubes.containsKey("/ant/head/antenna_"+side+"_scape/funiculus/tip"),"Subtle distal antenna tip required");
+                model.root().visit(new PoseStack(),(pose,path,index,cube)->{
+                    if(path.endsWith("_scape"))require(cube.maxX-cube.minX<=.45F,"Thin scape cross-section");
+                    if(path.endsWith("/funiculus"))require(cube.maxX-cube.minX<=.35F,"Slender funiculus cross-section");
+                });
                 require(cubes.containsKey("/ant/head/mandible_" + side) && cubes.containsKey("/ant/head/eye_" + side), "Mandible and compound-eye geometry");
             }
         });
@@ -186,7 +206,7 @@ public final class AntModelGameTest implements FabricClientGameTest {
             for (int sample = 0; sample <= 8; sample++) {
                 AntRenderState state = new AntRenderState();
                 state.moving = true; state.walkAnimationSpeed = 1;
-                state.walkAnimationPos = sample * (float)(2 * Math.PI / 2.8 / 8);
+                state.walkAnimationPos = sample * (float)(2 * Math.PI / AntModel.walkCadence(form==AntForm.QUEEN) / 8);
                 model.setupAnim(state);
                 Map<String, Vector3f[]> endpoints = new LinkedHashMap<>();
                 java.util.List<double[]> thoraxBoxes = new java.util.ArrayList<>();
@@ -307,7 +327,10 @@ public final class AntModelGameTest implements FabricClientGameTest {
             require(bounds[3] - bounds[2] < 1, "Low anatomy compatible with a future two-block-high passage");
             PrimeAnts.LOGGER.info("T03 rendered dimensions {}: bodyLength={}, bodyHeight={}, excludes antenna/leg reach", form, length, bounds[3] - bounds[2]);
         });
-        test(form, "taperedProfilesConnectedConstrictedWaist", () -> checkProfiles(form, model));
+        test(form, "taperedProfilesConnectedConstrictedWaist", () -> {
+            require(cubes.get("/ant/gaster")==99,"Bounded 11 x 9 gaster mesh");
+            checkProfiles(form, model);
+        });
         model.resetPose();
     }
 

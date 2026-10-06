@@ -250,3 +250,8 @@ Preserved partials: A1 entrance failed recorder resolution coupling; A2 is a rea
 - Rejected and preserved: A1/A6 walk3 bottom-edge discontinuity; A2 clipped queen tail; A3 clipped foreground worker; A4 outdoor queen grass-covered antennae/mandibles. [A2 review](t24-before-interior-a2-image-review.json), [A3 review](t24-before-interior-a3-image-review.json), [A4 review](t24-before-comparisons-a4-image-review.json), [A6 review](t24-after-comparisons-a6-image-review.json). Raw tasks and manual readability are separate.
 
 All15 fresh PNGs were opened;10 accepted/5 rejected. Six client launches,2145 additional observation ticks, eight separately saved/closed world copies; immediate archive after every task exit. Actual dirt equipment is present at the new queen mandibles. No new visible-brood, discovery-from-spawn, mixed-food scheduling or release claim. [Appearance note](../t24-appearance-note.md).
+
+
+## T25 adult refinement and capture-time clearance
+
+[Reviewed worker/queen daylight, ordinary-distance worker, four natural walking frames and actual nectar cargo](t25-appearance-review.md). Native 1600?1000 originals, all opened. Seventeen PNGs: ten current accepted, four rejected, three old-model diagnostic-only; native-crash A3 incomplete. Capture camera/equipment frozen from actual extraction before readback; solid-crossing reproducer rejected and fixed-lens recovery accepted. Five starts, 992 measured ticks plus conservative crash charge 1800 (2792 charged); no T25 food supply. Historical T23/T24 images and qualifications remain above. Full current acceptance is recorded in the linked T25 review/report after completion.

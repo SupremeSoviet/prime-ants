@@ -1,0 +1,16 @@
+{
+  "attempt": "t25-appearance-a5-queen",
+  "all_pngs_opened": true,
+  "native_frame": [
+    1600,
+    1000
+  ],
+  "frames": [
+    {
+      "image": "t25-appearance-a5-queen-queen-daylight.png",
+      "classification": "accepted",
+      "capture_valid": true,
+      "reason": "Intact anatomy, clear head/antennae/mandibles, coherent cuticle; no clipped anatomy or bottom-edge strip. Camera/frame checks passed."
+    }
+  ]
+}

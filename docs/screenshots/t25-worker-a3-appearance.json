@@ -1,0 +1,25 @@
+{
+  "run_id": "8593efb5-098a-49dd-a950-538ee108bad5",
+  "scenario": "appearance-t25",
+  "status": "opening",
+  "prior_ticks": 226,
+  "total_tick_bound": 12000,
+  "attempt_tick_bound": 1800,
+  "attempt_ticks_already_spent": 0,
+  "captures": [],
+  "ant_position_edits": 0,
+  "ai_pauses": 0,
+  "forced_poses": 0,
+  "terrain_edits": 0,
+  "supplied_ants": 0,
+  "supplied_food": 0,
+  "render_distance": 8,
+  "simulation_distance": 8,
+  "native_frame": [
+    1600,
+    1000
+  ],
+  "camera_policy": "Living spectator on verified dry FULL support; separate observer lens follows natural body heading. No actor or animation writes.",
+  "source_archive": "C:\\Users\\user\\Documents\\turnloop\\directions\\prime-ants-slice1\\turns\\T23\\t23-player-a5-world.zip",
+  "archive_root": "t23-player-a5"
+}

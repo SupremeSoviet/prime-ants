@@ -1,3 +1,15 @@
+# Current slice status - T25, 2026-10-06
+
+**Adult refinement and natural food carrying are reviewable in real daylight captures.** [T25 reviewed comparison, ordinary-distance worker, four walking frames and nectar grip](screenshots/t25-appearance-review.md). Worker femur/tibia are ~9% shorter with clearer knees, both castes have slender elbowed antennae, and a bounded finer gaster contour preserves queen proportions. Dark cuticle has coherent modest polish/warmer appendages; noisy pale hair strokes removed. Body scale,32texels/block, callow maturation and server biology/movement are retained.
+
+Actual mature natural worker `9a5b931b-bb9b-332d-b42a-34a6202eccca` carries one `prime_ants:flower_nectar_v2`; production harvest and capture-frame equipment confirmed, no T25 player food. Actual render extraction/readback binding replaces late camera metadata; native-solid crossing rejected and stored fixed lens recovered. T24 visual references remain qualified, without exact camera/clearance claims.
+
+17 new PNGs opened:10 current accepted,4 rejected,3 old-model diagnostic-only; A3 native Java C2 crash incomplete. Five client starts,992 measured ticks plus explicit1800 conservative crash debit (2792 charged). All attempts immediately archived; four segments complete normal close, A1 saved/stopped on assertion, A3 has no normal closure. A4 targets and demonstrates exact-method client JIT recovery before A5 workload. Completed exact unfiltered rerun build exits0 in 700.87s:15 unit/195 server/26 model, no failures/errors/skips, 457 accepted inputs, all baseline names and both production JAR helper exclusions retained. Scoped master commit is recorded in the T25 report. [T25 report](../../turnloop/directions/prime-ants-slice1/turns/T25/report.md).
+
+T26 remains final facet/gloss/stop-transition polish and a survival-lit interior with visible brood. Historical T23 ecology/player qualifications and T27?T30 performance/persistence/release remain unchanged.
+
+---
+
 # Current slice status - T24, 2026-10-06
 
 **The first worker/queen appearance pass is reviewable and settled with matched real-client captures.** [Worker/queen daylight and existing nest before/after](screenshots/t24-appearance-comparisons.md) show rounder connected bodies, a narrow single-node waist, queen-specific proportions/scars and a closer raised-knee stance. Baked body lengths1.097/2.227blocks retain decision13; all rendered UV edges verify32texels/block. Mature cuticle has mapped shading/bands/pubescence and warmer appendages; existing callow maturation remains. Actual queen dirt equipment follows the animated jaw grip.

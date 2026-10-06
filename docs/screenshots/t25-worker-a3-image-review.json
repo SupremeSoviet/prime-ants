@@ -1,0 +1,7 @@
+{
+  "attempt": "t25-worker-a3",
+  "all_pngs_opened": true,
+  "frames": [],
+  "classification": "incomplete",
+  "reason": "No PNG produced; pre-server Java C2 native crash, raw exit1. Immediate source-copy archive retained; no normal closure and no colony absence claim. 1800-tick conservative ledger debit, actual additional ticks unknown."
+}

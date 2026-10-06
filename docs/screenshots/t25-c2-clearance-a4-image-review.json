@@ -1,0 +1,28 @@
+{
+  "attempt": "t25-c2-clearance-a4",
+  "all_pngs_opened": true,
+  "native_frame": [
+    1600,
+    1000
+  ],
+  "frames": [
+    {
+      "image": "t25-c2-clearance-a4-clear-before.png",
+      "classification": "accepted",
+      "capture_valid": true,
+      "reason": "Intact anatomy, clear head/antennae/mandibles, coherent cuticle; no clipped anatomy or bottom-edge strip. Camera/frame checks passed."
+    },
+    {
+      "image": "t25-c2-clearance-a4-crossed-solid-rejected.png",
+      "classification": "rejected",
+      "capture_valid": false,
+      "reason": "Intentionally crossed native solid lens; underside/void edge artifact. Rejected at captured frame."
+    },
+    {
+      "image": "t25-c2-clearance-a4-fixed-lens-recovery.png",
+      "classification": "accepted",
+      "capture_valid": true,
+      "reason": "Intact anatomy, clear head/antennae/mandibles, coherent cuticle; no clipped anatomy or bottom-edge strip. Camera/frame checks passed."
+    }
+  ]
+}

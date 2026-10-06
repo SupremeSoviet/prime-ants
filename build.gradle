@@ -71,8 +71,10 @@ def captureRequest = [run_id:captureRunId, capture_prefix:capturePrefix, started
 loom.runs.named('clientGameTest') {
     systemProperties.put('prime_ants.clientWorkload','true')
     if(providers.gradleProperty('primeAntsClientScenario').isPresent()){
-        if(providers.gradleProperty('primeAntsClientScenario').get()=='appearance-t24'){
-            systemProperties.put('prime_ants.clientScenario','appearance-t24')
+        if(providers.gradleProperty('primeAntsClientScenario').get()=='appearance-t25'){
+            systemProperties.put('prime_ants.clientScenario','appearance-t25')
+            if(providers.gradleProperty('primeAntsAppearanceC2Recovery').getOrElse('false')=='true')
+                vmArgs '-XX:CompileCommand=exclude,net.minecraft.resources.ResourceManagerRegistryLoadTask::wrapOperation$zkp000$fabric-loot-api-v3$modifyLootTable'
             ['primeAntsAppearanceSource':'prime_ants.appearanceSource','primeAntsAppearanceRoot':'prime_ants.appearanceRoot','primeAntsAppearanceSpecimen':'prime_ants.appearanceSpecimen','primeAntsAppearancePriorTicks':'prime_ants.appearancePriorTicks'].each { property,key ->
                 if(!providers.gradleProperty(property).isPresent())throw new GradleException('Appearance mode requires '+property)
                 systemProperties.put(key,providers.gradleProperty(property).get())
@@ -81,6 +83,7 @@ loom.runs.named('clientGameTest') {
                 if(providers.gradleProperty('primeAntsAppearanceSpecimen').get()=='comparisons'&&!providers.gradleProperty(property).isPresent())throw new GradleException('Combined appearance mode requires '+property)
                 if(providers.gradleProperty(property).isPresent())systemProperties.put(key,providers.gradleProperty(property).get())
             }
+            systemProperties.put('prime_ants.appearanceAppleAllowed',providers.gradleProperty('primeAntsAppearanceAppleAllowed').getOrElse('false'))
             if(providers.gradleProperty('primeAntsAppearanceFirstSpecimen').isPresent())systemProperties.put('prime_ants.appearanceFirstSpecimen',providers.gradleProperty('primeAntsAppearanceFirstSpecimen').get())
         }else{
         if(providers.gradleProperty('primeAntsClientScenario').get()!='fresh-survival'||providers.gradleProperty('primeAntsPlayerBasicsWorld').isPresent())throw new GradleException('Fresh survival requires client-generated overworld without imported playerBasicsWorld')
@@ -168,7 +171,7 @@ tasks.named('runClientGameTest') {
         def currentLog=file('build/run/clientGameTest/logs/latest.log').getText('UTF-8')
         if(currentLog.contains('Rejecting block model prime_ants:block/cache_') || currentLog.contains('Missing texture references in model prime_ants:block/cache_'))
             throw new GradleException('Current cache visuals contain an atlas/model failure')
-        if(providers.gradleProperty('primeAntsClientScenario').getOrElse('')=='appearance-t24'){
+        if(providers.gradleProperty('primeAntsClientScenario').getOrElse('')=='appearance-t25'){
             def a=new groovy.json.JsonSlurper().parse(file("docs/screenshots/${capturePrefix}-appearance.json"))
             if(a.run_id!=captureRunId||a.status!='closed'||!a.normal_close||!a.normal_server_stop||a.accumulated_ticks>12000||a.captures.size()<1)throw new GradleException('Appearance capture/closure incomplete')
             def model=new groovy.xml.XmlSlurper().parse(currentModelReport)

@@ -1,0 +1,527 @@
+{
+  "run_id": "0817100a-700f-40a2-894e-c67bd49d2f82",
+  "scenario": "appearance-t25",
+  "status": "closed",
+  "prior_ticks": 113,
+  "total_tick_bound": 12000,
+  "attempt_tick_bound": 1800,
+  "attempt_ticks_already_spent": 0,
+  "captures": [
+    {
+      "name": "clear-before",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t25-clearance-a2-clear-before.png",
+      "subject_uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+      "recipe": {
+        "forward": 0.5,
+        "target_height": 0.24,
+        "side": 2.2,
+        "height": 1.25
+      },
+      "camera": {
+        "eye": [
+          168.1402810182908,
+          68.25,
+          149.26121553669975
+        ],
+        "yaw": -11.101984,
+        "pitch": 24.116852,
+        "fov": 70.0,
+        "viewport": [
+          1600,
+          1000
+        ],
+        "partial_tick": 1.0,
+        "camera_partial_tick": 1.0,
+        "render_extraction_utc": "2026-10-06T09:52:43.811948100Z",
+        "client_game_time": 11692,
+        "lens_block": "Block{minecraft:air}",
+        "clearance": true,
+        "living_subject": true,
+        "living_observer": true,
+        "night_vision": false,
+        "rendered_ants": [
+          {
+            "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+            "form": "worker",
+            "callow_visual": 1000,
+            "render_extraction_utc": "2026-10-06T09:52:43.810904300Z",
+            "render_entity_tick": 103,
+            "render_position": [
+              168.57470703125,
+              67.0,
+              151.47509765625
+            ],
+            "body_yaw": -113.90625,
+            "walk_animation_position": 24.383121,
+            "walk_animation_speed": 0.12025164,
+            "visual_age_ticks": 104.0,
+            "moving": true,
+            "carried_item": "minecraft:air",
+            "carried_soil_rendered": false,
+            "client_carried_soil_units": 0,
+            "partial_ticks": 1.0,
+            "body_relative_distal_contacts": [
+              [
+                0.19062498,
+                1.4848876,
+                -0.338482
+              ],
+              [
+                0.22187495,
+                1.5,
+                -0.0052680387
+              ],
+              [
+                0.19062501,
+                1.4848876,
+                0.06776803
+              ],
+              [
+                -0.190625,
+                1.5,
+                -0.20839304
+              ],
+              [
+                -0.221875,
+                1.4848877,
+                -0.13535696
+              ],
+              [
+                -0.19062498,
+                1.5,
+                0.19785698
+              ]
+            ],
+            "support_legs": [
+              1,
+              3,
+              5
+            ],
+            "support_tripod": "B"
+          }
+        ],
+        "readback_scheduled_utc": "2026-10-06T09:52:43.817159400Z"
+      },
+      "rendered_ants": [
+        {
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "form": "worker",
+          "callow_visual": 1000,
+          "render_extraction_utc": "2026-10-06T09:52:43.810904300Z",
+          "render_entity_tick": 103,
+          "render_position": [
+            168.57470703125,
+            67.0,
+            151.47509765625
+          ],
+          "body_yaw": -113.90625,
+          "walk_animation_position": 24.383121,
+          "walk_animation_speed": 0.12025164,
+          "visual_age_ticks": 104.0,
+          "moving": true,
+          "carried_item": "minecraft:air",
+          "carried_soil_rendered": false,
+          "client_carried_soil_units": 0,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.19062498,
+              1.4848876,
+              -0.338482
+            ],
+            [
+              0.22187495,
+              1.5,
+              -0.0052680387
+            ],
+            [
+              0.19062501,
+              1.4848876,
+              0.06776803
+            ],
+            [
+              -0.190625,
+              1.5,
+              -0.20839304
+            ],
+            [
+              -0.221875,
+              1.4848877,
+              -0.13535696
+            ],
+            [
+              -0.19062498,
+              1.5,
+              0.19785698
+            ]
+          ],
+          "support_legs": [
+            1,
+            3,
+            5
+          ],
+          "support_tripod": "B"
+        }
+      ],
+      "capture_valid": true,
+      "acceptance": "pending-manual-review"
+    },
+    {
+      "name": "crossed-solid-rejected",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t25-clearance-a2-crossed-solid-rejected.png",
+      "subject_uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+      "recipe": {
+        "forward": 0.5,
+        "target_height": 0.24,
+        "side": 2.2,
+        "height": 1.25
+      },
+      "camera": {
+        "eye": [
+          168.5,
+          66.5,
+          149.5
+        ],
+        "yaw": -11.101984,
+        "pitch": 24.116852,
+        "fov": 70.0,
+        "viewport": [
+          1600,
+          1000
+        ],
+        "partial_tick": 1.0,
+        "camera_partial_tick": 1.0,
+        "render_extraction_utc": "2026-10-06T09:52:43.979194300Z",
+        "client_game_time": 11694,
+        "lens_block": "Block{prime_ants:nest_soil}",
+        "clearance": false,
+        "living_subject": true,
+        "living_observer": true,
+        "night_vision": false,
+        "rendered_ants": [
+          {
+            "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+            "form": "worker",
+            "callow_visual": 1000,
+            "render_extraction_utc": "2026-10-06T09:52:43.979194300Z",
+            "render_entity_tick": 105,
+            "render_position": [
+              168.6636962890625,
+              67.0,
+              151.3997802734375
+            ],
+            "body_yaw": -137.8125,
+            "walk_animation_position": 24.735287,
+            "walk_animation_speed": 0.1973235,
+            "visual_age_ticks": 106.0,
+            "moving": true,
+            "carried_item": "minecraft:air",
+            "carried_soil_rendered": false,
+            "client_carried_soil_units": 0,
+            "partial_ticks": 1.0,
+            "body_relative_distal_contacts": [
+              [
+                0.19062501,
+                1.5000001,
+                -0.40085107
+              ],
+              [
+                0.22187498,
+                1.4969604,
+                0.057101045
+              ],
+              [
+                0.19062498,
+                1.5000001,
+                0.005398945
+              ],
+              [
+                -0.19062509,
+                1.4969603,
+                -0.14602393
+              ],
+              [
+                -0.22187503,
+                1.5000001,
+                -0.19772606
+              ],
+              [
+                -0.19062498,
+                1.4969603,
+                0.26022604
+              ]
+            ],
+            "support_legs": [
+              0,
+              2,
+              4
+            ],
+            "support_tripod": "A"
+          }
+        ],
+        "readback_scheduled_utc": "2026-10-06T09:52:43.981703800Z"
+      },
+      "rendered_ants": [
+        {
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "form": "worker",
+          "callow_visual": 1000,
+          "render_extraction_utc": "2026-10-06T09:52:43.979194300Z",
+          "render_entity_tick": 105,
+          "render_position": [
+            168.6636962890625,
+            67.0,
+            151.3997802734375
+          ],
+          "body_yaw": -137.8125,
+          "walk_animation_position": 24.735287,
+          "walk_animation_speed": 0.1973235,
+          "visual_age_ticks": 106.0,
+          "moving": true,
+          "carried_item": "minecraft:air",
+          "carried_soil_rendered": false,
+          "client_carried_soil_units": 0,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.19062501,
+              1.5000001,
+              -0.40085107
+            ],
+            [
+              0.22187498,
+              1.4969604,
+              0.057101045
+            ],
+            [
+              0.19062498,
+              1.5000001,
+              0.005398945
+            ],
+            [
+              -0.19062509,
+              1.4969603,
+              -0.14602393
+            ],
+            [
+              -0.22187503,
+              1.5000001,
+              -0.19772606
+            ],
+            [
+              -0.19062498,
+              1.4969603,
+              0.26022604
+            ]
+          ],
+          "support_legs": [
+            0,
+            2,
+            4
+          ],
+          "support_tripod": "A"
+        }
+      ],
+      "capture_valid": false,
+      "acceptance": "rejected-at-capture"
+    },
+    {
+      "name": "fixed-lens-recovery",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t25-clearance-a2-fixed-lens-recovery.png",
+      "subject_uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+      "recipe": {
+        "forward": 0.5,
+        "target_height": 0.24,
+        "side": 2.2,
+        "height": 1.25
+      },
+      "camera": {
+        "eye": [
+          168.1402810182908,
+          68.25,
+          149.26121553669975
+        ],
+        "yaw": -11.101984,
+        "pitch": 24.116852,
+        "fov": 70.0,
+        "viewport": [
+          1600,
+          1000
+        ],
+        "partial_tick": 1.0,
+        "camera_partial_tick": 1.0,
+        "render_extraction_utc": "2026-10-06T09:52:44.166836500Z",
+        "client_game_time": 11696,
+        "lens_block": "Block{minecraft:air}",
+        "clearance": true,
+        "living_subject": true,
+        "living_observer": true,
+        "night_vision": false,
+        "rendered_ants": [
+          {
+            "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+            "form": "worker",
+            "callow_visual": 1000,
+            "render_extraction_utc": "2026-10-06T09:52:44.166836500Z",
+            "render_entity_tick": 107,
+            "render_position": [
+              168.71044921875,
+              67.0,
+              151.354248046875
+            ],
+            "body_yaw": -137.8125,
+            "walk_animation_position": 25.091787,
+            "walk_animation_speed": 0.13368717,
+            "visual_age_ticks": 108.0,
+            "moving": false,
+            "carried_item": "minecraft:air",
+            "carried_soil_rendered": false,
+            "client_carried_soil_units": 0,
+            "partial_ticks": 1.0,
+            "body_relative_distal_contacts": [
+              [
+                0.190625,
+                1.5000001,
+                -0.2734375
+              ],
+              [
+                0.22187495,
+                1.5000001,
+                -0.0703125
+              ],
+              [
+                0.190625,
+                1.5000001,
+                0.1328125
+              ],
+              [
+                -0.190625,
+                1.5000001,
+                -0.2734375
+              ],
+              [
+                -0.22187495,
+                1.5000001,
+                -0.0703125
+              ],
+              [
+                -0.190625,
+                1.5000001,
+                0.1328125
+              ]
+            ],
+            "support_legs": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "support_tripod": "boundary"
+          }
+        ],
+        "readback_scheduled_utc": "2026-10-06T09:52:44.180725500Z"
+      },
+      "rendered_ants": [
+        {
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "form": "worker",
+          "callow_visual": 1000,
+          "render_extraction_utc": "2026-10-06T09:52:44.166836500Z",
+          "render_entity_tick": 107,
+          "render_position": [
+            168.71044921875,
+            67.0,
+            151.354248046875
+          ],
+          "body_yaw": -137.8125,
+          "walk_animation_position": 25.091787,
+          "walk_animation_speed": 0.13368717,
+          "visual_age_ticks": 108.0,
+          "moving": false,
+          "carried_item": "minecraft:air",
+          "carried_soil_rendered": false,
+          "client_carried_soil_units": 0,
+          "partial_ticks": 1.0,
+          "body_relative_distal_contacts": [
+            [
+              0.190625,
+              1.5000001,
+              -0.2734375
+            ],
+            [
+              0.22187495,
+              1.5000001,
+              -0.0703125
+            ],
+            [
+              0.190625,
+              1.5000001,
+              0.1328125
+            ],
+            [
+              -0.190625,
+              1.5000001,
+              -0.2734375
+            ],
+            [
+              -0.22187495,
+              1.5000001,
+              -0.0703125
+            ],
+            [
+              -0.190625,
+              1.5000001,
+              0.1328125
+            ]
+          ],
+          "support_legs": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "support_tripod": "boundary"
+        }
+      ],
+      "capture_valid": true,
+      "acceptance": "pending-manual-review"
+    }
+  ],
+  "ant_position_edits": 0,
+  "ai_pauses": 0,
+  "forced_poses": 0,
+  "terrain_edits": 0,
+  "supplied_ants": 0,
+  "supplied_food": 0,
+  "render_distance": 8,
+  "simulation_distance": 8,
+  "native_frame": [
+    1600,
+    1000
+  ],
+  "camera_policy": "Living spectator on verified dry FULL support; separate observer lens follows natural body heading. No actor or animation writes.",
+  "source_archive": "C:\\Users\\user\\Documents\\turnloop\\directions\\prime-ants-slice1\\turns\\T23\\t23-player-a5-world.zip",
+  "archive_root": "t23-player-a5",
+  "save": "C:\\Users\\user\\Documents\\prime-ants\\build\\run\\clientGameTest\\saves\\t25-clearance-a2",
+  "safe_observer_feet": [
+    165,
+    68,
+    146
+  ],
+  "safe_observer_checks": "FULL, build height/border, dry solid support, complete body space, alive and ticks advancing",
+  "queen_identity": "9c71829b-25f1-3b96-acbb-96252228271d",
+  "reproducer_previously_clear_following_lens": [
+    168.1402810182908,
+    68.25,
+    149.26121553669975
+  ],
+  "reproducer_policy": "Observer-only downward crossing into existing solid after readiness, before screenshot extraction; no terrain or actor edit",
+  "additional_ticks": 113,
+  "accumulated_ticks": 226,
+  "normal_server_stop": true,
+  "normal_close": true
+}

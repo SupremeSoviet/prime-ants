@@ -21,9 +21,11 @@ public final class AppearanceScenario {
     private static final UUID QUEEN=UUID.fromString("9c71829b-25f1-3b96-acbb-96252228271d");
     private static final UUID WORKER=UUID.fromString("9a5b931b-bb9b-332d-b42a-34a6202eccca");
     private static UUID cameraSubject;
+    private static View fixedView;
     private static double cameraSide, cameraForward, cameraHeight, targetHeight;
     public record View(Vec3 eye, float yaw, float pitch) {}
     public static View view() {
+        if(fixedView!=null)return fixedView;
         if(cameraSubject==null)return null;
         var client=Minecraft.getInstance();var ant=clientAnt(client,cameraSubject);if(ant==null)return null;
         double yaw=Math.toRadians(ant.yBodyRot);var forward=new Vec3(-Math.sin(yaw),0,Math.cos(yaw));var side=new Vec3(forward.z,0,-forward.x);
@@ -43,7 +45,7 @@ public final class AppearanceScenario {
     private static void require(boolean ok,String why){if(!ok)throw new AssertionError(why);}
     public void run(ClientGameTestContext c){
         require(prior>=0&&prior<12000,"Declared appearance observation allowance");
-        evidence.put("run_id",System.getProperty("prime_ants.runId"));evidence.put("scenario","appearance-t24");evidence.put("status","opening");
+        evidence.put("run_id",System.getProperty("prime_ants.runId"));evidence.put("scenario","appearance-t25");evidence.put("status","opening");
         evidence.put("prior_ticks",prior);evidence.put("total_tick_bound",12000);evidence.put("attempt_tick_bound",1800-attemptSpent);evidence.put("attempt_ticks_already_spent",attemptSpent);evidence.put("captures",captures);
         evidence.put("ant_position_edits",0);evidence.put("ai_pauses",0);evidence.put("forced_poses",0);evidence.put("terrain_edits",0);evidence.put("supplied_ants",0);evidence.put("supplied_food",0);
         evidence.put("render_distance",8);evidence.put("simulation_distance",8);evidence.put("native_frame",List.of(1600,1000));
@@ -72,20 +74,87 @@ public final class AppearanceScenario {
             require(w.getServer().computeOnServer(s->dev.primeants.founding.NaturalPlacement.get(w.getConnection().getServerLevel()).decisions().entrySet().stream().map(Map.Entry::getValue).anyMatch(d->"PLACED".equals(d.getAsJsonObject().get("status").getAsString())&&QUEEN.toString().equals(d.getAsJsonObject().get("queen").getAsString()))),"Production automatic placement identity");
             evidence.put("queen_identity",QUEEN.toString());
             c.runOnClient(client->{if(!client.gui.hud.isHidden())client.gui.hud.toggle();});
-            if("queen".equals(System.getProperty("prime_ants.appearanceSpecimen"))){captureWhenClear(c,w,QUEEN,"queen-daylight",true,55,3.1,1.1,1.6,.35);}
-            else{
-                if(!"interior".equals(System.getProperty("prime_ants.appearanceSpecimen"))){
-                    captureWhenClear(c,w,WORKER,"worker-daylight",true,45,1.55,.55,.48,.24);
-                    for(int frame=1;frame<=3;frame++){wait(c,w,4);capture(c,w,WORKER,"worker-walk-"+frame);}
-                }
-                w.getServer().runCommand("effect give @p minecraft:night_vision 99999 0 true");
-                captureWhenClear(c,w,QUEEN,"queen-interior",false,110,-1.1,-.25,1.9,.35);
+            String specimen=System.getProperty("prime_ants.appearanceSpecimen");
+            if("clearance-reproducer".equals(specimen)) {
+                captureWhenClear(c,w,WORKER,"clear-before",true,70,2.2,.5,1.25,.24);
+                var previous=capturedView();
+                evidence.put("reproducer_previously_clear_following_lens",List.of(previous.eye.x,previous.eye.y,previous.eye.z));
+                // Move only the observer lens across the native ground boundary between readiness and capture.
+                fixedView=c.computeOnClient(client->{
+                    for(int dy=1;dy<=4;dy++) {var pos=BlockPos.containing(previous.eye.add(0,-dy,0));if(client.level.getBlockState(pos).isSolidRender())return new View(Vec3.atCenterOf(pos),previous.yaw,previous.pitch);}
+                    throw new AssertionError("Native solid below clear lens required");
+                });
+                require(!capture(c,w,WORKER,"crossed-solid-rejected"),"A clear-before following lens entering solid must reject at capture");
+                evidence.put("reproducer_policy","Observer-only downward crossing into existing solid after readiness, before screenshot extraction; no terrain or actor edit");
+                fixedView=previous;
+                require(capture(c,w,WORKER,"fixed-lens-recovery"),"Verified fixed lens recovers valid capture");
+            } else if("queen".equals(specimen)) {
+                captureWhenClear(c,w,QUEEN,"queen-daylight",true,55,3.1,1.1,1.8,.35);
+            } else {
+                captureWhenClear(c,w,WORKER,"worker-ordinary",true,70,2.2,.5,1.25,.24);
+                captureWhenClear(c,w,WORKER,"worker-detail",true,50,1.65,.65,1.2,.24);
+                fixedView=capturedView();
+                for(int frame=1;frame<=4;frame++){wait(c,w,2);capture(c,w,WORKER,"worker-walk-"+frame);}
+                observeFood(c,w,stand);
             }
             evidence.put("status","captured");save();
         }catch(Throwable e){evidence.put("failure",e.toString());evidence.put("status","failed");save();throw new RuntimeException(e);}
-        finally{cameraSubject=null;}
+        finally{cameraSubject=null;fixedView=null;}
         require(closed!=null&&Files.exists(closed.resolve("level.dat"))&&Boolean.TRUE.equals(evidence.get("normal_server_stop")),"Normal saved closure");
         require(((Number)evidence.get("accumulated_ticks")).intValue()<=12000,"Appearance total bound");evidence.put("normal_close",true);evidence.put("status","closed");save();
+    }
+    private boolean tryFoodFrame(ClientGameTestContext c,TestSingleplayerContext w,String name) {
+        var candidates=w.getServer().computeOnServer(server->{
+            var list=new ArrayList<Map<String,Object>>();
+            for(var e:w.getConnection().getServerLevel().getAllEntities())if(e instanceof LasiusNigerEntity a&&a.form()==AntForm.WORKER&&a.isAlive()&&!a.isCallow()&&QUEEN.equals(a.queenId())&&dev.primeants.worker.WorkerTasks.food(a.getMainHandItem())&&a.getY()>=66.9) {
+                var row=new LinkedHashMap<String,Object>();row.put("uuid",a.getUUID().toString());row.put("queen",a.queenId().toString());row.put("brood",a.broodId().toString());row.put("item",net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(a.getMainHandItem().getItem()).toString());row.put("count",a.getMainHandItem().getCount());row.put("phase",a.workerTasks().phase().toString());
+                if(a.workerTasks().flowerSource()!=null)row.put("flower_source",List.of(a.workerTasks().flowerSource().getX(),a.workerTasks().flowerSource().getY(),a.workerTasks().flowerSource().getZ()));
+                if(a.workerTasks().sourceId()!=null)row.put("source_item_uuid",a.workerTasks().sourceId().toString());
+                list.add(row);
+            }
+            list.sort(Comparator.comparingInt(row->String.valueOf(row.get("item")).startsWith("prime_ants:")?0:1));
+            return list;
+        });
+        for(var candidate:candidates) {
+            UUID id=UUID.fromString((String)candidate.get("uuid"));
+            fixedView=null;cameraSubject=id;cameraForward=1.0;cameraHeight=1.0;targetHeight=.24;
+            c.runOnClient(client->client.options.fov().set(45));
+            for(double side:new double[]{1.6,-1.6}) {
+                cameraSide=side;
+                boolean ready=c.computeOnClient(client->{var ant=clientAnt(client,id);return ant!=null&&ant.isAlive()&&!ant.isCallow()&&dev.primeants.worker.WorkerTasks.food(ant.getMainHandItem())&&clear(client,ant,view().eye);});
+                if(!ready)continue;
+                evidence.put("food_candidate_server",candidate);save();
+                boolean valid=capture(c,w,id,name+"-"+captures.size());
+                var frame=(Map<?,?>)captures.getLast();
+                boolean equipment=((List<?>)frame.get("rendered_ants")).stream().anyMatch(r->{var row=(Map<?,?>)r;return candidate.get("item").equals(row.get("carried_item"))&&Boolean.TRUE.equals(row.get("carried_soil_rendered"))&&((Number)row.get("client_carried_soil_units")).intValue()>0;});
+                if(valid&&equipment){evidence.put("food_carrying_frame",frame.get("name"));evidence.put("food_actor",candidate);save();return true;}
+                // One rejected frame is retained; the opposite lens is a changed targeted recovery.
+            }
+        }
+        return false;
+    }
+    private void observeFood(ClientGameTestContext c,TestSingleplayerContext w,BlockPos retreat) {
+        evidence.put("natural_food_wait_bound",600);evidence.put("food_source_policy","Passive naturally harvested nectar/prey preferred; one declared inventory apple fallback only");save();
+        for(int tick=0;tick<600;tick++) {if(tryFoodFrame(c,w,"worker-food-natural")){evidence.put("food_source","natural/existing production cargo; no T25 food supplied");return;}wait(c,w,1);}
+        evidence.put("natural_food_wait_exhausted",true);save();
+        if(!Boolean.parseBoolean(System.getProperty("prime_ants.appearanceAppleAllowed","false"))){evidence.put("food_carrying_incomplete","One T25 player apple already used; no renewed supply");save();return;}
+        // Inventory-to-world feeding, with ordinary player drop behavior and immediate retreat.
+        var dropStand=w.getServer().computeOnServer(server->{
+            var level=w.getConnection().getServerLevel();
+            for(int r=1;r<=4;r++)for(int dx=-r;dx<=r;dx++)for(int dz=-r;dz<=r;dz++){var feet=ObserverSafety.surface(level,168+dx,149+dz);if(ObserverSafety.problem(level,w.getConnection().getServerPlayer(),feet)==null)return feet;}
+            return null;
+        });
+        require(dropStand!=null,"Safe player feeding stand");
+        w.getServer().runOnServer(server->{var player=w.getConnection().getServerPlayer();require(player.getInventory().countItem(net.minecraft.world.item.Items.APPLE)==0,"No existing apple confound");player.teleportTo(w.getConnection().getServerLevel(),dropStand.getX()+.5,dropStand.getY(),dropStand.getZ()+.5,Set.of(),0,45,true);player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.APPLE));});
+        w.getConnection().waitForClientboundPackets();
+        var trace=new LinkedHashMap<String,Object>();evidence.put("player_drop",trace);evidence.put("supplied_food",1);evidence.put("food_source","one explicitly supplied player-inventory apple; proves carrying/player feeding only");
+        var origin=w.getServer().computeOnServer(server->w.getConnection().getServerPlayer().position());
+        var away=w.getServer().computeOnServer(server->{var level=w.getConnection().getServerLevel();for(int r=5;r<=8;r++)for(int dx=-r;dx<=r;dx++)for(int dz=-r;dz<=r;dz++){var feet=ObserverSafety.surface(level,168+dx,149+dz);if(Vec3.atBottomCenterOf(feet).distanceTo(origin)>=4&&ObserverSafety.problem(level,w.getConnection().getServerPlayer(),feet)==null)return feet;}return null;});
+        require(away!=null,"Safe immediate four-block observer retreat");
+        w.getServer().runOnServer(server->{var player=w.getConnection().getServerPlayer();require(player.getMainHandItem().is(net.minecraft.world.item.Items.APPLE),"Declared inventory apple");player.setYRot((float)Math.toDegrees(Math.atan2(-(168.5-player.getX()),149.5-player.getZ())));player.setXRot(45);var item=player.drop(player.getMainHandItem().split(1),true,net.minecraft.util.Prediction.SERVER_ONLY);require(item!=null,"Physical ordinary player drop");trace.put("world_item_uuid",item.getUUID().toString());trace.put("world_item_position",List.of(item.getX(),item.getY(),item.getZ()));trace.put("inventory_loss",1);require(player.getInventory().countItem(net.minecraft.world.item.Items.APPLE)==0,"One apple leaves inventory");player.teleportTo(w.getConnection().getServerLevel(),away.getX()+.5,away.getY(),away.getZ()+.5,Set.of(),0,20,true);});
+        trace.put("origin",List.of(origin.x,origin.y,origin.z));trace.put("retreat",List.of(away.getX(),away.getY(),away.getZ()));trace.put("retreat_distance",Vec3.atBottomCenterOf(away).distanceTo(origin));trace.put("policy","ServerPlayer.drop from actual inventory, spectator observer retreat in same server action; no ant state/target writes");save();
+        for(int tick=0;tick<600;tick++){if(tryFoodFrame(c,w,"worker-food-player-drop"))return;wait(c,w,1);}
+        evidence.put("food_carrying_incomplete","No clear equipment-synchronized food frame within declared waits");save();
     }
     private TestSingleplayerContext open(ClientGameTestContext c)throws Exception{
         String source=System.getProperty("prime_ants.appearanceSource"),selected=System.getProperty("prime_ants.appearanceRoot");require(source!=null&&selected!=null,"Explicit source and archive root");
@@ -96,13 +165,17 @@ public final class AppearanceScenario {
     }
     private void wait(ClientGameTestContext c,TestSingleplayerContext w,int ticks){int before=w.getServer().computeOnServer(s->s.getTickCount());require(attemptSpent+before-start+ticks<1700&&prior+before-start+ticks<11900,"Appearance wait bound");c.waitTicks(ticks);require(w.getServer().computeOnServer(s->s.getTickCount()>before&&w.getConnection().getServerPlayer().isAlive()),"Live observer and advancing ticks");}
     private void captureWhenClear(ClientGameTestContext c,TestSingleplayerContext w,UUID id,String name,boolean exterior,int fov,double side,double forward,double height,double target){
-        c.runOnClient(client->client.options.fov().set(fov));cameraSide=side;cameraForward=forward;cameraHeight=height;targetHeight=target;cameraSubject=id;
+        fixedView=null;c.runOnClient(client->client.options.fov().set(fov));cameraSide=side;cameraForward=forward;cameraHeight=height;targetHeight=target;cameraSubject=id;
         boolean ready=false;
         for(int t=0;t<1000;t+=5){ready=c.computeOnClient(client->{var a=clientAnt(client,id);if(a==null||!a.isAlive()||a.isCallow()||exterior&&a.getY()<66.9)return false;var v=view();return clear(client,a,v.eye());});if(ready)break;wait(c,w,5);}
-        require(ready,"Declared subject unavailable/unobscured view missing: "+name);capture(c,w,id,name);
+        require(ready,"Declared subject unavailable/unobscured view missing: "+name);
+        require(capture(c,w,id,name),"Render-time clearance/subject/frame rejection: "+name);
     }
-    private static boolean clear(Minecraft client,LasiusNigerEntity a,Vec3 eye){
-        if(!client.level.getBlockState(BlockPos.containing(eye)).isAir()||!client.level.getFluidState(BlockPos.containing(eye)).isEmpty())return false;
+    public static boolean clear(Minecraft client,LasiusNigerEntity a,Vec3 eye){
+        for(double dx:new double[]{-.075,.075})for(double dy:new double[]{-.075,.075})for(double dz:new double[]{-.075,.075}) {
+            var lens=BlockPos.containing(eye.add(dx,dy,dz));
+            if(!client.level.hasChunkAt(lens)||!client.level.getWorldBorder().isWithinBounds(lens)||!client.level.getBlockState(lens).isAir()||!client.level.getFluidState(lens).isEmpty())return false;
+        }
         double yaw=Math.toRadians(a.yBodyRot);var forward=new Vec3(-Math.sin(yaw),0,Math.cos(yaw));var side=new Vec3(forward.z,0,-forward.x);double scale=a.form()==AntForm.QUEEN?2.2:1;
         for(double z:new double[]{-.47,.0,.47})for(double x:new double[]{-.22,.22})for(double y:new double[]{.12,.42})if(client.level.clip(new net.minecraft.world.level.ClipContext(eye,a.position().add(forward.scale(z*scale)).add(side.scale(x*scale)).add(0,y,0),net.minecraft.world.level.ClipContext.Block.OUTLINE,net.minecraft.world.level.ClipContext.Fluid.NONE,net.minecraft.world.phys.shapes.CollisionContext.empty())).getType()!=HitResult.Type.MISS)return false;
         // The broad body probes do not cover long scapes/jaws. Reuse the baked
@@ -122,14 +195,26 @@ public final class AppearanceScenario {
         if(!visible[0])return false;
         return true;
     }
-    private void capture(ClientGameTestContext c,TestSingleplayerContext w,UUID id,String name){
-        c.runOnClient(client->AntRenderRecorder.start(id));var png=c.takeScreenshot(TestScreenshotOptions.of(prefix+"-"+name).disableCounterPrefix().withDeltaTicks(1).withDestinationDir(dir));
-        var frame=new LinkedHashMap<String,Object>();frame.put("name",name);frame.put("image",png.toString());frame.put("subject_uuid",id.toString());frame.put("server_tick",w.getServer().computeOnServer(s->s.getTickCount()));
-        frame.put("recipe",Map.of("side",cameraSide,"forward",cameraForward,"height",cameraHeight,"target_height",targetHeight,"fov",c.computeOnClient(client->client.options.fov().get())));
-        frame.put("camera",c.computeOnClient(client->{var v=view();return Map.of("eye",List.of(v.eye.x,v.eye.y,v.eye.z),"yaw",v.yaw,"pitch",v.pitch);}));
-        var rendered=c.computeOnClient(client->AntRenderRecorder.finish());frame.put("rendered_ants",rendered);captures.add(frame);save();require(!rendered.isEmpty(),"Actual stable 1600x1000 rendered subject required");
+    private boolean capture(ClientGameTestContext c,TestSingleplayerContext w,UUID id,String name){
+        c.runOnClient(client->AntRenderRecorder.arm(id));
+        var png=c.takeScreenshot(TestScreenshotOptions.of(prefix+"-"+name).disableCounterPrefix().withDeltaTicks(1).withDestinationDir(dir));
+        var bound=c.computeOnClient(client->AntRenderRecorder.finishCapture());
+        var frame=new LinkedHashMap<String,Object>();frame.put("name",name);frame.put("image",png.toString());frame.put("subject_uuid",id.toString());
+        frame.put("recipe",Map.of("side",cameraSide,"forward",cameraForward,"height",cameraHeight,"target_height",targetHeight));
+        frame.put("camera",bound);
+        var rendered=(List<?>)bound.get("rendered_ants");frame.put("rendered_ants",rendered);
+        boolean valid=Boolean.TRUE.equals(bound.get("clearance"))&&Boolean.TRUE.equals(bound.get("living_subject"))&&Boolean.TRUE.equals(bound.get("living_observer"))&&!rendered.isEmpty()&&bound.get("viewport").equals(List.of(1600,1000));
+        frame.put("capture_valid",valid);frame.put("acceptance",valid?"pending-manual-review":"rejected-at-capture");
+        captures.add(frame);save();return valid;
     }
-    private static LasiusNigerEntity clientAnt(Minecraft client,UUID id){if(client.level!=null)for(var e:client.level.entitiesForRendering())if(e instanceof LasiusNigerEntity a&&a.getUUID().equals(id))return a;return null;}
+    @SuppressWarnings("unchecked")
+    private View capturedView() {
+        var frame=(Map<String,Object>)captures.getLast();
+        var camera=(Map<String,Object>)frame.get("camera");
+        var eye=(List<Number>)camera.get("eye");
+        return new View(new Vec3(eye.get(0).doubleValue(),eye.get(1).doubleValue(),eye.get(2).doubleValue()),((Number)camera.get("yaw")).floatValue(),((Number)camera.get("pitch")).floatValue());
+    }
+    public static LasiusNigerEntity clientAnt(Minecraft client,UUID id){if(client.level!=null)for(var e:client.level.entitiesForRendering())if(e instanceof LasiusNigerEntity a&&a.getUUID().equals(id))return a;return null;}
 
     /** Two ordinary save observations in one process; every world closes separately.
      * Counts add across copies and the shared 1,800-tick attempt limit remains. */
@@ -140,7 +225,7 @@ public final class AppearanceScenario {
         String[] keys={"prime_ants.capturePrefix","prime_ants.appearanceSource","prime_ants.appearanceRoot","prime_ants.appearanceSpecimen","prime_ants.appearancePriorTicks","prime_ants.appearanceAttemptSpent"};
         var original=new HashMap<String,String>();for(String key:keys)original.put(key,System.getProperty(key));
         var attempted=new ArrayList<Path>();var segments=new ArrayList<Object>();var frames=new ArrayList<Object>();
-        var summary=new LinkedHashMap<String,Object>();summary.put("run_id",System.getProperty("prime_ants.runId"));summary.put("scenario","appearance-t24");summary.put("prior_ticks",prior);summary.put("total_tick_bound",12000);summary.put("attempt_tick_bound",1800);
+        var summary=new LinkedHashMap<String,Object>();summary.put("run_id",System.getProperty("prime_ants.runId"));summary.put("scenario","appearance-t25");summary.put("prior_ticks",prior);summary.put("total_tick_bound",12000);summary.put("attempt_tick_bound",1800);
         Throwable failure=null;
         try{
             System.setProperty("prime_ants.capturePrefix",base+"-nest");System.setProperty("prime_ants.appearanceSpecimen",System.getProperty("prime_ants.appearanceFirstSpecimen","interior"));System.setProperty("prime_ants.appearanceAttemptSpent","0");

@@ -1,0 +1,25 @@
+{
+  "attempt": "t25-clearance-a2",
+  "all_pngs_opened": true,
+  "rendering": "T24 model; diagnostic captures before T25 appearance refinement; excluded from final appearance acceptance",
+  "frames": [
+    {
+      "image": "t25-clearance-a2-clear-before.png",
+      "capture_valid": true,
+      "classification": "valid-diagnostic-only",
+      "reason": "Clear lens and intact readable anatomy; old model only"
+    },
+    {
+      "image": "t25-clearance-a2-crossed-solid-rejected.png",
+      "capture_valid": false,
+      "classification": "rejected",
+      "reason": "Lens inside native solid; terrain/edge artifact"
+    },
+    {
+      "image": "t25-clearance-a2-fixed-lens-recovery.png",
+      "capture_valid": true,
+      "classification": "valid-diagnostic-only",
+      "reason": "Clear lens and intact readable anatomy; old model only"
+    }
+  ]
+}

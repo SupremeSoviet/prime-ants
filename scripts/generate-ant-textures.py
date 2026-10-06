@@ -2,7 +2,7 @@
 
 The 0.5 ant subtree and vanilla 16 model units/block give 32 texels/block.
 Ovoid UV cells and dimensions match AntModel. Every exposed cube face is shaded
-from body coordinates, so highlights, hairs and gaster bands follow the surfaces.
+from body coordinates, so highlights and gaster bands follow the surfaces.
 """
 from pathlib import Path
 import math
@@ -21,24 +21,17 @@ DIMENSIONS = {
 
 def cuticle(x, y, z, w, h, d, segment, callow):
     nx, ny, nz = x / w, y / h, z / d
-    # Longitudinal dorsal polish, restrained and continuous across UV islands.
-    shine = 15 * math.exp(-((nx + .12) / .17) ** 2) * max(0, -ny * 2)
-    shade = 4 - 11 * max(0, ny) + shine
-    grain = ((math.floor(x * 3) * 17 + math.floor(y * 3) * 11 + math.floor(z * 3) * 7) % 5) - 2
+    # Smooth polish in body coordinates; no independent grain or pale speckle strokes.
+    # Broad dorsal/side lobes stay coherent across each small geometry tier.
+    dorsal = math.exp(-((nx + .12) / .20) ** 2) * max(0, -ny * 2)
+    lateral = math.exp(-((ny + .16) / .19) ** 2) * min(1, abs(nx) * 2)
+    shine = 36 * dorsal + 14 * lateral
+    shade = 5 - 10 * max(0, ny) + shine
     if segment == 'gaster':
         phase = nz + .5
-        if min(abs(phase - band) for band in (.36, .60, .80)) < .023:
-            shade -= 13  # Dark transverse intersegment sutures, including side faces.
-        elif min(abs(phase - band) for band in (.39, .63, .83)) < .018:
-            shade += 5
-    base = (179, 155, 112) if callow else (32, 28, 24)
-    rgb = tuple(max(0, min(255, round(c + shade + grain))) for c in base)
-    # Sparse fine pale strokes on exposed dorsal/lateral cuticle, in body coordinates.
-    cell_x, cell_z = math.floor(x / 2.5), math.floor(z / 3)
-    hair = (cell_x * 37 + cell_z * 71 + 20261006) % 7
-    across, along = x - cell_x * 2.5, z - cell_z * 3
-    if hair == 0 and .85 < across < 1.35 and .45 < along < 2.25 and ny < .15:
-        rgb = (209, 188, 147) if callow else (100, 90, 73)
+        shade -= sum(7 * math.exp(-((phase-band)/.013)**2) for band in (.36,.60,.80))
+    base = (179, 155, 112) if callow else (34, 28, 23)
+    rgb = tuple(max(0, min(255, round(c + shade))) for c in base)
     return (*rgb, 255)
 
 
@@ -67,11 +60,18 @@ for form in ('worker', 'queen', 'callow'):
     image = Image.new('RGBA', (512,512), (179,155,112,255) if callow else (32,28,24,255))
     for segment, v, body in zip(('head','mesosoma','gaster','petiole'), (0,96,192,288), DIMENSIONS['worker' if callow else form]):
         w,h,d = body
-        for i,taper in enumerate(TAPER):
-            for j,width in enumerate(WIDTHS):
+        if segment == 'gaster':
+            tapers = (.30,.61,.80,.916,.98,1,.98,.916,.80,.61,.30)
+            widths = (.26,.50,.72,.90,1,.90,.72,.50,.26)
+            edges = (-.50,-.48,-.42,-.30,-.12,.12,.30,.42,.48,.50)
+            cell_u,cell_v = 45,10
+        else:
+            tapers,widths,edges,cell_u,cell_v = TAPER,WIDTHS,EDGES,52,18
+        for i,taper in enumerate(tapers):
+            for j,width in enumerate(widths):
                 sw,sh = w*taper,h*taper
-                paint_cube(image,i*52,v+j*18,-sw*width/2,sh*EDGES[j],-d/2+i*d/9,
-                           sw*width,sh*(EDGES[j+1]-EDGES[j]),d/9,body,segment,callow)
+                paint_cube(image,i*cell_u,v+j*cell_v,-sw*width/2,sh*edges[j],-d/2+i*d/len(tapers),
+                           sw*width,sh*(edges[j+1]-edges[j]),d/len(tapers),body,segment,callow)
     draw = ImageDraw.Draw(image)
     # Actual appendage islands: femur, tibia/tarsus and both antenna sections.
     limb = (190,157,101,255) if callow else (59,43,29,255)

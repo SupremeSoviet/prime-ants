@@ -1,0 +1,52 @@
+{
+  "attempt": "t25-appearance-a5-nest",
+  "all_pngs_opened": true,
+  "native_frame": [
+    1600,
+    1000
+  ],
+  "frames": [
+    {
+      "image": "t25-appearance-a5-nest-worker-ordinary.png",
+      "classification": "accepted",
+      "capture_valid": true,
+      "reason": "FOV70 at 2.472 blocks from body focus, daylight without night vision. Readable whole ant and dark/warm coherent surface; modest dorsal polish. Worker is completing a natural terrain step, so this material frame is not a six-foot flat-floor assertion."
+    },
+    {
+      "image": "t25-appearance-a5-nest-worker-detail.png",
+      "classification": "accepted",
+      "capture_valid": true,
+      "reason": "Intact anatomy, clear head/antennae/mandibles, coherent cuticle; no clipped anatomy or bottom-edge strip. Camera/frame checks passed."
+    },
+    {
+      "image": "t25-appearance-a5-nest-worker-walk-1.png",
+      "classification": "accepted",
+      "capture_valid": true,
+      "reason": "Natural walking through fixed camera; complete anatomy, changing joint poses, no edge artifact. Body Y=68 throughout sequence; rendered tripod recorded. Terrain step is natural."
+    },
+    {
+      "image": "t25-appearance-a5-nest-worker-walk-2.png",
+      "classification": "accepted",
+      "capture_valid": true,
+      "reason": "Natural walking through fixed camera; complete anatomy, changing joint poses, no edge artifact. Body Y=68 throughout sequence; rendered tripod recorded. Terrain step is natural."
+    },
+    {
+      "image": "t25-appearance-a5-nest-worker-walk-3.png",
+      "classification": "accepted",
+      "capture_valid": true,
+      "reason": "Natural walking through fixed camera; complete anatomy, changing joint poses, no edge artifact. Body Y=68 throughout sequence; rendered tripod recorded. Terrain step is natural."
+    },
+    {
+      "image": "t25-appearance-a5-nest-worker-walk-4.png",
+      "classification": "accepted",
+      "capture_valid": true,
+      "reason": "Natural walking through fixed camera; complete anatomy, changing joint poses, no edge artifact. Body Y=68 throughout sequence; rendered tripod recorded. Terrain step is natural."
+    },
+    {
+      "image": "t25-appearance-a5-nest-worker-food-natural-6.png",
+      "classification": "accepted",
+      "capture_valid": true,
+      "reason": "Natural flower_nectar_v2 visible below the connected gripping mandibles; mature real worker, exact rendered item/count confirmed; no player supply."
+    }
+  ]
+}
