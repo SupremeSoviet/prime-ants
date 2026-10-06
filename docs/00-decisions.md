@@ -355,3 +355,11 @@ Stages are cumulative, and the stock numbers are starting values. Invariant: eac
 - New saves write `ColonyAdultCapacityBound` on the queen and `AdultCapacityBound` on the pile.
 - A 0.1.0 save's `ColonyAdultCapacity` or `AdultCapacity` is read only when the new key is absent, and is still validated 4..30.
 - It migrates once. A saved 30, the 0.1.0 default and maximum, becomes 120, so the colony can pass 30 once Mature is reachable. A saved 4..29 is kept as a deliberate reduction.
+
+## Implementation notes - 2026-10-07 (stage-1 T03 first dug chamber)
+
+Decisions 6 and 24 now have concrete numbers. The nest plan (`dev.primeants.founding.NestBlueprint`) is a declarative table of rooms and passages in the founding nest's frame, compiled into a dig-task queue that real workers carry out block by block; it never places blocks.
+
+- **Bounds.** Every planned and shell cell lies within 10 blocks of the entrance forward or sideways, and from 3 blocks below the entrance level up to that level. One placement digs at most 32 cells. The 0.1.0 widening keeps its own radius 6 and depth 3.
+- **First chamber.** A Young colony that certainly lacks a material store digs a two-high 3x3 store room and a passage through the founding chamber's back wall (24 cells), on the left or right of the passage, keeping the other side free for the queen's hall. Only witnessed natural or colony-prepared soil is dug; the 0.1.0 widening goes first.
+- **Confirmation.** A fault seen in loaded blocks now beats unavailable terrain in every chamber check and in brood care, so an unloaded cell can no longer hide observed damage. Only reason labels changed for mixed cases.

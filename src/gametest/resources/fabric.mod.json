@@ -41,7 +41,8 @@
       "dev.primeants.gametest.PlayerBasicsGameTest",
       "dev.primeants.gametest.CropPolicyGameTest",
       "dev.primeants.gametest.DefenseGameTest",
-      "dev.primeants.gametest.ColonyStageGameTest"
+      "dev.primeants.gametest.ColonyStageGameTest",
+      "dev.primeants.gametest.MaterialStoreGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

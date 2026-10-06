@@ -17,6 +17,8 @@ public final class NurseryBlocks {
     public static final BroodPileBlock BROOD_PILE = pile();
     public static final dev.primeants.worker.NestCacheBlock NEST_CACHE = Registry.register(BuiltInRegistries.BLOCK,key("nest_cache"),new dev.primeants.worker.NestCacheBlock(BlockBehaviour.Properties.of().setId(key("nest_cache")).noCollision().noOcclusion().strength(0.1F)));
     public static final BlockEntityType<dev.primeants.worker.NestCache> CACHE_TYPE = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,id("nest_cache"),new BlockEntityType<>(dev.primeants.worker.NestCache::new,Set.of(NEST_CACHE)));
+    public static final dev.primeants.worker.MaterialStoreBlock MATERIAL_STORE = Registry.register(BuiltInRegistries.BLOCK,key("material_store"),new dev.primeants.worker.MaterialStoreBlock(BlockBehaviour.Properties.of().setId(key("material_store")).noCollision().noOcclusion().strength(0.1F)));
+    public static final BlockEntityType<dev.primeants.worker.MaterialStore> STORE_TYPE = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,id("material_store"),new BlockEntityType<>(dev.primeants.worker.MaterialStore::new,Set.of(MATERIAL_STORE)));
     public static final BlockEntityType<BroodPile> BROOD_TYPE = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
             id("brood_pile"), new BlockEntityType<>(BroodPile::new, Set.of(BROOD_PILE)));
     private static Identifier id(String n) { return Identifier.fromNamespaceAndPath(PrimeAnts.MOD_ID, n); }

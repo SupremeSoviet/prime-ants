@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "prime_ants:block/material_store"
+    }
+  }
+}

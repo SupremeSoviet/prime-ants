@@ -23,7 +23,8 @@ import net.minecraft.world.phys.AABB;
 
 /** Production egg founding, dropped food and real loaded ticks. The stage is only ever evaluated by the colony's own
  * nursery; tests read the registry. Fixtures are real damage, entity/block-entity/SavedData restores, saved tags, real
- * blocks and one injected unavailable cell (UnavailableCells). */
+ * blocks and one injected unavailable cell (UnavailableCells). The shared 14x14 pad ends one cell beyond the founding
+ * chamber's back wall, so no material-store placement validates here (MaterialStoreGameTest). */
 public final class ColonyStageGameTest {
     private final WorkerForagingGameTest f=new WorkerForagingGameTest();
     private final NursingGameTest food=new NursingGameTest();
@@ -225,6 +226,55 @@ public final class ColonyStageGameTest {
             c.assertTrue(state.problem()==null&&state.functions().equals(both(ColonyDevelopment.Presence.CONFIRMED))&&e.stage()==ColonyStage.YOUNG&&colony(c,q).stage()==ColonyStage.YOUNG,
                 "Clearing the obstruction confirms both functions and Young again: "+e);
             PrimeAnts.LOGGER.info("Stage-1 ENTRANCE CLEARED queen={} evaluation={}",q.getUUID(),e);step[0]=3;c.succeed();
+        });
+    }
+
+    /** Item-1 precedence: the entrance cell is unavailable, and a loaded founding wall cell is really broken. Observed
+     * damage wins: both functions are lost and the colony regresses, and brood care reports the same breach. */
+    @GameTest(maxTicks=24000,structure="prime_ants_test:idle_ground")
+    public void unavailableEntranceNeverHidesLoadedBrokenWallAndTheColonyRegresses(GameTestHelper c){
+        var q=f.start(c);boolean[] supplied={false};int[] step={0};ColonyDevelopment.Evaluation[] last={null};
+        c.onEachTick(()->{
+            var l=c.getLevel();var p=food.pile(c,q);if(p==null||step[0]==2)return;
+            if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;food.supply(c,q,10,8);}
+            var e=p.stageEvaluation();var plan=q.founding().plan();var cell=plan.entrance();var wall=plan.at(6,-1,-1);
+            if(step[0]==0){
+                if(!settledYoung(c,q,p))return;
+                c.assertTrue(NestPlan.loaded(l,wall)&&l.getBlockState(wall).isSolidRender()&&NestPlan.walkable(l,cell),"The back wall is solid and the entrance open before the fixture");
+                UnavailableCells.hide(c,cell);l.setBlock(wall,Blocks.AIR.defaultBlockState(),3);last[0]=e;step[0]=1;return;
+            }
+            if(e==last[0])return; // the nursery's own next evaluation
+            var state=founding(e);
+            c.assertTrue(!NestPlan.loaded(l,cell)&&NestPlan.loaded(l,wall)&&l.getBlockState(wall).isAir()&&"enclosure_shell_open".equals(state.problem())&&state.tier()==0
+                &&state.functions().equals(both(ColonyDevelopment.Presence.ABSENT))&&e.stage()==ColonyStage.FOUNDING&&e.result().possible()==ColonyStage.FOUNDING
+                &&colony(c,q).stage()==ColonyStage.FOUNDING&&e.inputs().adults().known()>=5&&e.cap()==ColonyStage.FOUNDING.adultCap()
+                &&e.result().missing(ColonyStage.YOUNG).toString().equals("[nursery 0/1, food_store 0/1]"),"A loaded broken wall beside an unavailable entrance is loss, not unknown: "+e);
+            c.assertTrue("enclosure_shell_open".equals(plan.nurseryProblem(l,q.getUUID(),true)),"Brood care sees the same observed breach, not the unavailable entrance");
+            PrimeAnts.LOGGER.info("Stage-1 HIDDEN ENTRANCE BROKEN WALL queen={} cell={} wall={} evaluation={}",q.getUUID(),cell,wall,e);step[0]=2;c.succeed();
+        });
+    }
+
+    /** Item-1 precedence: the entrance cell is unavailable and the loaded cache is destroyed. The food store is lost,
+     * the nursery stays unknown, and without a food store the colony regresses to Founding. */
+    @GameTest(maxTicks=24000,structure="prime_ants_test:idle_ground")
+    public void unavailableEntranceNeverHidesDestroyedLoadedCacheAndTheFoodStoreIsLost(GameTestHelper c){
+        var q=f.start(c);boolean[] supplied={false};int[] step={0};ColonyDevelopment.Evaluation[] last={null};
+        c.onEachTick(()->{
+            var l=c.getLevel();var p=food.pile(c,q);if(p==null||step[0]==2)return;
+            if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;food.supply(c,q,10,8);}
+            var e=p.stageEvaluation();var plan=q.founding().plan();var cell=plan.entrance();
+            if(step[0]==0){
+                if(!settledYoung(c,q,p)||f.cache(c,q)==null)return;
+                UnavailableCells.hide(c,cell);l.setBlock(plan.cache(),Blocks.AIR.defaultBlockState(),3);last[0]=e;step[0]=1;return;
+            }
+            if(e==last[0])return; // the nursery's own next evaluation
+            var state=founding(e);
+            c.assertTrue(!NestPlan.loaded(l,cell)&&NestPlan.loaded(l,plan.cache())&&f.cache(c,q)==null
+                &&state.functions().equals(Map.of(ChamberFunction.NURSERY,ColonyDevelopment.Presence.UNKNOWN,ChamberFunction.FOOD_STORE,ColonyDevelopment.Presence.ABSENT))
+                &&"food_store_marker_missing_or_foreign".equals(state.problem())&&e.stage()==ColonyStage.FOUNDING&&e.result().possible()==ColonyStage.FOUNDING
+                &&colony(c,q).stage()==ColonyStage.FOUNDING&&e.inputs().adults().known()>=5&&e.cap()==ColonyStage.FOUNDING.adultCap()
+                &&e.result().missing(ColonyStage.YOUNG).toString().equals("[nursery 0(+1?)/1, food_store 0/1]"),"A destroyed loaded cache is a lost food store beside an unavailable entrance: "+e);
+            PrimeAnts.LOGGER.info("Stage-1 HIDDEN ENTRANCE DESTROYED CACHE queen={} cell={} evaluation={}",q.getUUID(),cell,e);step[0]=2;c.succeed();
         });
     }
 }

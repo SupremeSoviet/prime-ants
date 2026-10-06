@@ -136,6 +136,7 @@ public final class QueenFounding {
                 PrimeAnts.LOGGER.warn("Released incompatible persisted forager claim queen={} worker={} phase={} cargo={}",queen.getUUID(),claimed.getUUID(),claimed.workerTasks().phase(),claimed.getMainHandItem());workerClaim=null;
             }
             NestExpansion.get(level).reconcile(level,queen);
+            ChamberExcavation.get(level).reconcile(level,queen);
             if (workerClaim == null && ready()) {
                 var workers = level.getEntitiesOfClass(LasiusNigerEntity.class, new AABB(plan.chamber()).inflate(4),
                         w -> w.isAlive() && !w.isRemoved() && !w.isCallow() && !w.isNoAi() && queen.getUUID().equals(w.queenId())
@@ -159,6 +160,7 @@ public final class QueenFounding {
             if(lifecycle==Lifecycle.OPEN&&ready()){
                 var members=level.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(plan.chamber()).inflate(16),w->w.isAlive()&&!w.isRemoved()&&dev.primeants.worker.ColonyMembers.get(level).belongs(w,queen.getUUID(),plan.chamber()));
                 NestExpansion.get(level).consider(level,queen,members);
+                ChamberExcavation.get(level).consider(level,queen,members); // nest-plan chambers after the 0.1.0 widening
                 for(var w:level.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(plan.chamber()).inflate(4),w->w.isAlive()&&!w.isRemoved()&&!w.isCallow()&&!w.isNoAi()))
                     if(!claimedBy(w)&&!w.workerTasks().construction()&&dev.primeants.worker.ColonyMembers.get(level).belongs(w,queen.getUUID(),plan.chamber()))w.workerTasks().assignNurse(plan);
             }

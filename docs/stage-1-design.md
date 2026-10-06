@@ -1,30 +1,19 @@
-# Stage 1 design: colony stages (as built in T01–T02)
+# Stage 1 design: colony stages and dug chambers (as built in T01–T03)
 
 A colony's stage comes only from live bodies and blocks (GDD v2 §1, decision 23), and the stage cap is the only adult
-limit. Code: `src/main/java/dev/primeants/colony/`.
+limit. Code: `colony/` (stages), `founding/` (plan, digging), `worker/MaterialStore`.
 
 ## Model
 
-- **`ChamberRegistry`** (`SavedData`, one entry per queen UUID) stores the nest anchor, the chambers and the last
-  evaluated stage. A chamber has bounds, functions (nursery, food store, material store, queen's hall), a tier 1–3 and
-  one marker block per function. A 0.1.0 founding room is registered as built: tier 1, markers at its pile and cache, no
-  terrain change.
-- **`ColonyDevelopment`** reads the world. A function counts only while its owned marker (`BroodPile.ownedBy`,
-  `NestCache.ownedBy`) sits in an open, enclosed room (`NestPlan.nurseryProblem`). A check that fails only because a
-  cell's chunk is unavailable (`*_chunk_unavailable`, the entrance route included) leaves the function unknown; only
-  loaded blocks observed wrong count as loss. An adult counts only as a found living body; a failed lookup is unknown.
-- **`StageRules`** is one rule table over (known, possible) bounds. It promotes only to a stage that is certainly met
-  and demotes only below one that its unknowns could not support. So unloaded members change nothing, and a stale saved
-  stage is recomputed once everything is loaded. `missing(target)` is cumulative: every unconfirmed requirement of the
-  target and each lower stage, lowest first. Each transition is logged with its evidence.
-- **`BroodPile`** applies `min(stage cap, bound)` to laying and emergence.
-  - The bound is the birth-selected `prime_ants.colonyAdultCapacity`: default 120, valid 4..120. The 0.1.0 fields
-    migrate once: 30 → 120, and 4..29 are kept.
-  - Evaluation runs at those decisions after a birth or death, and at least every 100 loaded nursery ticks.
-
-## Rule table
-
-Counts include the queen. Brood reserves cap space as in 0.1.0. The stock numbers are starting values.
+- **`ChamberRegistry`** (`SavedData`, per queen): nest anchor, chambers (bounds, functions, tier 1–3, a marker per
+  function) and the last evaluated stage. The 0.1.0 founding room counts as built; a dug chamber registers once its
+  marker block is set up.
+- **`ColonyDevelopment`** runs every check of the connected nest (`NestPlan.nurseryFindings`: stairs, founding chamber,
+  widening, dug spaces) plus a dug chamber's own cells. **A fault seen in loaded blocks beats unavailable terrain**
+  (`Findings`): a function is ABSENT if anything loaded is wrong (open shell, obstructed floor, missing or foreign
+  marker), UNKNOWN if only a needed cell is unavailable, else CONFIRMED. Brood care reads the same findings.
+- **`StageRules`** promotes only to a stage certainly met and demotes only below one its unknowns cannot support;
+  `missing(target)` is cumulative. **`BroodPile`** applies `min(stage cap, birth bound 4..120)`.
 
 | Stage | Requirements (cumulative) | Cap |
 |---|---|---|
@@ -33,17 +22,36 @@ Counts include the queen. Brood reserves cap space as in 0.1.0. The stock number
 | Mature | 25+ adults, queen's hall, material store, 4+ food, 16+ clay | 60 |
 | Great | 50+ adults, all four functions at tier 2+, 32+ stone | 120 |
 
-Each next threshold fits under the current cap (5 ≤ 5, 25 ≤ 30, 50 ≤ 60), including after a regression; this is checked
-at class load and in unit tests. Mature and Great stay unreachable until later turns, and the evaluator lists what they
-lack.
+Each next threshold fits under the current cap, also after a regression (checked at class load and in unit tests).
+
+## Nest plan (`NestBlueprint`)
+
+- **Format.** A Java record table of semantic primitives in the founding nest's frame (forward, side, dy): two-high
+  `Room`s (box, function, marker) and `Placement`s (passage from the founding chamber, room, rooms kept free).
+  `compile` validates a placement and emits a **dig queue**, never blocks: passage then room, each column floor first.
+- **Material store.** A 3×3 room at the founding depth through the centre of the founding back wall, 24 cells.
+  Placements `left`, then `right` (forward 7..9, sides ∓2..4); each keeps the other room for the queen's hall.
+- **Bounds.** Planned and shell cells stay within 10 blocks of the entrance forward or sideways, from 3 below its level
+  up to it; at most 32 cells per queue. Unit tests check connectivity, bounds, no overlap with stairs, plugs, founding
+  chamber, either widening side or deposits, a closed shell except the declared opening, and the covered order.
+
+## Digging (`DigJob`, `ChamberExcavation`)
+
+- **One machinery.** The 0.1.0 widening and plan chambers share `DigJob` and the `DIG`/`DIG_OUT` phases. Removed =
+  carried + deposited + released at every point; soil goes to the supported mound, or to custody if a builder dies.
+- **Trigger.** Young, `material_store` missing and not unknown, a real worker that leaves 2 caregivers, the widening
+  done, one builder at a time. Placements are tried every 100 ticks: observed ineligible terrain (not witnessed natural
+  or colony-prepared soil, fluid, too little mound) rejects one; an unloaded cell waits.
+- **Openings.** Dug cells recorded as the colony's openings are authorized in the founding shell; only the dug space's
+  faces join the habitat, so pending cells cannot harm brood care.
+- **Stop.** A replaced, player-placed or ineligible planned cell is never removed: the job stops after the builder
+  delivers its soil (an undug job re-plans to the next placement).
+- **Store.** The builder sets up the owned `MaterialStore` (16 units, empty for now) on the floor; the chamber registers
+  at tier 1 and is confirmed by the same precedence rule. Breaking the store alarms the colony.
 
 ## Extending it
 
-- **Dug chambers.** Register each finished nest-plan chamber. Generalize `nurseryProblem` into a per-chamber rule in
-  `ColonyDevelopment.confirm`, and add queen's-hall and material-store markers to `ownedMarker`.
-- **Tiers by wall material.** Replace `EARTHEN` with a shell scan: packed clay or resin counts as 2, dressed stone as 3.
-  The confirmed tier is min(saved tier, wall tier).
-- **Material stocks.** Sum confirmed stores. An unloaded store adds its capacity to *possible* only.
-- **Trap.** Stone spent on tier-3 walls must not, by itself, demote a Great colony. Count stored stone plus the stone
-  laid in the colony's own confirmed tier-3 walls, so a store-to-wall move is neutral. Treat clay and tier-2 walls the
-  same way for Mature.
+- **Queen's hall:** table rows on the reserved side, a marker block, an `ownedMarker` case.
+- **Tiers by wall material:** a shell scan (clay or resin 2, dressed stone 3); confirmed tier = min(saved, wall).
+- **Material stocks:** sum confirmed stores; an unloaded store adds its capacity to *possible* only. Count stone laid
+  in the colony's own tier-3 walls with stored stone, so a store-to-wall move cannot demote a Great colony.

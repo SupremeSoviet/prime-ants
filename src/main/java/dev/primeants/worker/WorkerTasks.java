@@ -3,7 +3,9 @@ package dev.primeants.worker;
 import dev.primeants.PrimeAnts;
 import dev.primeants.brood.NurseryBlocks;
 import dev.primeants.entity.LasiusNigerEntity;
+import dev.primeants.founding.ChamberExcavation;
 import dev.primeants.founding.ColonyPlugs;
+import dev.primeants.founding.DigJob;
 import dev.primeants.founding.NaturalSoil;
 import dev.primeants.founding.NestPlan;
 import dev.primeants.founding.NestExpansion;
@@ -93,7 +95,7 @@ public final class WorkerTasks {
                 &&plan.nurseryProblem(l,worker.queenId(),true)==null;
     }
     public boolean freeForConstruction(){return !defending&&!sharing.busy()&&(phase==Phase.NURSERY||phase==Phase.NURSE_CACHE);}
-    private boolean constructionClaim(ServerLevel l){var j=NestExpansion.get(l).job(worker.queenId());return j!=null&&worker.getUUID().equals(j.claim);}
+    private boolean constructionClaim(ServerLevel l){return DigJob.claimedBy(l,worker)!=null;}
     private boolean foragerClaim(ServerLevel l){var q=queen(l);return q!=null&&q.founding().claimedBy(worker);}
     private boolean eligible(ServerLevel l,NestPlan p){
         var q=queen(l);return !defending&&p!=null&&worker.isAlive()&&!worker.isRemoved()&&!worker.isCallow()&&!worker.isNoAi()
@@ -104,16 +106,17 @@ public final class WorkerTasks {
         &&worker.getMainHandItem().isEmpty()&&!constructionClaim(l)&&queen(l).founding().workerClaim()==null;}
     public boolean canConstruct(NestPlan p){return worker.level() instanceof ServerLevel l&&eligible(l,p)&&freeForConstruction()
         &&worker.getMainHandItem().isEmpty()&&!constructionClaim(l)&&!foragerClaim(l)
-        &&(NestExpansion.get(l).job(worker.queenId())==null||NestExpansion.get(l).job(worker.queenId()).claim==null);}
+        &&!DigJob.anyClaim(l,worker.queenId());}
     public boolean caregiver(ServerLevel l,NestPlan p){return l.getEntity(worker.getUUID())==worker&&NestPlan.loaded(l,worker.blockPosition())&&l.isPositionEntityTicking(worker.blockPosition())
         &&eligible(l,p)&&nursingAuthorized(l)&&plan.entrance().equals(p.entrance())&&plan.direction()==p.direction();}
-    public boolean assignConstruction(NestPlan p){
+    public boolean assignConstruction(NestPlan p){return assignConstruction(p,"assigned_bounded_extension");}
+    public boolean assignConstruction(NestPlan p,String why){
         if(!canConstruct(p)||NestExpansion.remainingCaregivers((ServerLevel)worker.level(),worker.queenId(),p,worker)<2)return false;
-        plan=p.routeGeometry();next(Phase.DIG,"assigned_bounded_extension");return true;
+        plan=p.routeGeometry();next(Phase.DIG,why);return true;
     }
     public boolean construction(){return phase==Phase.DIG||phase==Phase.DIG_OUT;}
     private boolean constructionAuthorized(ServerLevel l){
-        var j=worker.queenId()==null?null:NestExpansion.get(l).job(worker.queenId());var q=queen(l);
+        var j=worker.queenId()==null?null:DigJob.claimedBy(l,worker);var q=queen(l);
         return j!=null&&worker.getUUID().equals(j.claim)&&!foragerClaim(l)&&worker.isAlive()&&!worker.isRemoved()&&!worker.isCallow()&&!worker.isNoAi()&&plan!=null
             &&ColonyMembers.get(l).belongs(worker,worker.queenId(),plan.chamber())&&j.home.entrance().equals(plan.entrance())&&j.home.direction()==plan.direction()&&q!=null&&q.isAlive()&&q.founding().ready();
     }
@@ -163,7 +166,7 @@ public final class WorkerTasks {
             if(++searchTicks>240){clearFlower();next(Phase.RETURN,"bounded_search_finished");cooldown=40;return;}
         }
         if(nursing()&&NestExpansion.get(l).operationalSpace(l,worker.queenId()).contains(worker.blockPosition()))NestExpansion.get(l).used(worker.queenId(),worker,"existing_nurse_traversal");
-        if(construction()){var data=NestExpansion.get(l);var job=data.job(worker.queenId());job.ticks++;data.changed();}
+        if(construction()){var job=DigJob.claimedBy(l,worker);job.ticks++;job.changed(l);}
         phaseTicks++; if(cooldown>0)cooldown--;
         if(phaseTicks>1200) {
             if(phase==Phase.OPENING || phase==Phase.SOIL_OUT) {hold("opening_route_stalled_retry_no_remote_completion");phaseTicks=0;cooldown=40;}
@@ -184,7 +187,7 @@ public final class WorkerTasks {
                 var job=NestExpansion.get(l).job(worker.queenId());
                 // An empty search return has nothing to deliver. Vacate the single founding stair
                 // while its real builder still needs it; loaded collision/pathfinding moves both actors.
-                if(worker.getMainHandItem().isEmpty()&&job!=null&&!job.complete())next(Phase.EXIT,"empty_forager_yields_construction_stair");
+                if(worker.getMainHandItem().isEmpty()&&(job!=null&&!job.complete()||ChamberExcavation.get(l).hauling(worker.queenId())))next(Phase.EXIT,"empty_forager_yields_construction_stair");
                 else if(arrive(Vec3.atBottomCenterOf(plan.at(3,0,-2))))next(Phase.DEPOSIT,"inside_delivery");
             }
             case DEPOSIT -> deposit(l);
@@ -342,7 +345,7 @@ public final class WorkerTasks {
         if(stands.contains(worker.blockPosition())&&worker.onGround()&&worker.position().distanceToSqr(Vec3.atCenterOf(target))<=5.0)return worker.blockPosition();
         return stands.isEmpty()?null:stands.get((phaseTicks/100)%stands.size());
     }
-    private void prepareExposed(ServerLevel l,NestExpansion.Job j){
+    private void prepareExposed(ServerLevel l,DigJob j){
         for(var p:j.surfaces())if(worker.position().distanceToSqr(Vec3.atCenterOf(p))<=5.0
             &&j.completed().stream().anyMatch(t->t.distManhattan(p)==1)&&NaturalSoil.get(l).eligible(l,p))ColonyTerrain.get(l).prepare(l,p,worker.queenId());
     }
@@ -371,37 +374,63 @@ public final class WorkerTasks {
         return arrived;
     }
     private void dig(ServerLevel l){
-        var data=NestExpansion.get(l);var j=data.job(worker.queenId());
-        if(j.removed()==j.tasks.size()){
-            if(dirt()>0){next(Phase.DIG_OUT,"last_extension_soil_transport");return;}
-            j.claim=null;j.reason="completed_connected_extension";data.changed();next(Phase.NURSE_CACHE,"extension_complete_return_to_colony");return;
+        var j=DigJob.claimedBy(l,worker);
+        if(j.removed()==j.tasks.size()||j.stopped()){
+            if(dirt()>0){next(Phase.DIG_OUT,(j.stopped()?"stopped_":"last_")+j.label()+"_soil_transport");return;}
+            var marker=j.stopped()?null:j.pendingMarker(l,worker.queenId());
+            if(marker!=null){setUpMarker(l,j,marker);return;}
+            j.claim=null;if(!j.stopped())j.reason=j.completionReason(l,worker.queenId());j.changed(l);next(Phase.NURSE_CACHE,j.label()+(j.stopped()?"_stopped":"_complete")+"_return_to_colony");return;
         }
         if(!worker.getMainHandItem().isEmpty()&&dirt()==0){hold("foreign_cargo_retained_no_excavation");return;}
         int progress=j.removed();var target=j.tasks.get(progress);int column=1;
         while(progress+column<j.tasks.size()&&j.tasks.get(progress+column).getX()==target.getX()&&j.tasks.get(progress+column).getZ()==target.getZ())column++;
         if(dirt()+column>QueenFounding.CARRY_CAPACITY){next(Phase.DIG_OUT,"complete_column_before_hauling");return;}
-        if(!targetCompatible(l,target,j.expected.get(progress))){j.reason="target_replaced_unknown_or_foreign";data.changed();hold(j.reason);return;}
-        if(dev.primeants.founding.SupportSurvival.problem(l,target,Blocks.AIR.defaultBlockState()) instanceof String problem){j.reason=problem;data.changed();hold(j.reason);return;}
+        if(!targetCompatible(l,target,j.expected.get(progress))){
+            // Never remove a replaced, player-placed or otherwise ineligible planned cell.
+            if(j.stopsOnIncompatibleTarget()){j.stop(l,"target_replaced_unknown_or_foreign_at_"+target.toShortString());return;}
+            j.reason="target_replaced_unknown_or_foreign";j.changed(l);hold(j.reason);return;
+        }
+        if(dev.primeants.founding.SupportSurvival.problem(l,target,Blocks.AIR.defaultBlockState()) instanceof String problem){j.reason=problem;j.changed(l);hold(j.reason);return;}
         var stand=digStand(l,target);if(stand==null){hold("no_supported_exposed_face");return;}
         // A crowded stand need not be monopolized at its exact center. The actor already occupies
         // this supported adjacent floor; the same physical reach/face/state checks still gate its action.
-        if(!worker.blockPosition().equals(stand)||!worker.onGround()||worker.position().distanceToSqr(Vec3.atCenterOf(target))>5.0){arriveSupported(l,Vec3.atBottomCenterOf(stand));return;}
+        if(!worker.blockPosition().equals(stand)||!worker.onGround()||worker.position().distanceToSqr(Vec3.atCenterOf(target))>5.0){approach(l,j,stand);return;}
         worker.getNavigation().stop();worker.getLookControl().setLookAt(target.getX()+0.5,target.getY()+0.5,target.getZ()+0.5);
         if(!constructionAuthorized(l)||!NestPlan.walkable(l,stand)||!exposed(l,target,stand)||worker.position().distanceToSqr(Vec3.atCenterOf(target))>5.0
-            ||!targetCompatible(l,target,j.expected.get(progress))||dirt()>=QueenFounding.CARRY_CAPACITY||j.removed()>=NestExpansion.HARD_CAP)return;
+            ||!targetCompatible(l,target,j.expected.get(progress))||dirt()>=QueenFounding.CARRY_CAPACITY||j.removed()>=j.cap())return;
         if(dev.primeants.founding.SupportSurvival.problem(l,target,Blocks.AIR.defaultBlockState()) instanceof String problem){hold(problem);return;}
-        if(!l.setBlock(target,Blocks.AIR.defaultBlockState(),3)){hold("extension_removal_rejected");return;}
-        ColonyTerrain.get(l).removed(target,worker.queenId());data.removed(j,target);
+        if(!l.setBlock(target,Blocks.AIR.defaultBlockState(),3)){hold(j.label()+"_removal_rejected");return;}
+        ColonyTerrain.get(l).removed(target,worker.queenId());j.removed(l,target);
         worker.setItemSlot(EquipmentSlot.MAINHAND,new ItemStack(Items.DIRT,dirt()+1));cooldown=QueenFounding.cadence();phaseTicks=0;
         prepareExposed(l,j);j.reason="worker_removed_one_soil_unit";
-        PrimeAnts.LOGGER.info("Extension excavation queen={} worker={} target={} removed={} carried={} deposited={}",worker.queenId(),worker.getUUID(),target,j.removed(),dirt(),j.deposited);
+        PrimeAnts.LOGGER.info("{} excavation queen={} worker={} target={} removed={} carried={} deposited={}",j.title(),worker.queenId(),worker.getUUID(),target,j.removed(),dirt(),j.deposited);
         if((dirt()==QueenFounding.CARRY_CAPACITY||j.removed()==j.tasks.size())&&target.getY()==plan.entrance().getY()-2)next(Phase.DIG_OUT,"soil_in_mandibles_transport");
+    }
+    /** Outside or on the stairs, a builder bound beyond the founding chamber first walks into the chamber, as returning
+     * foragers do; from the chamber's floor the passage leads on. */
+    private void approach(ServerLevel l,DigJob j,BlockPos stand){
+        if(j.viaFoundingChamber()&&worker.blockPosition().getY()>plan.entrance().getY()-2)arriveSupported(l,Vec3.atBottomCenterOf(plan.at(3,0,-2)));
+        else arriveSupported(l,Vec3.atBottomCenterOf(stand));
+    }
+    /** The claimed builder walks onto an open floor beside the marker cell and sets up the job's marker block. */
+    private void setUpMarker(ServerLevel l,DigJob j,BlockPos marker){
+        if(!reaches(l,worker,Vec3.atBottomCenterOf(marker).add(0,0.15,0))){
+            var completed=j.completed();BlockPos stand=null;
+            for(var d:Direction.Plane.HORIZONTAL){var p=marker.relative(d);
+                if(completed.contains(p)&&NestPlan.walkable(l,p)&&(stand==null||worker.position().distanceToSqr(Vec3.atBottomCenterOf(p))<worker.position().distanceToSqr(Vec3.atBottomCenterOf(stand))))stand=p;}
+            if(stand==null){hold(j.label()+"_marker_stand_unavailable");return;}
+            approach(l,j,stand);return;
+        }
+        worker.getNavigation().stop();worker.getLookControl().setLookAt(marker.getX()+0.5,marker.getY()+0.2,marker.getZ()+0.5);
+        if(!constructionAuthorized(l))return;
+        if(j.setUp(l,worker))PrimeAnts.LOGGER.info("{} marker set up queen={} worker={} marker={} reason={}",j.title(),worker.queenId(),worker.getUUID(),marker,j.reason);
+        else hold(j.label()+"_marker_setup_refused");
     }
     private boolean targetCompatible(ServerLevel l,BlockPos p,net.minecraft.world.level.block.state.BlockState expected){
         return ColonyTerrain.get(l).compatible(l,p,worker.queenId(),expected);
     }
     private void digOut(ServerLevel l){
-        var data=NestExpansion.get(l);var j=data.job(worker.queenId());
+        var j=DigJob.claimedBy(l,worker);
         if(dirt()==0){next(Phase.DIG,"empty_mandibles_next_work");return;}
         BlockPos target=null;Vec3 dest=null;
         for(var p:NestExpansion.deposits(plan)){
@@ -420,9 +449,9 @@ public final class WorkerTasks {
             ||worker.getBoundingBox().intersects(new AABB(target))||worker.position().distanceToSqr(Vec3.atCenterOf(target))>5.0)return;
         if(dev.primeants.founding.SupportSurvival.problem(l,target,NurseryBlocks.NEST_SOIL.defaultBlockState()) instanceof String problem){hold(problem);return;}
         if(l.setBlock(target,NurseryBlocks.NEST_SOIL.defaultBlockState(),3)){
-            ColonyTerrain.get(l).deposited(target,worker.queenId());j.deposited++;data.changed();
+            ColonyTerrain.get(l).deposited(target,worker.queenId());j.deposited++;j.changed(l);
             worker.setItemSlot(EquipmentSlot.MAINHAND,dirt()==1?ItemStack.EMPTY:new ItemStack(Items.DIRT,dirt()-1));cooldown=QueenFounding.cadence();phaseTicks=0;
-            PrimeAnts.LOGGER.info("Extension deposit queen={} worker={} target={} removed={} carried={} deposited={}",worker.queenId(),worker.getUUID(),target,j.removed(),dirt(),j.deposited);
+            PrimeAnts.LOGGER.info("{} deposit queen={} worker={} target={} removed={} carried={} deposited={}",j.title(),worker.queenId(),worker.getUUID(),target,j.removed(),dirt(),j.deposited);
             if(dirt()==0)next(Phase.DIG,"delivered_soil_next_work");
         }
     }
@@ -580,7 +609,7 @@ public final class WorkerTasks {
             worker.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);
             TransferCustody.get(l).retry(l);
         }
-        NestExpansion.get(l).release(worker.queenId(),worker,constructionSoil);
+        var job=DigJob.claimedBy(l,worker);if(job!=null)job.release(l,worker,constructionSoil);
         var q=queen(l);if(q!=null)q.founding().releaseWorker(worker);
         ColonyMembers.get(l).died(worker);
         source=null;next(Phase.DEAD,"worker_dead_no_replacement");

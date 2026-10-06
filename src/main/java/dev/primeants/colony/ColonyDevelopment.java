@@ -3,9 +3,12 @@ package dev.primeants.colony;
 import dev.primeants.PrimeAnts;
 import dev.primeants.brood.BroodPile;
 import dev.primeants.entity.LasiusNigerEntity;
+import dev.primeants.founding.ChamberExcavation;
+import dev.primeants.founding.Findings;
 import dev.primeants.founding.NestPlan;
 import dev.primeants.worker.AdultHistory;
 import dev.primeants.worker.ColonyMembers;
+import dev.primeants.worker.MaterialStore;
 import dev.primeants.worker.NestCache;
 import java.util.*;
 import net.minecraft.core.BlockPos;
@@ -43,8 +46,10 @@ public final class ColonyDevelopment {
         var states = new ArrayList<ChamberState>();
         var tiers = new EnumMap<ChamberFunction, int[]>(ChamberFunction.class);
         int food = 0, foodUnknown = 0;
+        // One connected nest: the founding chamber's habitat covers the stairs, the widening and every dug chamber.
+        var habitat = plan.nurseryFindings(l, queen, operational);
         for (var chamber : colony.chambers()) {
-            var state = confirm(l, queen, plan, operational, chamber);
+            var state = confirm(l, queen, plan, habitat, chamber);
             states.add(state);
             state.functions().forEach((f, presence) -> {
                 var t = tiers.computeIfAbsent(f, k -> new int[2]);
@@ -57,7 +62,7 @@ public final class ColonyDevelopment {
         }
         var bounds = new EnumMap<ChamberFunction, StageRules.Bound>(ChamberFunction.class);
         tiers.forEach((f, t) -> bounds.put(f, new StageRules.Bound(t[0], t[1])));
-        // No material store exists before upgrade work: clay and stone are known to be zero.
+        // Stores are set up empty and nothing fills them yet: clay and stone are known to be zero.
         var inputs = new StageRules.Inputs(new StageRules.Bound(known, known + unknown), bounds, new StageRules.Bound(food, food + foodUnknown),
             StageRules.Bound.NONE, StageRules.Bound.NONE);
         var result = StageRules.evaluate(colony.stage(), inputs);
@@ -70,33 +75,40 @@ public final class ColonyDevelopment {
         }
         return new Evaluation(colony.stage(), result, inputs, List.copyOf(states), cap);
     }
-    /** The founding chamber counts a function only with its owned marker, open cells and an enclosed shell:
-     * the same live habitat predicate that gates brood care. Unloaded terrain is unknown, not absent. */
-    private static ChamberState confirm(ServerLevel l, UUID queen, NestPlan plan, boolean operational, ChamberRegistry.Chamber chamber) {
+    /** A function counts only with its owned marker in an open, enclosed chamber: the same live habitat predicate that
+     * gates brood care (NestPlan.nurseryFindings), plus a dug chamber's own cells. Every check runs; a fault seen in
+     * loaded blocks makes the function absent even beside unavailable terrain, which alone leaves it unknown. */
+    private static ChamberState confirm(ServerLevel l, UUID queen, NestPlan plan, Findings habitat, ChamberRegistry.Chamber chamber) {
         var functions = new EnumMap<ChamberFunction, Presence>(ChamberFunction.class);
-        if (!chamber.id().equals(ChamberRegistry.FOUNDING)) {
-            // Chambers dug from nest plans get their live rule with that work; until then a saved entry never counts.
-            for (var f : chamber.functions()) functions.put(f, Presence.ABSENT);
-            return new ChamberState(chamber.id(), functions, 0, "no_live_confirmation_rule");
+        Findings space;
+        if (chamber.id().equals(ChamberRegistry.FOUNDING)) space = habitat;
+        else {
+            var room = ChamberExcavation.roomFindings(l, queen, plan, chamber.min(), chamber.max());
+            if (room == null) {
+                for (var f : chamber.functions()) functions.put(f, Presence.ABSENT);
+                return new ChamberState(chamber.id(), functions, 0, "no_live_confirmation_rule");
+            }
+            space = habitat.copy().add(room);
         }
-        String problem = plan.nurseryProblem(l, queen, operational);
-        boolean unloaded = problem != null && problem.endsWith("chunk_unavailable");
+        var all = space.copy();
         for (var f : chamber.functions()) {
             var marker = chamber.markers().get(f);
-            Presence presence;
-            if (marker == null) presence = Presence.ABSENT;
-            else if (unloaded || !NestPlan.loaded(l, marker)) presence = Presence.UNKNOWN;
-            else presence = problem == null && ownedMarker(l, queen, plan, f, marker) ? Presence.CONFIRMED : Presence.ABSENT;
-            functions.put(f, presence);
+            var check = space.copy();
+            if (marker == null) check.fault(f.serializedName() + "_marker_missing");
+            else if (check.cell(NestPlan.loaded(l, marker), f.serializedName() + "_marker_chunk_unavailable") && !ownedMarker(l, queen, plan, f, marker))
+                check.fault(f.serializedName() + "_marker_missing_or_foreign");
+            functions.put(f, switch (check.verdict()) { case CLEAR -> Presence.CONFIRMED; case UNKNOWN -> Presence.UNKNOWN; case DAMAGED -> Presence.ABSENT; });
+            all.add(check);
         }
-        return new ChamberState(chamber.id(), functions, problem == null ? Math.min(chamber.tier(), EARTHEN) : 0, problem);
+        return new ChamberState(chamber.id(), functions, space.verdict() == Findings.Verdict.CLEAR ? Math.min(chamber.tier(), EARTHEN) : 0, all.problem());
     }
     private static boolean ownedMarker(ServerLevel l, UUID queen, NestPlan plan, ChamberFunction f, BlockPos marker) {
         return switch (f) {
             case NURSERY -> l.getBlockEntity(marker) instanceof BroodPile pile && pile.ownedBy(queen, plan);
             case FOOD_STORE -> l.getBlockEntity(marker) instanceof NestCache cache && cache.ownedBy(queen, plan);
-            // No queen's hall or material store block exists yet; the founding chamber is neither.
-            case MATERIAL_STORE, QUEENS_HALL -> false;
+            case MATERIAL_STORE -> l.getBlockEntity(marker) instanceof MaterialStore store && store.ownedBy(queen, plan);
+            // No queen's hall block exists yet.
+            case QUEENS_HALL -> false;
         };
     }
 }

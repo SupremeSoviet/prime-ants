@@ -54,7 +54,8 @@ public final class ColonyAlarm extends SavedData {
         var owner=ColonyTerrain.get(l).componentOwner(l,p);if(owner!=null)return owner;
         owner=ColonyPlugs.get(l).componentOwner(l,p);if(owner!=null)return owner;
         if(l.getBlockEntity(p) instanceof dev.primeants.brood.BroodPile b)return b.componentOwner();
-        if(l.getBlockEntity(p) instanceof NestCache cache)return cache.componentOwner();return null;
+        if(l.getBlockEntity(p) instanceof NestCache cache)return cache.componentOwner();
+        if(l.getBlockEntity(p) instanceof MaterialStore store)return store.componentOwner();return null;
     }
     private record BreakKey(ServerLevel level,UUID player,BlockPos pos){}
     private record Before(UUID colony,BlockState state,long tick){}

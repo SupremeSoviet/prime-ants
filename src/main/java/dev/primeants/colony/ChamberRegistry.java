@@ -100,6 +100,22 @@ public final class ChamberRegistry extends SavedData {
             throw new IllegalStateException("Chamber registry conflict for colony " + queen);
         return existing;
     }
+    /** Registers a chamber dug from the nest plan once. A saved entry with the same id must describe the same chamber;
+     * a conflicting one is kept and reported. */
+    public boolean register(UUID queen, Chamber chamber) {
+        var c = colonies.get(queen);
+        if (c == null) return false;
+        var saved = c.chamber(chamber.id());
+        if (saved != null) {
+            if (saved.equals(chamber)) return true;
+            dev.primeants.PrimeAnts.LOGGER.error("Chamber registry conflict queen={} saved={} built={}", queen, saved, chamber);
+            return false;
+        }
+        var chambers = new ArrayList<>(c.chambers()); chambers.add(chamber);
+        colonies.put(queen, new Colony(c.queen(), c.entrance(), c.direction(), chambers, c.stage())); setDirty();
+        dev.primeants.PrimeAnts.LOGGER.info("Chamber registered queen={} chamber={} functions={} tier={} markers={}", queen, chamber.id(), chamber.functions(), chamber.tier(), chamber.markers());
+        return true;
+    }
     void stage(UUID queen, ColonyStage stage) {
         var c = colonies.get(queen);
         colonies.put(queen, new Colony(c.queen(), c.entrance(), c.direction(), c.chambers(), stage)); setDirty();

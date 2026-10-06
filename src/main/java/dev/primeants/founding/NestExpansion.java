@@ -15,16 +15,17 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.saveddata.*;
 import net.minecraft.world.phys.AABB;
 
-/** One bounded circulation widening per colony. Plans, successful edits and live usable space are distinct. */
+/** One bounded circulation widening per colony (0.1.0). Plans, successful edits and live usable space are distinct.
+ * Its job is the shared DigJob; nest-plan chambers wait for it (ChamberExcavation). */
 public final class NestExpansion extends SavedData {
     public static final int HARD_CAP=32, REMOVALS=12, RADIUS=6, DEPTH=3;
-    public static final class Job {
+    public static final class Job extends DigJob {
         static final Codec<Job> CODEC=RecordCodecBuilder.create(i->i.group(
             BlockPos.CODEC.fieldOf("entrance").forGetter(j->j.home.entrance()),
             Codec.STRING.fieldOf("direction").forGetter(j->j.home.direction().getName()),
             Codec.INT.fieldOf("side").forGetter(j->j.side),
             BlockState.CODEC.listOf().fieldOf("expected").forGetter(j->j.expected),
-            BlockPos.CODEC.listOf().fieldOf("completed").forGetter(j->List.copyOf(j.completed)),
+            BlockPos.CODEC.listOf().fieldOf("completed").forGetter(DigJob::completed),
             Codec.STRING.fieldOf("claim").forGetter(j->j.claim==null?"":j.claim.toString()),
             Codec.INT.fieldOf("deposited").forGetter(j->j.deposited),
             Codec.INT.fieldOf("released").forGetter(j->j.released),
@@ -34,41 +35,35 @@ public final class NestExpansion extends SavedData {
             Codec.STRING.fieldOf("used_by").forGetter(j->j.usedBy),
             Codec.STRING.fieldOf("use").forGetter(j->j.use)
         ).apply(i,Job::new));
-        public final NestPlan home;
         public final int side,triggerWorkers;
-        public final List<BlockPos> tasks;
-        public final List<BlockState> expected;
-        private final List<BlockPos> completed;
-        public UUID claim;
-        public int deposited,released;
-        public long ticks;
-        public String reason,usedBy,use;
+        public String usedBy,use;
         private Job(BlockPos entrance,String direction,int side,List<BlockState> expected,List<BlockPos> completed,String claim,int deposited,int released,long ticks,String reason,int triggerWorkers,String usedBy,String use){
-            Direction d=Direction.byName(direction);if(d==null||d.getAxis().isVertical()||Math.abs(side)!=1)throw new IllegalArgumentException("Invalid extension home");
-            home=NestPlan.geometry(entrance,d);this.side=side;tasks=targets(home,side);this.expected=List.copyOf(expected);this.completed=new ArrayList<>(completed);
-            this.claim=claim.isEmpty()?null:UUID.fromString(claim);this.deposited=deposited;this.released=released;this.ticks=ticks;this.reason=reason;this.triggerWorkers=triggerWorkers;this.usedBy=usedBy;this.use=use;
-            if(expected.size()!=REMOVALS||completed.size()>REMOVALS||!tasks.subList(0,completed.size()).equals(completed)||deposited<0||released<0||deposited+released>completed.size()||ticks<0)throw new IllegalArgumentException("Invalid saved extension edits/balance");
+            super(home(entrance,direction,side),targets(home(entrance,direction,side),side),expected,completed,claim,deposited,released,ticks,reason);
+            this.side=side;this.triggerWorkers=triggerWorkers;this.usedBy=usedBy;this.use=use;
         }
-        public int removed(){return completed.size();}
-        public boolean complete(){return removed()==tasks.size()&&deposited+released==removed();}
-        public List<BlockPos> completed(){return List.copyOf(completed);}
-        public List<BlockPos> floors(){return tasks.stream().filter(p->p.getY()==home.entrance().getY()-2).toList();}
-        public List<BlockPos> surfaces(){
+        private static NestPlan home(BlockPos entrance,String direction,int side){
+            Direction d=Direction.byName(direction);if(d==null||d.getAxis().isVertical()||Math.abs(side)!=1)throw new IllegalArgumentException("Invalid extension home");
+            return NestPlan.geometry(entrance,d);
+        }
+        @Override public String label(){return "extension";}
+        @Override public int cap(){return HARD_CAP;}
+        @Override public void changed(ServerLevel l){NestExpansion.get(l).changed();}
+        @Override public List<BlockPos> surfaces(){
             var out=new LinkedHashSet<BlockPos>();for(var p:tasks)for(var d:Direction.values()){var n=p.relative(d);if(!tasks.contains(n)&&!home.tasks().contains(n))out.add(n);}return List.copyOf(out);
         }
         public List<BlockPos> usable(ServerLevel l,UUID owner){
             if(problem(l,owner)!=null)return List.of();
             return floors().stream().filter(p->completed.contains(p)&&completed.contains(p.above())&&NestPlan.walkable(l,p)).toList();
         }
-        public String problem(ServerLevel l,UUID owner){
+        /** The planned footprint is guarded from planning on: every pending cell and the whole shell stay solid. */
+        @Override public void findings(ServerLevel l,UUID owner,Findings r){
             for(var p:tasks){
-                if(!NestPlan.loaded(l,p))return "extension_chunk_unavailable";
-                if(completed.contains(p)){if(!ColonyTerrain.get(l).opened(l,p,owner))return "extension_completed_opening_revoked";}
-                else if(!l.getBlockState(p).isSolidRender()||!l.getFluidState(p).isEmpty())return "extension_unauthorized_pending_breach";
+                if(!r.cell(NestPlan.loaded(l,p),"extension_chunk_unavailable"))continue;
+                if(completed.contains(p)){if(!ColonyTerrain.get(l).opened(l,p,owner))r.fault("extension_completed_opening_revoked");}
+                else if(!l.getBlockState(p).isSolidRender()||!l.getFluidState(p).isEmpty())r.fault("extension_unauthorized_pending_breach");
             }
-            for(var p:surfaces())if(!NestPlan.loaded(l,p))return "extension_chunk_unavailable";
-                else if(!l.getBlockState(p).isSolidRender()||!l.getFluidState(p).isEmpty())return "extension_shell_or_support_open";
-            return null;
+            for(var p:surfaces())if(r.cell(NestPlan.loaded(l,p),"extension_chunk_unavailable")&&(!l.getBlockState(p).isSolidRender()||!l.getFluidState(p).isEmpty()))
+                r.fault("extension_shell_or_support_open");
         }
     }
     public static final Codec<NestExpansion> CODEC=Codec.unboundedMap(Codec.STRING,Job.CODEC).xmap(NestExpansion::new,d->Map.copyOf(d.jobs));
@@ -80,8 +75,9 @@ public final class NestExpansion extends SavedData {
     private static List<BlockPos> targets(NestPlan p,int side){
         var out=new ArrayList<BlockPos>();for(int s:new int[]{2,3})for(int f:(s==2?new int[]{5,4,3}:new int[]{3,4,5}))for(int y=-2;y<=-1;y++)out.add(p.at(f,s*side,y));return List.copyOf(out);
     }
-    public boolean opening(ServerLevel l,BlockPos p,UUID owner){var j=job(owner);return j!=null&&j.completed.contains(p)&&ColonyTerrain.get(l).opened(l,p,owner);}
+    public boolean opening(ServerLevel l,BlockPos p,UUID owner){var j=job(owner);return j!=null&&j.opening(l,p,owner);}
     public String problem(ServerLevel l,UUID owner){var j=job(owner);return j==null?null:j.problem(l,owner);}
+    public void findings(ServerLevel l,UUID owner,Findings r){var j=job(owner);if(j!=null)j.findings(l,owner,r);}
     public List<BlockPos> usable(ServerLevel l,UUID owner){var j=job(owner);return j==null?List.of():j.usable(l,owner);}
     public List<BlockPos> operationalSpace(ServerLevel l,UUID owner){var j=job(owner);return j!=null&&j.removed()==j.tasks.size()?j.usable(l,owner):List.of();}
     /** Idle/feeding circulation may use already verified two-high floors during a job, while
@@ -100,40 +96,11 @@ public final class NestExpansion extends SavedData {
                 :bodyTop<=p.getY()+1&&terrain.compatible(l,p.above(),owner,j.expected.get(j.tasks.indexOf(p.above()))))).toList();
     }
     public void changed(){setDirty();}
-    /** Loaded conflicts are resolved from the worker's canonical task/cargo. Missing lookup stays unknown. */
-    public void reconcile(ServerLevel l,LasiusNigerEntity q){
-        var j=job(q.getUUID());if(j==null||j.claim==null)return;
-        if(!(l.getEntity(j.claim) instanceof LasiusNigerEntity w))return;
-        if(!ColonyMembers.get(l).belongs(w,q.getUUID(),j.home.chamber())||w.workerTasks().plan()==null
-            ||!w.workerTasks().plan().entrance().equals(j.home.entrance())||w.workerTasks().plan().direction()!=j.home.direction()){
-            j.claim=null;j.reason="quarantined_foreign_builder_claim_cargo_and_edits_retained";setDirty();
-            dev.primeants.PrimeAnts.LOGGER.error("Quarantined foreign construction owner queen={} worker={} actualQueen={}",q.getUUID(),w.getUUID(),w.queenId());return;
-        }
-        if(!w.workerTasks().construction()&&(w.getMainHandItem().is(net.minecraft.world.item.Items.DIRT)||j.removed()>j.deposited+j.released)){
-            q.founding().releaseWorker(w);
-            if(!j.reason.startsWith("quarantined_")){
-                j.reason="quarantined_incompatible_task_with_unsettled_soil";setDirty();
-                dev.primeants.PrimeAnts.LOGGER.error("Quarantined construction claim queen={} worker={} phase={} cargo={} removed={} deposited={} released={}",q.getUUID(),w.getUUID(),w.workerTasks().phase(),w.getMainHandItem(),j.removed(),j.deposited,j.released);
-            }
-            return;
-        }
-        if(q.founding().claimedBy(w)){
-            if(w.workerTasks().construction())q.founding().releaseWorker(w);
-            else {j.claim=null;j.reason="persisted_construction_claim_released_task_and_cargo_retained";setDirty();}
-            dev.primeants.PrimeAnts.LOGGER.warn("Resolved overlapping role claims queen={} worker={} phase={} cargo={} removed={} deposited={}",q.getUUID(),w.getUUID(),w.workerTasks().phase(),w.getMainHandItem(),j.removed(),j.deposited);
-        }
-        if(j.claim!=null&&!w.workerTasks().construction()){
-            // Never overwrite nursing/foraging or equipment to recover a historical claim.
-            j.claim=null;j.reason="persisted_construction_claim_released_incompatible_task";setDirty();
-            dev.primeants.PrimeAnts.LOGGER.warn("Released incompatible construction claim queen={} worker={} task={} cargo={}",q.getUUID(),w.getUUID(),w.workerTasks().phase(),w.getMainHandItem());
-        }
-    }
+    public void reconcile(ServerLevel l,LasiusNigerEntity q){var j=job(q.getUUID());if(j!=null)j.reconcile(l,q);}
     public static long remainingCaregivers(ServerLevel l,UUID owner,NestPlan p,LasiusNigerEntity proposed){
         return l.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(p.chamber()).inflate(16),w->w!=proposed&&w.isAlive()&&!w.isRemoved()
             &&owner.equals(w.queenId())&&w.workerTasks().caregiver(l,p)).size();
     }
-    public void removed(Job j,BlockPos p){if(j.removed()>=HARD_CAP||!j.tasks.get(j.removed()).equals(p))throw new IllegalStateException("Extension order/cap");j.completed.add(p);setDirty();}
-    public void release(UUID owner,LasiusNigerEntity w,int soil){var j=job(owner);if(j!=null&&w.getUUID().equals(j.claim)){j.claim=null;j.released+=soil;j.reason="builder_dead_waiting_actual_worker";setDirty();}}
     public void used(UUID owner,LasiusNigerEntity w,String use){var j=job(owner);if(j!=null&&j.usedBy.isEmpty()){j.usedBy=w.getUUID().toString();j.use=use;setDirty();}}
     public static List<BlockPos> deposits(NestPlan p){var out=new ArrayList<>(p.deposits());out.addAll(p.deposits().stream().map(BlockPos::above).toList());return List.copyOf(out);}
     public static boolean depositSupport(ServerLevel l,BlockPos p,UUID owner){return NestPlan.loaded(l,p)&&NestPlan.loaded(l,p.below())&&l.getFluidState(p).isEmpty()&&l.getBlockState(p.below()).isSolidRender()&&(NaturalSoil.get(l).eligible(l,p.below())||ColonyTerrain.get(l).mound(l,p.below(),owner));}

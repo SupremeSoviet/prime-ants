@@ -34,14 +34,14 @@ def gameTestReport = layout.buildDirectory.file('test-results/gametest/server.xm
 def serverDiagnosticFilter = providers.gradleProperty('primeAntsServerDiagnosticFilter')
 def serverDiagnosticGroup = providers.gradleProperty('primeAntsServerDiagnosticGroup')
 // Diagnostic group -> the one GameTest class it runs concurrently. Never acceptance.
-def serverDiagnosticGroups = ['nectar':'NectarGameTest', 'colony_stage':'ColonyStageGameTest']
+def serverDiagnosticGroups = ['nectar':'NectarGameTest', 'colony_stage':'ColonyStageGameTest', 'material_store':'MaterialStoreGameTest']
 // A focused diagnostic may validate one case; it must never make check/build green.
 gradle.taskGraph.whenReady { graph ->
     if ((serverDiagnosticFilter.isPresent() || serverDiagnosticGroup.isPresent()) && graph.hasTask(':check')) {
         throw new GradleException('Server diagnostic filter is forbidden in check/build; use runGameTest for an explicitly labelled single-case diagnosis')
     }
     if (serverDiagnosticGroup.isPresent() && (!(serverDiagnosticGroup.get() in serverDiagnosticGroups.keySet()) || serverDiagnosticFilter.isPresent()))
-        throw new GradleException('Only the explicit concurrent nectar or colony_stage diagnostic groups are supported')
+        throw new GradleException('Only the explicit concurrent nectar, colony_stage or material_store diagnostic groups are supported')
     if (providers.gradleProperty('primeAntsIdleSeed').isPresent() && !serverDiagnosticFilter.isPresent()) {
         throw new GradleException('Idle seed override is diagnostic only; acceptance uses the declared regression fixtures')
     }
@@ -56,7 +56,7 @@ loom.runs.named('gameTest') {
     if (providers.gradleProperty('primeAntsOriginDiagnostics').isPresent()) systemProperties.put('prime_ants.originDiagnostics', 'true')
     systemProperties.put('fabric-api.gametest.report-file', gameTestReport.get().asFile.absolutePath)
     def groupClass = serverDiagnosticGroup.isPresent() ? serverDiagnosticGroups[serverDiagnosticGroup.get()] : null
-    if (serverDiagnosticGroup.isPresent() && groupClass == null) throw new GradleException('Only the explicit concurrent nectar or colony_stage diagnostic groups are supported')
+    if (serverDiagnosticGroup.isPresent() && groupClass == null) throw new GradleException('Only the explicit concurrent nectar, colony_stage or material_store diagnostic groups are supported')
     systemProperties.put('fabric-api.gametest.filter', groupClass != null ? 'prime_ants_test:' + groupClass.replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase() + '_*' : serverDiagnosticFilter.getOrElse('prime_ants_test:*'))
     if (providers.gradleProperty('primeAntsIdleSeed').isPresent()) systemProperties.put('prime_ants.idleSeed', providers.gradleProperty('primeAntsIdleSeed').get())
 }
@@ -318,9 +318,14 @@ tasks.named('runGameTest') {
         if(defenseNames.size()!=10)throw new GradleException('Defense discovery incomplete')
         defenseNames.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:defense_game_test_'+n})throw new GradleException('Missing bounded defense regression '+n)}
         def stageNames=(file('src/gametest/java/dev/primeants/gametest/ColonyStageGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
-        if(stageNames.size()!=5)throw new GradleException('Colony stage discovery incomplete')
+        if(stageNames.size()!=7)throw new GradleException('Colony stage discovery incomplete')
         stageNames.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:colony_stage_game_test_'+n})throw new GradleException('Missing colony stage regression '+n)}
-        if(cases.size()!=173+foodNames.size()+policyNames.size()+defenseNames.size()+stageNames.size())throw new GradleException('Expected complete baseline plus current additions')
+        def storeNames=(file('src/gametest/java/dev/primeants/gametest/MaterialStoreGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+        if(storeNames.size()!=3)throw new GradleException('Material store discovery incomplete')
+        storeNames.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:material_store_game_test_'+n})throw new GradleException('Missing material store test '+n)}
+        // Stage-1 T03: confirmation precedence and the first dug chamber.
+        ['colony_stage_game_test_unavailable_entrance_never_hides_loaded_broken_wall_and_the_colony_regresses','colony_stage_game_test_unavailable_entrance_never_hides_destroyed_loaded_cache_and_the_food_store_is_lost','material_store_game_test_young_colony_digs_the_material_store_and_the_evaluator_confirms_it','material_store_game_test_player_placed_block_in_planned_cell_is_never_removed_and_the_job_stops','material_store_game_test_mid_dig_reload_continues_without_duplicate_removals_and_the_finished_store_reloads_as_one_chamber'].each{n->if(!cases.any{it.@name.text()=='prime_ants_test:'+n})throw new GradleException('Missing T03 regression '+n)}
+        if(cases.size()!=173+foodNames.size()+policyNames.size()+defenseNames.size()+stageNames.size()+storeNames.size())throw new GradleException('Expected complete baseline plus current additions')
         if (report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] }) {
             throw new GradleException('Server GameTest report contains a failure or skipped test')
         }
