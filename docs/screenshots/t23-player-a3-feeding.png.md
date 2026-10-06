@@ -1,0 +1,1 @@
+REJECTED for feeding readability: the server had collected the declared player apple, but client equipment was still air. This empty-handed frame is not visible food evidence; actual delivery trace remains separate.

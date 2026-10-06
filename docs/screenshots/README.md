@@ -228,3 +228,15 @@ Opened again: [T11 mound/traffic](t11-a4-expanded-mound.png) and [T11 connected 
 - [t22-fresh-a4-terrain.png](t22-fresh-a4-terrain.png): actual shoreline with foreground foliage, opened and inspected; bounded discovery later selected no colony and had unsafe observer exploration. Normal closure/archive; no ant/defense claim.
 
 There is no T22 entrance/mound or defense image. The server one-point mob bite/ant UUID is separate evidence in T22/damage-evidence.txt and is not attributed to these terrain frames. Brood 100x/founding 20x are disclosed for the client workload; no ant positioning, forced stages/poses, AI pauses or supplies.
+
+
+### T23 real-client player checkpoint - 2026-10-06
+
+Same naturally placed primary queen9c71829b-25f1-3b96-acbb-96252228271d, entrance(168,67,149), client-created vanilla seed2026100501 world, local known-site observer access. Ordinary survival entry/return, food-drop/4.115m retreat and attack/bite; no measured teleport/noclip, staged ants or terrain clearing. Work20/brood100, native1600x1000, daytime, hidden HUD. All11 fresh PNGs opened. Four A5 frames individually accepted in [image review](t23-player-a5-image-review.json); actual world/input/food/bite records in [A5 evidence](t23-player-a5-fresh.json), mandatory apple trace in [A3](t23-player-a3-fresh.json).
+
+- [A5 entrance/mound](t23-player-a5-entrance.png): entrance explicitly framed, living worker at opened stairs and native mound edges.
+- [A5 existing interior](t23-player-a5-interior.png): actual chamber/queen/mineral floor during ordinary survival entry, then return; nursery empty after the first clutch, no visible-brood or cutaway claim.
+- [A5 food carrying](t23-player-a5-feeding.png): supplied raw chicken visibly at the genuine forager mandibles after client equipment sync; world UUID947cdc0c-3104-4b01-bf72-12db6b591545 reaches the owned cache. Optional one-chicken repeat; required one-apple delivery is separately secured in A3. Player supplies are not autonomous intake proof.
+- [A5 actual defense](t23-player-a5-defense.png): hit worker red after real survival attack; another owned worker gives an actual mob bite20->19HP and player retreats. No forced target or pose.
+
+Preserved partials: A1 entrance failed recorder resolution coupling; A2 is a readable native-frame recovery only. A3 entrance/interior/actual defense are real, but [A3 feeding](t23-player-a3-feeding.png) is **rejected** because client equipment was still air. [A4 food-sync](t23-player-a4-food-sync.png) records actual native nectar equipment, but grass/terrain occlude the mouth/item and it is **rejected** for readable feeding proof. Neither recovery nor normal closure alone passes the full checkpoint. Each attempt's normal closed world was immediately archived. T20/T22 PNGs and their original qualifications remain unchanged. T22 A4's drowned/unloaded-height nonselection is observer failure, not absence proof.

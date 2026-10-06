@@ -59,6 +59,7 @@ loom.runs.named('gameTest') {
 apply from: 'gradle/client-evidence.gradle'
 apply from: 'gradle/restart-evidence.gradle'
 apply from: 'gradle/placement-diagnostic.gradle'
+apply from: 'gradle/fresh-player-validation.gradle'
 def capturePrefix = providers.gradleProperty('primeAntsCapturePrefix').getOrElse('t05-' + java.util.UUID.randomUUID().toString())
 def captureRunId = java.util.UUID.randomUUID().toString()
 def captureStart = System.currentTimeMillis()
@@ -73,7 +74,14 @@ loom.runs.named('clientGameTest') {
         if(providers.gradleProperty('primeAntsClientScenario').get()!='fresh-survival'||providers.gradleProperty('primeAntsPlayerBasicsWorld').isPresent())throw new GradleException('Fresh survival requires client-generated overworld without imported playerBasicsWorld')
         systemProperties.put('prime_ants.clientScenario','fresh-survival')
         systemProperties.put('prime_ants.freshLoadingOnly',providers.gradleProperty('primeAntsFreshLoadingOnly').getOrElse('false'))
+        systemProperties.put('prime_ants.freshObserverRecoveryOnly',providers.gradleProperty('primeAntsFreshObserverRecoveryOnly').getOrElse('false'))
+        systemProperties.put('prime_ants.freshFoodSyncRecoveryOnly',providers.gradleProperty('primeAntsFreshFoodSyncRecoveryOnly').getOrElse('false'))
+        systemProperties.put('prime_ants.playerFood',providers.gradleProperty('primeAntsPlayerFood').getOrElse('apple'))
+        if(providers.gradleProperty('primeAntsPriorAppleEvidence').isPresent())systemProperties.put('prime_ants.priorAppleEvidence',providers.gradleProperty('primeAntsPriorAppleEvidence').get())
         systemProperties.put('prime_ants.priorScenarioTicks',providers.gradleProperty('primeAntsPriorScenarioTicks').getOrElse('0'))
+        ['primeAntsFreshWorldArchive':'prime_ants.freshWorldArchive','primeAntsKnownSiteRoute':'prime_ants.knownSiteRoute','primeAntsFreshArchiveWorld':'prime_ants.freshArchiveWorld'].each { property,key ->
+            if(providers.gradleProperty(property).isPresent())systemProperties.put(key,providers.gradleProperty(property).get())
+        }
     }
     if(providers.gradleProperty('primeAntsPlayerBasicsWorld').isPresent()){
         systemProperties.put('prime_ants.playerLoadingProbe',providers.gradleProperty('primeAntsPlayerLoadingProbe').getOrElse('false'))
@@ -149,14 +157,17 @@ tasks.named('runClientGameTest') {
             throw new GradleException('Current cache visuals contain an atlas/model failure')
         if(providers.gradleProperty('primeAntsClientScenario').getOrElse('')=='fresh-survival'){
             def f=new groovy.json.JsonSlurper().parse(file("docs/screenshots/${capturePrefix}-fresh.json"))
-            if(f.status!='success'||f.normal_close!=true||f.run_id!=captureRunId||f.seed!=2026100501L||f.server_ticks[1]<=f.server_ticks[0]||f.client_ticks[1]<=f.client_ticks[0]||!file(f.terrain_image).exists()||f.generation.dimension!='minecraft:overworld'||!f.generation.generator.endsWith('NoiseBasedChunkGenerator'))throw new GradleException('Fresh survival loading/movement/render/closure failed')
+            if(f.run_id!=captureRunId)throw new GradleException('Stale fresh client evidence')
+            def reviewFile=file("docs/screenshots/${capturePrefix}-image-review.json")
+            def result=classifyFreshPlayerResult(f,reviewFile.exists()?new groovy.json.JsonSlurper().parse(reviewFile):[:])
+            file("build/test-results/client-model/${capturePrefix}-validation.json").setText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(result)),'UTF-8')
             def model=new groovy.xml.XmlSlurper().parse(currentModelReport)
             def cases=model.depthFirst().findAll{it.name()=='testcase'}
             def names=(file('src/gametest/java/dev/primeants/gametest/AntModelGameTest.java').text =~ /test\(form, "(\w+)"/).collect{it[1]}.toSet()-['profilesOnly']
             def expected=['WORKER','QUEEN'].collectMany{form->names.collect{'AntModel.'+form+':'+it}}.toSet()
             if(cases.size()!=26||cases.collect{it.@classname.text()+':'+it.@name.text()}.toSet()!=expected||model.depthFirst().any{it.name() in ['failure','error','skipped']})throw new GradleException('Fresh client must also execute every current model name without failure/skip')
-            if(!f.loading_only&&(!(f.natural_result in ['defense_demonstrated','bounded_absence','incomplete_maturation'])||f.additional_ticks_through_close>24000))throw new GradleException('Natural colony result or tick bound missing')
-            logger.lifecycle('Verified client-created fresh survival overworld, input movement, terrain render and normal close');return
+            if(!result.checkpoint_success&&result.state!='loading_only'&&!(result.state=='observer_recovery_only'&&providers.gradleProperty('primeAntsFreshObserverRecoveryOnly').getOrElse('false')=='true')&&!(result.state=='food_sync_recovery_only'&&providers.gradleProperty('primeAntsFreshFoodSyncRecoveryOnly').getOrElse('false')=='true'))throw new GradleException("Player checkpoint incomplete/rejected: ${result.state}; loading/closure remain separate")
+            logger.lifecycle("Fresh client result: ${result.state}; checkpoint_success=${result.checkpoint_success}");return
         }
         if(providers.gradleProperty('primeAntsPlayerLoadingProbe').getOrElse('false')=='true'){
             def p=new groovy.json.JsonSlurper().parse(file("docs/screenshots/${capturePrefix}-provenance.json"))

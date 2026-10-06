@@ -1,0 +1,1 @@
+Actual colony response immediately after ordinary survival provocation, recorded mob-ant bite20->19HP; close workers/queen and native hurt-camera angle. Player apple is physically visible in the owned cache after genuine delivery; no staged defense.

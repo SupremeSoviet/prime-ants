@@ -258,12 +258,17 @@ public final class DefenseGameTest {
         var q=f.start(c);boolean[] supplied={false},hit={false};LasiusNigerEntity[] donor={null},recipient={null};ServerPlayer[] p={null};
         ItemStack[] cargo={null},otherCargo={null};long[] given={0},received={0};UUID[] claim={null};
         c.onEachTick(()->{
-            if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){new NursingGameTest().supply(c,q,8,8);supplied[0]=true;}
+            // Keep the original total 8 apples/8 chicken, but initially only three apples:
+            // queen feeding plus one real donor leaves a genuinely hungry worker recipient.
+            // Supplying everybody at once sometimes eliminated the crop-action precondition.
+            if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){new NursingGameTest().supply(c,q,3,0);supplied[0]=true;}
             if(!hit[0]){
                 var d=f.workers(c,q).stream().filter(a->a.workerTasks().sharing().actionTicks()>2&&a.workerTasks().sharing().target()!=null).findFirst().orElse(null);if(d==null)return;
                 if(!(c.getLevel().getEntity(d.workerTasks().sharing().target()) instanceof LasiusNigerEntity r)||r.form()!=AntForm.WORKER)return;
                 c.assertTrue(r.workerTasks().sharing().busy()&&d.socialAction()&&r.socialAction(),"Genuine emerged bodies have actually started a physical crop action without forced fasting or target assignment");
                 donor[0]=d;recipient[0]=r;cargo[0]=d.getMainHandItem().copy();otherCargo[0]=r.getMainHandItem().copy();given[0]=d.nutrition().givenSugar();received[0]=r.nutrition().receivedSugar();claim[0]=q.founding().workerClaim();
+                new NursingGameTest().supply(c,q,5,8);
+                dev.primeants.PrimeAnts.LOGGER.info("T23 crop-defense fixture: real partial worker action ticks={} donor={} recipient={}; remaining original supply follows",d.workerTasks().sharing().actionTicks(),d.getUUID(),r.getUUID());
                 p[0]=player(c,stand(c,d),GameType.SURVIVAL);attack(c,p[0],d);hit[0]=true;return;
             }
             if(!donor[0].workerTasks().defending()||!recipient[0].workerTasks().defending())return;

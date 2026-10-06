@@ -1,0 +1,245 @@
+{
+  "run_id": "d883a68e-cf65-40f7-b017-091081f4e9a2",
+  "scenario": "fresh-survival",
+  "seed": 2026100501,
+  "status": "closed",
+  "checkpoint_success": false,
+  "natural_placement": "production default",
+  "render_distance": 8,
+  "simulation_distance": 8,
+  "founding_multiplier": 20.0,
+  "brood_multiplier": 100.0,
+  "observer_setup": "Spectator while loading/travelling/maturing; dry FULL-loaded complete-body check before survival. Camera/daylight setup disclosed; measured entry, drop/retreat and attack use survival inputs.",
+  "observer_setup_moves": [
+    {
+      "purpose": "predeclared site loading; Y is camera only",
+      "site": [
+        168,
+        67,
+        149
+      ],
+      "mode": "spectator"
+    },
+    {
+      "return_to_survival": false,
+      "feet": [
+        168,
+        67,
+        150
+      ],
+      "mode": "spectator setup"
+    }
+  ],
+  "safe_destination_checks": [
+    {
+      "complete_body_clear": true,
+      "ticks_advancing": true,
+      "dry_support_feet_head": true,
+      "feet": [
+        168,
+        67,
+        150
+      ],
+      "FULL": true,
+      "alive": true,
+      "mode_after_setup": "spectator",
+      "build_height_border": true
+    }
+  ],
+  "maturation_samples": [
+    {
+      "server_tick": 32,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.5570057296315,
+        65.0,
+        145.76299418712767
+      ],
+      "phase": "SETTLED",
+      "reason": "operational_open",
+      "lifecycle": "OPEN",
+      "removed": 24,
+      "deposited": 22,
+      "founding_loaded_ticks": 6514,
+      "adult_age": 1435,
+      "workers": 3,
+      "brood_loaded_ticks": 1795,
+      "persisted_stage_duration": 120,
+      "brood_condition": "income_warmup",
+      "brood": [],
+      "first_clutch": [
+        "ac8da9c5-1612-4ab6-a085-9d9341b14dc5",
+        "5ce11813-5809-43fb-812c-79ab942a3c73",
+        "0307320e-4be0-47f1-a5e8-c51569e5ae9b"
+      ]
+    }
+  ],
+  "ant_position_edits": 0,
+  "supplied_ants": 0,
+  "supplied_food": 0,
+  "terrain_edits": 0,
+  "ai_pauses": 0,
+  "measured_teleports": 0,
+  "loading_only": false,
+  "recovery_only": true,
+  "native_frame": [
+    1600,
+    1000
+  ],
+  "prior_scenario_ticks": 10849,
+  "additional_tick_bound": 13151,
+  "source_archive": "C:\\Users\\user\\Documents\\turnloop\\directions\\prime-ants-slice1\\turns\\T23\\t23-player-a3-world.zip",
+  "route": [
+    {
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "initial_ground": [
+        168,
+        67,
+        149
+      ],
+      "priority": "primary"
+    },
+    {
+      "queen": "05888952-07db-3426-8bbc-6cf27cdcf840",
+      "initial_ground": [
+        168,
+        71,
+        86
+      ],
+      "priority": "fallback"
+    }
+  ],
+  "archive_world_root": "t23-player-a3/",
+  "additional_start_tick": 0,
+  "join_protection": "First living server body becomes spectator before physics",
+  "save": "C:\\Users\\user\\Documents\\prime-ants\\build\\run\\clientGameTest\\saves\\t23-player-a4",
+  "persisted_observer_dead": false,
+  "generation": {
+    "dimension": "minecraft:overworld",
+    "generator": "net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator",
+    "seed": 2026100501
+  },
+  "server_ticks": [
+    5,
+    15
+  ],
+  "client_ticks": [
+    3,
+    13
+  ],
+  "loading_success": true,
+  "site_viability": [
+    {
+      "server_tick": 26,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.5570057296315,
+        65.0,
+        145.76299418712767
+      ],
+      "phase": "SETTLED",
+      "reason": "operational_open",
+      "lifecycle": "OPEN",
+      "removed": 24,
+      "deposited": 22,
+      "founding_loaded_ticks": 6514,
+      "adult_age": 1429,
+      "workers": 3,
+      "brood_loaded_ticks": 1789,
+      "persisted_stage_duration": 120,
+      "brood_condition": "income_warmup",
+      "brood": [],
+      "first_clutch": [
+        "ac8da9c5-1612-4ab6-a085-9d9341b14dc5",
+        "5ce11813-5809-43fb-812c-79ab942a3c73",
+        "0307320e-4be0-47f1-a5e8-c51569e5ae9b"
+      ],
+      "FULL_site_loaded": true,
+      "genuine_placement_identity": true,
+      "route_site": [
+        168,
+        67,
+        149
+      ]
+    }
+  ],
+  "colony_uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+  "selected_priority": "primary",
+  "colony_origin": "Existing production automatic queen in closed T22 A4 client-created ordinary overworld; known-site access, not spawn discovery",
+  "recovery_supply": "none; passive existing/native food only",
+  "food-sync_image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t23-player-a4-food-sync.png",
+  "food-sync_rendered_ants": [
+    {
+      "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+      "form": "worker",
+      "callow_visual": 1000,
+      "render_extraction_utc": "2026-10-06T06:12:48.622614800Z",
+      "render_entity_tick": 197,
+      "render_position": [
+        173.40869140625,
+        67.0,
+        149.94775390625
+      ],
+      "body_yaw": -112.5,
+      "walk_animation_position": 43.36121,
+      "walk_animation_speed": 1.2806192E-4,
+      "visual_age_ticks": 198.0,
+      "moving": false,
+      "carried_item": "prime_ants:flower_nectar_v2",
+      "carried_soil_rendered": true,
+      "client_carried_soil_units": 1,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.26875,
+          1.5,
+          -0.265625
+        ],
+        [
+          0.29999998,
+          1.5,
+          -0.0625
+        ],
+        [
+          0.26875,
+          1.5,
+          0.140625
+        ],
+        [
+          -0.26875,
+          1.5,
+          -0.265625
+        ],
+        [
+          -0.29999998,
+          1.5,
+          -0.0625
+        ],
+        [
+          -0.26875,
+          1.5,
+          0.140625
+        ]
+      ],
+      "support_legs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "support_tripod": "boundary"
+    }
+  ],
+  "food_sync_actor": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+  "natural_result": "food_sync_recovery_only",
+  "additional_ticks_through_close": 202,
+  "accumulated_scenario_ticks": 11051,
+  "normal_server_stop": true,
+  "normal_close": true
+}

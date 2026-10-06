@@ -1,0 +1,1282 @@
+{
+  "run_id": "ddc27f26-985e-4f02-81b8-97f1965bfa67",
+  "scenario": "fresh-survival",
+  "seed": 2026100501,
+  "status": "closed",
+  "checkpoint_success": false,
+  "natural_placement": "production default",
+  "render_distance": 8,
+  "simulation_distance": 8,
+  "founding_multiplier": 20.0,
+  "brood_multiplier": 100.0,
+  "observer_setup": "Spectator while loading/travelling/maturing; dry FULL-loaded complete-body check before survival. Camera/daylight setup disclosed; measured entry, drop/retreat and attack use survival inputs.",
+  "observer_setup_moves": [
+    {
+      "mode": "spectator",
+      "purpose": "predeclared site loading; Y is camera only",
+      "site": [
+        168,
+        67,
+        149
+      ]
+    },
+    {
+      "mode": "spectator setup",
+      "return_to_survival": false,
+      "feet": [
+        168,
+        67,
+        150
+      ]
+    },
+    {
+      "mode": "spectator setup",
+      "return_to_survival": true,
+      "feet": [
+        168,
+        67,
+        152
+      ]
+    }
+  ],
+  "safe_destination_checks": [
+    {
+      "build_height_border": true,
+      "complete_body_clear": true,
+      "ticks_advancing": true,
+      "dry_support_feet_head": true,
+      "feet": [
+        168,
+        67,
+        150
+      ],
+      "FULL": true,
+      "alive": true,
+      "mode_after_setup": "spectator"
+    },
+    {
+      "build_height_border": true,
+      "complete_body_clear": true,
+      "ticks_advancing": true,
+      "dry_support_feet_head": true,
+      "feet": [
+        168,
+        67,
+        152
+      ],
+      "FULL": true,
+      "alive": true,
+      "mode_after_setup": "survival"
+    }
+  ],
+  "maturation_samples": [
+    {
+      "server_tick": 32,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.5570057296315,
+        65.0,
+        145.76299418712767
+      ],
+      "phase": "SETTLED",
+      "reason": "operational_open",
+      "lifecycle": "OPEN",
+      "removed": 24,
+      "deposited": 22,
+      "founding_loaded_ticks": 6514,
+      "adult_age": 906,
+      "workers": 3,
+      "brood_loaded_ticks": 1266,
+      "persisted_stage_duration": 120,
+      "brood_condition": "income_warmup",
+      "brood": [],
+      "first_clutch": [
+        "0307320e-4be0-47f1-a5e8-c51569e5ae9b",
+        "ac8da9c5-1612-4ab6-a085-9d9341b14dc5",
+        "5ce11813-5809-43fb-812c-79ab942a3c73"
+      ]
+    },
+    {
+      "server_tick": 32,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.5570057296315,
+        65.0,
+        145.76299418712767
+      ],
+      "phase": "SETTLED",
+      "reason": "operational_open",
+      "lifecycle": "OPEN",
+      "removed": 24,
+      "deposited": 22,
+      "founding_loaded_ticks": 6514,
+      "adult_age": 906,
+      "workers": 3,
+      "brood_loaded_ticks": 1266,
+      "persisted_stage_duration": 120,
+      "brood_condition": "income_warmup",
+      "brood": [],
+      "first_clutch": [
+        "0307320e-4be0-47f1-a5e8-c51569e5ae9b",
+        "ac8da9c5-1612-4ab6-a085-9d9341b14dc5",
+        "5ce11813-5809-43fb-812c-79ab942a3c73"
+      ]
+    },
+    {
+      "server_tick": 42,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.5570057296315,
+        65.0,
+        145.76299418712767
+      ],
+      "phase": "SETTLED",
+      "reason": "operational_open",
+      "lifecycle": "OPEN",
+      "removed": 24,
+      "deposited": 22,
+      "founding_loaded_ticks": 6514,
+      "adult_age": 916,
+      "workers": 3,
+      "brood_loaded_ticks": 1276,
+      "persisted_stage_duration": 120,
+      "brood_condition": "income_warmup",
+      "brood": [],
+      "first_clutch": [
+        "0307320e-4be0-47f1-a5e8-c51569e5ae9b",
+        "ac8da9c5-1612-4ab6-a085-9d9341b14dc5",
+        "5ce11813-5809-43fb-812c-79ab942a3c73"
+      ]
+    }
+  ],
+  "ant_position_edits": 0,
+  "supplied_ants": 0,
+  "supplied_food": "One declared player apple, separate from autonomous intake",
+  "terrain_edits": 0,
+  "ai_pauses": 0,
+  "measured_teleports": 0,
+  "loading_only": false,
+  "recovery_only": false,
+  "native_frame": [
+    1600,
+    1000
+  ],
+  "prior_scenario_ticks": 10320,
+  "additional_tick_bound": 13680,
+  "source_archive": "C:\\Users\\user\\Documents\\turnloop\\directions\\prime-ants-slice1\\turns\\T23\\t23-player-a2-world.zip",
+  "route": [
+    {
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "initial_ground": [
+        168,
+        67,
+        149
+      ],
+      "priority": "primary"
+    },
+    {
+      "queen": "05888952-07db-3426-8bbc-6cf27cdcf840",
+      "initial_ground": [
+        168,
+        71,
+        86
+      ],
+      "priority": "fallback"
+    }
+  ],
+  "archive_world_root": "t23-player-a2/",
+  "additional_start_tick": 0,
+  "join_protection": "First living server body becomes spectator before physics",
+  "save": "C:\\Users\\user\\Documents\\prime-ants\\build\\run\\clientGameTest\\saves\\t23-player-a3",
+  "persisted_observer_dead": false,
+  "generation": {
+    "dimension": "minecraft:overworld",
+    "generator": "net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator",
+    "seed": 2026100501
+  },
+  "server_ticks": [
+    5,
+    15
+  ],
+  "client_ticks": [
+    3,
+    13
+  ],
+  "loading_success": true,
+  "site_viability": [
+    {
+      "server_tick": 26,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.5570057296315,
+        65.0,
+        145.76299418712767
+      ],
+      "phase": "SETTLED",
+      "reason": "operational_open",
+      "lifecycle": "OPEN",
+      "removed": 24,
+      "deposited": 22,
+      "founding_loaded_ticks": 6514,
+      "adult_age": 900,
+      "workers": 3,
+      "brood_loaded_ticks": 1260,
+      "persisted_stage_duration": 120,
+      "brood_condition": "income_warmup",
+      "brood": [],
+      "first_clutch": [
+        "0307320e-4be0-47f1-a5e8-c51569e5ae9b",
+        "ac8da9c5-1612-4ab6-a085-9d9341b14dc5",
+        "5ce11813-5809-43fb-812c-79ab942a3c73"
+      ],
+      "FULL_site_loaded": true,
+      "genuine_placement_identity": true,
+      "route_site": [
+        168,
+        67,
+        149
+      ]
+    }
+  ],
+  "colony_uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+  "selected_priority": "primary",
+  "colony_origin": "Existing production automatic queen in closed T22 A4 client-created ordinary overworld; known-site access, not spawn discovery",
+  "mature_worker_uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+  "entrance": [
+    168,
+    67,
+    149
+  ],
+  "daytime_observer_command": "time set day; production loaded clocks continue",
+  "watch": true,
+  "unprovoked_watch_ticks": 100,
+  "entrance_image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t23-player-a3-entrance.png",
+  "entrance_rendered_ants": [
+    {
+      "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+      "form": "worker",
+      "callow_visual": 1000,
+      "render_extraction_utc": "2026-10-06T06:00:40.593848Z",
+      "render_entity_tick": 151,
+      "render_position": [
+        168.64752012154682,
+        65.0,
+        145.35247987845318
+      ],
+      "body_yaw": 45.0,
+      "walk_animation_position": 0.0,
+      "walk_animation_speed": 0.0,
+      "visual_age_ticks": 152.0,
+      "moving": false,
+      "carried_item": "minecraft:air",
+      "carried_soil_rendered": false,
+      "client_carried_soil_units": 0,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.26875,
+          1.5,
+          -0.265625
+        ],
+        [
+          0.29999998,
+          1.5,
+          -0.0625
+        ],
+        [
+          0.26875,
+          1.5,
+          0.140625
+        ],
+        [
+          -0.26875,
+          1.5,
+          -0.265625
+        ],
+        [
+          -0.29999998,
+          1.5,
+          -0.0625
+        ],
+        [
+          -0.26875,
+          1.5,
+          0.140625
+        ]
+      ],
+      "support_legs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "support_tripod": "boundary"
+    },
+    {
+      "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+      "form": "worker",
+      "callow_visual": 1000,
+      "render_extraction_utc": "2026-10-06T06:00:40.594438400Z",
+      "render_entity_tick": 151,
+      "render_position": [
+        168.4984130859375,
+        67.0,
+        149.8707275390625
+      ],
+      "body_yaw": -180.0,
+      "walk_animation_position": 38.462936,
+      "walk_animation_speed": 0.28541213,
+      "visual_age_ticks": 152.0,
+      "moving": true,
+      "carried_item": "prime_ants:flower_nectar_v2",
+      "carried_soil_rendered": true,
+      "client_carried_soil_units": 1,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.26874998,
+          1.5,
+          -0.3271183
+        ],
+        [
+          0.3,
+          1.4827696,
+          -0.0010067231
+        ],
+        [
+          0.26875,
+          1.5,
+          0.07913173
+        ],
+        [
+          -0.26875,
+          1.4827695,
+          -0.20413174
+        ],
+        [
+          -0.3,
+          1.5,
+          -0.12399326
+        ],
+        [
+          -0.26874998,
+          1.4827695,
+          0.20211829
+        ]
+      ],
+      "support_legs": [
+        0,
+        2,
+        4
+      ],
+      "support_tripod": "A"
+    },
+    {
+      "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "form": "queen",
+      "callow_visual": 1000,
+      "render_extraction_utc": "2026-10-06T06:00:40.594438400Z",
+      "render_entity_tick": 151,
+      "render_position": [
+        168.5570057296315,
+        65.0,
+        145.76299418712767
+      ],
+      "body_yaw": 168.75,
+      "walk_animation_position": 0.0,
+      "walk_animation_speed": 0.0,
+      "visual_age_ticks": 152.0,
+      "moving": false,
+      "carried_item": "minecraft:air",
+      "carried_soil_rendered": false,
+      "client_carried_soil_units": 0,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.464375,
+          1.5000001,
+          -0.5625
+        ],
+        [
+          0.54562503,
+          1.4999999,
+          -0.21875
+        ],
+        [
+          0.464375,
+          1.5000001,
+          0.125
+        ],
+        [
+          -0.464375,
+          1.5000001,
+          -0.5625
+        ],
+        [
+          -0.54562503,
+          1.4999999,
+          -0.21875
+        ],
+        [
+          -0.464375,
+          1.5000001,
+          0.125
+        ]
+      ],
+      "support_legs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "support_tripod": "boundary"
+    },
+    {
+      "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+      "form": "worker",
+      "callow_visual": 1000,
+      "render_extraction_utc": "2026-10-06T06:00:40.594438400Z",
+      "render_entity_tick": 151,
+      "render_position": [
+        167.64752012154682,
+        65.0,
+        145.35247987845318
+      ],
+      "body_yaw": 45.0,
+      "walk_animation_position": 0.0,
+      "walk_animation_speed": 0.0,
+      "visual_age_ticks": 152.0,
+      "moving": false,
+      "carried_item": "minecraft:air",
+      "carried_soil_rendered": false,
+      "client_carried_soil_units": 0,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.26875,
+          1.5,
+          -0.265625
+        ],
+        [
+          0.29999998,
+          1.5,
+          -0.0625
+        ],
+        [
+          0.26875,
+          1.5,
+          0.140625
+        ],
+        [
+          -0.26875,
+          1.5,
+          -0.265625
+        ],
+        [
+          -0.29999998,
+          1.5,
+          -0.0625
+        ],
+        [
+          -0.26875,
+          1.5,
+          0.140625
+        ]
+      ],
+      "support_legs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "support_tripod": "boundary"
+    }
+  ],
+  "entered": true,
+  "interior_image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t23-player-a3-interior.png",
+  "interior_rendered_ants": [
+    {
+      "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+      "form": "worker",
+      "callow_visual": 1000,
+      "render_extraction_utc": "2026-10-06T06:00:42.544074800Z",
+      "render_entity_tick": 188,
+      "render_position": [
+        168.64752012154682,
+        65.0,
+        145.35247987845318
+      ],
+      "body_yaw": 45.0,
+      "walk_animation_position": 0.0,
+      "walk_animation_speed": 0.0,
+      "visual_age_ticks": 189.0,
+      "moving": false,
+      "carried_item": "minecraft:air",
+      "carried_soil_rendered": false,
+      "client_carried_soil_units": 0,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.26875,
+          1.5,
+          -0.265625
+        ],
+        [
+          0.29999998,
+          1.5,
+          -0.0625
+        ],
+        [
+          0.26875,
+          1.5,
+          0.140625
+        ],
+        [
+          -0.26875,
+          1.5,
+          -0.265625
+        ],
+        [
+          -0.29999998,
+          1.5,
+          -0.0625
+        ],
+        [
+          -0.26875,
+          1.5,
+          0.140625
+        ]
+      ],
+      "support_legs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "support_tripod": "boundary"
+    },
+    {
+      "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+      "form": "worker",
+      "callow_visual": 1000,
+      "render_extraction_utc": "2026-10-06T06:00:42.544074800Z",
+      "render_entity_tick": 188,
+      "render_position": [
+        168.49989394437836,
+        65.0,
+        146.2715524788706
+      ],
+      "body_yaw": 180.0086,
+      "walk_animation_position": 51.897736,
+      "walk_animation_speed": 0.8895655,
+      "visual_age_ticks": 189.0,
+      "moving": true,
+      "carried_item": "minecraft:air",
+      "carried_soil_rendered": false,
+      "client_carried_soil_units": 0,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.26875004,
+          1.5,
+          -0.33441064
+        ],
+        [
+          0.29999998,
+          1.4785646,
+          0.0062855845
+        ],
+        [
+          0.26874998,
+          1.5000001,
+          0.0718394
+        ],
+        [
+          -0.26875,
+          1.4785646,
+          -0.1968394
+        ],
+        [
+          -0.29999998,
+          1.5,
+          -0.1312856
+        ],
+        [
+          -0.26875004,
+          1.4785647,
+          0.20941061
+        ]
+      ],
+      "support_legs": [
+        0,
+        2,
+        4
+      ],
+      "support_tripod": "A"
+    },
+    {
+      "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "form": "queen",
+      "callow_visual": 1000,
+      "render_extraction_utc": "2026-10-06T06:00:42.544074800Z",
+      "render_entity_tick": 188,
+      "render_position": [
+        168.5570057296315,
+        65.0,
+        145.76299418712767
+      ],
+      "body_yaw": 168.75,
+      "walk_animation_position": 0.0,
+      "walk_animation_speed": 0.0,
+      "visual_age_ticks": 189.0,
+      "moving": false,
+      "carried_item": "minecraft:air",
+      "carried_soil_rendered": false,
+      "client_carried_soil_units": 0,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.464375,
+          1.5000001,
+          -0.5625
+        ],
+        [
+          0.54562503,
+          1.4999999,
+          -0.21875
+        ],
+        [
+          0.464375,
+          1.5000001,
+          0.125
+        ],
+        [
+          -0.464375,
+          1.5000001,
+          -0.5625
+        ],
+        [
+          -0.54562503,
+          1.4999999,
+          -0.21875
+        ],
+        [
+          -0.464375,
+          1.5000001,
+          0.125
+        ]
+      ],
+      "support_legs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "support_tripod": "boundary"
+    },
+    {
+      "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+      "form": "worker",
+      "callow_visual": 1000,
+      "render_extraction_utc": "2026-10-06T06:00:42.544074800Z",
+      "render_entity_tick": 188,
+      "render_position": [
+        167.64752012154682,
+        65.0,
+        145.35247987845318
+      ],
+      "body_yaw": 45.0,
+      "walk_animation_position": 0.0,
+      "walk_animation_speed": 0.0,
+      "visual_age_ticks": 189.0,
+      "moving": false,
+      "carried_item": "prime_ants:flower_nectar_v2",
+      "carried_soil_rendered": true,
+      "client_carried_soil_units": 1,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.26875,
+          1.5,
+          -0.265625
+        ],
+        [
+          0.29999998,
+          1.5,
+          -0.0625
+        ],
+        [
+          0.26875,
+          1.5,
+          0.140625
+        ],
+        [
+          -0.26875,
+          1.5,
+          -0.265625
+        ],
+        [
+          -0.29999998,
+          1.5,
+          -0.0625
+        ],
+        [
+          -0.26875,
+          1.5,
+          0.140625
+        ]
+      ],
+      "support_legs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "support_tripod": "boundary"
+    }
+  ],
+  "returned": true,
+  "food_trace": {
+    "item": "minecraft:apple",
+    "intake_before": 0,
+    "world_uuid": "3f9328c9-2dbc-470b-9e87-1dec82260bb1",
+    "inventory_loss": 1,
+    "input": "keyDrop with immediate keyDown/keyJump",
+    "step_away_blocks": 4.115340406386029,
+    "carrier": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+    "carried_units": 1,
+    "world_item_removed": true,
+    "delivered": true,
+    "inventory_final": 0,
+    "intake_after": 0
+  },
+  "feeding_image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t23-player-a3-feeding.png",
+  "feeding_rendered_ants": [
+    {
+      "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+      "form": "worker",
+      "callow_visual": 1000,
+      "render_extraction_utc": "2026-10-06T06:00:50.041635600Z",
+      "render_entity_tick": 337,
+      "render_position": [
+        168.64752012154682,
+        65.0,
+        145.35247987845318
+      ],
+      "body_yaw": 45.0,
+      "walk_animation_position": 0.0,
+      "walk_animation_speed": 0.0,
+      "visual_age_ticks": 338.0,
+      "moving": false,
+      "carried_item": "minecraft:air",
+      "carried_soil_rendered": false,
+      "client_carried_soil_units": 0,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.26875,
+          1.5,
+          -0.265625
+        ],
+        [
+          0.29999998,
+          1.5,
+          -0.0625
+        ],
+        [
+          0.26875,
+          1.5,
+          0.140625
+        ],
+        [
+          -0.26875,
+          1.5,
+          -0.265625
+        ],
+        [
+          -0.29999998,
+          1.5,
+          -0.0625
+        ],
+        [
+          -0.26875,
+          1.5,
+          0.140625
+        ]
+      ],
+      "support_legs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "support_tripod": "boundary"
+    },
+    {
+      "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+      "form": "worker",
+      "callow_visual": 1000,
+      "render_extraction_utc": "2026-10-06T06:00:50.041635600Z",
+      "render_entity_tick": 337,
+      "render_position": [
+        168.5,
+        67.0,
+        152.5760498046875
+      ],
+      "body_yaw": 0.0,
+      "walk_animation_position": 80.20962,
+      "walk_animation_speed": 0.28512296,
+      "visual_age_ticks": 338.0,
+      "moving": true,
+      "carried_item": "minecraft:air",
+      "carried_soil_rendered": false,
+      "client_carried_soil_units": 0,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.26875,
+          1.4777012,
+          -0.2623263
+        ],
+        [
+          0.29999998,
+          1.5,
+          -0.0657987
+        ],
+        [
+          0.26874998,
+          1.4777013,
+          0.14392371
+        ],
+        [
+          -0.26874998,
+          1.5,
+          -0.2689237
+        ],
+        [
+          -0.29999995,
+          1.4777012,
+          -0.059201304
+        ],
+        [
+          -0.26875,
+          1.5,
+          0.1373263
+        ]
+      ],
+      "support_legs": [
+        1,
+        3,
+        5
+      ],
+      "support_tripod": "B"
+    },
+    {
+      "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "form": "queen",
+      "callow_visual": 1000,
+      "render_extraction_utc": "2026-10-06T06:00:50.041635600Z",
+      "render_entity_tick": 337,
+      "render_position": [
+        168.5570057296315,
+        65.0,
+        145.76299418712767
+      ],
+      "body_yaw": 168.75,
+      "walk_animation_position": 0.0,
+      "walk_animation_speed": 0.0,
+      "visual_age_ticks": 338.0,
+      "moving": false,
+      "carried_item": "minecraft:air",
+      "carried_soil_rendered": false,
+      "client_carried_soil_units": 0,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.464375,
+          1.5000001,
+          -0.5625
+        ],
+        [
+          0.54562503,
+          1.4999999,
+          -0.21875
+        ],
+        [
+          0.464375,
+          1.5000001,
+          0.125
+        ],
+        [
+          -0.464375,
+          1.5000001,
+          -0.5625
+        ],
+        [
+          -0.54562503,
+          1.4999999,
+          -0.21875
+        ],
+        [
+          -0.464375,
+          1.5000001,
+          0.125
+        ]
+      ],
+      "support_legs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "support_tripod": "boundary"
+    },
+    {
+      "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+      "form": "worker",
+      "callow_visual": 1000,
+      "render_extraction_utc": "2026-10-06T06:00:50.041635600Z",
+      "render_entity_tick": 337,
+      "render_position": [
+        167.64752012154682,
+        65.0,
+        145.35247987845318
+      ],
+      "body_yaw": 1.40625,
+      "walk_animation_position": 0.0,
+      "walk_animation_speed": 0.0,
+      "visual_age_ticks": 338.0,
+      "moving": false,
+      "carried_item": "minecraft:air",
+      "carried_soil_rendered": false,
+      "client_carried_soil_units": 0,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.26875,
+          1.5,
+          -0.265625
+        ],
+        [
+          0.29999998,
+          1.5,
+          -0.0625
+        ],
+        [
+          0.26875,
+          1.5,
+          0.140625
+        ],
+        [
+          -0.26875,
+          1.5,
+          -0.265625
+        ],
+        [
+          -0.29999998,
+          1.5,
+          -0.0625
+        ],
+        [
+          -0.26875,
+          1.5,
+          0.140625
+        ]
+      ],
+      "support_legs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "support_tripod": "boundary"
+    }
+  ],
+  "fed": true,
+  "provocation": "keyAttack on genuine mature worker",
+  "health_before_provocation": 20.0,
+  "damage": {
+    "damage_source": "mob",
+    "ant_bites": 1,
+    "server_tick": 492,
+    "player_health": 19.0,
+    "ant_uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+    "player_alive": true
+  },
+  "client_bite": true,
+  "defense_image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t23-player-a3-defense.png",
+  "defense_rendered_ants": [
+    {
+      "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+      "form": "worker",
+      "callow_visual": 1000,
+      "render_extraction_utc": "2026-10-06T06:00:57.739875500Z",
+      "render_entity_tick": 489,
+      "render_position": [
+        168.6116943359375,
+        65.0,
+        145.833740234375
+      ],
+      "body_yaw": 8.4375,
+      "walk_animation_position": 1.5293697,
+      "walk_animation_speed": 0.26748952,
+      "visual_age_ticks": 490.0,
+      "moving": true,
+      "carried_item": "minecraft:air",
+      "carried_soil_rendered": false,
+      "client_carried_soil_units": 0,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.26875004,
+          1.4799191,
+          -0.22721843
+        ],
+        [
+          0.3,
+          1.5,
+          -0.10090659
+        ],
+        [
+          0.26874998,
+          1.4799191,
+          0.17903157
+        ],
+        [
+          -0.26874998,
+          1.5,
+          -0.30403158
+        ],
+        [
+          -0.29999995,
+          1.4799191,
+          -0.024093412
+        ],
+        [
+          -0.26875007,
+          1.5,
+          0.10221843
+        ]
+      ],
+      "support_legs": [
+        1,
+        3,
+        5
+      ],
+      "support_tripod": "B"
+    },
+    {
+      "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+      "form": "worker",
+      "callow_visual": 1000,
+      "render_extraction_utc": "2026-10-06T06:00:57.739875500Z",
+      "render_entity_tick": 489,
+      "render_position": [
+        168.6342220471895,
+        65.2913818359375,
+        145.05101136180522
+      ],
+      "body_yaw": 3.131218,
+      "walk_animation_position": 115.10501,
+      "walk_animation_speed": 0.46444687,
+      "visual_age_ticks": 490.0,
+      "moving": true,
+      "carried_item": "minecraft:air",
+      "carried_soil_rendered": false,
+      "client_carried_soil_units": 0,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.26874998,
+          1.5,
+          -0.240555
+        ],
+        [
+          0.29999995,
+          1.4764061,
+          -0.087569974
+        ],
+        [
+          0.26874998,
+          1.5000001,
+          0.16569497
+        ],
+        [
+          -0.26874995,
+          1.476406,
+          -0.29069498
+        ],
+        [
+          -0.3,
+          1.5,
+          -0.037430022
+        ],
+        [
+          -0.26875,
+          1.476406,
+          0.11555501
+        ]
+      ],
+      "support_legs": [
+        0,
+        2,
+        4
+      ],
+      "support_tripod": "A"
+    },
+    {
+      "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "form": "queen",
+      "callow_visual": 1000,
+      "render_extraction_utc": "2026-10-06T06:00:57.740399200Z",
+      "render_entity_tick": 489,
+      "render_position": [
+        168.5570057296315,
+        65.0,
+        145.76299418712767
+      ],
+      "body_yaw": 168.75,
+      "walk_animation_position": 0.0,
+      "walk_animation_speed": 0.0,
+      "visual_age_ticks": 490.0,
+      "moving": false,
+      "carried_item": "minecraft:air",
+      "carried_soil_rendered": false,
+      "client_carried_soil_units": 0,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.464375,
+          1.5000001,
+          -0.5625
+        ],
+        [
+          0.54562503,
+          1.4999999,
+          -0.21875
+        ],
+        [
+          0.464375,
+          1.5000001,
+          0.125
+        ],
+        [
+          -0.464375,
+          1.5000001,
+          -0.5625
+        ],
+        [
+          -0.54562503,
+          1.4999999,
+          -0.21875
+        ],
+        [
+          -0.464375,
+          1.5000001,
+          0.125
+        ]
+      ],
+      "support_legs": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "support_tripod": "boundary"
+    },
+    {
+      "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+      "form": "worker",
+      "callow_visual": 1000,
+      "render_extraction_utc": "2026-10-06T06:00:57.740399200Z",
+      "render_entity_tick": 489,
+      "render_position": [
+        167.937255859375,
+        65.0,
+        145.7425537109375
+      ],
+      "body_yaw": -37.96875,
+      "walk_animation_position": 1.5389076,
+      "walk_animation_speed": 0.26981091,
+      "visual_age_ticks": 490.0,
+      "moving": true,
+      "carried_item": "minecraft:air",
+      "carried_soil_rendered": false,
+      "client_carried_soil_units": 0,
+      "partial_ticks": 1.0,
+      "body_relative_distal_contacts": [
+        [
+          0.26874998,
+          1.4796535,
+          -0.2296029
+        ],
+        [
+          0.3,
+          1.5,
+          -0.09852211
+        ],
+        [
+          0.26874998,
+          1.4796536,
+          0.1766471
+        ],
+        [
+          -0.26875004,
+          1.5,
+          -0.30164713
+        ],
+        [
+          -0.29999998,
+          1.4796535,
+          -0.026477898
+        ],
+        [
+          -0.26874995,
+          1.5,
+          0.10460289
+        ]
+      ],
+      "support_legs": [
+        1,
+        3,
+        5
+      ],
+      "support_tripod": "B"
+    }
+  ],
+  "defense_retreat": true,
+  "natural_result": "interactions_complete",
+  "interactions_complete": true,
+  "additional_ticks_through_close": 529,
+  "accumulated_scenario_ticks": 10849,
+  "normal_server_stop": true,
+  "normal_close": true
+}

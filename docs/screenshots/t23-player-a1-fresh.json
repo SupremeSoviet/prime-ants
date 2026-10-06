@@ -1,0 +1,933 @@
+{
+  "run_id": "e6e52acb-5503-4b5b-a13c-5b4046829895",
+  "scenario": "fresh-survival",
+  "seed": 2026100501,
+  "status": "failed",
+  "checkpoint_success": false,
+  "natural_placement": "production default",
+  "render_distance": 8,
+  "simulation_distance": 8,
+  "founding_multiplier": 20.0,
+  "brood_multiplier": 100.0,
+  "observer_setup": "Spectator while loading/travelling/maturing; dry FULL-loaded complete-body check before survival. Camera/daylight setup disclosed; measured entry, drop/retreat and attack use survival inputs.",
+  "observer_setup_moves": [
+    {
+      "mode": "spectator",
+      "purpose": "predeclared site loading; Y is camera only",
+      "site": [
+        168,
+        67,
+        149
+      ]
+    },
+    {
+      "feet": [
+        171,
+        67,
+        150
+      ],
+      "mode": "spectator setup",
+      "return_to_survival": false
+    },
+    {
+      "feet": [
+        168,
+        67,
+        152
+      ],
+      "mode": "spectator setup",
+      "return_to_survival": true
+    }
+  ],
+  "safe_destination_checks": [
+    {
+      "FULL": true,
+      "alive": true,
+      "mode_after_setup": "spectator",
+      "build_height_border": true,
+      "complete_body_clear": true,
+      "ticks_advancing": true,
+      "dry_support_feet_head": true,
+      "feet": [
+        171,
+        67,
+        150
+      ]
+    },
+    {
+      "FULL": true,
+      "alive": true,
+      "mode_after_setup": "survival",
+      "build_height_border": true,
+      "complete_body_clear": true,
+      "ticks_advancing": true,
+      "dry_support_feet_head": true,
+      "feet": [
+        168,
+        67,
+        152
+      ]
+    }
+  ],
+  "maturation_samples": [
+    {
+      "server_tick": 58,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.47499999403954,
+        67.0,
+        154.42888030886218
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 3,
+      "deposited": 1,
+      "founding_loaded_ticks": 488,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 58,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.47499999403954,
+        67.0,
+        154.42888030886218
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 3,
+      "deposited": 1,
+      "founding_loaded_ticks": 488,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 258,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.716729216041,
+        67.0,
+        154.50343547380464
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 3,
+      "deposited": 2,
+      "founding_loaded_ticks": 688,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 458,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.60584191604366,
+        67.0,
+        150.55834647146773
+      ],
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 3,
+      "deposited": 3,
+      "founding_loaded_ticks": 888,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 658,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.4769482473248,
+        67.0,
+        148.60499196142368
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 6,
+      "deposited": 3,
+      "founding_loaded_ticks": 1088,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 858,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        169.7468079674869,
+        67.0,
+        153.44883881239565
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 6,
+      "deposited": 4,
+      "founding_loaded_ticks": 1288,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 1058,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.94756381191831,
+        67.0,
+        150.9898634590477
+      ],
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 6,
+      "deposited": 6,
+      "founding_loaded_ticks": 1488,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 1258,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.50005813713798,
+        66.0,
+        147.63598005145627
+      ],
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 6,
+      "deposited": 6,
+      "founding_loaded_ticks": 1688,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 1458,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.50059184165954,
+        67.0,
+        150.37500430458346
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 10,
+      "deposited": 6,
+      "founding_loaded_ticks": 1888,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 1658,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        166.84736849207104,
+        67.0,
+        152.48469259506913
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 10,
+      "deposited": 6,
+      "founding_loaded_ticks": 2088,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 1858,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        166.41183311643664,
+        67.0,
+        153.47678376975756
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 10,
+      "deposited": 6,
+      "founding_loaded_ticks": 2288,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 2058,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        166.52500000596046,
+        67.0,
+        152.54996001297317
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 10,
+      "deposited": 7,
+      "founding_loaded_ticks": 2488,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 2258,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        171.0190666076368,
+        67.0,
+        153.46484010521698
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 10,
+      "deposited": 7,
+      "founding_loaded_ticks": 2688,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 2458,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.52142930334497,
+        67.0,
+        153.7723944498082
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 10,
+      "deposited": 9,
+      "founding_loaded_ticks": 2888,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 2658,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        166.8159498467475,
+        68.0,
+        154.49432073481924
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 10,
+      "deposited": 9,
+      "founding_loaded_ticks": 3088,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 2858,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        166.7708085725111,
+        68.0,
+        150.2885845515998
+      ],
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 10,
+      "deposited": 10,
+      "founding_loaded_ticks": 3288,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 3058,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.51749638675417,
+        65.0,
+        145.9803714943402
+      ],
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 12,
+      "deposited": 10,
+      "founding_loaded_ticks": 3488,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 3258,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        169.11316128411403,
+        67.0,
+        151.09744966030635
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 14,
+      "deposited": 10,
+      "founding_loaded_ticks": 3688,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 3458,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        166.46300014334918,
+        68.17675927506424,
+        152.4953571668073
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 14,
+      "deposited": 12,
+      "founding_loaded_ticks": 3888,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 3658,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.12921759210477,
+        68.0,
+        148.87056304476604
+      ],
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 14,
+      "deposited": 14,
+      "founding_loaded_ticks": 4088,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 3858,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        167.75208676830408,
+        65.0,
+        146.51406951136846
+      ],
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 15,
+      "deposited": 14,
+      "founding_loaded_ticks": 4288,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 4058,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.47921824750046,
+        65.0,
+        146.80402628096562
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 18,
+      "deposited": 14,
+      "founding_loaded_ticks": 4488,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 4258,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        169.87478077048684,
+        67.0,
+        152.0205921187927
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 18,
+      "deposited": 14,
+      "founding_loaded_ticks": 4688,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 4458,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        169.1860820284089,
+        67.0,
+        151.71911521508204
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 18,
+      "deposited": 17,
+      "founding_loaded_ticks": 4888,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 4658,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.5092559835404,
+        67.0,
+        149.46712961816
+      ],
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 18,
+      "deposited": 18,
+      "founding_loaded_ticks": 5088,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 4858,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.7723948105418,
+        65.0,
+        146.52131583110472
+      ],
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 20,
+      "deposited": 18,
+      "founding_loaded_ticks": 5288,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 5058,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.50830894232377,
+        66.0,
+        147.66408965726674
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 22,
+      "deposited": 18,
+      "founding_loaded_ticks": 5488,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 5258,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        165.60917027829794,
+        68.0,
+        150.50352875290503
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 22,
+      "deposited": 18,
+      "founding_loaded_ticks": 5688,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 5458,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        170.52274264384167,
+        67.0,
+        151.4999996009637
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 22,
+      "deposited": 19,
+      "founding_loaded_ticks": 5888,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 5658,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        166.8119088078121,
+        68.0,
+        151.4766727564512
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 22,
+      "deposited": 21,
+      "founding_loaded_ticks": 6088,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 5858,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        169.41138434710686,
+        68.0,
+        149.4743123619125
+      ],
+      "phase": "EXCAVATING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 22,
+      "deposited": 22,
+      "founding_loaded_ticks": 6288,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 6058,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.66371340657392,
+        65.0,
+        146.328328535093
+      ],
+      "phase": "SEALING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 24,
+      "deposited": 22,
+      "founding_loaded_ticks": 6488,
+      "adult_age": 0,
+      "workers": 0
+    },
+    {
+      "server_tick": 6258,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.5570057296315,
+        65.0,
+        145.76299418712767
+      ],
+      "phase": "SETTLED",
+      "reason": "settled_throat_sealed",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 24,
+      "deposited": 22,
+      "founding_loaded_ticks": 6514,
+      "adult_age": 0,
+      "workers": 0,
+      "brood_loaded_ticks": 174,
+      "persisted_stage_duration": 120,
+      "brood_condition": "cared",
+      "brood": [
+        {
+          "stage": "LARVA",
+          "id": "0307320e-4be0-47f1-a5e8-c51569e5ae9b"
+        },
+        {
+          "stage": "LARVA",
+          "id": "ac8da9c5-1612-4ab6-a085-9d9341b14dc5"
+        },
+        {
+          "stage": "LARVA",
+          "id": "5ce11813-5809-43fb-812c-79ab942a3c73"
+        }
+      ],
+      "first_clutch": [
+        "5ce11813-5809-43fb-812c-79ab942a3c73",
+        "0307320e-4be0-47f1-a5e8-c51569e5ae9b",
+        "ac8da9c5-1612-4ab6-a085-9d9341b14dc5"
+      ]
+    },
+    {
+      "server_tick": 6458,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.5570057296315,
+        65.0,
+        145.76299418712767
+      ],
+      "phase": "SETTLED",
+      "reason": "settled_throat_sealed",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 24,
+      "deposited": 22,
+      "founding_loaded_ticks": 6514,
+      "adult_age": 14,
+      "workers": 3,
+      "brood_loaded_ticks": 374,
+      "persisted_stage_duration": 120,
+      "brood_condition": "cared",
+      "brood": [],
+      "first_clutch": [
+        "5ce11813-5809-43fb-812c-79ab942a3c73",
+        "0307320e-4be0-47f1-a5e8-c51569e5ae9b",
+        "ac8da9c5-1612-4ab6-a085-9d9341b14dc5"
+      ]
+    },
+    {
+      "server_tick": 6658,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.5570057296315,
+        65.0,
+        145.76299418712767
+      ],
+      "phase": "SETTLED",
+      "reason": "operational_opening",
+      "lifecycle": "OPENING",
+      "removed": 24,
+      "deposited": 22,
+      "founding_loaded_ticks": 6514,
+      "adult_age": 214,
+      "workers": 3,
+      "brood_loaded_ticks": 574,
+      "persisted_stage_duration": 120,
+      "brood_condition": "income_warmup",
+      "brood": [],
+      "first_clutch": [
+        "5ce11813-5809-43fb-812c-79ab942a3c73",
+        "0307320e-4be0-47f1-a5e8-c51569e5ae9b",
+        "ac8da9c5-1612-4ab6-a085-9d9341b14dc5"
+      ]
+    },
+    {
+      "server_tick": 6858,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.5570057296315,
+        65.0,
+        145.76299418712767
+      ],
+      "phase": "SETTLED",
+      "reason": "operational_open",
+      "lifecycle": "OPEN",
+      "removed": 24,
+      "deposited": 22,
+      "founding_loaded_ticks": 6514,
+      "adult_age": 414,
+      "workers": 3,
+      "brood_loaded_ticks": 774,
+      "persisted_stage_duration": 120,
+      "brood_condition": "income_warmup",
+      "brood": [],
+      "first_clutch": [
+        "5ce11813-5809-43fb-812c-79ab942a3c73",
+        "0307320e-4be0-47f1-a5e8-c51569e5ae9b",
+        "ac8da9c5-1612-4ab6-a085-9d9341b14dc5"
+      ]
+    },
+    {
+      "server_tick": 6968,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.5570057296315,
+        65.0,
+        145.76299418712767
+      ],
+      "phase": "SETTLED",
+      "reason": "operational_open",
+      "lifecycle": "OPEN",
+      "removed": 24,
+      "deposited": 22,
+      "founding_loaded_ticks": 6514,
+      "adult_age": 524,
+      "workers": 3,
+      "brood_loaded_ticks": 884,
+      "persisted_stage_duration": 120,
+      "brood_condition": "income_warmup",
+      "brood": [],
+      "first_clutch": [
+        "5ce11813-5809-43fb-812c-79ab942a3c73",
+        "0307320e-4be0-47f1-a5e8-c51569e5ae9b",
+        "ac8da9c5-1612-4ab6-a085-9d9341b14dc5"
+      ]
+    }
+  ],
+  "ant_position_edits": 0,
+  "supplied_ants": 0,
+  "supplied_food": 0,
+  "terrain_edits": 0,
+  "ai_pauses": 0,
+  "measured_teleports": 0,
+  "loading_only": false,
+  "prior_scenario_ticks": 3002,
+  "additional_tick_bound": 20998,
+  "source_archive": "C:\\Users\\user\\Documents\\turnloop\\directions\\prime-ants-slice1\\turns\\T22\\t22-fresh-a4-world.zip",
+  "route": [
+    {
+      "priority": "primary",
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "initial_ground": [
+        168,
+        67,
+        149
+      ]
+    },
+    {
+      "priority": "fallback",
+      "queen": "05888952-07db-3426-8bbc-6cf27cdcf840",
+      "initial_ground": [
+        168,
+        71,
+        86
+      ]
+    }
+  ],
+  "archive_world_root": "New World/",
+  "additional_start_tick": 0,
+  "save": "C:\\Users\\user\\Documents\\prime-ants\\build\\run\\clientGameTest\\saves\\t23-player-a1",
+  "persisted_observer_dead": true,
+  "join_protection": "First living server body becomes spectator before physics",
+  "respawn_recovery": "Normal deathScreen.respawn button; no health edits",
+  "generation": {
+    "dimension": "minecraft:overworld",
+    "generator": "net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator",
+    "seed": 2026100501
+  },
+  "server_ticks": [
+    31,
+    41
+  ],
+  "client_ticks": [
+    1,
+    11
+  ],
+  "loading_success": true,
+  "site_viability": [
+    {
+      "server_tick": 52,
+      "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "alive": true,
+      "health": 20.0,
+      "position": [
+        168.47499999403954,
+        67.0,
+        154.42225726680132
+      ],
+      "phase": "TRANSPORTING",
+      "reason": "verified_site_work_in_progress",
+      "lifecycle": "CLAUSTRAL",
+      "removed": 3,
+      "deposited": 1,
+      "founding_loaded_ticks": 482,
+      "adult_age": 0,
+      "workers": 0,
+      "FULL_site_loaded": true,
+      "genuine_placement_identity": true,
+      "route_site": [
+        168,
+        67,
+        149
+      ]
+    }
+  ],
+  "colony_uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+  "selected_priority": "primary",
+  "colony_origin": "Existing production automatic queen in closed T22 A4 client-created ordinary overworld; known-site access, not spawn discovery",
+  "mature_worker_uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+  "entrance": [
+    168,
+    67,
+    149
+  ],
+  "daytime_observer_command": "time set day; production loaded clocks continue",
+  "watch": true,
+  "unprovoked_watch_ticks": 100,
+  "entrance_image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t23-player-a1-entrance.png",
+  "entrance_rendered_ants": [],
+  "additional_ticks_through_close": 7082,
+  "accumulated_scenario_ticks": 10084,
+  "normal_server_stop": true,
+  "failure": "java.lang.AssertionError: Actual ants must render; external readability inspection still required",
+  "natural_result": "interaction_incomplete",
+  "normal_close": true
+}

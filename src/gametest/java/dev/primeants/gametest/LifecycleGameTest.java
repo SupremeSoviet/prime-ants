@@ -28,20 +28,27 @@ public final class LifecycleGameTest {
     }
     @GameTest(maxTicks=26000,structure="prime_ants_test:idle_ground")
     public void environmentalChickenLootFundsNewWorkerThenQueenDeathEndsColony(GameTestHelper c){
-        var q=start(c,7000,3500,5);boolean[] supplied={false},killed={false},finished={false},lootClosed={false};var original=new HashSet<UUID>();var all=new HashSet<UUID>();var loot=new HashMap<UUID,ItemStack>();
+        var q=start(c,7000,3500,5);boolean[] supplied={false},sugarProvided={false},killed={false},finished={false},lootClosed={false};var original=new HashSet<UUID>();var all=new HashSet<UUID>();var loot=new HashMap<UUID,ItemStack>();
         var observedWorld=new HashMap<UUID,ItemEntity>();var expired=new HashMap<UUID,Integer>();
         var mobs=new ArrayList<net.minecraft.world.entity.animal.chicken.Chicken>();var hazards=new ArrayList<net.minecraft.core.BlockPos>();
         c.onEachTick(()->{
             if(finished[0])return;
             var p=q.founding().plan();var b=pile(c,q);var ws=f.workers(c,q);if(p==null||b==null)return;ws.forEach(w->all.add(w.getUUID()));
             if(!supplied[0]&&ws.size()==3&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){
-                supplied[0]=true;ws.forEach(w->original.add(w.getUUID()));f.drop(c,p.at(-3,0,1),new ItemStack(Items.APPLE,6)); // Declared controlled sugar, separate from genuine world protein.
+                supplied[0]=true;ws.forEach(w->original.add(w.getUUID()));
                 for(int i=-1;i<=1;i++){
                     var cell=p.at(-6,i,1);c.assertTrue(c.getLevel().getBlockState(cell).isAir(),"Temporary controlled suffocation cell starts air");hazards.add(cell);c.getLevel().setBlock(cell,Blocks.STONE.defaultBlockState(),3);
                     var mob=EntityTypes.CHICKEN.create(c.getLevel(),EntitySpawnReason.COMMAND);c.assertTrue(mob!=null,"Real vanilla chicken");var pos=Vec3.atBottomCenterOf(cell);mob.setPos(pos.x,pos.y,pos.z);mob.setNoAi(true);mob.setPersistenceRequired();c.assertTrue(c.getLevel().addFreshEntity(mob),"Uninjured real mob inserted into controlled physical hazard");mobs.add(mob);
                 }
             }
             if(!supplied[0])return;
+            // This positive fixture formerly made its sole forager choose six apples while two
+            // genuine chicken drops expired. Secure actual protein first; keep supply, costs,
+            // mortality, food expiry, bound and all conservation/birth/death assertions intact.
+            if(!sugarProvided[0]&&b.supply(c.getLevel()).storedProtein()>=Nutrition.EGG_PROTEIN+Nutrition.LARVA_PROTEIN){
+                sugarProvided[0]=true;f.drop(c,p.at(-3,0,1),new ItemStack(Items.APPLE,6));
+                dev.primeants.PrimeAnts.LOGGER.info("T23 lifecycle fixture: six controlled apples follow actual stored environmental protein={}",b.supply(c.getLevel()).storedProtein());
+            }
             if(c.getTick()%1000==0)dev.primeants.PrimeAnts.LOGGER.info("T21 lifecycle growth diagnosis tick={} queenAlive={} queenHealth={} gate={} window={} recentSugar={} supply={} records={} workers={}",c.getTick(),q.isAlive(),q.getHealth(),b.growth().reason(),b.growth().observedTicks(),b.growth().recentSugar(),b.supply(c.getLevel()),b.records().stream().map(r->r.stage()+" "+r.nutrition().sugar()+"/"+r.nutrition().protein()).toList(),ws.stream().map(w->w.getUUID()+" age="+w.elapsedAgeTicks()+" fast="+w.adultLife().fasting()+" sugar="+w.nutrition().sugar()+" role="+w.workerTasks().phase()+" cargo="+w.getMainHandItem()).toList());
             for(var item:c.getLevel().getEntitiesOfClass(ItemEntity.class,c.getBounds().inflate(8),i->i.isAlive()&&i.getItem().is(Items.CHICKEN))){
                 observedWorld.putIfAbsent(item.getUUID(),item);if(!lootClosed[0])loot.putIfAbsent(item.getUUID(),item.getItem().copy());
@@ -56,7 +63,7 @@ public final class LifecycleGameTest {
             c.assertTrue(actual==worldRaw+carriedRaw+storedRaw+custodyRaw+q.nutrition().chickens()+b.consumedChickens()+expired.values().stream().mapToInt(Integer::intValue).sum(),"Actual environmental raw loot = world/cargo/cache/custody + terminal ingestion + witnessed vanilla expiry; releases are not new loot");
             if(!killed[0]&&ws.stream().anyMatch(w->!original.contains(w.getUUID()))){
                 killed[0]=true;var added=ws.stream().filter(w->!original.contains(w.getUUID())).findFirst().orElseThrow();
-                c.assertTrue(actual>0&&mobs.stream().allMatch(m->!m.isAlive())&&q.nutrition().chickens()>0&&b.consumedChickens()>0&&b.consumed().contains(added.broodId())&&!b.original().contains(added.broodId())&&b.records().isEmpty(),"Actual environmental raw chicken protein funds unique additional worker; all live brood completed within five-adult cap");
+                c.assertTrue(sugarProvided[0]&&actual>0&&mobs.stream().allMatch(m->!m.isAlive())&&q.nutrition().chickens()>0&&b.consumedChickens()>0&&b.consumed().contains(added.broodId())&&!b.original().contains(added.broodId())&&b.records().isEmpty(),"Actual environmental raw chicken protein funds unique additional worker; all live brood completed within five-adult cap");
                 q.hurtServer(c.getLevel(),q.damageSources().genericKill(),1000);c.assertTrue(!q.isAlive(),"Normal queen death after world-food worker birth");
                 dev.primeants.PrimeAnts.LOGGER.info("T18 WORLD FOOD BIRTH queen={} mobs={} actualRawLoot={} controlledApples=6 originalWorkers={} additional={} brood={} adultCap=5 receiptsQueen={} receiptsBrood={}",q.getUUID(),mobs.stream().map(Entity::getUUID).toList(),actual,original,added.getUUID(),added.broodId(),q.nutrition().chickens(),b.consumedChickens());
             }

@@ -1,0 +1,1 @@
+Passive existing/native-food equipment recovery, no supply: actual client flower_nectar_v2 on the forager. Grass/terrain occlude the mouth/item, so this is rejected as readable feeding proof and does not pass the player checkpoint.

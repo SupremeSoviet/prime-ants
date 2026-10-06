@@ -1,0 +1,1 @@
+Actual supplied raw chicken visibly carried at the forager mandibles after client equipment sync; ordinary drop and4.115m retreat, genuine pickup then owned-cache delivery. Required earlier one-apple trace remains A3; no autonomous-intake claim.

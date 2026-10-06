@@ -16,6 +16,20 @@ public final class BootstrapGameTest {
         context.assertEntityNotPresent(EntityTypes.ITEM);
         // Only the isolated GameTest fixture is edited; the client capture world is untouched.
         context.setBlock(3, 1, 3, Blocks.STONE);
+        // T23 targeted observer recovery uses only this isolated fixture, before any client attempt.
+        var stand=context.absolutePos(new net.minecraft.core.BlockPos(3,2,3));
+        context.setBlock(3,2,3,Blocks.AIR);context.setBlock(3,3,3,Blocks.AIR);
+        context.assertTrue(ObserverSafety.problem(context.getLevel(),null,stand)==null,"Dry FULL-loaded full-body observer destination accepted");
+        var unloaded=new net.minecraft.core.BlockPos(1000000,80,1000000);
+        context.assertTrue(ObserverSafety.surface(context.getLevel(),unloaded.getX(),unloaded.getZ())==null
+                &&"terrain_not_FULL".equals(ObserverSafety.problem(context.getLevel(),null,unloaded)),"Unloaded terrain rejected before height/support reads");
+        context.assertTrue(ObserverSafety.problem(context.getLevel(),null,stand.atY(context.getLevel().getMinY()))!=null,"Void/minimum-Y destination rejected");
+        context.setBlock(3,2,3,Blocks.WATER);
+        context.assertTrue("wet_destination".equals(ObserverSafety.problem(context.getLevel(),null,stand)),"Wet feet rejected");
+        context.setBlock(3,2,3,Blocks.AIR);context.setBlock(3,3,3,Blocks.STONE);
+        context.assertTrue("body_collision".equals(ObserverSafety.problem(context.getLevel(),null,stand)),"Complete standing body collision rejected");
+        context.setBlock(3,3,3,Blocks.AIR);
+        PrimeAnts.LOGGER.info("T23 observer recovery: dry accepted; unloaded, void, wet, blocked-head rejected");
         ItemEntity food = context.spawnItem(Items.APPLE, 3.5F, 2.0F, 3.5F);
         long startTick = context.getTick();
         int initialAge = food.getAge();

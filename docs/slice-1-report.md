@@ -1,13 +1,45 @@
-# Current slice status - T22, 2026-10-06
+# Current slice status - T23, 2026-10-06
 
-**Current-food admission and bounded player defense are supported; fresh survival loading and normal closure are recovered. The natural-client defense/capture checkpoint remains incomplete.** Current exact unfiltered `build --console=plain --rerun-tasks` passes **15 unit / 195 server / 26 model**, zero failures/errors/skips, retaining all 184 baseline server names and original 24 model cases. Current inputs and both production JAR exclusions pass. [Verification](../../turnloop/directions/prime-ants-slice1/turns/T22/final-verification.json).
+**The real-client player checkpoint is complete on one naturally placed colony.**
 
-Laying reserves existing commitments, the proposed egg/larva and unchanged 25% maintenance margin from current stores alone. Recent intake remains a separate rate condition. The warmed four-adult/no-brood 48,000/48,000 receipt regression rejects stores 1,000/2,000 and admits its stocked control. Genuine unheld production food-fed laying/emergence passes. Food values/costs, sharing conservation/reserve, lifespan/fasting and 39,000 founding budget are unchanged. Four old negative scheduling controls use a disclosed test-only admission hold until real collection funds their setup; no brood/stage/food credit is manufactured.
+| Stage | Result and evidence |
+|---|---|
+| Natural colony selected | Primary queen `9c71829b-25f1-3b96-acbb-96252228271d`, live20HP, genuine placement, entrance(168,67,149), ordinary seed2026100501 overworld; fallback never used. |
+| Watching | 100 ordinary survival ticks without alarm; [entrance/mound and living worker](screenshots/t23-player-a5-entrance.png). |
+| Entry and return | Ordinary movement/jump inputs through existing worker-opened stairs into the chamber and back; no measured teleport/noclip; [interior](screenshots/t23-player-a5-interior.png). |
+| Food collected/delivered | Required one apple in A3 and optional one raw chicken in A5: inventory loss, world UUID, genuine forager cargo, owned cache, no recollection, immediate4.115m retreat; [visible chicken at mandibles](screenshots/t23-player-a5-feeding.png). |
+| Actual client bite | After real survival attack, owned worker `ec9d7a07-ea92-396a-a736-38ed3d707167` gives source`mob`, health20->19, then ordinary retreat; [defense](screenshots/t23-player-a5-defense.png). |
+| Readable images | All11 fresh PNGs opened. Four A5 frames accepted individually; A3 empty-handed feeding and A4 grass-occluded nectar remain explicitly rejected. [Review](screenshots/t23-player-a5-image-review.json). |
+| Normal closure | All five owned attempts saved/closed and archived immediately before another Gradle task; final A5 copy retained for visual work. |
+| Current build | Exact unfiltered rerun build passes15 unit/195 server/26 model, zero failures/errors/skips, all baseline names,448 unchanged inputs and both JAR exclusions. [Verification](../../turnloop/directions/prime-ants-slice1/turns/T23/final-verification.json). |
 
-Accepted player damage or successful breaking of an actually owned component signals only that colony. Ownership is captured BEFORE mutation, canceled attempts discard it and successful AFTER consumes it; ordinary writes have already revoked terrain/plug ownership. Mature registered workers use the existing owner before home-readiness checks: alarm 600 loaded ticks, response radius 12, chase boundary 16 around the current harm, one-point normal mob bite at physical reach/visibility with cooldown 20. Creative/spectator/absent/other-dimension targets receive no pursuit. Ten real-action cases cover ownership types, two-colony isolation, benign/canceled/unknown/ordinary work, walls/range, coherent cooldown/expiry/missing-target restore and real feeding/sharing cancellation. Canonical cargo and claims persist. Actual server bite: health 20->19, source mob, ant UUID recorded in [damage evidence](../../turnloop/directions/prime-ants-slice1/turns/T22/damage-evidence.txt).
+`verifyFreshPlayerCheckpoint` exits0 after image review and required same-colony apple-trace verification.
+Loading, recovery-only, incomplete maturation, observer failure and completed interactions with unreviewed images remain distinct;
+normal save/exit alone cannot pass. A3/A5 raw client tasks exit1 while images are unreviewed, preserving their historical exits.
 
-**Fresh loading passes** in 37.49 s: ordinary NoiseBasedChunkGenerator overworld, survival, seed 2026100501 declared in advance, default placement, distances 8/8, server ticks 14->36/client 12->34, ordinary W movement about 4 m, readable [actual terrain PNG](screenshots/t22-fresh-a2-terrain.png), normal populated close and immediate archive. Fabric's full-square chunk-download predicate conflicted with vanilla's circular tracking; the recovered harness waits for actual rendering plus compiled terrain at the player. No timeout/RAM increase or distance-two workaround. Imported-world/dimension-transfer deadlock remains unresolved historical evidence and was not retried. Client/playtest FULL policing is removed; old interrupted consumption stays unknown.
+The owner-authorized known-site route reopens an owned closed T22 A4 **client-created vanilla overworld**;
+it is local access, not a walk-from-spawn discovery claim. Primary founding advances from3 removals to24,22 queen deposits,
+three genuine first-clutch workers and their opened entrance. Founding loaded ticks488->6514; actual worker brood IDs match
+the original clutch. Work20/brood100 acceleration preserves persisted stage120, costs, maintenance, life and source timing.
+No supplied ants/brood, manual biology ticks, reserve/stage/AI/ant-position/target edits or player terrain clearing.
+Player food is an interaction supply, not autonomous-intake evidence.
 
-**Natural-client result is partial.** The same seed/radius-128 scenario recorded no selected colony in 3,002 total additional server ticks across closed attempts. Four real automatic queens were outside the declared area; 37 candidates remain pending/unknown. Observer exploration drowned the survival player and used an ungenerated height -64, so this is not a complete absence proof or reliable discovery driver. No maturation, client ant bite, real entrance/mound or combat picture is claimed. No ant supplies, forced stages/poses, AI pauses, terrain clearing or diagnostic placement occurred. Each owned world was archived immediately. Client history: 30 launches, native startup 21/9, tasks 13/17; 33 headless launches separate.
+Observer setup uses spectator for loading/travel/waiting, actual non-generating FULL terrain before height/support reads,
+build height/border, solid dry support, empty feet/head fluid, full0.6x1.8 body clearance, liveness and advancing client/server ticks.
+Survival stand(168,67,152) is rechecked before physics/inputs. A1 uses the normal Respawn button for the saved dead T22 player;
+no health edit. Measured entry, drops/retreats and attacks remain survival. A5 waits318 normal loaded ticks for the prior real alarm,
+without clearing it. Daylight, hidden HUD, camera setup and fixed native1600x1000 are disclosed.
 
-T21 native survival remains bounded observation under the earlier admission rule, without re-accounting or current-rule balance promotion. T23 retains feeding, multi-colony MSPT and broad save/reload, and must carry the unfinished natural combat/capture and unsafe observer-route gap. T24-T26 visuals and T27-T30 release remain scheduled. [Failure/command appendix](t22-evidence-appendix.md), [historical report](slice-1-history-through-T21.md), [turn report](../../turnloop/directions/prime-ants-slice1/turns/T22/report.md).
+**12,029 /24,000 total natural ticks**, including the prior3,002 and all T23 recovery/load/wait/interaction/closure;
+11,971 remain. Client history35 launches, native startup26/9, raw tasks15/20; one accepted full checkpoint and four accepted images
+are separate results. Ten T23 headless server launches are separate(43 including the brief's33).
+
+Russian guide recovered from Git UTF-8 bytes; final strict UTF-8/Cyrillic/no-replacement verification is in T23/guide-utf8.json.
+Two variable controlled fixtures changed **supply order only**, preserving quantities, bounds, real actions and assertions;
+their failed full runs, original narrow reproducers and targeted recoveries are retained. Native frame and equipment races were
+diagnosed before renewed work; no timeout/RAM increase, recorder-guard widening or production mechanic change.
+
+T22 A4 drowned its observer and read unavailable height-64; its original task exit is preserved, but its nonselection is observer
+failure, not absence proof. [T22 historical report](t22-status-historical.md), [T23 details/commands](t23-player-checkpoint-appendix.md),
+[turn report](../../turnloop/directions/prime-ants-slice1/turns/T23/report.md).
+**T24-T26 remains appearance; performance and broad save/reload belong to T27-T30 release checks.**

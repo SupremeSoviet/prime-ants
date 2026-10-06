@@ -1,0 +1,76 @@
+// Saving and process exit are not player-checkpoint acceptance.
+ext.classifyFreshPlayerResult = { Map f, Map review ->
+    if (f.natural_result == 'observer_harness_failure' || f.observer_failure || f.persisted_observer_dead && !f.respawn_recovery)
+        return [state:'observer_harness_failure', checkpoint_success:false]
+    boolean loading = f.loading_success == true && f.normal_close == true && f.normal_server_stop == true &&
+        f.seed == 2026100501L && f.generation?.dimension == 'minecraft:overworld' && f.generation?.generator?.endsWith('NoiseBasedChunkGenerator') &&
+        f.server_ticks?.size() == 2 && f.client_ticks?.size() == 2 && f.server_ticks[1] > f.server_ticks[0] && f.client_ticks[1] > f.client_ticks[0]
+    if (!loading) return [state:'loading_or_closure_failure', checkpoint_success:false]
+    if (!(f.accumulated_scenario_ticks instanceof Number) || f.accumulated_scenario_ticks > 24000 ||
+        f.accumulated_scenario_ticks != f.prior_scenario_ticks + f.additional_ticks_through_close)
+        return [state:'invalid_accumulated_bound', checkpoint_success:false]
+    if (f.loading_only) return [state:'loading_only', loading_success:true, checkpoint_success:false]
+    if (f.recovery_only && f.natural_result == 'observer_recovery_only' && f.watch == true && f.entrance_rendered_ants && f.safe_destination_checks)
+        return [state:'observer_recovery_only', loading_success:true, checkpoint_success:false]
+    if (f.recovery_only && f.natural_result == 'food_sync_recovery_only' && f.food_sync_actor && f['food-sync_rendered_ants'])
+        return [state:'food_sync_recovery_only', loading_success:true, checkpoint_success:false]
+    if (f.natural_result in ['incomplete_maturation','colony_failure','combat_death','interaction_incomplete','interaction_bound_exhausted'])
+        return [state:f.natural_result, loading_success:true, checkpoint_success:false]
+    if (f.status != 'closed' || f.failure || f.natural_result != 'interactions_complete' || f.interactions_complete != true || !f.colony_uuid || !f.safe_destination_checks ||
+        !f.safe_destination_checks.every { check -> ['FULL','build_height_border','dry_support_feet_head','complete_body_clear','alive','ticks_advancing'].every { check[it] == true } } ||
+        !['watch','entered','returned','fed','client_bite','defense_retreat'].every { f[it] == true } ||
+        !f.food_trace?.world_uuid || !f.food_trace?.carrier || f.food_trace?.delivered != true ||
+        !(f.food_trace?.item in ['minecraft:apple','minecraft:chicken']) || f.food_trace?.item == 'minecraft:chicken' && !f.prior_apple_evidence ||
+        f.food_trace?.inventory_loss != 1 || f.food_trace?.carried_units != 1 || f.food_trace?.inventory_final != 0 || f.food_trace?.step_away_blocks < 4 ||
+        !f.damage?.ant_uuid || f.damage?.damage_source != 'mob' || !(f.damage?.player_health instanceof Number) || !(f.health_before_provocation instanceof Number) ||
+        f.damage.player_health >= f.health_before_provocation || !(f.damage?.ant_bites instanceof Number) || f.damage.ant_bites < 1 || f.measured_teleports != 0 ||
+        !['ant_position_edits','supplied_ants','terrain_edits','ai_pauses'].every { f[it] == 0 })
+        return [state:'incomplete_player_checkpoint', loading_success:true, checkpoint_success:false]
+    if (review?.run_id != f.run_id || !['entrance','interior','feeding','defense'].every { review[it]?.readable == true })
+        return [state:'interactions_complete_images_unreviewed', loading_success:true, checkpoint_success:false]
+    return [state:'player_checkpoint_complete', loading_success:true, checkpoint_success:true]
+}
+tasks.register('verifyFreshObserverResultHandling') {
+    doLast {
+        def baseline=[loading_success:true,normal_close:true,normal_server_stop:true,seed:2026100501L,
+            generation:[dimension:'minecraft:overworld',generator:'NoiseBasedChunkGenerator'],server_ticks:[10,20],client_ticks:[5,15],
+            prior_scenario_ticks:3002,additional_ticks_through_close:100,accumulated_scenario_ticks:3102,loading_only:false,status:'closed',natural_result:'incomplete_maturation',run_id:'fixture',
+            ant_position_edits:0,supplied_ants:0,terrain_edits:0,ai_pauses:0]
+        def cases=[]
+        def check={name,changes,wanted->def r=classifyFreshPlayerResult(baseline+changes,[:]);assert r.state==wanted && !r.checkpoint_success;cases << [fixture:name,result:r]}
+        check('valid incomplete stays incomplete',[:],'incomplete_maturation')
+        check('normal load/close alone',[natural_result:null],'incomplete_player_checkpoint')
+        check('explicit loading only',[loading_only:true],'loading_only')
+        check('dead observer disguised as absence',[natural_result:'bounded_absence',observer_failure:'dead_observer'],'observer_harness_failure')
+        check('observer result disguised by successful exit',[natural_result:'observer_harness_failure'],'observer_harness_failure')
+        check('bare bounded absence',[natural_result:'bounded_absence'],'incomplete_player_checkpoint')
+        check('targeted recovery is not full checkpoint',[recovery_only:true,natural_result:'observer_recovery_only',watch:true,entrance_rendered_ants:[[uuid:'worker']],safe_destination_checks:[[FULL:true]]],'observer_recovery_only')
+        check('equipment recovery is not full checkpoint',[recovery_only:true,natural_result:'food_sync_recovery_only',food_sync_actor:'worker','food-sync_rendered_ants':[[uuid:'worker',carried_item:'minecraft:apple']]],'food_sync_recovery_only')
+        check('prior ticks cannot disappear',[accumulated_scenario_ticks:100],'invalid_accumulated_bound')
+        check('tick bound enforced',[additional_ticks_through_close:21000,accumulated_scenario_ticks:24002],'invalid_accumulated_bound')
+        def complete=baseline+[natural_result:'interactions_complete',interactions_complete:true,colony_uuid:'queen',safe_destination_checks:[[FULL:true,build_height_border:true,dry_support_feet_head:true,complete_body_clear:true,alive:true,ticks_advancing:true]],watch:true,entered:true,returned:true,fed:true,client_bite:true,defense_retreat:true,
+            food_trace:[item:'minecraft:apple',world_uuid:'item',carrier:'forager',delivered:true,inventory_loss:1,carried_units:1,inventory_final:0,step_away_blocks:4],damage:[ant_uuid:'ant',damage_source:'mob',ant_bites:1,player_health:19],health_before_provocation:20,measured_teleports:0]
+        assert classifyFreshPlayerResult(complete,[:]).state=='interactions_complete_images_unreviewed'
+        def reviewed=[run_id:'fixture',entrance:[readable:true],interior:[readable:true],feeding:[readable:true],defense:[readable:true]]
+        assert classifyFreshPlayerResult(complete,reviewed).checkpoint_success
+        def dest=file(providers.gradleProperty('primeAntsRecoveryEvidence').getOrElse('build/test-results'));dest.mkdirs()
+        new File(dest,'observer-result-recovery.json').setText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(cases+[[fixture:'full interactions require explicit image review',passed:true]])),'UTF-8')
+        logger.lifecycle('Observer result recovery passed: loading/closure, incomplete, dead/absence, accumulated bound and image review remain distinct')
+    }
+}
+tasks.register('verifyFreshPlayerCheckpoint') {
+    doLast {
+        def prefix=providers.gradleProperty('primeAntsCapturePrefix').get()
+        def f=new groovy.json.JsonSlurper().parse(file("docs/screenshots/${prefix}-fresh.json"))
+        def reviewFile=file("docs/screenshots/${prefix}-image-review.json")
+        def review=reviewFile.exists()?new groovy.json.JsonSlurper().parse(reviewFile):[:]
+        def result=classifyFreshPlayerResult(f,review)
+        if(!result.checkpoint_success)throw new GradleException("Player checkpoint not complete: ${result.state}")
+        if(f.food_trace.item=='minecraft:chicken'){
+            def parent=new groovy.json.JsonSlurper().parse(file(f.prior_apple_evidence));def apple=parent.food_trace
+            if(parent.normal_close!=true||parent.seed!=f.seed||parent.colony_uuid!=f.colony_uuid||apple?.item!='minecraft:apple'||!apple.world_uuid||!apple.carrier||apple.delivered!=true||apple.inventory_loss!=1||apple.carried_units!=1||apple.inventory_final!=0||apple.step_away_blocks<4)throw new GradleException('Optional chicken cannot replace the required same-colony apple trace')
+        }
+        ['entrance','interior','feeding','defense'].each{stage->def png=file(f[stage+'_image']);if(!png.exists()||review[stage].image!=png.absolutePath)throw new GradleException('Reviewed image does not match '+stage)}
+        logger.lifecycle('Verified measured natural-player checkpoint and individually reviewed readable PNGs')
+    }
+}
