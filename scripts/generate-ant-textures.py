@@ -25,7 +25,7 @@ def cuticle(x, y, z, w, h, d, segment, callow):
     # Broad dorsal/side lobes stay coherent across each small geometry tier.
     dorsal = math.exp(-((nx + .12) / .20) ** 2) * max(0, -ny * 2)
     lateral = math.exp(-((ny + .16) / .19) ** 2) * min(1, abs(nx) * 2)
-    shine = 36 * dorsal + 14 * lateral
+    shine = (48 if segment in ('head','gaster') else 36) * dorsal + 14 * lateral
     shade = 5 - 10 * max(0, ny) + shine
     if segment == 'gaster':
         phase = nz + .5
@@ -61,17 +61,19 @@ for form in ('worker', 'queen', 'callow'):
     for segment, v, body in zip(('head','mesosoma','gaster','petiole'), (0,96,192,288), DIMENSIONS['worker' if callow else form]):
         w,h,d = body
         if segment == 'gaster':
-            tapers = (.30,.61,.80,.916,.98,1,.98,.916,.80,.61,.30)
+            tapers = (.27,.52,.72,.855,.94,.985,1,.985,.94,.855,.72,.52,.27)
             widths = (.26,.50,.72,.90,1,.90,.72,.50,.26)
             edges = (-.50,-.48,-.42,-.30,-.12,.12,.30,.42,.48,.50)
             cell_u,cell_v = 45,10
         else:
             tapers,widths,edges,cell_u,cell_v = TAPER,WIDTHS,EDGES,52,18
+        u=0
         for i,taper in enumerate(tapers):
             for j,width in enumerate(widths):
                 sw,sh = w*taper,h*taper
-                paint_cube(image,i*cell_u,v+j*cell_v,-sw*width/2,sh*edges[j],-d/2+i*d/len(tapers),
+                paint_cube(image,u if segment=='gaster' else i*cell_u,v+j*cell_v,-sw*width/2,sh*edges[j],-d/2+i*d/len(tapers),
                            sw*width,sh*(edges[j+1]-edges[j]),d/len(tapers),body,segment,callow)
+            if segment=='gaster':u+=math.ceil(2*(w*taper+d/len(tapers)))+1
     draw = ImageDraw.Draw(image)
     # Actual appendage islands: femur, tibia/tarsus and both antenna sections.
     limb = (190,157,101,255) if callow else (59,43,29,255)
@@ -80,9 +82,19 @@ for form in ('worker', 'queen', 'callow'):
     for x in range(0,48,3):
         draw.line((x,400,x,452),fill=(201,168,112,255) if callow else (66,48,32,255))
     draw.rectangle((160,400,185,420),fill=(137,102,60,255) if callow else (47,32,21,255))
-    draw.rectangle((220,400,238,415),fill=(10,10,11,255))
-    for y in range(400,414,2):
-        for x in range(220+(y%4),237,3):draw.point((x,y),fill=(37,36,33,255))
+    # Eye cells have their own UVs and a coherent small upper-side glint.
+    eye_size=1.3 if form=='queen' else 1
+    def eye_cuticle(x,y,z,w,h,d,segment,callow):
+        glint=44*math.exp(-((y/h+.28)/.21)**2-((z/d+.15)/.26)**2)
+        shade=round(11+glint+6*max(0,-y/h))
+        return (shade,shade,shade+1,255)
+    body_cuticle=cuticle
+    cuticle=eye_cuticle
+    for i,taper in enumerate((.68,1,.68)):
+        for j,(lo,hi,width) in enumerate(((-.5,-.22,.70),(-.22,.22,1),(.22,.5,.70))):
+            ew=1.15*eye_size*taper*width;eh=1.7*eye_size*taper
+            paint_cube(image,220+i*12,400+j*6,-ew/2,eh*lo,-1.2*eye_size+i*.8*eye_size,ew,eh*(hi-lo),.8*eye_size,(1.15*eye_size,1.7*eye_size,2.4*eye_size),'eye',False)
+    cuticle=body_cuticle
     draw.rectangle((260,400,275,415),fill=(75,57,39,255))
     draw.line((264,401,264,410),fill=(30,24,18,255))
     draw.rectangle((380,400,389,408),fill=(49,35,24,255))

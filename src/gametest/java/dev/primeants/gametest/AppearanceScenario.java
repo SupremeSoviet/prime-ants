@@ -20,9 +20,9 @@ import net.minecraft.world.phys.*;
 public final class AppearanceScenario {
     private static final UUID QUEEN=UUID.fromString("9c71829b-25f1-3b96-acbb-96252228271d");
     private static final UUID WORKER=UUID.fromString("9a5b931b-bb9b-332d-b42a-34a6202eccca");
-    private static UUID cameraSubject;
-    private static View fixedView;
-    private static double cameraSide, cameraForward, cameraHeight, targetHeight;
+    static UUID cameraSubject;
+    static View fixedView;
+    static double cameraSide, cameraForward, cameraHeight, targetHeight;
     public record View(Vec3 eye, float yaw, float pitch) {}
     public static View view() {
         if(fixedView!=null)return fixedView;
@@ -33,25 +33,30 @@ public final class AppearanceScenario {
         var delta=ant.position().add(0,targetHeight,0).subtract(eye);
         return new View(eye,(float)Math.toDegrees(Math.atan2(-delta.x,delta.z)),(float)-Math.toDegrees(Math.atan2(delta.y,Math.sqrt(delta.horizontalDistanceSqr()))));
     }
-    private final Path dir=Path.of(System.getProperty("prime_ants.captureDir"));
-    private final String prefix=System.getProperty("prime_ants.capturePrefix");
-    private final Map<String,Object> evidence=new LinkedHashMap<>();
+    final Path dir=Path.of(System.getProperty("prime_ants.captureDir"));
+    final String prefix=System.getProperty("prime_ants.capturePrefix");
+    final Map<String,Object> evidence=new LinkedHashMap<>();
     private final List<Object> captures=new ArrayList<>();
     private net.minecraft.server.MinecraftServer owned;
     private int start;
     private final int prior=Integer.getInteger("prime_ants.appearancePriorTicks",0);
     private final int attemptSpent=Integer.getInteger("prime_ants.appearanceAttemptSpent",0);
-    private void save(){try{Files.createDirectories(dir);Files.writeString(dir.resolve(prefix+"-appearance.json"),new GsonBuilder().setPrettyPrinting().create().toJson(evidence),StandardCharsets.UTF_8);}catch(Exception e){throw new RuntimeException(e);}}
-    private static void require(boolean ok,String why){if(!ok)throw new AssertionError(why);}
+    void save(){try{Files.createDirectories(dir);Files.writeString(dir.resolve(prefix+"-appearance.json"),new GsonBuilder().setPrettyPrinting().create().toJson(evidence),StandardCharsets.UTF_8);}catch(Exception e){throw new RuntimeException(e);}}
+    static void require(boolean ok,String why){if(!ok)throw new AssertionError(why);}
+    private final boolean t26="appearance-t26".equals(System.getProperty("prime_ants.clientScenario"));
+    private final int totalBound=Integer.getInteger("prime_ants.appearanceTotalBound",12000);
+    private final int attemptBound=Integer.getInteger("prime_ants.appearanceAttemptBound",1800);
+    private boolean measuredSurvival;
+    public void survival(boolean value){measuredSurvival=value;cameraSubject=null;fixedView=null;}
     public void run(ClientGameTestContext c){
-        require(prior>=0&&prior<12000,"Declared appearance observation allowance");
-        evidence.put("run_id",System.getProperty("prime_ants.runId"));evidence.put("scenario","appearance-t25");evidence.put("status","opening");
-        evidence.put("prior_ticks",prior);evidence.put("total_tick_bound",12000);evidence.put("attempt_tick_bound",1800-attemptSpent);evidence.put("attempt_ticks_already_spent",attemptSpent);evidence.put("captures",captures);
+        require(prior>=0&&prior<totalBound,"Declared appearance observation allowance");
+        evidence.put("run_id",System.getProperty("prime_ants.runId"));evidence.put("scenario",t26?"appearance-t26":"appearance-t25");evidence.put("status","opening");
+        evidence.put("prior_ticks",prior);evidence.put("total_tick_bound",totalBound);evidence.put("attempt_tick_bound",attemptBound-attemptSpent);evidence.put("attempt_ticks_already_spent",attemptSpent);evidence.put("captures",captures);
         evidence.put("ant_position_edits",0);evidence.put("ai_pauses",0);evidence.put("forced_poses",0);evidence.put("terrain_edits",0);evidence.put("supplied_ants",0);evidence.put("supplied_food",0);
         evidence.put("render_distance",8);evidence.put("simulation_distance",8);evidence.put("native_frame",List.of(1600,1000));
         evidence.put("camera_policy","Living spectator on verified dry FULL support; separate observer lens follows natural body heading. No actor or animation writes.");save();
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STARTED.register(s->{if(owned==null){owned=s;start=s.getTickCount();save();}});
-        net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.START_SERVER_TICK.register(s->{if(s==owned)for(var p:s.getPlayerList().getPlayers())if(p.isAlive())p.setGameMode(GameType.SPECTATOR);});
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.START_SERVER_TICK.register(s->{if(s==owned&&!measuredSurvival)for(var p:s.getPlayerList().getPlayers())if(p.isAlive())p.setGameMode(GameType.SPECTATOR);});
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPING.register(s->{if(s==owned){evidence.put("additional_ticks",s.getTickCount()-start);evidence.put("accumulated_ticks",prior+s.getTickCount()-start);save();}});
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(s->{if(s==owned){evidence.put("normal_server_stop",true);save();}});
         c.runOnClient(client->{client.options.renderDistance().set(8);client.options.simulationDistance().set(8);client.getWindow().setWindowed(1600,1000);client.options.guiScale().set(2);client.options.fovEffectScale().set(0.0);});
@@ -75,7 +80,15 @@ public final class AppearanceScenario {
             evidence.put("queen_identity",QUEEN.toString());
             c.runOnClient(client->{if(!client.gui.hud.isHidden())client.gui.hud.toggle();});
             String specimen=System.getProperty("prime_ants.appearanceSpecimen");
-            if("clearance-reproducer".equals(specimen)) {
+            if(t26&&"brood-final".equals(specimen)){
+                new T26Observations(this).broodFinal(c,w);
+            } else if(t26&&"brood".equals(specimen)){
+                new T26Observations(this).brood(c,w,stand);
+            } else if(t26&&"transition".equals(specimen)){
+                captureWhenClear(c,w,WORKER,"worker-ordinary",true,70,2.2,.5,1.25,.24);
+                captureWhenClear(c,w,WORKER,"worker-detail",true,50,1.65,.65,1.2,.24);
+                new T26Observations(this).transition(c,w,WORKER);
+            } else if("clearance-reproducer".equals(specimen)) {
                 captureWhenClear(c,w,WORKER,"clear-before",true,70,2.2,.5,1.25,.24);
                 var previous=capturedView();
                 evidence.put("reproducer_previously_clear_following_lens",List.of(previous.eye.x,previous.eye.y,previous.eye.z));
@@ -101,7 +114,7 @@ public final class AppearanceScenario {
         }catch(Throwable e){evidence.put("failure",e.toString());evidence.put("status","failed");save();throw new RuntimeException(e);}
         finally{cameraSubject=null;fixedView=null;}
         require(closed!=null&&Files.exists(closed.resolve("level.dat"))&&Boolean.TRUE.equals(evidence.get("normal_server_stop")),"Normal saved closure");
-        require(((Number)evidence.get("accumulated_ticks")).intValue()<=12000,"Appearance total bound");evidence.put("normal_close",true);evidence.put("status","closed");save();
+        require(((Number)evidence.get("accumulated_ticks")).intValue()<=totalBound,"Appearance total bound");evidence.put("normal_close",true);evidence.put("status","closed");save();
     }
     private boolean tryFoodFrame(ClientGameTestContext c,TestSingleplayerContext w,String name) {
         var candidates=w.getServer().computeOnServer(server->{
@@ -163,8 +176,8 @@ public final class AppearanceScenario {
             for(var entry:z.stream().toList())if(entry.getName().startsWith(selected+"/")){var p=target.resolve(entry.getName().substring(selected.length()+1)).normalize();require(p.startsWith(target),"Safe archive path");if(entry.isDirectory())Files.createDirectories(p);else{Files.createDirectories(p.getParent());try(var in=z.getInputStream(entry)){Files.copy(in,p);}}}}
         evidence.put("source_archive",source);evidence.put("archive_root",selected);save();return new TestWorldSaveImpl(c,target).open();
     }
-    private void wait(ClientGameTestContext c,TestSingleplayerContext w,int ticks){int before=w.getServer().computeOnServer(s->s.getTickCount());require(attemptSpent+before-start+ticks<1700&&prior+before-start+ticks<11900,"Appearance wait bound");c.waitTicks(ticks);require(w.getServer().computeOnServer(s->s.getTickCount()>before&&w.getConnection().getServerPlayer().isAlive()),"Live observer and advancing ticks");}
-    private void captureWhenClear(ClientGameTestContext c,TestSingleplayerContext w,UUID id,String name,boolean exterior,int fov,double side,double forward,double height,double target){
+    void wait(ClientGameTestContext c,TestSingleplayerContext w,int ticks){int before=w.getServer().computeOnServer(s->s.getTickCount());require(attemptSpent+before-start+ticks<attemptBound-100&&prior+before-start+ticks<totalBound-100,"Appearance wait bound");c.waitTicks(ticks);require(w.getServer().computeOnServer(s->s.getTickCount()>before&&w.getConnection().getServerPlayer().isAlive()),"Live observer and advancing ticks");}
+    void captureWhenClear(ClientGameTestContext c,TestSingleplayerContext w,UUID id,String name,boolean exterior,int fov,double side,double forward,double height,double target){
         fixedView=null;c.runOnClient(client->client.options.fov().set(fov));cameraSide=side;cameraForward=forward;cameraHeight=height;targetHeight=target;cameraSubject=id;
         boolean ready=false;
         for(int t=0;t<1000;t+=5){ready=c.computeOnClient(client->{var a=clientAnt(client,id);if(a==null||!a.isAlive()||a.isCallow()||exterior&&a.getY()<66.9)return false;var v=view();return clear(client,a,v.eye());});if(ready)break;wait(c,w,5);}
@@ -195,7 +208,7 @@ public final class AppearanceScenario {
         if(!visible[0])return false;
         return true;
     }
-    private boolean capture(ClientGameTestContext c,TestSingleplayerContext w,UUID id,String name){
+    boolean capture(ClientGameTestContext c,TestSingleplayerContext w,UUID id,String name){
         c.runOnClient(client->AntRenderRecorder.arm(id));
         var png=c.takeScreenshot(TestScreenshotOptions.of(prefix+"-"+name).disableCounterPrefix().withDeltaTicks(1).withDestinationDir(dir));
         var bound=c.computeOnClient(client->AntRenderRecorder.finishCapture());
@@ -219,18 +232,27 @@ public final class AppearanceScenario {
     /** Two ordinary save observations in one process; every world closes separately.
      * Counts add across copies and the shared 1,800-tick attempt limit remains. */
     public static void comparisons(ClientGameTestContext c){
+        int totalBound=Integer.getInteger("prime_ants.appearanceTotalBound",12000),attemptBound=Integer.getInteger("prime_ants.appearanceAttemptBound",1800);
         String base=System.getProperty("prime_ants.capturePrefix");
         Path dir=Path.of(System.getProperty("prime_ants.captureDir"));
         int prior=Integer.getInteger("prime_ants.appearancePriorTicks",0);
         String[] keys={"prime_ants.capturePrefix","prime_ants.appearanceSource","prime_ants.appearanceRoot","prime_ants.appearanceSpecimen","prime_ants.appearancePriorTicks","prime_ants.appearanceAttemptSpent"};
         var original=new HashMap<String,String>();for(String key:keys)original.put(key,System.getProperty(key));
         var attempted=new ArrayList<Path>();var segments=new ArrayList<Object>();var frames=new ArrayList<Object>();
-        var summary=new LinkedHashMap<String,Object>();summary.put("run_id",System.getProperty("prime_ants.runId"));summary.put("scenario","appearance-t25");summary.put("prior_ticks",prior);summary.put("total_tick_bound",12000);summary.put("attempt_tick_bound",1800);
+        var summary=new LinkedHashMap<String,Object>();summary.put("run_id",System.getProperty("prime_ants.runId"));summary.put("scenario",System.getProperty("prime_ants.clientScenario"));summary.put("prior_ticks",prior);summary.put("total_tick_bound",totalBound);summary.put("attempt_tick_bound",attemptBound);
         Throwable failure=null;
         try{
             System.setProperty("prime_ants.capturePrefix",base+"-nest");System.setProperty("prime_ants.appearanceSpecimen",System.getProperty("prime_ants.appearanceFirstSpecimen","interior"));System.setProperty("prime_ants.appearanceAttemptSpent","0");
             Path nest=dir.resolve(base+"-nest-appearance.json");attempted.add(nest);new AppearanceScenario().run(c);
             var first=com.google.gson.JsonParser.parseString(Files.readString(nest,StandardCharsets.UTF_8)).getAsJsonObject();int spent=first.get("additional_ticks").getAsInt();
+            if("appearance-t26".equals(System.getProperty("prime_ants.clientScenario"))&&"brood-final".equals(System.getProperty("prime_ants.appearanceFirstSpecimen"))){
+                System.setProperty("prime_ants.capturePrefix",base+"-worker");System.setProperty("prime_ants.appearanceSpecimen","transition");
+                var queenSource=Path.of(System.getProperty("prime_ants.appearanceSecondSource"));
+                System.setProperty("prime_ants.appearanceSource",queenSource.getParent().getParent().resolve("T23/t23-player-a5-world.zip").toString());System.setProperty("prime_ants.appearanceRoot","t23-player-a5");
+                System.setProperty("prime_ants.appearancePriorTicks",Integer.toString(prior+spent));System.setProperty("prime_ants.appearanceAttemptSpent",Integer.toString(spent));
+                Path worker=dir.resolve(base+"-worker-appearance.json");attempted.add(worker);new AppearanceScenario().run(c);
+                spent+=com.google.gson.JsonParser.parseString(Files.readString(worker,StandardCharsets.UTF_8)).getAsJsonObject().get("additional_ticks").getAsInt();
+            }
             System.setProperty("prime_ants.capturePrefix",base+"-queen");System.setProperty("prime_ants.appearanceSpecimen","queen");
             System.setProperty("prime_ants.appearanceSource",Objects.requireNonNull(System.getProperty("prime_ants.appearanceSecondSource")));
             System.setProperty("prime_ants.appearanceRoot",Objects.requireNonNull(System.getProperty("prime_ants.appearanceSecondRoot")));
@@ -251,7 +273,7 @@ public final class AppearanceScenario {
                 }
                 summary.put("segments",segments);summary.put("captures",frames);summary.put("normal_close",closed);summary.put("normal_server_stop",stopped);
                 if(known){summary.put("additional_ticks",ticks);summary.put("accumulated_ticks",prior+ticks);}
-                summary.put("status",failure==null&&closed&&known&&ticks<=1800&&prior+ticks<=12000?"closed":"failed");
+                summary.put("status",failure==null&&closed&&known&&ticks<=attemptBound&&prior+ticks<=totalBound?"closed":"failed");
                 Files.writeString(dir.resolve(base+"-appearance.json"),new GsonBuilder().setPrettyPrinting().create().toJson(summary),StandardCharsets.UTF_8);
             }catch(Exception e){throw new RuntimeException(e);}
         }

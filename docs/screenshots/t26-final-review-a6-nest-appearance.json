@@ -1,0 +1,964 @@
+{
+  "run_id": "4cbd0cb8-6b78-4fa6-8d84-fcea0b210a5c",
+  "scenario": "appearance-t26",
+  "status": "closed",
+  "prior_ticks": 5437,
+  "total_tick_bound": 24000,
+  "attempt_tick_bound": 6000,
+  "attempt_ticks_already_spent": 0,
+  "captures": [
+    {
+      "name": "nursery-final-overview",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t26-final-review-a6-nest-nursery-final-overview.png",
+      "camera": {
+        "eye": [
+          168.5,
+          67.61999988555908,
+          148.5
+        ],
+        "yaw": -168.43542,
+        "pitch": 36.079144,
+        "fov": 85.0,
+        "viewport": [
+          1600,
+          1000
+        ],
+        "partial_tick": 1.0,
+        "camera_partial_tick": 1.0,
+        "render_extraction_utc": "2026-10-06T10:46:11.080491800Z",
+        "client_game_time": 17057,
+        "lens_block": "Block{minecraft:air}",
+        "clearance": false,
+        "living_subject": true,
+        "living_observer": true,
+        "night_vision": false,
+        "rendered_ants": [
+          {
+            "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+            "form": "queen",
+            "callow_visual": 1000,
+            "render_extraction_utc": "2026-10-06T10:46:11.079446800Z",
+            "render_entity_tick": 31,
+            "render_position": [
+              168.81787256345493,
+              65.0,
+              145.05968406937245
+            ],
+            "body_yaw": 168.75,
+            "walk_animation_position": 0.0,
+            "walk_animation_speed": 0.0,
+            "visual_age_ticks": 32.0,
+            "moving": false,
+            "carried_item": "minecraft:air",
+            "carried_soil_rendered": false,
+            "client_carried_soil_units": 0,
+            "partial_ticks": 1.0,
+            "world_distal_contacts": [
+              [
+                168.36918370237197,
+                65.001,
+                144.54355164353353
+              ],
+              [
+                168.3565571732121,
+                65.001,
+                144.89654761620224
+              ],
+              [
+                168.5033082798621,
+                65.001,
+                145.2178414288143
+              ],
+              [
+                169.03489169040031,
+                65.001,
+                144.41113409165126
+              ],
+              [
+                169.1816427926897,
+                65.001,
+                144.73242788234106
+              ],
+              [
+                169.1690162678904,
+                65.001,
+                145.08542387693203
+              ]
+            ],
+            "support_floor_heights": [
+              65.0,
+              65.0,
+              65.0,
+              65.0,
+              65.0,
+              65.0
+            ],
+            "actual_floor_clearances": [
+              0.0010000000000047748,
+              0.0010000000000047748,
+              0.0010000000000047748,
+              0.0010000000000047748,
+              0.0010000000000047748,
+              0.0010000000000047748
+            ],
+            "flat_ground": false,
+            "body_relative_distal_contacts": [
+              [
+                0.339375,
+                1.5,
+                -0.59374994
+              ],
+              [
+                0.420625,
+                1.5,
+                -0.25
+              ],
+              [
+                0.339375,
+                1.5,
+                0.09374996
+              ],
+              [
+                -0.339375,
+                1.5,
+                -0.59374994
+              ],
+              [
+                -0.420625,
+                1.5,
+                -0.25
+              ],
+              [
+                -0.339375,
+                1.5,
+                0.09374996
+              ]
+            ],
+            "support_legs": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "support_tripod": "boundary"
+          }
+        ],
+        "brightness": 0.5,
+        "observer_position": [
+          168.5,
+          66.0,
+          148.5
+        ],
+        "survival_observer": true,
+        "brood_position": [
+          169,
+          65,
+          145
+        ],
+        "brood_blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+        "active_brood": [
+          {
+            "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+            "expired": false,
+            "slot": 1,
+            "stage": "COCOON"
+          }
+        ],
+        "block_light": 13,
+        "sky_light": 12,
+        "clearance_policy": "Actual survival eye/body, dry loaded air lens, ordinary support, live a/b/c projection and sight ray to each active slot",
+        "readback_scheduled_utc": "2026-10-06T10:46:11.091765200Z"
+      },
+      "server_after": {
+        "server_tick": 36,
+        "game_time": 17060,
+        "pile": [
+          169,
+          65,
+          145
+        ],
+        "pile_loaded_ticks": 8416,
+        "persisted_stage_duration": 120,
+        "condition": "enclosure_chamber_obstructed",
+        "last_laying_tick": 2748,
+        "growth_reason": "income_warmup",
+        "supply": {
+          "complete": true,
+          "hungry": true,
+          "foodSugar": 16000,
+          "foodProtein": 24000,
+          "storedSugar": 4148,
+          "storedProtein": 4000,
+          "committedSugar": 0,
+          "committedProtein": 0,
+          "adults": 5,
+          "brood": 1
+        },
+        "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+        "brood": [
+          {
+            "nourishment": 12000,
+            "sugar": 0,
+            "slot": 1,
+            "progress": 86,
+            "protein": 0,
+            "founding": false,
+            "neglect_ticks": 0,
+            "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+            "expired": false,
+            "stage": "COCOON"
+          }
+        ],
+        "queen": {
+          "apples": 0,
+          "sugar": 4148,
+          "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+          "protein": 4000,
+          "position": [
+            168.81787256345493,
+            65.0,
+            145.05968406937245
+          ],
+          "chickens": 0
+        },
+        "workers": [
+          {
+            "sugar": 0,
+            "task": "APPROACH",
+            "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+            "alive": true,
+            "position": [
+              168.2239644689313,
+              65.0,
+              146.2453810310005
+            ],
+            "item": "0 minecraft:air",
+            "protein": 0
+          },
+          {
+            "sugar": 0,
+            "task": "NURSE_CACHE",
+            "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+            "alive": true,
+            "position": [
+              168.2005538723618,
+              65.0,
+              146.25140704454182
+            ],
+            "item": "0 minecraft:air",
+            "protein": 0
+          },
+          {
+            "sugar": 0,
+            "task": "NURSE_CACHE",
+            "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+            "alive": true,
+            "position": [
+              168.24516738800295,
+              65.0,
+              146.27357990648704
+            ],
+            "item": "0 minecraft:air",
+            "protein": 0
+          },
+          {
+            "sugar": 0,
+            "task": "NURSE_CACHE",
+            "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+            "alive": true,
+            "position": [
+              168.2275398822231,
+              65.0,
+              146.2536304223593
+            ],
+            "item": "0 minecraft:air",
+            "protein": 0
+          }
+        ],
+        "cache": [],
+        "observer": {
+          "alive": true,
+          "mode": "SURVIVAL",
+          "position": [
+            168.5,
+            66.0,
+            148.5
+          ]
+        }
+      },
+      "capture_valid": false,
+      "acceptance": "pending-manual-review"
+    },
+    {
+      "name": "nursery-final-detail",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t26-final-review-a6-nest-nursery-final-detail.png",
+      "camera": {
+        "eye": [
+          168.5,
+          67.61999988555908,
+          148.5
+        ],
+        "yaw": -168.43542,
+        "pitch": 36.079144,
+        "fov": 70.0,
+        "viewport": [
+          1600,
+          1000
+        ],
+        "partial_tick": 1.0,
+        "camera_partial_tick": 1.0,
+        "render_extraction_utc": "2026-10-06T10:46:11.272678400Z",
+        "client_game_time": 17059,
+        "lens_block": "Block{minecraft:air}",
+        "clearance": false,
+        "living_subject": true,
+        "living_observer": true,
+        "night_vision": false,
+        "rendered_ants": [
+          {
+            "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+            "form": "queen",
+            "callow_visual": 1000,
+            "render_extraction_utc": "2026-10-06T10:46:11.272150900Z",
+            "render_entity_tick": 33,
+            "render_position": [
+              168.81787256345493,
+              65.0,
+              145.05968406937245
+            ],
+            "body_yaw": 168.75,
+            "walk_animation_position": 0.0,
+            "walk_animation_speed": 0.0,
+            "visual_age_ticks": 34.0,
+            "moving": false,
+            "carried_item": "minecraft:air",
+            "carried_soil_rendered": false,
+            "client_carried_soil_units": 0,
+            "partial_ticks": 1.0,
+            "world_distal_contacts": [
+              [
+                168.36918370237197,
+                65.001,
+                144.54355164353353
+              ],
+              [
+                168.3565571732121,
+                65.001,
+                144.89654761620224
+              ],
+              [
+                168.5033082798621,
+                65.001,
+                145.2178414288143
+              ],
+              [
+                169.03489169040031,
+                65.001,
+                144.41113409165126
+              ],
+              [
+                169.1816427926897,
+                65.001,
+                144.73242788234106
+              ],
+              [
+                169.1690162678904,
+                65.001,
+                145.08542387693203
+              ]
+            ],
+            "support_floor_heights": [
+              65.0,
+              65.0,
+              65.0,
+              65.0,
+              65.0,
+              65.0
+            ],
+            "actual_floor_clearances": [
+              0.0010000000000047748,
+              0.0010000000000047748,
+              0.0010000000000047748,
+              0.0010000000000047748,
+              0.0010000000000047748,
+              0.0010000000000047748
+            ],
+            "flat_ground": false,
+            "body_relative_distal_contacts": [
+              [
+                0.339375,
+                1.5,
+                -0.59374994
+              ],
+              [
+                0.420625,
+                1.5,
+                -0.25
+              ],
+              [
+                0.339375,
+                1.5,
+                0.09374996
+              ],
+              [
+                -0.339375,
+                1.5,
+                -0.59374994
+              ],
+              [
+                -0.420625,
+                1.5,
+                -0.25
+              ],
+              [
+                -0.339375,
+                1.5,
+                0.09374996
+              ]
+            ],
+            "support_legs": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "support_tripod": "boundary"
+          }
+        ],
+        "brightness": 0.5,
+        "observer_position": [
+          168.5,
+          66.0,
+          148.5
+        ],
+        "survival_observer": true,
+        "brood_position": [
+          169,
+          65,
+          145
+        ],
+        "brood_blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+        "active_brood": [
+          {
+            "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+            "expired": false,
+            "slot": 1,
+            "stage": "COCOON"
+          }
+        ],
+        "block_light": 13,
+        "sky_light": 12,
+        "clearance_policy": "Actual survival eye/body, dry loaded air lens, ordinary support, live a/b/c projection and sight ray to each active slot",
+        "readback_scheduled_utc": "2026-10-06T10:46:11.276840200Z"
+      },
+      "server_after": {
+        "server_tick": 37,
+        "game_time": 17061,
+        "pile": [
+          169,
+          65,
+          145
+        ],
+        "pile_loaded_ticks": 8417,
+        "persisted_stage_duration": 120,
+        "condition": "enclosure_chamber_obstructed",
+        "last_laying_tick": 2748,
+        "growth_reason": "income_warmup",
+        "supply": {
+          "complete": true,
+          "hungry": true,
+          "foodSugar": 16000,
+          "foodProtein": 24000,
+          "storedSugar": 4148,
+          "storedProtein": 4000,
+          "committedSugar": 0,
+          "committedProtein": 0,
+          "adults": 5,
+          "brood": 1
+        },
+        "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+        "brood": [
+          {
+            "nourishment": 12000,
+            "sugar": 0,
+            "slot": 1,
+            "progress": 86,
+            "protein": 0,
+            "founding": false,
+            "neglect_ticks": 0,
+            "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+            "expired": false,
+            "stage": "COCOON"
+          }
+        ],
+        "queen": {
+          "apples": 0,
+          "sugar": 4148,
+          "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+          "protein": 4000,
+          "position": [
+            168.81787256345493,
+            65.0,
+            145.05968406937245
+          ],
+          "chickens": 0
+        },
+        "workers": [
+          {
+            "sugar": 0,
+            "task": "APPROACH",
+            "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+            "alive": true,
+            "position": [
+              168.2239644689313,
+              65.0,
+              146.2453810310005
+            ],
+            "item": "0 minecraft:air",
+            "protein": 0
+          },
+          {
+            "sugar": 0,
+            "task": "NURSE_CACHE",
+            "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+            "alive": true,
+            "position": [
+              168.2005538723618,
+              65.0,
+              146.25140704454182
+            ],
+            "item": "0 minecraft:air",
+            "protein": 0
+          },
+          {
+            "sugar": 0,
+            "task": "NURSE_CACHE",
+            "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+            "alive": true,
+            "position": [
+              168.24516738800295,
+              65.0,
+              146.27357990648704
+            ],
+            "item": "0 minecraft:air",
+            "protein": 0
+          },
+          {
+            "sugar": 0,
+            "task": "NURSE_CACHE",
+            "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+            "alive": true,
+            "position": [
+              168.2275398822231,
+              65.0,
+              146.2536304223593
+            ],
+            "item": "0 minecraft:air",
+            "protein": 0
+          }
+        ],
+        "cache": [],
+        "observer": {
+          "alive": true,
+          "mode": "SURVIVAL",
+          "position": [
+            168.5,
+            66.0,
+            148.5
+          ]
+        }
+      },
+      "capture_valid": false,
+      "acceptance": "pending-manual-review"
+    }
+  ],
+  "ant_position_edits": 0,
+  "ai_pauses": 0,
+  "forced_poses": 0,
+  "terrain_edits": 0,
+  "supplied_ants": 0,
+  "supplied_food": 0,
+  "render_distance": 8,
+  "simulation_distance": 8,
+  "native_frame": [
+    1600,
+    1000
+  ],
+  "camera_policy": "Living spectator on verified dry FULL support; separate observer lens follows natural body heading. No actor or animation writes.",
+  "source_archive": "C:\\Users\\user\\Documents\\turnloop\\directions\\prime-ants-slice1\\turns\\T26\\t26-brood-a5-world.zip",
+  "archive_root": "t26-brood-a5",
+  "save": "C:\\Users\\user\\Documents\\prime-ants\\build\\run\\clientGameTest\\saves\\t26-final-review-a6-nest",
+  "safe_observer_feet": [
+    165,
+    68,
+    146
+  ],
+  "safe_observer_checks": "FULL, build height/border, dry solid support, complete body space, alive and ticks advancing",
+  "queen_identity": "9c71829b-25f1-3b96-acbb-96252228271d",
+  "brood_samples": [
+    {
+      "server_tick": 27,
+      "game_time": 17051,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 8407,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4150,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86,
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON"
+        }
+      ],
+      "queen": {
+        "apples": 0,
+        "sugar": 4150,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000,
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0
+      },
+      "workers": [
+        {
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air",
+          "protein": 0
+        },
+        {
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air",
+          "protein": 0
+        },
+        {
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air",
+          "protein": 0
+        },
+        {
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air",
+          "protein": 0
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SPECTATOR",
+        "position": [
+          165.5,
+          68.0,
+          146.5
+        ]
+      }
+    },
+    {
+      "server_tick": 37,
+      "game_time": 17061,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 8417,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4148,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86,
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON"
+        }
+      ],
+      "queen": {
+        "apples": 0,
+        "sugar": 4148,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000,
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0
+      },
+      "workers": [
+        {
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air",
+          "protein": 0
+        },
+        {
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air",
+          "protein": 0
+        },
+        {
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air",
+          "protein": 0
+        },
+        {
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air",
+          "protein": 0
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          168.5,
+          66.0,
+          148.5
+        ]
+      }
+    }
+  ],
+  "supplied_apples": 0,
+  "supplied_chickens": 0,
+  "supplied_torches": 0,
+  "interior_access": "Pre-measurement spectator setup on dry FULL supported existing corridor, followed by living survival view; no virtual lens or measured teleport",
+  "intervention_caption": "Continuation of the actual closed player-fed T26 A5 state, with the same two survival-placed vanilla torches; no renewed food/torches or biological writes",
+  "brood_capture_before": {
+    "server_tick": 36,
+    "game_time": 17060,
+    "pile": [
+      169,
+      65,
+      145
+    ],
+    "pile_loaded_ticks": 8416,
+    "persisted_stage_duration": 120,
+    "condition": "enclosure_chamber_obstructed",
+    "last_laying_tick": 2748,
+    "growth_reason": "income_warmup",
+    "supply": {
+      "complete": true,
+      "hungry": true,
+      "foodSugar": 16000,
+      "foodProtein": 24000,
+      "storedSugar": 4148,
+      "storedProtein": 4000,
+      "committedSugar": 0,
+      "committedProtein": 0,
+      "adults": 5,
+      "brood": 1
+    },
+    "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+    "brood": [
+      {
+        "nourishment": 12000,
+        "sugar": 0,
+        "slot": 1,
+        "progress": 86,
+        "protein": 0,
+        "founding": false,
+        "neglect_ticks": 0,
+        "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+        "expired": false,
+        "stage": "COCOON"
+      }
+    ],
+    "queen": {
+      "apples": 0,
+      "sugar": 4148,
+      "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "protein": 4000,
+      "position": [
+        168.81787256345493,
+        65.0,
+        145.05968406937245
+      ],
+      "chickens": 0
+    },
+    "workers": [
+      {
+        "sugar": 0,
+        "task": "APPROACH",
+        "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+        "alive": true,
+        "position": [
+          168.2239644689313,
+          65.0,
+          146.2453810310005
+        ],
+        "item": "0 minecraft:air",
+        "protein": 0
+      },
+      {
+        "sugar": 0,
+        "task": "NURSE_CACHE",
+        "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+        "alive": true,
+        "position": [
+          168.2005538723618,
+          65.0,
+          146.25140704454182
+        ],
+        "item": "0 minecraft:air",
+        "protein": 0
+      },
+      {
+        "sugar": 0,
+        "task": "NURSE_CACHE",
+        "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+        "alive": true,
+        "position": [
+          168.24516738800295,
+          65.0,
+          146.27357990648704
+        ],
+        "item": "0 minecraft:air",
+        "protein": 0
+      },
+      {
+        "sugar": 0,
+        "task": "NURSE_CACHE",
+        "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+        "alive": true,
+        "position": [
+          168.2275398822231,
+          65.0,
+          146.2536304223593
+        ],
+        "item": "0 minecraft:air",
+        "protein": 0
+      }
+    ],
+    "cache": [],
+    "observer": {
+      "alive": true,
+      "mode": "SURVIVAL",
+      "position": [
+        168.5,
+        66.0,
+        148.5
+      ]
+    }
+  },
+  "additional_ticks": 38,
+  "accumulated_ticks": 5475,
+  "normal_server_stop": true,
+  "normal_close": true
+}

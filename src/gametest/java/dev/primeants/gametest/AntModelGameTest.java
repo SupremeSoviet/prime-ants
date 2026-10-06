@@ -200,6 +200,7 @@ public final class AntModelGameTest implements FabricClientGameTest {
                     if(path.endsWith("/funiculus"))require(cube.maxX-cube.minX<=.35F,"Slender funiculus cross-section");
                 });
                 require(cubes.containsKey("/ant/head/mandible_" + side) && cubes.containsKey("/ant/head/eye_" + side), "Mandible and compound-eye geometry");
+                require(cubes.get("/ant/head/eye_"+side)==9,"Bounded rounded compound-eye mesh");
             }
         });
         test(form, "articulatedLegGeometryStaysConnected", () -> {
@@ -328,7 +329,7 @@ public final class AntModelGameTest implements FabricClientGameTest {
             PrimeAnts.LOGGER.info("T03 rendered dimensions {}: bodyLength={}, bodyHeight={}, excludes antenna/leg reach", form, length, bounds[3] - bounds[2]);
         });
         test(form, "taperedProfilesConnectedConstrictedWaist", () -> {
-            require(cubes.get("/ant/gaster")==99,"Bounded 11 x 9 gaster mesh");
+            require(cubes.get("/ant/gaster")==117,"Bounded 13 x 9 gaster mesh");
             checkProfiles(form, model);
         });
         model.resetPose();

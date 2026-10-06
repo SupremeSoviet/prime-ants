@@ -113,7 +113,7 @@ public final class AntModel extends EntityModel<AntRenderState> {
                     box(0, 400, -thickness / 2, 0, -thickness / 2, thickness, femurLength, thickness),
                     PartPose.rotation(0, 0, angles[1]));
             PartDefinition tibia = femur.addOrReplaceChild("tibia",
-                    box(0, 430, -thickness * 0.4F, 0, -thickness * 0.4F, thickness * 0.8F, tibiaLength, thickness * 0.8F),
+                    box(0, 430, -thickness * 0.46F, 0, -thickness * 0.46F, thickness * 0.92F, tibiaLength, thickness * 0.92F),
                     PartPose.offsetAndRotation(0, femurLength, 0, 0, 0, angles[2]));
             tibia.addOrReplaceChild("tarsus", box(32, 430, -thickness * 0.35F, 0, -thickness * 0.35F,
                     thickness * 0.7F, queen ? 2 : 1.2F, thickness * 0.7F),
@@ -126,11 +126,16 @@ public final class AntModel extends EntityModel<AntRenderState> {
         return CubeListBuilder.create().texOffs(u, v).addBox(x, y, z, w, h, d);
     }
 
-    /** Small faceted compound eye, with a rounded outline rather than a rectangular slab. */
+    /** Nine small cells form a rounded dark dome; no rectangular eye plate. */
     private static CubeListBuilder eye(boolean queen) {
-        float size = queen ? 1.3F : 1F;
-        return box(220, 400, -.55F * size, -.55F * size, -1.1F * size, 1.1F * size, 1.1F * size, 2.2F * size)
-                .addBox(-.45F * size, -.8F * size, -.8F * size, .9F * size, 1.6F * size, 1.6F * size);
+        float size=queen?1.3F:1F;
+        CubeListBuilder eye=CubeListBuilder.create();
+        float[] taper={.68F,1F,.68F},widths={.70F,1F,.70F},edges={-.5F,-.22F,.22F,.5F};
+        for(int i=0;i<3;i++)for(int j=0;j<3;j++){
+            float w=1.15F*size*taper[i]*widths[j],h=1.7F*size*taper[i];
+            eye.texOffs(220+i*12,400+j*6).addBox(-w/2,h*edges[j],-1.2F*size+i*.8F*size,w,h*(edges[j+1]-edges[j]),.8F*size);
+        }
+        return eye;
     }
 
     /** Nine axial slices, each with five horizontal tiers: an elliptical cross-section,
@@ -152,15 +157,19 @@ public final class AntModel extends EntityModel<AntRenderState> {
         return shape;
     }
 
-    /** Fixed 11 x 9 gaster mesh (99 cubes); finer terraces without changing body bounds. */
+    /** Fixed 13 x 9 gaster mesh (117 cubes); 18 extra cells reduce axial terraces. */
     private static CubeListBuilder gasterOvoid(float w, float h, float d) {
-        float[] taper={.30F,.61F,.80F,.916F,.98F,1F,.98F,.916F,.80F,.61F,.30F};
+        float[] taper={.27F,.52F,.72F,.855F,.94F,.985F,1F,.985F,.94F,.855F,.72F,.52F,.27F};
         float[] widths={.26F,.50F,.72F,.90F,1F,.90F,.72F,.50F,.26F};
         float[] edges={-.50F,-.48F,-.42F,-.30F,-.12F,.12F,.30F,.42F,.48F,.50F};
         CubeListBuilder shape=CubeListBuilder.create();
-        for(int slice=0;slice<taper.length;slice++)for(int tier=0;tier<widths.length;tier++) {
-            float width=w*taper[slice]*widths[tier],height=h*taper[slice];
-            shape.texOffs(slice*45,192+tier*10).addBox(-width/2,height*edges[tier],-d/2+slice*d/11,width,height*(edges[tier+1]-edges[tier]),d/11);
+        int u=0;
+        for(int slice=0;slice<taper.length;slice++){
+            for(int tier=0;tier<widths.length;tier++) {
+                float width=w*taper[slice]*widths[tier],height=h*taper[slice];
+                shape.texOffs(u,192+tier*10).addBox(-width/2,height*edges[tier],-d/2+slice*d/13,width,height*(edges[tier+1]-edges[tier]),d/13);
+            }
+            u+=(int)Math.ceil(2*(w*taper[slice]+d/13))+1;
         }
         return shape;
     }

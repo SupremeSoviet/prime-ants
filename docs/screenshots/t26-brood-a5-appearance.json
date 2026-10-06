@@ -1,0 +1,6962 @@
+{
+  "run_id": "4d13bcce-148c-4029-a62a-445935fbe2c2",
+  "scenario": "appearance-t26",
+  "status": "closed",
+  "prior_ticks": 349,
+  "total_tick_bound": 24000,
+  "attempt_tick_bound": 7000,
+  "attempt_ticks_already_spent": 0,
+  "captures": [
+    {
+      "name": "brood-cocoon-overview",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t26-brood-a5-brood-cocoon-overview.png",
+      "camera": {
+        "eye": [
+          168.4903479546403,
+          66.61999988555908,
+          146.62478769383677
+        ],
+        "yaw": -138.08765,
+        "pitch": 44.203064,
+        "fov": 70.0,
+        "viewport": [
+          1600,
+          1000
+        ],
+        "partial_tick": 1.0,
+        "camera_partial_tick": 1.0,
+        "render_extraction_utc": "2026-10-06T10:41:11.125899400Z",
+        "client_game_time": 12018,
+        "lens_block": "Block{minecraft:air}",
+        "clearance": true,
+        "living_subject": true,
+        "living_observer": true,
+        "night_vision": false,
+        "rendered_ants": [
+          {
+            "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+            "form": "queen",
+            "callow_visual": 1000,
+            "render_extraction_utc": "2026-10-06T10:41:11.124394600Z",
+            "render_entity_tick": 80,
+            "render_position": [
+              168.560302734375,
+              65.0,
+              145.673095703125
+            ],
+            "body_yaw": 168.75,
+            "walk_animation_position": 0.35919738,
+            "walk_animation_speed": 6.007735E-4,
+            "visual_age_ticks": 81.0,
+            "moving": false,
+            "carried_item": "minecraft:air",
+            "carried_soil_rendered": false,
+            "client_carried_soil_units": 0,
+            "partial_ticks": 1.0,
+            "body_relative_distal_contacts": [
+              [
+                0.339375,
+                1.5,
+                -0.59374994
+              ],
+              [
+                0.420625,
+                1.5,
+                -0.25
+              ],
+              [
+                0.339375,
+                1.5,
+                0.09374996
+              ],
+              [
+                -0.339375,
+                1.5,
+                -0.59374994
+              ],
+              [
+                -0.420625,
+                1.5,
+                -0.25
+              ],
+              [
+                -0.339375,
+                1.5,
+                0.09374996
+              ]
+            ],
+            "support_legs": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "support_tripod": "boundary"
+          }
+        ],
+        "brightness": 0.5,
+        "observer_position": [
+          168.4903479546403,
+          65.0,
+          146.62478769383677
+        ],
+        "survival_observer": true,
+        "brood_position": [
+          169,
+          65,
+          145
+        ],
+        "brood_blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+        "active_brood": [
+          {
+            "slot": 1,
+            "stage": "COCOON",
+            "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+            "expired": false
+          }
+        ],
+        "block_light": 13,
+        "sky_light": 12,
+        "clearance_policy": "Actual survival eye/body, dry loaded air lens, ordinary support, live a/b/c projection and sight ray to each active slot",
+        "readback_scheduled_utc": "2026-10-06T10:41:11.133240Z"
+      },
+      "server_after": {
+        "server_tick": 85,
+        "game_time": 12021,
+        "pile": [
+          169,
+          65,
+          145
+        ],
+        "pile_loaded_ticks": 3377,
+        "persisted_stage_duration": 120,
+        "condition": "enclosure_chamber_obstructed",
+        "last_laying_tick": 2748,
+        "growth_reason": "income_warmup",
+        "supply": {
+          "complete": true,
+          "hungry": false,
+          "foodSugar": 16000,
+          "foodProtein": 24000,
+          "storedSugar": 5408,
+          "storedProtein": 4000,
+          "committedSugar": 0,
+          "committedProtein": 0,
+          "adults": 5,
+          "brood": 1
+        },
+        "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+        "brood": [
+          {
+            "protein": 0,
+            "founding": false,
+            "neglect_ticks": 0,
+            "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+            "expired": false,
+            "stage": "COCOON",
+            "nourishment": 12000,
+            "sugar": 0,
+            "slot": 1,
+            "progress": 86
+          }
+        ],
+        "queen": {
+          "position": [
+            168.56032584414314,
+            65.0,
+            145.67303466020584
+          ],
+          "chickens": 0,
+          "apples": 0,
+          "sugar": 5408,
+          "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+          "protein": 4000
+        },
+        "workers": [
+          {
+            "protein": 0,
+            "sugar": 0,
+            "task": "APPROACH",
+            "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+            "alive": true,
+            "position": [
+              168.21570200499445,
+              68.0,
+              148.78546754670143
+            ],
+            "item": "0 minecraft:air"
+          },
+          {
+            "protein": 0,
+            "sugar": 0,
+            "task": "NURSE_CACHE",
+            "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+            "alive": true,
+            "position": [
+              168.4786170150691,
+              67.0,
+              149.34374973946547
+            ],
+            "item": "0 minecraft:air"
+          },
+          {
+            "protein": 0,
+            "sugar": 0,
+            "task": "NURSE_CACHE",
+            "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+            "alive": true,
+            "position": [
+              168.45489292034495,
+              67.0,
+              148.95364229829218
+            ],
+            "item": "0 minecraft:air"
+          },
+          {
+            "protein": 0,
+            "sugar": 0,
+            "task": "NURSE_CACHE",
+            "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+            "alive": true,
+            "position": [
+              168.52257669893,
+              67.0,
+              149.28311415600496
+            ],
+            "item": "0 minecraft:air"
+          }
+        ],
+        "cache": [],
+        "observer": {
+          "alive": true,
+          "mode": "SURVIVAL",
+          "position": [
+            168.4903479546403,
+            65.0,
+            146.62478769383677
+          ]
+        }
+      },
+      "capture_valid": true,
+      "acceptance": "pending-manual-review"
+    },
+    {
+      "name": "brood-cocoon-detail",
+      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t26-brood-a5-brood-cocoon-detail.png",
+      "camera": {
+        "eye": [
+          168.4903479546403,
+          66.61999988555908,
+          146.62478769383677
+        ],
+        "yaw": -138.08765,
+        "pitch": 44.203064,
+        "fov": 45.0,
+        "viewport": [
+          1600,
+          1000
+        ],
+        "partial_tick": 1.0,
+        "camera_partial_tick": 1.0,
+        "render_extraction_utc": "2026-10-06T10:41:11.291742800Z",
+        "client_game_time": 12020,
+        "lens_block": "Block{minecraft:air}",
+        "clearance": true,
+        "living_subject": true,
+        "living_observer": true,
+        "night_vision": false,
+        "rendered_ants": [
+          {
+            "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+            "form": "queen",
+            "callow_visual": 1000,
+            "render_extraction_utc": "2026-10-06T10:41:11.291742800Z",
+            "render_entity_tick": 82,
+            "render_position": [
+              168.560302734375,
+              65.0,
+              145.673095703125
+            ],
+            "body_yaw": 168.75,
+            "walk_animation_position": 0.3597741,
+            "walk_animation_speed": 2.1627845E-4,
+            "visual_age_ticks": 83.0,
+            "moving": false,
+            "carried_item": "minecraft:air",
+            "carried_soil_rendered": false,
+            "client_carried_soil_units": 0,
+            "partial_ticks": 1.0,
+            "body_relative_distal_contacts": [
+              [
+                0.339375,
+                1.5,
+                -0.59374994
+              ],
+              [
+                0.420625,
+                1.5,
+                -0.25
+              ],
+              [
+                0.339375,
+                1.5,
+                0.09374996
+              ],
+              [
+                -0.339375,
+                1.5,
+                -0.59374994
+              ],
+              [
+                -0.420625,
+                1.5,
+                -0.25
+              ],
+              [
+                -0.339375,
+                1.5,
+                0.09374996
+              ]
+            ],
+            "support_legs": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "support_tripod": "boundary"
+          }
+        ],
+        "brightness": 0.5,
+        "observer_position": [
+          168.4903479546403,
+          65.0,
+          146.62478769383677
+        ],
+        "survival_observer": true,
+        "brood_position": [
+          169,
+          65,
+          145
+        ],
+        "brood_blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+        "active_brood": [
+          {
+            "slot": 1,
+            "stage": "COCOON",
+            "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+            "expired": false
+          }
+        ],
+        "block_light": 13,
+        "sky_light": 12,
+        "clearance_policy": "Actual survival eye/body, dry loaded air lens, ordinary support, live a/b/c projection and sight ray to each active slot",
+        "readback_scheduled_utc": "2026-10-06T10:41:11.293765300Z"
+      },
+      "server_after": {
+        "server_tick": 87,
+        "game_time": 12023,
+        "pile": [
+          169,
+          65,
+          145
+        ],
+        "pile_loaded_ticks": 3379,
+        "persisted_stage_duration": 120,
+        "condition": "enclosure_chamber_obstructed",
+        "last_laying_tick": 2748,
+        "growth_reason": "income_warmup",
+        "supply": {
+          "complete": true,
+          "hungry": false,
+          "foodSugar": 16000,
+          "foodProtein": 24000,
+          "storedSugar": 5407,
+          "storedProtein": 4000,
+          "committedSugar": 0,
+          "committedProtein": 0,
+          "adults": 5,
+          "brood": 1
+        },
+        "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+        "brood": [
+          {
+            "protein": 0,
+            "founding": false,
+            "neglect_ticks": 0,
+            "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+            "expired": false,
+            "stage": "COCOON",
+            "nourishment": 12000,
+            "sugar": 0,
+            "slot": 1,
+            "progress": 86
+          }
+        ],
+        "queen": {
+          "position": [
+            168.56032584414314,
+            65.0,
+            145.67303466020584
+          ],
+          "chickens": 0,
+          "apples": 0,
+          "sugar": 5407,
+          "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+          "protein": 4000
+        },
+        "workers": [
+          {
+            "protein": 0,
+            "sugar": 0,
+            "task": "APPROACH",
+            "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+            "alive": true,
+            "position": [
+              168.31640996227213,
+              68.0,
+              148.68432512410146
+            ],
+            "item": "0 minecraft:air"
+          },
+          {
+            "protein": 0,
+            "sugar": 0,
+            "task": "NURSE_CACHE",
+            "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+            "alive": true,
+            "position": [
+              168.48029734085006,
+              67.0,
+              149.2011055088263
+            ],
+            "item": "0 minecraft:air"
+          },
+          {
+            "protein": 0,
+            "sugar": 0,
+            "task": "NURSE_CACHE",
+            "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+            "alive": true,
+            "position": [
+              168.46161829441877,
+              67.0,
+              148.8123011316928
+            ],
+            "item": "0 minecraft:air"
+          },
+          {
+            "protein": 0,
+            "sugar": 0,
+            "task": "NURSE_CACHE",
+            "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+            "alive": true,
+            "position": [
+              168.52065417498662,
+              67.0,
+              149.14046600977326
+            ],
+            "item": "0 minecraft:air"
+          }
+        ],
+        "cache": [],
+        "observer": {
+          "alive": true,
+          "mode": "SURVIVAL",
+          "position": [
+            168.4903479546403,
+            65.0,
+            146.62478769383677
+          ]
+        }
+      },
+      "capture_valid": true,
+      "acceptance": "pending-manual-review"
+    }
+  ],
+  "ant_position_edits": 0,
+  "ai_pauses": 0,
+  "forced_poses": 0,
+  "terrain_edits": 0,
+  "supplied_ants": 0,
+  "supplied_food": 0,
+  "render_distance": 8,
+  "simulation_distance": 8,
+  "native_frame": [
+    1600,
+    1000
+  ],
+  "camera_policy": "Living spectator on verified dry FULL support; separate observer lens follows natural body heading. No actor or animation writes.",
+  "source_archive": "C:\\Users\\user\\Documents\\turnloop\\directions\\prime-ants-slice1\\turns\\T26\\t26-final-interior-a4-world.zip",
+  "archive_root": "t26-final-interior-a4-nest",
+  "save": "C:\\Users\\user\\Documents\\prime-ants\\build\\run\\clientGameTest\\saves\\t26-brood-a5",
+  "safe_observer_feet": [
+    165,
+    68,
+    146
+  ],
+  "safe_observer_checks": "FULL, build height/border, dry solid support, complete body space, alive and ticks advancing",
+  "queen_identity": "9c71829b-25f1-3b96-acbb-96252228271d",
+  "brood_samples": [
+    {
+      "server_tick": 26,
+      "game_time": 11962,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 3318,
+      "persisted_stage_duration": 120,
+      "condition": "income_warmup",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5423,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 42
+        }
+      ],
+      "queen": {
+        "position": [
+          168.5570057296315,
+          65.0,
+          145.76299418712767
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5423,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.38887287196124,
+            68.16610926093821,
+            149.52142560141075
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.4656121682263,
+            66.0,
+            148.37722665112284
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.5148014512122,
+            65.0,
+            146.6343510317986
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.56096952479584,
+            66.0,
+            148.30089261548733
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SPECTATOR",
+        "position": [
+          165.5,
+          68.0,
+          146.5
+        ]
+      }
+    },
+    {
+      "server_tick": 83,
+      "game_time": 12019,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 3375,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5408,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.56032584414314,
+          65.0,
+          145.67303466020584
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5408,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.1150063441824,
+            68.0,
+            148.88661819976585
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.47708264089187,
+            67.0,
+            149.48629841460044
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.449169271032,
+            67.0,
+            149.0934258610852
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.52431912920707,
+            67.0,
+            149.42570943108788
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          168.4903479546403,
+          65.0,
+          146.62478769383677
+        ]
+      }
+    },
+    {
+      "server_tick": 83,
+      "game_time": 12019,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 3375,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5408,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.56032584414314,
+          65.0,
+          145.67303466020584
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5408,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.1150063441824,
+            68.0,
+            148.88661819976585
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.47708264089187,
+            67.0,
+            149.48629841460044
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.449169271032,
+            67.0,
+            149.0934258610852
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.52431912920707,
+            67.0,
+            149.42570943108788
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          168.4903479546403,
+          65.0,
+          146.62478769383677
+        ]
+      }
+    },
+    {
+      "server_tick": 187,
+      "game_time": 12123,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 3479,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5382,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5382,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.5234019314897,
+            65.0,
+            146.92011519923386
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.46999196232616,
+            65.0,
+            147.0022024018084
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.46560609876872,
+            65.0,
+            147.0391234301346
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.52982625633592,
+            65.0,
+            146.9988106083874
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.76985700129748,
+          65.0,
+          145.75971859758488
+        ]
+      }
+    },
+    {
+      "server_tick": 287,
+      "game_time": 12223,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 3579,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5357,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5357,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 387,
+      "game_time": 12323,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 3679,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5332,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5332,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 487,
+      "game_time": 12423,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 3779,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5307,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5307,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 587,
+      "game_time": 12523,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 3879,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5282,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5282,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 687,
+      "game_time": 12623,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 3979,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5257,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5257,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 787,
+      "game_time": 12723,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 4079,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5232,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5232,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 887,
+      "game_time": 12823,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 4179,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5207,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5207,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 987,
+      "game_time": 12923,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 4279,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5182,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5182,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 1087,
+      "game_time": 13023,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 4379,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5157,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5157,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 1187,
+      "game_time": 13123,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 4479,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5132,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5132,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 1287,
+      "game_time": 13223,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 4579,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5107,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5107,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 1387,
+      "game_time": 13323,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 4679,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5082,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5082,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 1487,
+      "game_time": 13423,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 4779,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5057,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5057,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 1587,
+      "game_time": 13523,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 4879,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5032,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5032,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 1687,
+      "game_time": 13623,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 4979,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 5007,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 5007,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 1787,
+      "game_time": 13723,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 5079,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4982,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4982,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 1887,
+      "game_time": 13823,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 5179,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4957,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4957,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 1987,
+      "game_time": 13923,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 5279,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4932,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4932,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 2087,
+      "game_time": 14023,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 5379,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4907,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4907,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 2187,
+      "game_time": 14123,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 5479,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4882,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4882,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 2287,
+      "game_time": 14223,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 5579,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4857,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4857,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 2387,
+      "game_time": 14323,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 5679,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4832,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4832,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 2487,
+      "game_time": 14423,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 5779,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4807,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4807,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 2587,
+      "game_time": 14523,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 5879,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4782,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4782,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 2687,
+      "game_time": 14623,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 5979,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4757,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4757,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 2787,
+      "game_time": 14723,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 6079,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4732,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4732,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 2887,
+      "game_time": 14823,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 6179,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4707,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4707,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 2987,
+      "game_time": 14923,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 6279,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4682,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4682,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 3087,
+      "game_time": 15023,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 6379,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4657,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4657,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 3187,
+      "game_time": 15123,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 6479,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4632,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4632,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 3287,
+      "game_time": 15223,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 6579,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4607,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4607,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 3387,
+      "game_time": 15323,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 6679,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4582,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4582,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 3487,
+      "game_time": 15423,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 6779,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4557,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4557,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 3587,
+      "game_time": 15523,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 6879,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4532,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4532,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 3687,
+      "game_time": 15623,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 6979,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4507,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4507,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 3787,
+      "game_time": 15723,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 7079,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4482,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4482,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 3887,
+      "game_time": 15823,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 7179,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4457,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4457,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 3987,
+      "game_time": 15923,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 7279,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4432,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4432,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 4087,
+      "game_time": 16023,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 7379,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4407,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4407,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 4187,
+      "game_time": 16123,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 7479,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4382,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4382,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 4287,
+      "game_time": 16223,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 7579,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4357,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4357,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 4387,
+      "game_time": 16323,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 7679,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4332,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4332,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 4487,
+      "game_time": 16423,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 7779,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4307,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4307,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 4587,
+      "game_time": 16523,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 7879,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4282,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4282,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 4687,
+      "game_time": 16623,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 7979,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4257,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4257,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 4787,
+      "game_time": 16723,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 8079,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4232,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4232,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 4887,
+      "game_time": 16823,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 8179,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4207,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4207,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 4987,
+      "game_time": 16923,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 8279,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4182,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4182,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    },
+    {
+      "server_tick": 5087,
+      "game_time": 17023,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 8379,
+      "persisted_stage_duration": 120,
+      "condition": "enclosure_chamber_obstructed",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": true,
+        "foodSugar": 16000,
+        "foodProtein": 24000,
+        "storedSugar": 4157,
+        "storedProtein": 4000,
+        "committedSugar": 0,
+        "committedProtein": 0,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+      "brood": [
+        {
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 0,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "COCOON",
+          "nourishment": 12000,
+          "sugar": 0,
+          "slot": 1,
+          "progress": 86
+        }
+      ],
+      "queen": {
+        "position": [
+          168.81787256345493,
+          65.0,
+          145.05968406937245
+        ],
+        "chickens": 0,
+        "apples": 0,
+        "sugar": 4157,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000
+      },
+      "workers": [
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH",
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2239644689313,
+            65.0,
+            146.2453810310005
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.2005538723618,
+            65.0,
+            146.25140704454182
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.24516738800295,
+            65.0,
+            146.27357990648704
+          ],
+          "item": "0 minecraft:air"
+        },
+        {
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE",
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.2275398822231,
+            65.0,
+            146.2536304223593
+          ],
+          "item": "0 minecraft:air"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "alive": true,
+        "mode": "SURVIVAL",
+        "position": [
+          167.49988581463768,
+          65.0,
+          144.99429897216527
+        ]
+      }
+    }
+  ],
+  "player_drops": [
+    {
+      "item": "minecraft:apple",
+      "count": 2,
+      "origin": [
+        168.5,
+        67.0,
+        151.5
+      ],
+      "world_items": [
+        {
+          "uuid": "c79fb2d9-8503-4409-84a2-544ce7f66421",
+          "count": 2,
+          "position": [
+            165.4722979731735,
+            68.0,
+            148.57776830313
+          ]
+        },
+        {
+          "uuid": "16dfc9f9-c0e5-474c-8c63-ceb10f43c641",
+          "count": 2,
+          "position": [
+            168.49765896837818,
+            68.2454486554861,
+            151.75914516671898
+          ]
+        }
+      ]
+    },
+    {
+      "item": "minecraft:chicken",
+      "count": 1,
+      "origin": [
+        168.5,
+        67.0,
+        151.5
+      ],
+      "world_items": [
+        {
+          "uuid": "f57ee4a1-712d-4cb4-a8f2-c56aea6d9611",
+          "count": 1,
+          "position": [
+            166.45308394681814,
+            68.0,
+            147.46271255162853
+          ]
+        },
+        {
+          "uuid": "3005a0c1-1236-4366-af64-255938700374",
+          "count": 1,
+          "position": [
+            168.5032647889345,
+            68.11345622599124,
+            151.2951967953876
+          ]
+        }
+      ]
+    }
+  ],
+  "torch_placements": [
+    {
+      "face": "north",
+      "support": [
+        167,
+        66,
+        147
+      ],
+      "target": [
+        167,
+        66,
+        146
+      ],
+      "index": 0,
+      "eye": [
+        168.4903479546403,
+        66.62000000476837,
+        146.62478769383677
+      ],
+      "player": [
+        168.49365858119572,
+        65.0,
+        146.58198583810488
+      ],
+      "reach": 1.0426408960086515,
+      "method": "MultiPlayerGameMode.useItemOn; normal survival prediction/packet/BlockItem placement"
+    },
+    {
+      "face": "west",
+      "support": [
+        170,
+        66,
+        146
+      ],
+      "target": [
+        169,
+        66,
+        146
+      ],
+      "index": 1,
+      "eye": [
+        168.4903479546403,
+        66.62000000476837,
+        146.62478769383677
+      ],
+      "player": [
+        168.4903479546403,
+        65.0,
+        146.62478769383677
+      ],
+      "reach": 1.5192901734792859,
+      "method": "MultiPlayerGameMode.useItemOn; normal survival prediction/packet/BlockItem placement"
+    }
+  ],
+  "work_multiplier": 20,
+  "brood_multiplier": 100,
+  "supplied_apples": 2,
+  "supplied_chickens": 1,
+  "supplied_torches": 0,
+  "intervention_caption": "Player-fed natural colony; normal survival inventory drops and vanilla torch interactions; production care/laying/development only",
+  "food_retreat": [
+    168.5,
+    68.16610926093821,
+    155.5402018858828
+  ],
+  "interior_access": "Spectator setup on verified supported chamber entry before measured survival placement/view; existing connected two-high stairs, T23 and T26 A3 normal entry; no measured teleport",
+  "brood_wait_bound": 5000,
+  "brood_capture_before": {
+    "server_tick": 85,
+    "game_time": 12021,
+    "pile": [
+      169,
+      65,
+      145
+    ],
+    "pile_loaded_ticks": 3377,
+    "persisted_stage_duration": 120,
+    "condition": "enclosure_chamber_obstructed",
+    "last_laying_tick": 2748,
+    "growth_reason": "income_warmup",
+    "supply": {
+      "complete": true,
+      "hungry": false,
+      "foodSugar": 16000,
+      "foodProtein": 24000,
+      "storedSugar": 5408,
+      "storedProtein": 4000,
+      "committedSugar": 0,
+      "committedProtein": 0,
+      "adults": 5,
+      "brood": 1
+    },
+    "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dcocoon,c\u003dempty]",
+    "brood": [
+      {
+        "protein": 0,
+        "founding": false,
+        "neglect_ticks": 0,
+        "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+        "expired": false,
+        "stage": "COCOON",
+        "nourishment": 12000,
+        "sugar": 0,
+        "slot": 1,
+        "progress": 86
+      }
+    ],
+    "queen": {
+      "position": [
+        168.56032584414314,
+        65.0,
+        145.67303466020584
+      ],
+      "chickens": 0,
+      "apples": 0,
+      "sugar": 5408,
+      "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "protein": 4000
+    },
+    "workers": [
+      {
+        "protein": 0,
+        "sugar": 0,
+        "task": "APPROACH",
+        "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+        "alive": true,
+        "position": [
+          168.21570200499445,
+          68.0,
+          148.78546754670143
+        ],
+        "item": "0 minecraft:air"
+      },
+      {
+        "protein": 0,
+        "sugar": 0,
+        "task": "NURSE_CACHE",
+        "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+        "alive": true,
+        "position": [
+          168.4786170150691,
+          67.0,
+          149.34374973946547
+        ],
+        "item": "0 minecraft:air"
+      },
+      {
+        "protein": 0,
+        "sugar": 0,
+        "task": "NURSE_CACHE",
+        "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+        "alive": true,
+        "position": [
+          168.45489292034495,
+          67.0,
+          148.95364229829218
+        ],
+        "item": "0 minecraft:air"
+      },
+      {
+        "protein": 0,
+        "sugar": 0,
+        "task": "NURSE_CACHE",
+        "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+        "alive": true,
+        "position": [
+          168.52257669893,
+          67.0,
+          149.28311415600496
+        ],
+        "item": "0 minecraft:air"
+      }
+    ],
+    "cache": [],
+    "observer": {
+      "alive": true,
+      "mode": "SURVIVAL",
+      "position": [
+        168.4903479546403,
+        65.0,
+        146.62478769383677
+      ]
+    }
+  },
+  "observed_live_stages": [
+    "COCOON"
+  ],
+  "missing_live_stages": [
+    "EGG",
+    "LARVA"
+  ],
+  "additional_ticks": 5088,
+  "accumulated_ticks": 5437,
+  "normal_server_stop": true,
+  "normal_close": true
+}

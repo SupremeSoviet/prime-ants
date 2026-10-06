@@ -1,4 +1,41 @@
-﻿import pathlib,json
+import sys,math
+if '--brood-only' in sys.argv:
+ import pathlib,json
+ from PIL import Image
+ root=pathlib.Path(__file__).resolve().parents[1]/'src/main/resources/assets/prime_ants'
+ faces=('up','down','north','south','east','west')
+ def oval(cx,cy,cz,w,h,d,slices=5):
+  out=[]
+  for i in range(slices):
+   axial=math.sqrt(max(.08,1-((i+.5)/slices*2-1)**2))
+   for j,(lo,hi,width) in enumerate(((-.5,-.22,.68),(-.22,.22,1),(.22,.5,.68))):
+    x0=cx-w*axial*width/2;x1=cx+w*axial*width/2
+    y0=cy+h*axial*lo;y1=cy+h*axial*hi;z0=cz-d/2+i*d/slices;z1=z0+d/slices
+    # Block textures retain vanilla density: UV extents match element dimensions.
+    uv={'up':[x0,z0,x1,z1],'down':[x0,z0,x1,z1],'north':[x0,16-y1,x1,16-y0],'south':[x0,16-y1,x1,16-y0],'east':[z0,16-y1,z1,16-y0],'west':[z0,16-y1,z1,16-y0]}
+    out.append({'from':[x0,y0,z0],'to':[x1,y1,z1],'faces':{f:{'texture':'#all','uv':uv[f]} for f in faces}})
+  return out
+ for slot,(x,z) in zip('abc',((2,3),(9,3),(5,10))):
+  for stage in ('egg','larva','cocoon'):
+   if stage=='egg':elements=oval(x+1.5,1,z+1.5,2.6,2,3)
+   elif stage=='cocoon':elements=oval(x+2.5,1.5,z+2,4.5,3,4,7)
+   else:
+    elements=[]
+    for i,(cx,cz,w,h) in enumerate(((x+1,z+1.6,1.6,1.7),(x+2.1,z+1.3,1.9,2.3),(x+3.3,z+1.6,1.8,2.5),(x+4.1,z+2.2,1.3,1.8))):elements+=oval(cx,h/2,cz,w,h,1.25,3)
+   model={'textures':{'all':f'prime_ants:block/brood_{stage}','particle':f'prime_ants:block/brood_{stage}'},'elements':elements}
+   (root/f'models/block/brood_{stage}_{slot}.json').write_text(json.dumps(model,indent=2)+'\n',encoding='utf-8')
+ for stage,base in (('egg',(236,227,198)),('larva',(231,212,159)),('cocoon',(183,149,103))):
+  im=Image.new('RGB',(16,16))
+  for y in range(16):
+   for x in range(16):
+    shade=round(5*math.sin(x*.8)+3*math.cos(y*.7))
+    if stage=='larva':shade-=12 if x in (3,5,7,11,13) else 0
+    if stage=='cocoon':shade+=7 if (x+2*y)%5==0 else -2
+    im.putpixel((x,y),tuple(max(0,min(255,v+shade)) for v in base))
+  im.save(root/f'textures/block/brood_{stage}.png')
+ raise SystemExit(0)
+
+import pathlib,json
 from PIL import Image
 root=pathlib.Path('src/main/resources/assets/prime_ants')
 (root/'blockstates').mkdir(exist_ok=True);(root/'models/block').mkdir(exist_ok=True);(root/'textures/block').mkdir(exist_ok=True)

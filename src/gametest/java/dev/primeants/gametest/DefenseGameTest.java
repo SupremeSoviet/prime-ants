@@ -222,8 +222,22 @@ public final class DefenseGameTest {
             var plan=q.founding().plan();if(plan==null||q.founding().lifecycle()!=QueenFounding.Lifecycle.OPEN)return;
             if(!dropped[0]){
                 p[0]=player(c,Vec3.atBottomCenterOf(plan.at(-3,1,1)),GameType.SURVIVAL);
-                p[0].setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(Items.APPLE));p[0].drop(true);move(p[0],Vec3.atBottomCenterOf(plan.at(-7,1,1)));dropped[0]=true;return;
+                p[0].setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(Items.APPLE));p[0].drop(true);
+                // The fixed -7 retreat sometimes lay beyond this fixture's soil platform.
+                // Preserve four-block retreat without placing terrain or renewing player health.
+                var origin=p[0].position();var intended=Vec3.atBottomCenterOf(plan.at(-7,1,1));var options=new ArrayList<Vec3>();
+                for(int dx=-8;dx<=8;dx++)for(int dz=-8;dz<=8;dz++)for(int dy=-1;dy<=1;dy++){
+                    var feet=BlockPos.containing(origin).offset(dx,dy,dz);var v=Vec3.atBottomCenterOf(feet);
+                    if(v.subtract(origin).horizontalDistanceSqr()<16||!c.getBounds().contains(v)||!NestPlan.walkable(c.getLevel(),feet)
+                        ||!c.getLevel().getBlockState(feet.below()).isFaceSturdy(c.getLevel(),feet.below(),net.minecraft.core.Direction.UP)
+                        ||!c.getLevel().getFluidState(feet.below()).isEmpty()
+                        ||!c.getLevel().noCollision(p[0],new AABB(v.x-.3,v.y,v.z-.3,v.x+.3,v.y+1.8,v.z+.3)))continue;
+                    options.add(v);
+                }
+                var retreat=options.stream().min(Comparator.comparingDouble(intended::distanceToSqr)).orElseThrow(()->new AssertionError("Existing supported complete-body retreat at least four horizontal blocks away"));
+                move(p[0],retreat);dev.primeants.PrimeAnts.LOGGER.info("T26 owned-break supported retreat origin={} intended={} actual={} horizontalDistance={}",origin,intended,retreat,Math.sqrt(retreat.subtract(origin).horizontalDistanceSqr()));dropped[0]=true;return;
             }
+            c.assertTrue(p[0].isAlive()&&!p[0].isRemoved()&&p[0].gameMode.getGameModeForPlayer()==GameType.SURVIVAL,"Living survival observer remains valid during benign food wait");
             var cache=f.cache(c,q);if(cache==null||cache.size()==0)return;
             c.assertTrue(ColonyAlarm.get(c.getLevel()).alarm(q.getUUID())==null,"Benign food visit leaves colony peaceful");
             var mound=plan.deposits().stream().filter(b->ColonyTerrain.get(c.getLevel()).mound(c.getLevel(),b,q.getUUID())).min(Comparator.comparingDouble(b->Vec3.atCenterOf(b).distanceToSqr(Vec3.atBottomCenterOf(plan.outside())))).orElseThrow();
@@ -231,7 +245,9 @@ public final class DefenseGameTest {
                 move(p[0],Vec3.atBottomCenterOf(pos.equals(mound)?plan.outside():plan.at(5,-1,-2)));
                 c.assertTrue(p[0].position().distanceToSqr(Vec3.atCenterOf(pos))<=20.25,"Controlled player stands within normal block interaction reach");
                 c.assertTrue(q.getUUID().equals(ColonyAlarm.ownedComponent(c.getLevel(),pos)),"Live component owner comes from actual colony writes/block entity");
+                dev.primeants.PrimeAnts.LOGGER.info("T26 owned-break diagnostic queen={} block={} player={} alive={} health={} mode={} position={} beforeAlarm={}",q.getUUID(),pos,p[0].getUUID(),p[0].isAlive(),p[0].getHealth(),p[0].gameMode.getGameModeForPlayer(),p[0].position(),ColonyAlarm.get(c.getLevel()).alarm(q.getUUID()));
                 c.assertTrue(p[0].gameMode.destroyBlock(pos),"Successful ordinary player break");
+                dev.primeants.PrimeAnts.LOGGER.info("T26 owned-break result block={} afterAlarm={}",pos,ColonyAlarm.get(c.getLevel()).alarm(q.getUUID()));
                 var alarm=ColonyAlarm.get(c.getLevel()).alarm(q.getUUID());
                 c.assertTrue(alarm!=null&&alarm.player().equals(p[0].getUUID())&&alarm.origin().equals(pos)&&alarm.remaining()==600,"Repeated genuine owned harm renews finite alarm for exactly provoking player");
             }

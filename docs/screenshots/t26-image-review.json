@@ -1,0 +1,74 @@
+[
+  {
+    "image": "docs\\screenshots\\rejected\\t26\\t26-brood-a5-brood-cocoon-detail.png",
+    "sha256": "3cb8aea902a23d699d4347e905db01e73b826cfbfc445533b15a8b585547515c",
+    "opened": true,
+    "native_size": [
+      1600,
+      1000
+    ],
+    "accepted": false,
+    "reason": "Queen anatomy clipped; living cocoon alone does not satisfy required overview",
+    "raw_capture_path_moved_to_rejected_folder": true
+  },
+  {
+    "image": "docs\\screenshots\\rejected\\t26\\t26-brood-a5-brood-cocoon-overview.png",
+    "sha256": "15ca534b1dce0b9f5e612a016c01080f2e283977cc281f66b38144bf4e9e107b",
+    "opened": true,
+    "native_size": [
+      1600,
+      1000
+    ],
+    "accepted": false,
+    "reason": "Queen anatomy clipped; living cocoon alone does not satisfy required overview",
+    "raw_capture_path_moved_to_rejected_folder": true
+  },
+  {
+    "image": "docs\\screenshots\\rejected\\t26\\t26-final-review-a6-nest-nursery-final-detail.png",
+    "sha256": "25ab7ec019021d6a884db5d9a0bf219389fa9d0efbbbdd5e03d197d3c69c6fdf",
+    "opened": true,
+    "native_size": [
+      1600,
+      1000
+    ],
+    "accepted": false,
+    "reason": "Capture-time brood-slot sight ray fails; corridor wall hides cocoon",
+    "raw_capture_path_moved_to_rejected_folder": true
+  },
+  {
+    "image": "docs\\screenshots\\rejected\\t26\\t26-final-review-a6-nest-nursery-final-overview.png",
+    "sha256": "84cbd2fa80698f3ddff95588e349fe3964a021deac2c83b3fe91713abeff695c",
+    "opened": true,
+    "native_size": [
+      1600,
+      1000
+    ],
+    "accepted": false,
+    "reason": "Capture-time brood-slot sight ray fails; corridor wall hides cocoon",
+    "raw_capture_path_moved_to_rejected_folder": true
+  },
+  {
+    "image": "docs\\screenshots\\t26-final-review-a6-worker-worker-detail.png",
+    "sha256": "4ef22a913814d478b109d4b5139f691bab3730174e96dd0d134f4ff5ecafdd23",
+    "opened": true,
+    "native_size": [
+      1600,
+      1000
+    ],
+    "accepted": true,
+    "reason": "Unclipped mature daylight worker; capture-bound clearance passes; all six support-floor probes at Y67",
+    "raw_capture_path_moved_to_rejected_folder": false
+  },
+  {
+    "image": "docs\\screenshots\\t26-final-review-a6-worker-worker-ordinary.png",
+    "sha256": "30d4c09a2bb97870ca65bcc18cf24a75f17d5256f229a5442e8b42cf2c842448",
+    "opened": true,
+    "native_size": [
+      1600,
+      1000
+    ],
+    "accepted": true,
+    "reason": "Unclipped mature daylight worker; capture-bound clearance passes; all six support-floor probes at Y67",
+    "raw_capture_path_moved_to_rejected_folder": false
+  }
+]

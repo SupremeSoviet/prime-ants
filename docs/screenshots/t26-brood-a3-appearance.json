@@ -1,0 +1,164 @@
+{
+  "run_id": "77dac66f-ed61-4027-a16f-762a39084ed1",
+  "scenario": "appearance-t26",
+  "status": "failed",
+  "prior_ticks": 94,
+  "total_tick_bound": 24000,
+  "attempt_tick_bound": 7000,
+  "attempt_ticks_already_spent": 0,
+  "captures": [],
+  "ant_position_edits": 0,
+  "ai_pauses": 0,
+  "forced_poses": 0,
+  "terrain_edits": 0,
+  "supplied_ants": 0,
+  "supplied_food": 0,
+  "render_distance": 8,
+  "simulation_distance": 8,
+  "native_frame": [
+    1600,
+    1000
+  ],
+  "camera_policy": "Living spectator on verified dry FULL support; separate observer lens follows natural body heading. No actor or animation writes.",
+  "source_archive": "C:\\Users\\user\\Documents\\turnloop\\directions\\prime-ants-slice1\\turns\\T26\\t26-brood-a2-world.zip",
+  "archive_root": "t26-brood-a2",
+  "save": "C:\\Users\\user\\Documents\\prime-ants\\build\\run\\clientGameTest\\saves\\t26-brood-a3",
+  "safe_observer_feet": [
+    165,
+    68,
+    146
+  ],
+  "safe_observer_checks": "FULL, build height/border, dry solid support, complete body space, alive and ticks advancing",
+  "queen_identity": "9c71829b-25f1-3b96-acbb-96252228271d",
+  "brood_samples": [
+    {
+      "server_tick": 26,
+      "game_time": 11707,
+      "pile": [
+        169,
+        65,
+        145
+      ],
+      "pile_loaded_ticks": 3063,
+      "persisted_stage_duration": 120,
+      "condition": "income_warmup",
+      "last_laying_tick": 2748,
+      "growth_reason": "income_warmup",
+      "supply": {
+        "complete": true,
+        "hungry": false,
+        "foodSugar": 16000,
+        "foodProtein": 16000,
+        "storedSugar": 9486,
+        "storedProtein": 12000,
+        "committedSugar": 4000,
+        "committedProtein": 8000,
+        "adults": 5,
+        "brood": 1
+      },
+      "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dlarva,c\u003dempty]",
+      "brood": [
+        {
+          "slot": 1,
+          "progress": 0,
+          "protein": 0,
+          "founding": false,
+          "neglect_ticks": 195,
+          "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+          "expired": false,
+          "stage": "LARVA",
+          "nourishment": 0,
+          "sugar": 4000
+        }
+      ],
+      "queen": {
+        "apples": 0,
+        "sugar": 5486,
+        "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+        "protein": 4000,
+        "position": [
+          168.5570057296315,
+          65.0,
+          145.76299418712767
+        ],
+        "chickens": 0
+      },
+      "workers": [
+        {
+          "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+          "alive": true,
+          "position": [
+            168.2898888660663,
+            67.0,
+            151.35455764273152
+          ],
+          "item": "0 minecraft:air",
+          "protein": 0,
+          "sugar": 0,
+          "task": "APPROACH"
+        },
+        {
+          "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+          "alive": true,
+          "position": [
+            168.09396771475753,
+            68.0,
+            149.55309194904905
+          ],
+          "item": "0 minecraft:air",
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE"
+        },
+        {
+          "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+          "alive": true,
+          "position": [
+            168.80167979985444,
+            65.0,
+            144.54996606697674
+          ],
+          "item": "1 minecraft:chicken",
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_FEED"
+        },
+        {
+          "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+          "alive": true,
+          "position": [
+            168.45263380680996,
+            65.0,
+            146.45315809023447
+          ],
+          "item": "0 minecraft:air",
+          "protein": 0,
+          "sugar": 0,
+          "task": "NURSE_CACHE"
+        }
+      ],
+      "cache": [],
+      "observer": {
+        "position": [
+          165.5,
+          68.0,
+          146.5
+        ],
+        "alive": true,
+        "mode": "SPECTATOR"
+      }
+    }
+  ],
+  "player_drops": [],
+  "torch_placements": [],
+  "work_multiplier": 20,
+  "brood_multiplier": 100,
+  "supplied_apples": 0,
+  "supplied_chickens": 0,
+  "supplied_torches": 2,
+  "intervention_caption": "Player-fed natural colony; normal survival inventory drops and vanilla torch interactions; production care/laying/development only",
+  "additional_ticks": 100,
+  "accumulated_ticks": 194,
+  "normal_server_stop": true,
+  "failure": "java.lang.AssertionError: Reachable existing torch support with unobstructed click ray"
+}

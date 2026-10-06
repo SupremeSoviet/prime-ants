@@ -1,0 +1,180 @@
+{
+  "run_id": "584f49bf-dbff-4308-8d31-73f3a1a904ea",
+  "scenario": "appearance-t26",
+  "prior_ticks": 194,
+  "total_tick_bound": 24000,
+  "attempt_tick_bound": 7500,
+  "failure": "java.lang.RuntimeException: java.lang.AssertionError: Ordinary survival walk did not reach (168.5, 66.0, 148.5)",
+  "segments": [
+    {
+      "run_id": "584f49bf-dbff-4308-8d31-73f3a1a904ea",
+      "scenario": "appearance-t26",
+      "status": "failed",
+      "prior_ticks": 194,
+      "total_tick_bound": 24000,
+      "attempt_tick_bound": 7500,
+      "attempt_ticks_already_spent": 0,
+      "captures": [],
+      "ant_position_edits": 0,
+      "ai_pauses": 0,
+      "forced_poses": 0,
+      "terrain_edits": 0,
+      "supplied_ants": 0,
+      "supplied_food": 0,
+      "render_distance": 8,
+      "simulation_distance": 8,
+      "native_frame": [
+        1600,
+        1000
+      ],
+      "camera_policy": "Living spectator on verified dry FULL support; separate observer lens follows natural body heading. No actor or animation writes.",
+      "source_archive": "C:\\Users\\user\\Documents\\turnloop\\directions\\prime-ants-slice1\\turns\\T26\\t26-brood-a3-world.zip",
+      "archive_root": "t26-brood-a3",
+      "save": "C:\\Users\\user\\Documents\\prime-ants\\build\\run\\clientGameTest\\saves\\t26-final-interior-a4-nest",
+      "safe_observer_feet": [
+        165,
+        68,
+        146
+      ],
+      "safe_observer_checks": "FULL, build height/border, dry solid support, complete body space, alive and ticks advancing",
+      "queen_identity": "9c71829b-25f1-3b96-acbb-96252228271d",
+      "brood_samples": [
+        {
+          "server_tick": 27,
+          "game_time": 11808,
+          "pile": [
+            169,
+            65,
+            145
+          ],
+          "pile_loaded_ticks": 3164,
+          "persisted_stage_duration": 120,
+          "condition": "income_warmup",
+          "last_laying_tick": 2748,
+          "growth_reason": "income_warmup",
+          "supply": {
+            "complete": true,
+            "hungry": false,
+            "foodSugar": 16000,
+            "foodProtein": 24000,
+            "storedSugar": 9195,
+            "storedProtein": 11467,
+            "committedSugar": 3734,
+            "committedProtein": 7467,
+            "adults": 5,
+            "brood": 1
+          },
+          "blockstate": "Block{prime_ants:brood_pile}[a\u003dempty,b\u003dlarva,c\u003dempty]",
+          "brood": [
+            {
+              "progress": 8,
+              "protein": 7467,
+              "founding": false,
+              "neglect_ticks": 0,
+              "uuid": "1a81b11b-8275-418f-90db-5f6aaed81ce6",
+              "expired": false,
+              "stage": "LARVA",
+              "nourishment": 799,
+              "sugar": 3734,
+              "slot": 1
+            }
+          ],
+          "queen": {
+            "uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
+            "protein": 4000,
+            "position": [
+              168.5570057296315,
+              65.0,
+              145.76299418712767
+            ],
+            "chickens": 0,
+            "apples": 0,
+            "sugar": 5461
+          },
+          "workers": [
+            {
+              "position": [
+                167.60435358643022,
+                68.0,
+                149.52791232810716
+              ],
+              "item": "0 minecraft:air",
+              "protein": 0,
+              "sugar": 0,
+              "task": "APPROACH",
+              "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
+              "alive": true
+            },
+            {
+              "position": [
+                167.86755410662934,
+                68.0,
+                149.08794306237607
+              ],
+              "item": "0 minecraft:air",
+              "protein": 0,
+              "sugar": 0,
+              "task": "NURSE_CACHE",
+              "uuid": "ec9d7a07-ea92-396a-a736-38ed3d707167",
+              "alive": true
+            },
+            {
+              "position": [
+                168.52439905931988,
+                65.0,
+                145.83433204793712
+              ],
+              "item": "0 minecraft:air",
+              "protein": 0,
+              "sugar": 0,
+              "task": "NURSE_CACHE",
+              "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",
+              "alive": true
+            },
+            {
+              "position": [
+                168.4752068120098,
+                66.0,
+                147.81224867821103
+              ],
+              "item": "0 minecraft:air",
+              "protein": 0,
+              "sugar": 0,
+              "task": "NURSE_CACHE",
+              "uuid": "589f6860-15b6-3c86-96e7-19938c01b2fc",
+              "alive": true
+            }
+          ],
+          "cache": [],
+          "observer": {
+            "alive": true,
+            "mode": "SPECTATOR",
+            "position": [
+              165.5,
+              68.0,
+              146.5
+            ]
+          }
+        }
+      ],
+      "player_drops": [],
+      "torch_placements": [],
+      "work_multiplier": 20,
+      "brood_multiplier": 100,
+      "supplied_apples": 0,
+      "supplied_chickens": 0,
+      "supplied_torches": 0,
+      "intervention_caption": "Player-fed natural colony; normal survival inventory drops and vanilla torch interactions; production care/laying/development only",
+      "additional_ticks": 155,
+      "accumulated_ticks": 349,
+      "normal_server_stop": true,
+      "failure": "java.lang.AssertionError: Ordinary survival walk did not reach (168.5, 66.0, 148.5)"
+    }
+  ],
+  "captures": [],
+  "normal_close": false,
+  "normal_server_stop": true,
+  "additional_ticks": 155,
+  "accumulated_ticks": 349,
+  "status": "failed"
+}
