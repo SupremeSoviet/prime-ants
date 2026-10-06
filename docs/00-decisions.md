@@ -299,3 +299,12 @@ Five automatic queens began protected soil excavation in all three fixed sample 
 ## Implementation notes - 2026-10-06 (T21 owner-authorized food policy)
 
 Physical crop sharing uses twenty loaded mouth-action ticks, up to 1,500 existing sugar and a 1,000 donor reserve, retaining work/cargo and separate protein. The owner-authorized prospective maintenance choice is one sugar prepaid for four covered loaded ticks, with persisted remainder and unchanged historical spending, lifespan, fasting grace and 39,000 founding budget. A descriptive 2,400-loaded-tick actual-intake window gates new laying against current adult/brood commitments and a 25% maintenance margin; unavailable data pauses growth. Physical protein stays available for larvae once the queen has an egg's 2,000 protein, rather than being trapped in her ingested store. Native survival and player evidence must be judged from the T21 report, independently of green component tests; no broad persistence, defense or performance claim is added.
+
+
+## Implementation notes - 2026-10-06 (T22 actual-stock funding and local defense)
+
+Recent receipts remain a separate laying-rate observation; only current stores fund existing brood commitments, a new egg/larva and the unchanged 25% maintenance margin. Sharing, physical costs, food values, adult lifespan/fasting and the 39,000 founding reserve are unchanged. T21 native survival is historical evidence under its earlier admission rule.
+
+Actual accepted survival-player ant damage or a successful break of a currently owned component signals that colony. Mature registered workers respond within 12 blocks of the current harm anchor, pursue only its provoking player within 16, and bite at physical reach/visibility for one normal health point with a 20-loaded-tick cooldown. Alarm duration is 600 loaded ticks; repeated genuine harm may renew it. Ownership is captured before block mutation and consumed only after successful break. The existing worker owner suspends/resumes tasks and retains equipment/claims; no reputation, automatic repair or resource credit is introduced.
+
+Fresh-client checks use ordinary vanilla overworld generation/survival, seed 2026100501 declared in advance, render/simulation 8/8 and no experiment FULL limits. Imported dimension-transfer recovery is excluded. The current report records actual acceptance/client results and their limits; performance, feeding and broad restart remain T23.

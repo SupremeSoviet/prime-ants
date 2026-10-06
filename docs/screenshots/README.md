@@ -219,3 +219,12 @@ The original T11 A4 PNGs/provenance are preserved with their original run/date. 
 Opened again: [T11 mound/traffic](t11-a4-expanded-mound.png) and [T11 connected interior](t11-a4-usable-interior.png), with original T11 run/date/provenance retained. The pale brood cluster is partly overlapped. The [T11 soil image](t11-a4-soil-carrying.png) remains rejected for readable carrying evidence as recorded in T12; no replacement was captured. Worker/queen close-ups and readable food carrying still need fresh real evidence. Red T13 acceptance blocked all native capture and performance. All 269 historical capture/caption/provenance files retain their hashes. The current partial result and Phase 2 handoff are in [slice report](../slice-1-report.md).
 
 - `t20-player-a1-entrance.png`: Actual survival exterior after successful tunnel entry/return; mound/worker visible, entrance behind camera and viewport discontinuity; failed feeding attempt, weak entry evidence. PNG opened and inspected.
+
+
+### T22 fresh loading evidence - 2026-10-06
+
+- [t22-fresh-a2-terrain.png](t22-fresh-a2-terrain.png): actual fresh survival overworld shoreline/forest/water after ordinary W input and tick advancement; seed 2026100501, render/simulation 8/8, stable native 1280x720 frame at startup, hidden HUD. Opened and inspected; normal populated closure archived immediately. Loading evidence only.
+- [t22-fresh-a3-terrain.png](t22-fresh-a3-terrain.png): preserved startup terrain PNG from the natural attempt that later failed observer-coordinate formatting; no colony/combat claim.
+- [t22-fresh-a4-terrain.png](t22-fresh-a4-terrain.png): actual shoreline with foreground foliage, opened and inspected; bounded discovery later selected no colony and had unsafe observer exploration. Normal closure/archive; no ant/defense claim.
+
+There is no T22 entrance/mound or defense image. The server one-point mob bite/ant UUID is separate evidence in T22/damage-evidence.txt and is not attributed to these terrain frames. Brood 100x/founding 20x are disclosed for the client workload; no ant positioning, forced stages/poses, AI pauses or supplies.

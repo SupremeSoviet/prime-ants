@@ -178,7 +178,7 @@ public final class AntModel extends EntityModel<AntRenderState> {
             femur.zRot = angles[1];
             femur.getChild("tibia").zRot = angles[2];
         }
-        if(state.social){
+        if(state.social||state.biting){
             var head=root().getChild("ant").getChild("head");
             head.yRot=state.yRot*(float)Math.PI/180;
             head.xRot+=0.08F;

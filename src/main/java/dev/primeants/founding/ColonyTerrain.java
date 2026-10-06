@@ -23,6 +23,10 @@ public final class ColonyTerrain extends SavedData {
     public static ColonyTerrain get(ServerLevel l){return l.getDataStorage().computeIfAbsent(TYPE);}
     private static String key(BlockPos p){return Long.toString(p.asLong());}
     public void invalidate(BlockPos p){if(records.remove(key(p))!=null)setDirty();}
+    public UUID componentOwner(ServerLevel l,BlockPos p){
+        String r=records.get(key(p));if(r==null)return null;UUID owner=UUID.fromString(r.substring(0,36));
+        return prepared(l,p,owner)||mound(l,p,owner)?owner:null;
+    }
     private void record(BlockPos p,UUID owner,String kind){records.put(key(p),owner+":"+kind);setDirty();}
     private boolean matches(ServerLevel l,BlockPos p,UUID owner,String kind,BlockState expected){return NestPlan.loaded(l,p)&&l.getBlockState(p).equals(expected)&&(owner+":"+kind).equals(records.get(key(p)));}
     public boolean prepared(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"prepared:nest_soil",NurseryBlocks.NEST_SOIL.defaultBlockState());}

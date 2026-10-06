@@ -45,6 +45,7 @@ public final class AntCaptureTest implements FabricClientGameTest {
     private final Map<String,Object> provenance = new LinkedHashMap<>();
     private final String runId = System.getProperty("prime_ants.runId"), prefix = System.getProperty("prime_ants.capturePrefix");
     @Override public void runTest(ClientGameTestContext context) {
+        if("fresh-survival".equals(System.getProperty("prime_ants.clientScenario"))){new FreshSurvivalScenario().run(context);return;}
         if(System.getProperty("prime_ants.playerBasicsWorld")!=null){new PlayerBasicsScenario().run(context);return;}
         provenance.put("caption","T13 real colony close-ups, entrance traffic, visible brood and real cargo; observer-only mandible-region framing");
         provenance.put("run_id",runId); provenance.put("capture_prefix",prefix); provenance.put("entrypoint",getClass().getName());

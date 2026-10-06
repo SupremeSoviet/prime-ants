@@ -1,0 +1,56 @@
+{
+  "run_id": "215bc4bb-9fa5-483d-8f35-d34cce76a13d",
+  "scenario": "fresh-survival",
+  "seed": 2026100501,
+  "status": "failed",
+  "natural_placement": "production default",
+  "render_distance": 8,
+  "simulation_distance": 8,
+  "founding_multiplier": 20.0,
+  "brood_multiplier": 100.0,
+  "observer_setup": "Survival with observer commands enabled; fixed 1280x720 native window at startup, HUD hidden, daytime/camera/player setup moves disclosed. Combat uses ordinary survival inputs and physics.",
+  "ant_position_edits": 0,
+  "supplied_ants": 0,
+  "supplied_food": 0,
+  "terrain_edits": 0,
+  "ai_pauses": 0,
+  "loading_only": false,
+  "save": "C:\\Users\\user\\Documents\\prime-ants\\build\\run\\clientGameTest\\saves\\New World",
+  "generation": {
+    "dimension": "minecraft:overworld",
+    "seed": 2026100501,
+    "generator": "net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator"
+  },
+  "server_ticks": [
+    14,
+    36
+  ],
+  "client_ticks": [
+    12,
+    34
+  ],
+  "movement": {
+    "after": [
+      86.5,
+      72.0,
+      -24.30000001192093
+    ],
+    "before": [
+      86.5,
+      72.0,
+      -24.5
+    ],
+    "input": "keyUp held 20 client ticks"
+  },
+  "terrain_image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t22-fresh-a3-terrain.png",
+  "additional_start_tick": 57,
+  "additional_tick_bound": 24000,
+  "discovery_radius": 128,
+  "spawn": [
+    80,
+    66,
+    -16
+  ],
+  "additional_ticks_through_close": 501,
+  "failure": "java.util.IllegalFormatConversionException: f !\u003d java.lang.Integer"
+}

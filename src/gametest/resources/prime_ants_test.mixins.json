@@ -3,6 +3,7 @@
   "package": "dev.primeants.gametest.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
+    "FundedPopulationMixin",
     "IdleStrollTraceMixin",
     "IdleLandTraceMixin",
     "IdlePathTraceMixin",

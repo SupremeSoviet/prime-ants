@@ -91,16 +91,28 @@ public final class CropPolicyGameTest {
     public void flowWindowPausesWithQueenStockAndResumesWithoutInventingIncome(GameTestHelper c){
         var flow=new FoodLimitedGrowth();
         for(int t=0;t<=2400;t+=200)flow.observe(t,supply(t*20L,t*20L));
-        c.assertTrue(flow.allows(supply(48000,48000)),"Actual recent receipt stream funds projected commitments");
+        c.assertTrue(flow.allows(supply(48000,48000)),"Current stock funds projected commitments with separate recent intake condition");
         for(int t=2600;t<=5000;t+=200)flow.observe(t,supply(48000,48000));
-        c.assertTrue(!flow.allows(supply(48000,48000))&&flow.reason().equals("recent_income_below_adult_commitments"),"Falling income pauses despite 8000 queen sugar and 16000 protein");
+        c.assertTrue(!flow.allows(supply(48000,48000))&&flow.reason().equals("recent_income_below_adult_commitments"),"Falling income pauses despite 10000 current sugar and 16000 protein");
         var out=TagValueOutput.createWithContext(ProblemReporter.DISCARDING,c.getLevel().registryAccess());flow.save(out);var copy=new FoodLimitedGrowth();copy.load(TagValueInput.create(ProblemReporter.DISCARDING,c.getLevel().registryAccess(),out.buildResult()));
         copy.observe(5200,supply(48000,48000));c.assertTrue(copy.recentSugar()==0,"Replayed absolute receipts and reload are not income");
         for(int t=5400;t<=7800;t+=200)copy.observe(t,supply(48000+(t-5200)*20L,48000+(t-5200)*20L));
         c.assertTrue(copy.allows(supply(100000,100000))&&copy.resumes()==2&&copy.pauses()==1,"Restored actual intake resumes funded gate, metadata spends or supplies nothing");
         var missing=new FoodLimitedGrowth.Supply(false,false,100000,100000,8000,16000,0,0,4,0);copy.observe(8000,missing);c.assertTrue(!copy.allows(missing)&&copy.observedTicks()==0,"Missing loaded data conservatively discards income window and requires full warmup");c.succeed();
     }
-    private static FoodLimitedGrowth.Supply supply(long s,long p){return new FoodLimitedGrowth.Supply(true,false,s,p,8000,16000,0,0,4,0);}
+    private static FoodLimitedGrowth.Supply supply(long s,long p){return new FoodLimitedGrowth.Supply(true,false,s,p,10000,16000,0,0,4,0);}
+    @GameTest
+    public void warmedReceiptsCannotFundSpentFoodAndCurrentStockCoversCommitments(GameTestHelper c){
+        var flow=new FoodLimitedGrowth();
+        for(int t=0;t<=2400;t+=200)flow.observe(t,supply(t*20L,t*20L));
+        var poor=new FoodLimitedGrowth.Supply(true,false,48000,48000,1000,2000,0,0,4,0);
+        c.assertTrue(flow.recentSugar()==48000&&flow.recentProtein()==48000&&flow.observedTicks()==2400,"Reviewer warmed gate: four adults, no brood, 48000 actual receipts each");
+        c.assertTrue(!flow.allows(poor)&&flow.reason().equals("stores_below_brood_and_safety_commitments"),"Spent receipts cannot underwrite egg, larva and 25 percent maintenance margin");
+        c.assertTrue(flow.allows(supply(48000,48000)),"Adequately stocked positive control uses identical receipt history");
+        var committed=new FoodLimitedGrowth.Supply(true,false,48000,48000,10000,16000,1000,8000,4,1);
+        c.assertTrue(!flow.allows(committed),"Existing brood commitments remain reserved in addition to the proposed investment");
+        c.succeed();
+    }
     @GameTest(maxTicks=18000)
     public void eightUnreachableDropsCannotHideNinthBeforeNativeFallback(GameTestHelper c){drops(c,false);}
     @GameTest(maxTicks=18000)

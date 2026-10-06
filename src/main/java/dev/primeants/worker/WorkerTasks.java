@@ -32,6 +32,12 @@ public final class WorkerTasks {
     private final LasiusNigerEntity worker;
     private final CropSharing sharing;
     public CropSharing sharing(){return sharing;}
+    private boolean defending;
+    private UUID defenseTarget;
+    private int biteCooldown,biteTicks;
+    private long defenseLastTick=Long.MIN_VALUE,bites;
+    public boolean defending(){return defending;}public UUID defenseTarget(){return defenseTarget;}
+    public int biteCooldown(){return biteCooldown;}public long bites(){return bites;}
     private final java.util.ArrayList<UUID> droppedQueue=new java.util.ArrayList<>();
     private int droppedCursor;
     public static final int DROPPED_TOTAL=96, DROPPED_PER_PULSE=8;
@@ -86,11 +92,11 @@ public final class WorkerTasks {
                 &&l.getBlockEntity(plan.nursery()) instanceof dev.primeants.brood.BroodPile p&&p.ownedBy(worker.queenId(),plan)&&p.operational()
                 &&plan.nurseryProblem(l,worker.queenId(),true)==null;
     }
-    public boolean freeForConstruction(){return !sharing.busy()&&(phase==Phase.NURSERY||phase==Phase.NURSE_CACHE);}
+    public boolean freeForConstruction(){return !defending&&!sharing.busy()&&(phase==Phase.NURSERY||phase==Phase.NURSE_CACHE);}
     private boolean constructionClaim(ServerLevel l){var j=NestExpansion.get(l).job(worker.queenId());return j!=null&&worker.getUUID().equals(j.claim);}
     private boolean foragerClaim(ServerLevel l){var q=queen(l);return q!=null&&q.founding().claimedBy(worker);}
     private boolean eligible(ServerLevel l,NestPlan p){
-        var q=queen(l);return p!=null&&worker.isAlive()&&!worker.isRemoved()&&!worker.isCallow()&&!worker.isNoAi()
+        var q=queen(l);return !defending&&p!=null&&worker.isAlive()&&!worker.isRemoved()&&!worker.isCallow()&&!worker.isNoAi()
             &&ColonyMembers.get(l).belongs(worker,worker.queenId(),p.chamber())&&q!=null&&q.isAlive()&&q.founding().ready()
             &&q.founding().plan()!=null&&q.founding().plan().entrance().equals(p.entrance())&&q.founding().plan().direction()==p.direction();
     }
@@ -146,6 +152,7 @@ public final class WorkerTasks {
     }
     public void tick(ServerLevel l) {
         if(phase==Phase.DEAD || !worker.isAlive())return;
+        if(defense(l))return;
         if(sharing.tick(l))return;
         if(adultMeal(l))return;
         if(worker.isCallow() || phase==Phase.NURSERY) {hold(worker.isCallow()?"callow_shelter":"nursery_shelter");return;}
@@ -188,6 +195,42 @@ public final class WorkerTasks {
             case DIG_OUT -> digOut(l);
             default -> { }
         }
+    }
+    private boolean defense(ServerLevel l){
+        // Persist this clock/cooldown so re-entry or coherent restore in the same
+        // loaded tick cannot decrement twice or duplicate a physical bite.
+        if(defenseLastTick==l.getGameTime())return defending;
+        defenseLastTick=l.getGameTime();if(biteCooldown>0)biteCooldown--;if(biteTicks>0)biteTicks--;
+        worker.setBiteAction(biteTicks>0);
+        var alarm=ColonyAlarm.get(l).alarm(worker.queenId());
+        var player=alarm==null?null:l.getPlayerByUUID(alarm.player());
+        boolean member=worker.queenId()!=null&&worker.nurseryHome()!=null&&ColonyMembers.get(l).belongs(worker,worker.queenId(),worker.nurseryHome());
+        var origin=alarm==null?Vec3.ZERO:Vec3.atBottomCenterOf(alarm.origin());
+        int radius=defending&&player!=null&&player.getUUID().equals(defenseTarget)?ColonyAlarm.CHASE_RADIUS:ColonyAlarm.RESPONSE_RADIUS;
+        boolean eligible=member&&!worker.isCallow()&&!worker.isNoAi()&&!worker.isRemoved()&&ColonyAlarm.validPlayer(l,player)
+            &&worker.position().distanceToSqr(origin)<=radius*radius
+            &&player.position().distanceToSqr(origin)<=ColonyAlarm.CHASE_RADIUS*ColonyAlarm.CHASE_RADIUS;
+        if(!eligible){
+            if(defending){defending=false;defenseTarget=null;worker.getNavigation().stop();worker.setBiteAction(false);biteTicks=0;}
+            return false;
+        }
+        if(!defending||!player.getUUID().equals(defenseTarget)){
+            defending=true;defenseTarget=player.getUUID();sharing.cancel(l);feedingTicks=0;harvestingTicks=0;worker.adultLife().resetMeal();
+            worker.getNavigation().stop();
+        }
+        // Ignore nest readiness here: a genuine breach is precisely why the
+        // normal controller may now be unable to work. Cargo/phase/claims stay.
+        var contact=player.position().add(0,.25,0);worker.getLookControl().setLookAt(player.getEyePosition());
+        if(reaches(l,worker,contact)){
+            worker.getNavigation().stop();
+            if(biteCooldown==0){
+                biteCooldown=20;biteTicks=5;worker.setBiteAction(true);
+                float before=player.getHealth();var damage=worker.damageSources().mobAttack(worker);
+                boolean accepted=player.hurtServer(l,damage,1.0F);
+                if(accepted){bites++;dev.primeants.PrimeAnts.LOGGER.info("Ant bite ant={} colony={} player={} source={} tick={} healthBefore={} healthAfter={} cooldown={}",worker.getUUID(),worker.queenId(),player.getUUID(),damage.type().msgId(),l.getGameTime(),before,player.getHealth(),biteCooldown);}
+            }
+        }else if(worker.tickCount%10==0||worker.getNavigation().isDone())worker.getNavigation().moveTo(player.getX(),player.getY(),player.getZ(),0,1.0);
+        return true;
     }
     private boolean adultMeal(ServerLevel l){
         var life=worker.adultLife();
@@ -544,6 +587,8 @@ public final class WorkerTasks {
         clearFlower();
     }
     public void save(ValueOutput out) {
+        out.putBoolean("Defending",defending);if(defenseTarget!=null)out.putString("DefenseTarget",defenseTarget.toString());
+        out.putInt("BiteCooldown",biteCooldown);out.putInt("BiteTicks",biteTicks);out.putLong("DefenseLastTick",defenseLastTick);out.putLong("Bites",bites);
         sharing.save(out.child("CropSharing"));
         out.store("DroppedQueue",com.mojang.serialization.Codec.STRING.listOf(),droppedQueue.stream().map(UUID::toString).toList());out.putInt("DroppedCursor",droppedCursor);
         out.putString("Phase",phase.name());out.putString("Reason",reason);out.putInt("Opened",opened);out.putInt("Placed",placed);out.putInt("PhaseTicks",phaseTicks);out.putInt("Cooldown",cooldown);
@@ -557,6 +602,10 @@ public final class WorkerTasks {
         // Cargo is canonical vanilla Mob mainhand equipment, not duplicated here.
     }
     public void load(ValueInput in) {
+        defending=in.getBooleanOr("Defending",false);defenseTarget=in.getString("DefenseTarget").map(UUID::fromString).orElse(null);
+        biteCooldown=in.getIntOr("BiteCooldown",0);biteTicks=in.getIntOr("BiteTicks",0);defenseLastTick=in.getLongOr("DefenseLastTick",Long.MIN_VALUE);bites=in.getLongOr("Bites",0);
+        if(biteCooldown<0||biteCooldown>20||biteTicks<0||biteTicks>5||bites<0||defending!=(defenseTarget!=null))throw new IllegalArgumentException("Invalid bounded defense interrupt");
+        worker.setBiteAction(biteTicks>0);
         sharing.load(in.childOrEmpty("CropSharing"));
         droppedQueue.clear();in.read("DroppedQueue",com.mojang.serialization.Codec.STRING.listOf()).orElse(List.of()).forEach(v->droppedQueue.add(UUID.fromString(v)));droppedCursor=in.getIntOr("DroppedCursor",0);
         if(droppedQueue.size()>DROPPED_TOTAL||droppedCursor<0||droppedCursor>droppedQueue.size())throw new IllegalArgumentException("Invalid dropped continuation");

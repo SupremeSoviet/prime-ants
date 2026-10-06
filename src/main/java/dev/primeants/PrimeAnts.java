@@ -15,6 +15,7 @@ public final class PrimeAnts implements ModInitializer {
         AntEntities.initialize();
         dev.primeants.brood.NurseryBlocks.initialize();
         AntItems.initialize();
+        dev.primeants.worker.ColonyAlarm.initialize();
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_LEVEL_TICK.register(dev.primeants.worker.FlowerNectar::tick);
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_LEVEL_TICK.register(dev.primeants.worker.NativePrey::tick);
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_LEVEL_TICK.register(dev.primeants.worker.TransferCustody::tick);

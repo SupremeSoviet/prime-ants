@@ -42,7 +42,7 @@ final class PlayerBasicsScenario {
                 Path target=save.resolve(entry.getName().substring(archiveRoot.length())).normalize();require(target.startsWith(save),"Safe archive member");
                 if(entry.isDirectory())Files.createDirectories(target);else{Files.createDirectories(target.getParent());try(var in=zip.getInputStream(entry)){Files.copy(in,target);}}
             }}
-            c.runOnClient(client->{client.options.renderDistance().set(2);client.options.simulationDistance().set(2);client.getWindow().setWindowed(1600,1000);client.options.guiScale().set(2);}); // Bounded copied-site loading, before opening the world.
+            c.runOnClient(client->{client.options.renderDistance().set(8);client.options.simulationDistance().set(8);client.getWindow().setWindowed(1600,1000);client.options.guiScale().set(2);}); // Retired imported diagnostic; ordinary distances, no client chunk policing.
             try(TestSingleplayerContext world=new TestWorldSaveImpl(c,save).open()){
                 var dimension=ResourceKey.create(Registries.DIMENSION,Identifier.fromNamespaceAndPath("prime_ants_test","placement_native"));
                 NestPlan plan=world.getServer().computeOnServer(s->{var l=s.getLevel(dimension);var q=(LasiusNigerEntity)l.getEntity(queen);
@@ -59,7 +59,7 @@ final class PlayerBasicsScenario {
                 c.runOnClient(client->{client.options.fov().set(80);client.player.lookAt(EntityAnchorArgument.Anchor.EYES,Vec3.atCenterOf(p.entrance()));});
                 world.getServer().runOnServer(s->{var l=s.getLevel(dimension);l.clockManager().setTotalTicks(l.dimensionType().defaultClock().orElseThrow(),6000);});
                 c.waitTicks(40); // Window/framebuffer and camera stable well before any PNG.
-                if(probe){c.waitTicks(240);require(world.getServer().computeOnServer(s->PlacementSettings.replayBudget()<=300),"Enforced all-dimension loading bound");record.put("status","success");record.put("completed_utc",Instant.now().toString());return;}
+                if(probe){c.waitTicks(240);record.put("status","success");record.put("completed_utc",Instant.now().toString());return;}
                 record.put("start",List.of(start.getX(),start.getY(),start.getZ()));record.put("local_visible_mound",world.getServer().computeOnServer(s->p.deposits().stream().anyMatch(pos->ColonyTerrain.get(s.getLevel(dimension)).mound(s.getLevel(dimension),pos,queen))));
                 walk(c,Vec3.atBottomCenterOf(p.at(0,0,0)),180);
                 walk(c,Vec3.atBottomCenterOf(p.at(1,0,-1)),100);

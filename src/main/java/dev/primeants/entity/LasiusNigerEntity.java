@@ -46,6 +46,9 @@ public final class LasiusNigerEntity extends PathfinderMob {
     private static final EntityDataAccessor<String> LINEAGE = SynchedEntityData.defineId(LasiusNigerEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Boolean> SOCIAL = SynchedEntityData.defineId(LasiusNigerEntity.class, EntityDataSerializers.BOOLEAN);
     public boolean socialAction(){return entityData.get(SOCIAL);}
+    private static final EntityDataAccessor<Boolean> BITE = SynchedEntityData.defineId(LasiusNigerEntity.class, EntityDataSerializers.BOOLEAN);
+    public boolean biteAction(){return entityData.get(BITE);}
+    public void setBiteAction(boolean value){entityData.set(BITE,value);}
     public void setSocialAction(boolean value){entityData.set(SOCIAL,value);}
     private static final EntityDataAccessor<Integer> CALLOW = SynchedEntityData.defineId(LasiusNigerEntity.class, EntityDataSerializers.INT);
     private long bodyReserve = initialReserve(), callowAgeTicks, callowDuration;
@@ -126,7 +129,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
 
     public AntForm form() { return form; }
     public long elapsedAgeTicks() { return elapsedAgeTicks; }
-    @Override protected void defineSynchedData(SynchedEntityData.Builder builder) { super.defineSynchedData(builder); builder.define(SOCIAL,false); builder.define(CALLOW, 1000); builder.define(LINEAGE, ""); }
+    @Override protected void defineSynchedData(SynchedEntityData.Builder builder) { super.defineSynchedData(builder); builder.define(BITE,false); builder.define(SOCIAL,false); builder.define(CALLOW, 1000); builder.define(LINEAGE, ""); }
 
     @Override protected PathNavigation createNavigation(Level level) { return new AntGroundNavigation(this, level); }
 
@@ -239,6 +242,13 @@ public final class LasiusNigerEntity extends PathfinderMob {
         return result;
     }
 
+    @Override public boolean hurtServer(ServerLevel level,DamageSource source,float amount){
+        float health=getHealth(),absorption=getAbsorptionAmount();UUID colony=colonyIdentity();
+        boolean accepted=super.hurtServer(level,source,amount);
+        if(accepted&&(getHealth()<health||getAbsorptionAmount()<absorption)&&source.getEntity() instanceof net.minecraft.world.entity.player.Player player)
+            dev.primeants.worker.ColonyAlarm.get(level).harm(level,colony,player,blockPosition(),"accepted_ant_damage");
+        return accepted;
+    }
     @Override public void die(DamageSource source) {
         if (level() instanceof ServerLevel server) {
             dev.primeants.worker.AdultHistory.get(server).died(this);

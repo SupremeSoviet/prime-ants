@@ -38,7 +38,8 @@
       "dev.primeants.gametest.TerminalBroodGameTest",
       "dev.primeants.gametest.NativeFoodGameTest",
       "dev.primeants.gametest.PlayerBasicsGameTest",
-      "dev.primeants.gametest.CropPolicyGameTest"
+      "dev.primeants.gametest.CropPolicyGameTest",
+      "dev.primeants.gametest.DefenseGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

@@ -36,8 +36,10 @@ public final class FoodLimitedGrowth {
         else if(s.hungry())why="hungry_adults_unserved";
         else if(observedTicks()<WARMUP)why="income_warmup";
         else if(recentSugar()<maintenance)why="recent_income_below_adult_commitments";
-        else if(s.storedSugar()+recentSugar()/2<s.committedSugar()+Nutrition.EGG_SUGAR+Nutrition.LARVA_SUGAR+maintenance
-            ||s.storedProtein()+recentProtein()/2<s.committedProtein()+Nutrition.EGG_PROTEIN+Nutrition.LARVA_PROTEIN)why="stores_below_brood_and_safety_commitments";
+        // Receipts are a rate observation, never available funding. Reserve the
+        // existing brood, this investment and maintenance from food still here.
+        else if(s.storedSugar()<s.committedSugar()+Nutrition.EGG_SUGAR+Nutrition.LARVA_SUGAR+maintenance
+            ||s.storedProtein()<s.committedProtein()+Nutrition.EGG_PROTEIN+Nutrition.LARVA_PROTEIN)why="stores_below_brood_and_safety_commitments";
         else why="funded_growth";
         set(why.equals("funded_growth"),why);return open;
     }

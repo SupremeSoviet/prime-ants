@@ -31,6 +31,7 @@ public final class NestCache extends BlockEntity {
     public NestCache(BlockPos p, BlockState s) { super(NurseryBlocks.CACHE_TYPE,p,s); }
     public List<ItemStack> contents() { return contents.stream().map(ItemStack::copy).toList(); }
     public int size() { return contents.size(); }
+    public UUID componentOwner(){return colony!=null&&plan!=null&&level instanceof ServerLevel l&&l.getBlockEntity(getBlockPos())==this&&ownedBy(colony,plan)?colony:null;}
     public boolean ownedBy(UUID id, NestPlan p) { return id.equals(colony) && plan != null && plan.entrance().equals(p.entrance()) && plan.direction()==p.direction() && getBlockPos().equals(p.cache()) && getBlockState().is(NurseryBlocks.NEST_CACHE); }
     public boolean establish(LasiusNigerEntity w, NestPlan p) {
         if (!(level instanceof ServerLevel l) || colony != null || !getBlockPos().equals(p.cache()) || w.queenId()==null

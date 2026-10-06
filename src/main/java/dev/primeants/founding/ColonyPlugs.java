@@ -23,6 +23,7 @@ public final class ColonyPlugs extends SavedData {
     public static ColonyPlugs get(ServerLevel level) { return level.getDataStorage().computeIfAbsent(TYPE); }
     private String key(BlockPos p) { return Long.toString(p.asLong()); }
     public void invalidate(BlockPos p) { if (records.remove(key(p)) != null) setDirty(); }
+    public UUID componentOwner(ServerLevel l,BlockPos p){String r=records.get(key(p));if(r==null)return null;UUID id=UUID.fromString(r.substring(0,36));return owned(l,p,id)?id:null;}
     public void placed(BlockPos p, UUID colony) { records.put(key(p), colony + ":plug"); setDirty(); }
     /** Legacy dirt stays readable; newly compacted plugs use the same nest-soil material as the mound. */
     public static boolean material(net.minecraft.world.level.block.state.BlockState state){return state.is(Blocks.DIRT)||state.is(dev.primeants.brood.NurseryBlocks.NEST_SOIL);}

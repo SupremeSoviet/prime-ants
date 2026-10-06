@@ -17,9 +17,8 @@ public final class PlacementSettings implements ModInitializer {
     public static final Set<ChunkPos> DECLARED_FULL=new HashSet<>();
     public static final Set<String> EXISTING_FULL=new HashSet<>();
     public static boolean replayExperiment(){return Set.of("t18-replay-v1","t19-replay-v1","t20-tuned-v1","t21-policy-v1").contains(System.getProperty("prime_ants.placementMode",""));}
-    public static int replayFullLimit(){return "t21-policy-v1".equals(System.getProperty("prime_ants.placementMode"))||System.getProperty("prime_ants.playerBudgetDeclaration")!=null?300:"t20-tuned-v1".equals(System.getProperty("prime_ants.placementMode"))?200:150;}
-    private static int workflowBefore;
-    public static int replayBudget(){return (System.getProperty("prime_ants.playerBudgetDeclaration")!=null?workflowBefore:EXISTING_FULL.size()+Integer.getInteger("prime_ants.placementPriorFull",0))+(int)ALL_FULL.stream().filter(p->!EXISTING_FULL.contains(p)).count();}
+    public static int replayFullLimit(){return "t21-policy-v1".equals(System.getProperty("prime_ants.placementMode"))?300:"t20-tuned-v1".equals(System.getProperty("prime_ants.placementMode"))?200:150;}
+    public static int replayBudget(){return EXISTING_FULL.size()+Integer.getInteger("prime_ants.placementPriorFull",0)+(int)ALL_FULL.stream().filter(p->!EXISTING_FULL.contains(p)).count();}
     public static boolean integrationExperiment() {return "t17-nectar-v1".equals(System.getProperty("prime_ants.placementMode"));}
     public static boolean frozenExperiment() {return integrationExperiment() || "t16-frozen-v1".equals(System.getProperty("prime_ants.placementMode"));}
     public static boolean biomeExperiment() {return "t15-biome-v1".equals(System.getProperty("prime_ants.placementMode"));}
@@ -31,24 +30,20 @@ public final class PlacementSettings implements ModInitializer {
         if(System.getProperty("prime_ants.placementSeed")!=null) dimensions+=",prime_ants_test:placement_native";
         System.setProperty("prime_ants.developmentPlacementDimensions",dimensions);
         TICKET=Registry.register(BuiltInRegistries.TICKET_TYPE,Identifier.fromNamespaceAndPath("prime_ants_test","placement"),new TicketType(0,14));
-        if(replayExperiment()||System.getProperty("prime_ants.playerBudgetDeclaration")!=null) {
+        if(replayExperiment()&&!Boolean.getBoolean("prime_ants.clientWorkload")) {
             try {
-                var d=com.google.gson.JsonParser.parseString(java.nio.file.Files.readString(java.nio.file.Path.of(System.getProperty("prime_ants.playerBudgetDeclaration",System.getProperty("prime_ants.placementDeclaration"))))).getAsJsonObject();
+                var d=com.google.gson.JsonParser.parseString(java.nio.file.Files.readString(java.nio.file.Path.of(System.getProperty("prime_ants.placementDeclaration")))).getAsJsonObject();
                 d.getAsJsonArray("existing_full").forEach(v->EXISTING_FULL.add(v.getAsString()));
                 for(var v:d.getAsJsonArray("selected")){var p=v.getAsJsonArray();for(int x=p.get(0).getAsInt()-d.get("halo_radius").getAsInt();x<=p.get(0).getAsInt()+d.get("halo_radius").getAsInt();x++)for(int z=p.get(1).getAsInt()-d.get("halo_radius").getAsInt();z<=p.get(1).getAsInt()+d.get("halo_radius").getAsInt();z++)DECLARED_FULL.add(new ChunkPos(x,z));}
-                workflowBefore=d.has("workflow_used_before")?d.get("workflow_used_before").getAsInt():106;
-                if(System.getProperty("prime_ants.playerBudgetDeclaration")==null&&EXISTING_FULL.size()!=106||replayBudget()>=replayFullLimit())throw new IllegalStateException("Replay existing/prior budget invalid");
+                if(EXISTING_FULL.size()!=106||replayBudget()>=replayFullLimit())throw new IllegalStateException("Replay existing/prior budget invalid");
             }catch(java.io.IOException e){throw new RuntimeException(e);}
         }
-        if(System.getProperty("prime_ants.playerBudgetDeclaration")!=null)net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPING.register(server->{
-            var row=new com.google.gson.JsonObject();row.addProperty("server_ticks",server.getTickCount());row.addProperty("workflow_used_before",workflowBefore);row.addProperty("budget_used",replayBudget());row.addProperty("full_limit",replayFullLimit());row.add("source_full",new com.google.gson.Gson().toJsonTree(EXISTING_FULL.stream().sorted().toList()));row.add("new_full",new com.google.gson.Gson().toJsonTree(ALL_FULL.stream().filter(k->!EXISTING_FULL.contains(k)).sorted().toList()));row.add("constructed_full",new com.google.gson.Gson().toJsonTree(ALL_FULL.stream().sorted().toList()));
-            try{java.nio.file.Files.writeString(java.nio.file.Path.of(System.getProperty("prime_ants.captureDir"),System.getProperty("prime_ants.capturePrefix")+"-loading.json"),new com.google.gson.GsonBuilder().setPrettyPrinting().create().toJson(row));}catch(java.io.IOException e){throw new RuntimeException(e);}
-        });
         ServerChunkEvents.CHUNK_LOAD.register((l,c,g)->recordFull(l,c.getPos()));
     }
     public static void recordFull(net.minecraft.server.level.ServerLevel l, ChunkPos p) {
-        if(System.getProperty("prime_ants.placementSeed")==null&&System.getProperty("prime_ants.playerBudgetDeclaration")==null)return;
-        if(replayExperiment()||System.getProperty("prime_ants.playerBudgetDeclaration")!=null) {
+        if(Boolean.getBoolean("prime_ants.clientWorkload"))return;
+        if(System.getProperty("prime_ants.placementSeed")==null)return;
+        if(replayExperiment()) {
             String key=l.dimension().identifier()+":"+p.x()+":"+p.z();
             if(l.dimension().identifier().toString().equals("prime_ants_test:placement_native")&&!DECLARED_FULL.contains(p))throw new IllegalStateException("Replay native region expansion refused: "+key);
             if(!EXISTING_FULL.contains(key)&&!ALL_FULL.contains(key)&&replayBudget()>=replayFullLimit())throw new IllegalStateException("Replay FULL allowance exhausted before construction: "+key);

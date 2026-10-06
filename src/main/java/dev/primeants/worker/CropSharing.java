@@ -19,7 +19,7 @@ public final class CropSharing {
     public boolean busy(){return target!=null||receivingFrom!=null;}
     public int actionTicks(){return actionTicks;} public UUID target(){return target;}
     private static boolean live(ServerLevel l,LasiusNigerEntity a){
-        if(l.getEntity(a.getUUID())!=a||!a.isAlive()||a.isRemoved()||a.isNoAi()||a.isCallow()
+        if(l.getEntity(a.getUUID())!=a||!a.isAlive()||a.isRemoved()||a.isNoAi()||a.isCallow()||a.workerTasks().defending()
             ||!NestPlan.loaded(l,a.blockPosition())||!l.isPositionEntityTicking(a.blockPosition()))return false;
         return a.form()==AntForm.QUEEN||a.queenId()!=null&&a.nurseryHome()!=null&&ColonyMembers.get(l).belongs(a,a.queenId(),a.nurseryHome());
     }
@@ -36,6 +36,11 @@ public final class CropSharing {
             a.workerTasks().sharing().receivingFrom=null;a.setSocialAction(false);
         }
         donor.setSocialAction(false);target=null;actionTicks=0;approachTicks=0;cooldown=40;donor.getNavigation().stop();
+    }
+    /** Cancel both uncommitted endpoints before the existing owner takes defense movement. */
+    public void cancel(ServerLevel l){
+        if(receivingFrom!=null&&l.getEntity(receivingFrom) instanceof LasiusNigerEntity d&&donor.getUUID().equals(d.workerTasks().sharing().target))d.workerTasks().sharing().clear(l);
+        receivingFrom=null;clear(l);
     }
     public boolean tick(ServerLevel l){
         if(lastTick>=l.getGameTime())return target!=null||receivingFrom!=null;

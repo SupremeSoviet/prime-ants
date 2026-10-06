@@ -80,6 +80,7 @@ public final class BroodPile extends BlockEntity {
     public List<BroodRecord> records() { return List.copyOf(records); }
     public Set<UUID> consumed() { return Set.copyOf(consumed); }
     public UUID queenId() { return queenId; }
+    public UUID componentOwner(){return queenId!=null&&plan!=null&&level instanceof ServerLevel l&&l.getBlockEntity(getBlockPos())==this&&ownedBy(queenId,plan)?queenId:null;}
     public long loadedTicks() { return loadedTicks; }
     public long stageDuration() { return stageDuration; }
     public String condition() { return condition; }

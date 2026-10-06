@@ -88,12 +88,13 @@ public final class RoleConflictGameTest {
     @GameTest(maxTicks=26000,structure="prime_ants_test:idle_ground")
     public void conflictingPersistedForagerClaimReleasesWithoutLosingBuilderProgress(GameTestHelper c){conflict(c,2);}
     private void conflict(GameTestHelper c,int restoration){
-        LasiusNigerEntity[] queen={f.start(c)};boolean[] supplied={false},killed={false},released={false},replacement={false};
+        LasiusNigerEntity[] queen={f.start(c)};var funding=FundedPopulationFixture.hold(c,queen[0]);boolean[] supplied={false},killed={false},released={false},replacement={false};
         var trace=new ConstructionTrace();
         UUID[] builder={null},dead={null};int[] atDeath={0};long[] deathTick={0};boolean[] formerReleased={false},builderHeld={false};Map<UUID,ItemStack> retained=new HashMap<>();Set<UUID> disabled=new HashSet<>();
         c.onEachTick(()->{
-            var q=queen[0];if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;food.supply(c,q,6,8);}
-            if(supplied[0]){c.assertTrue(food.total(c,q)==14,"Food/custody/terminal receipts conserved on every loaded tick");food.yields(c,q);}soil.balance(c,q);
+            var q=queen[0];if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;food.supply(c,q,10,8);}
+            if(supplied[0]){c.assertTrue(food.total(c,q)==18,"Food/custody/terminal receipts conserved on every loaded tick");food.yields(c,q);}soil.balance(c,q);
+            if(!funding.releaseIfStocked(food.pile(c,q)))return;
             var j=NestExpansion.get(c.getLevel()).job(q.getUUID());if(j==null)return;
             trace.tick(c,q);
             var workers=f.workers(c,q);var claimBefore=j.claim;var b=workers.stream().filter(w->w.getUUID().equals(claimBefore)).findFirst().orElse(null);
@@ -162,11 +163,13 @@ public final class RoleConflictGameTest {
     }
     @GameTest(maxTicks=26000,structure="prime_ants_test:idle_ground")
     public void disabledNursingLabelsCannotReserveCareWithFourOtherMatureWorkers(GameTestHelper c){
-        var q=f.start(c);boolean[] supplied={false},checked={false};Set<UUID> initial=new HashSet<>(),held=new HashSet<>();
+        var q=f.start(c);var funding=FundedPopulationFixture.hold(c,q);boolean[] supplied={false},checked={false};Set<UUID> initial=new HashSet<>(),held=new HashSet<>();
         c.onEachTick(()->{
             if(checked[0])return;
-            if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;f.workers(c,q).forEach(w->initial.add(w.getUUID()));food.supply(c,q,6,8);}
-            if(!supplied[0])return;c.assertTrue(food.total(c,q)==14,"Reservation fixture preserves ordinary food accounting");food.yields(c,q);soil.balance(c,q);
+            if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;f.workers(c,q).forEach(w->initial.add(w.getUUID()));food.supply(c,q,10,8);}
+            if(!supplied[0])return;c.assertTrue(food.total(c,q)==18,"Reservation fixture preserves ordinary food accounting");food.yields(c,q);soil.balance(c,q);
+            if(c.getTick()%200==0){var pile=food.pile(c,q);PrimeAnts.LOGGER.info("T22 reservation funding tick={} condition={} supply={} held={}",c.getTick(),pile==null?"missing":pile.condition(),pile==null?"missing":pile.supply(c.getLevel()),held.size());}
+            if(!funding.releaseIfStocked(food.pile(c,q)))return;
             var ws=f.workers(c,q);for(var w:ws)if(!initial.contains(w.getUUID())){
                 w.setNoAi(true);if(held.add(w.getUUID())){
                     // Negative reservation fixture: keep actual new bodies loaded on the existing
@@ -183,7 +186,7 @@ public final class RoleConflictGameTest {
             c.assertTrue(NestExpansion.get(c.getLevel()).job(q.getUUID())==null,"Disabled callows kept construction below mature enabled trigger while genuine brood grew");
             for(var w:ws)if(initial.contains(w.getUUID())&&!q.founding().claimedBy(w))w.setNoAi(true);else if(held.contains(w.getUUID()))w.setNoAi(false);
             c.assertTrue(ws.stream().filter(w->!w.isNoAi()&&!w.isCallow()).count()==4&&ws.stream().filter(w->w.workerTasks().nursing()&&w.isNoAi()).count()==2,"Four OTHER mature enabled workers and two disabled nursing labels");checked[0]=true;
-            c.runAfterDelay(1,()->{c.assertTrue(NestExpansion.get(c.getLevel()).job(q.getUUID())==null,"Construction must defer while two enabled associated caregivers would not remain");c.assertTrue(food.total(c,q)==14,"Deferred scheduler preserves all food");c.succeed();});
+            c.runAfterDelay(1,()->{c.assertTrue(NestExpansion.get(c.getLevel()).job(q.getUUID())==null,"Construction must defer while two enabled associated caregivers would not remain");c.assertTrue(food.total(c,q)==18,"Deferred scheduler preserves all food");c.succeed();});
         });
     }
     @GameTest(maxTicks=26000,structure="prime_ants_test:idle_ground")

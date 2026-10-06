@@ -1,0 +1,20 @@
+{
+  "run_id": "d213025b-b6ad-4714-9f3c-21757495eaf1",
+  "scenario": "fresh-survival",
+  "seed": 2026100501,
+  "status": "failed",
+  "natural_placement": "production default",
+  "render_distance": 8,
+  "simulation_distance": 8,
+  "founding_multiplier": 20.0,
+  "brood_multiplier": 100.0,
+  "observer_setup": "Survival with observer commands enabled; fixed 1280x720 native window at startup, HUD hidden, daytime/camera/player setup moves disclosed. Combat uses ordinary survival inputs and physics.",
+  "ant_position_edits": 0,
+  "supplied_ants": 0,
+  "supplied_food": 0,
+  "terrain_edits": 0,
+  "ai_pauses": 0,
+  "loading_only": true,
+  "save": "C:\\Users\\user\\Documents\\prime-ants\\build\\run\\clientGameTest\\saves\\New World",
+  "failure": "java.lang.AssertionError: Timed out waiting for predicate"
+}

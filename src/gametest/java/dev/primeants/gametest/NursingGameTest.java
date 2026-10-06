@@ -37,9 +37,9 @@ public final class NursingGameTest {
         c.onEachTick(()->{
             c.assertTrue(q.founding().phase()!=QueenFounding.Phase.FAILED,"Production founding remains valid");var p=pile(c,q);if(p==null)return;
             original.addAll(p.original());var ws=fixture.workers(c,q);
-            if(!supplied[0]&&ws.size()==3&&ws.stream().allMatch(w->!w.isCallow())&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;ws.forEach(w->firstWorkers.add(w.getUUID()));supply(c,q,6,8);}
+            if(!supplied[0]&&ws.size()==3&&ws.stream().allMatch(w->!w.isCallow())&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;ws.forEach(w->firstWorkers.add(w.getUUID()));supply(c,q,10,8);}
             if(!supplied[0])return;
-            c.assertTrue(total(c,q)==14,"Every supplied food unit is world/cache/cargo/custody or genuinely consumed: "+total(c,q));yields(c,q);
+            c.assertTrue(total(c,q)==18,"Every supplied food unit is world/cache/cargo/custody or genuinely consumed: "+total(c,q));yields(c,q);
             for(var w:ws){if(w.workerTasks().nursing()&&WorkerTasks.food(w.getMainHandItem())){carried[0]=true;c.assertTrue(!q.founding().claimedBy(w)&&ColonyMembers.get(c.getLevel()).belongs(w,q.getUUID(),q.founding().plan().chamber()),"Nurse membership does not steal forager claim");}if(w.workerTasks().feedingTicks()>0)fed[0]=true;}
             p.records().stream().filter(r->!r.founding()).forEach(r->newIds.add(r.id()));p.consumed().stream().filter(id->!original.contains(id)).forEach(newIds::add);
             if(c.getTick()%500==0)PrimeAnts.LOGGER.info("T10 growth tick={} stock={} consumed={} queenSugar={} queenProtein={} records={} workers={}",c.getTick(),total(c,q),consumed(c,q),q.nutrition().sugar(),q.nutrition().protein(),p.records().stream().map(r->r.id()+" "+r.stage()+" "+r.progress()+" "+r.nutrition().sugar()+"/"+r.nutrition().protein()).toList(),ws.stream().map(w->w.getUUID()+" "+w.position()+" "+w.workerTasks().phase()+" "+w.workerTasks().reason()+" "+w.getMainHandItem()).toList());
@@ -47,7 +47,7 @@ public final class NursingGameTest {
             if(additional.isPresent()&&newIds.size()>3){
                 c.assertTrue(original.size()==3&&p.consumed().containsAll(original)&&Collections.disjoint(original,newIds)&&ws.size()>3&&firstWorkers.stream().allMatch(id->c.getLevel().getEntity(id) instanceof LasiusNigerEntity),"Original clutch remains, different new IDs reuse slots, actual workers increase beyond three");
                 c.assertTrue(carried[0]&&fed[0]&&consumed(c,q)>0&&q.bodyReserve()==0&&additional.get().broodId()!=null&&newIds.contains(additional.get().broodId()),"Physical nurses feed; extra pale worker derives from new food-fed brood");
-                PrimeAnts.LOGGER.info("T10 GROWTH SUCCESS supplied=6apple/8chicken consumed={} queenReceipts={}/{}/{} larvaReceipts={}/{}/{} oldBrood={} newBrood={} originalWorkers={} liveWorkers={} additional={}",consumed(c,q),q.nutrition().apples(),q.nutrition().berries(),q.nutrition().chickens(),p.consumedApples(),p.consumedBerries(),p.consumedChickens(),original,newIds,firstWorkers,ws.stream().map(LasiusNigerEntity::getUUID).toList(),additional.get().getUUID());c.succeed();
+                PrimeAnts.LOGGER.info("T10 GROWTH SUCCESS supplied=10apple/8chicken consumed={} queenReceipts={}/{}/{} larvaReceipts={}/{}/{} oldBrood={} newBrood={} originalWorkers={} liveWorkers={} additional={}",consumed(c,q),q.nutrition().apples(),q.nutrition().berries(),q.nutrition().chickens(),p.consumedApples(),p.consumedBerries(),p.consumedChickens(),original,newIds,firstWorkers,ws.stream().map(LasiusNigerEntity::getUUID).toList(),additional.get().getUUID());c.succeed();
             }
         });
     }
