@@ -251,10 +251,11 @@ public final class WorkerForagingGameTest {
             if(done[0])return; // succeed() clears entities before other due callbacks finish this same tick.
             if(!checked[0])absentCaregivers(c,q);
             var p=q.founding().plan();if(p==null)return;
-            if(!dropped[0]&&q.founding().sealed()) {dropped[0]=true;drop(c,p.at(-3,0,1),new ItemStack(Items.APPLE,7));}
+            // T06 food shares: four of one kind fill a kind's share, so the seven units are four apples and three chickens.
+            if(!dropped[0]&&q.founding().sealed()) {dropped[0]=true;drop(c,p.at(-3,0,1),new ItemStack(Items.APPLE,4));drop(c,p.at(-3,0,1),new ItemStack(Items.CHICKEN,3));}
             if(dropped[0])c.assertTrue(foodTotal(c,q)==7,"All seven source units remain physical total="+foodTotal(c,q)+" world="+c.getLevel().getEntitiesOfClass(ItemEntity.class,c.getBounds().inflate(8),i->i.isAlive()&&WorkerTasks.food(i.getItem())).stream().map(i->i.getItem()+" at "+i.position()).toList()+" cache="+(cache(c,q)==null?List.of():cache(c,q).contents())+" workers="+workers(c,q).stream().map(w->w.getMainHandItem()+" at "+w.position()).toList());soilBalance(c,q);
             var n=cache(c,q);if(!checked[0]&&n!=null&&n.size()==6) {
-                var actor=workers(c,q).stream().filter(w->w.getMainHandItem().is(Items.APPLE)&&w.workerTasks().reason().equals("cache_full_blocked_or_foreign_cargo_retained")).findFirst();
+                var actor=workers(c,q).stream().filter(w->WorkerTasks.food(w.getMainHandItem())&&w.workerTasks().reason().equals("cache_full_blocked_or_foreign_cargo_retained")).findFirst();
                 if(actor.isEmpty())return;checked[0]=true;UUID dead=actor.get().getUUID();var worker=actor.get();Set<UUID> survivors=new HashSet<>();workers(c,q).stream().filter(w->w!=worker).forEach(w->survivors.add(w.getUUID()));
                 c.runAfterDelay(80,()->{
                     c.assertTrue(worker.getMainHandItem().getCount()==1&&n.size()==6&&foodTotal(c,q)==7,"Full cache retains real cargo through bounded retries");worker.hurtServer(c.getLevel(),worker.damageSources().generic(),1000);worker.die(worker.damageSources().generic());workers(c,q).forEach(w->w.setNoAi(false));

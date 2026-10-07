@@ -48,9 +48,11 @@ public final class NestWalls {
     public static int chamberTier(Collection<Integer> wallTiers) { return wallTiers.stream().mapToInt(Integer::intValue).min().orElse(1); }
     /** The highest chamber tier a stage has unlocked (GDD v2 section 1): Mature unlocks tier 2, Great tier 3. */
     public static int unlocked(ColonyStage s) { return switch (s) { case FOUNDING, YOUNG -> 1; case MATURE -> 2; case GREAT -> 3; }; }
-    /** Exact accounting of one upgrade job: units taken out of the store are carried, built into walls or in custody. */
-    public record Ledger(int taken, int carried, int built, int custody) {
-        public Ledger { if (taken < 0 || carried < 0 || built < 0 || custody < 0) throw new IllegalArgumentException("Negative upgrade units"); }
-        public boolean exact() { return taken == carried + built + custody; }
+    /** Exact accounting of one upgrade job: units taken out of the store are carried, built into walls, or released, the
+     * cumulative count of units dead builders handed to transfer custody (each once; custody then sets them down, so how
+     * many are still in custody now is a separate, live figure: ChamberUpgrade.Job.custody). */
+    public record Ledger(int taken, int carried, int built, int released) {
+        public Ledger { if (taken < 0 || carried < 0 || built < 0 || released < 0) throw new IllegalArgumentException("Negative upgrade units"); }
+        public boolean exact() { return taken == carried + built + released; }
     }
 }

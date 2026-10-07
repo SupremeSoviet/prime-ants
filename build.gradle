@@ -36,7 +36,8 @@ def serverDiagnosticGroup = providers.gradleProperty('primeAntsServerDiagnosticG
 // Diagnostic group -> the one GameTest class it runs concurrently. Never acceptance.
 def serverDiagnosticGroups = ['nectar':'NectarGameTest', 'colony_stage':'ColonyStageGameTest', 'material_store':'MaterialStoreGameTest',
                               'chamber_scan':'ChamberScanGameTest', 'queens_hall':'QueensHallGameTest', 'material_hauling':'MaterialHaulingGameTest',
-                              'nursery_upgrade':'NurseryUpgradeGameTest']
+                              'nursery_upgrade':'NurseryUpgradeGameTest', 'mound':'MoundGameTest', 'food_cache':'FoodCacheGameTest',
+                              'mature_colony':'MatureColonyGameTest']
 // A focused diagnostic may validate one case; it must never make check/build green.
 gradle.taskGraph.whenReady { graph ->
     if ((serverDiagnosticFilter.isPresent() || serverDiagnosticGroup.isPresent()) && graph.hasTask(':check')) {
@@ -400,7 +401,16 @@ tasks.named('runGameTest') {
             names.size()
         }.sum()
         ['material_hauling_game_test_food_dropped_while_the_forager_walks_to_clay_is_collected_before_the_clay','nursery_upgrade_game_test_young_colony_reaches_mature_by_real_play_then_rebuilds_its_nursery_in_packed_clay_and_its_brood_develops_faster','nursery_upgrade_game_test_upgrade_keeps_every_unit_through_reload_and_killed_builder_and_never_converts_player_changed_wall'].each{n->if(!cases.any{it.@name.text()=='prime_ants_test:'+n})throw new GradleException('Missing T05 regression '+n)}
-        if(cases.size()!=173+foodNames.size()+policyNames.size()+defenseNames.size()+stageNames.size()+storeNames.size()+t04+t05)throw new GradleException('Expected complete baseline plus current additions')
+        // Stage-1 T06: the stage mound, the food cache's kind shares, and a Mature colony's upgrade ledger and brood.
+        def t06=['MoundGameTest':2,'FoodCacheGameTest':1,'MatureColonyGameTest':1].collect { className,count ->
+            def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+            if(names.size()!=count)throw new GradleException('T06 discovery incomplete: '+className)
+            def prefix=className.replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()
+            names.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:${prefix}_${name}"})throw new GradleException('Missing T06 test: '+prefix+'_'+name)}
+            names.size()
+        }.sum()
+        ['mound_game_test_young_colony_lays_its_store_and_hall_soil_on_its_stage_mound_where_short_plants_cover_the_old_deposits','mound_game_test_player_block_on_the_mound_is_never_covered_and_mid_deposit_reload_keeps_every_unit_once','food_cache_game_test_cache_full_of_chickens_still_takes_apples_and_no_adult_starves','mature_colony_game_test_upgrade_counts_every_clay_unit_in_each_place_through_its_builder_death'].each{n->if(!cases.any{it.@name.text()=='prime_ants_test:'+n})throw new GradleException('Missing T06 regression '+n)}
+        if(cases.size()!=173+foodNames.size()+policyNames.size()+defenseNames.size()+stageNames.size()+storeNames.size()+t04+t05+t06)throw new GradleException('Expected complete baseline plus current additions')
         if (report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] }) {
             throw new GradleException('Server GameTest report contains a failure or skipped test')
         }

@@ -13,6 +13,7 @@ import dev.primeants.founding.NestPlan;
 import dev.primeants.founding.NestExpansion;
 import dev.primeants.founding.QueenFounding;
 import dev.primeants.founding.ColonyTerrain;
+import dev.primeants.founding.MoundSoil;
 import java.util.UUID;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -513,12 +514,18 @@ public final class WorkerTasks {
     private static boolean wallFaceOpen(ServerLevel l,BlockPos target,BlockPos stand){
         var face=new BlockPos(stand.getX(),target.getY(),stand.getZ());return target.distManhattan(face)==1&&l.getBlockState(face).isAir();
     }
+    /** A cell of the job's own deposits that takes a unit now: nest-plan rooms lay their soil on the colony's stage mound
+     * (MoundSoil), the 0.1.0 widening on its own two deposit layers. */
+    private boolean depositable(ServerLevel l,boolean mound,BlockPos p){
+        return mound?MoundSoil.takes(l,p,worker.queenId())&&l.mayInteract(worker,p):NestExpansion.depositSupport(l,p,worker.queenId())&&l.getBlockState(p).isAir();
+    }
     private void digOut(ServerLevel l){
         var j=DigJob.claimedBy(l,worker);
         if(dirt()==0){next(Phase.DIG,"empty_mandibles_next_work");return;}
+        boolean mound=j instanceof ChamberExcavation.Job;
         BlockPos target=null;Vec3 dest=null;
-        for(var p:NestExpansion.deposits(plan)){
-            if(!NestExpansion.depositSupport(l,p,worker.queenId())||!l.getBlockState(p).isAir()||!l.getEntities(worker,new AABB(p)).isEmpty())continue;
+        for(var p:mound?MoundSoil.free(l,plan,worker.queenId()):NestExpansion.deposits(plan)){
+            if(!depositable(l,mound,p)||!l.getEntities(worker,new AABB(p)).isEmpty())continue;
             for(var d:Direction.Plane.HORIZONTAL)for(int y=-1;y<=0;y++){
                 var stand=p.relative(d).offset(0,y,0);if(!NestPlan.loaded(l,stand)||!NestPlan.walkable(l,stand)||Vec3.atCenterOf(p).distanceToSqr(Vec3.atBottomCenterOf(stand).add(0,0.5,0))>3.0)continue;
                 var v=Vec3.atBottomCenterOf(stand).add(0.35*d.getStepX(),0,0.35*d.getStepZ());
@@ -529,11 +536,12 @@ public final class WorkerTasks {
         }
         if(target==null){j.reason="mound_blocked_soil_retained";hold(j.reason);cooldown=40;return;}
         if(!arriveSupported(l,dest))return;
-        if(!constructionAuthorized(l)||!NestExpansion.depositSupport(l,target,worker.queenId())||!l.getBlockState(target).isAir()||!l.getEntities(worker,new AABB(target)).isEmpty()
+        if(!constructionAuthorized(l)||!depositable(l,mound,target)||!l.getEntities(worker,new AABB(target)).isEmpty()
             ||worker.getBoundingBox().intersects(new AABB(target))||worker.position().distanceToSqr(Vec3.atCenterOf(target))>5.0)return;
         if(dev.primeants.founding.SupportSurvival.problem(l,target,NurseryBlocks.NEST_SOIL.defaultBlockState()) instanceof String problem){hold(problem);return;}
-        if(l.setBlock(target,NurseryBlocks.NEST_SOIL.defaultBlockState(),3)){
-            ColonyTerrain.get(l).deposited(target,worker.queenId());j.deposited++;j.changed(l);
+        if(mound?MoundSoil.lay(l,target,worker.queenId()):l.setBlock(target,NurseryBlocks.NEST_SOIL.defaultBlockState(),3)){
+            if(!mound)ColonyTerrain.get(l).deposited(target,worker.queenId());
+            j.deposited++;j.changed(l);
             worker.setItemSlot(EquipmentSlot.MAINHAND,dirt()==1?ItemStack.EMPTY:new ItemStack(Items.DIRT,dirt()-1));cooldown=QueenFounding.cadence();phaseTicks=0;
             PrimeAnts.LOGGER.info("{} deposit queen={} worker={} target={} removed={} carried={} deposited={}",j.title(),worker.queenId(),worker.getUUID(),target,j.removed(),dirt(),j.deposited);
             if(dirt()==0)next(Phase.DIG,"delivered_soil_next_work");
@@ -589,7 +597,7 @@ public final class WorkerTasks {
         int endDrops=Math.min(droppedQueue.size(),droppedCursor+DROPPED_PER_PULSE);
         while(droppedCursor<endDrops){
             var e=l.getEntity(droppedQueue.get(droppedCursor++));
-            if(!(e instanceof ItemEntity item)||!item.isAlive()||item.isRemoved()||item.hasPickUpDelay()||!food(item.getItem())
+            if(!(e instanceof ItemEntity item)||!item.isAlive()||item.isRemoved()||item.hasPickUpDelay()||!food(item.getItem())||!storable(l,item.getItem())
                 ||!withinSearch(item.blockPosition())||!NestPlan.walkable(l,item.blockPosition()))continue;
             var path=worker.getNavigation().createPath(item.blockPosition(),0,48);
             if(path==null||!path.canReach())continue;
@@ -684,6 +692,7 @@ public final class WorkerTasks {
         var entity=source==null?null:l.getEntity(source);
         if(!(entity instanceof ItemEntity item) || !item.isAlive()||item.isRemoved()||item.hasPickUpDelay()||!(food(item.getItem())||MaterialStore.material(item.getItem()))||!withinSearch(item.blockPosition())||!NestPlan.loaded(l,item.blockPosition())) {source=null;next(Phase.SEARCH,"source_unavailable");return;}
         if(!worker.getMainHandItem().isEmpty()) {next(Phase.RETURN,"existing_cargo_return");return;}
+        if(food(item.getItem())&&!storable(l,item.getItem())){source=null;next(Phase.SEARCH,"food_kind_share_full_left_on_ground");return;}
         Vec3 target=item.position().add(0,0.1,0);
         if(!reaches(l,worker,target)) {arrive(Vec3.atBottomCenterOf(item.blockPosition()));return;}
         // A material unit is taken only while the confirmed store has room for it, checked at the moment of pickup.
@@ -700,12 +709,17 @@ public final class WorkerTasks {
         worker.setItemSlot(EquipmentSlot.MAINHAND,cargo);source=null;next(Phase.RETURN,food(cargo)?"physical_food_in_mandibles":"physical_material_in_mandibles");
         PrimeAnts.LOGGER.info("Worker pickup worker={} item={} position={}",worker.getUUID(),cargo,worker.position());
     }
-    /** Dropped food this trip could collect now, by the search's own rules: in the search area, supported and reachable;
-     * nearest first, at most 8 path trials. */
+    /** Food of a kind the colony's own cache has room for (NestCache.shareRoom): a cache full of one kind never keeps the
+     * other kind out, also in the forager's mandibles. Before the first delivery sets up the cache, any food. */
+    private boolean storable(ServerLevel l,ItemStack s){
+        return !(l.getBlockEntity(plan.cache()) instanceof NestCache cache)||!cache.ownedBy(worker.queenId(),plan)||cache.shareRoom(s);
+    }
+    /** Dropped food this trip could collect now, by the search's own rules: in the search area, of a kind the cache has
+     * room for, supported and reachable; nearest first, at most 8 path trials. */
     private ItemEntity collectableFood(ServerLevel l){
         var candidates=new java.util.ArrayList<ItemEntity>();
         l.getEntities(net.minecraft.world.level.entity.EntityTypeTest.forClass(ItemEntity.class),new AABB(plan.outside()).inflate(SEARCH_RADIUS,3,SEARCH_RADIUS),
-            i->i.isAlive()&&!i.isRemoved()&&!i.hasPickUpDelay()&&food(i.getItem())&&NestPlan.loaded(l,i.blockPosition()),candidates,DROPPED_TOTAL);
+            i->i.isAlive()&&!i.isRemoved()&&!i.hasPickUpDelay()&&food(i.getItem())&&storable(l,i.getItem())&&NestPlan.loaded(l,i.blockPosition()),candidates,DROPPED_TOTAL);
         candidates.sort(java.util.Comparator.comparingDouble(worker::distanceToSqr));
         int attempts=0;
         for(var item:candidates){
@@ -749,14 +763,14 @@ public final class WorkerTasks {
         if(phase==Phase.DEAD)return;worker.getNavigation().stop();
         int constructionSoil=constructionClaim(l)&&worker.getMainHandItem().is(Items.DIRT)?worker.getMainHandItem().getCount():0;
         int upgradeClay=upgradeClaim(l)&&worker.getMainHandItem().is(Items.CLAY_BALL)?worker.getMainHandItem().getCount():0;
+        var transfer=UUID.nameUUIDFromBytes(("worker-cargo:"+worker.getUUID()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
         if(!worker.getMainHandItem().isEmpty()) {
-            var transfer=UUID.nameUUIDFromBytes(("worker-cargo:"+worker.getUUID()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
             TransferCustody.get(l).take(transfer,"worker:"+worker.getUUID(),worker.position(),worker.getMainHandItem());
             worker.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);
             TransferCustody.get(l).retry(l);
         }
         var job=DigJob.claimedBy(l,worker);if(job!=null)job.release(l,worker,constructionSoil);
-        ChamberUpgrade.get(l).release(l,worker,upgradeClay);
+        ChamberUpgrade.get(l).release(l,worker,upgradeClay,transfer);
         var q=queen(l);if(q!=null)q.founding().releaseWorker(worker);
         ColonyMembers.get(l).died(worker);
         source=null;next(Phase.DEAD,"worker_dead_no_replacement");

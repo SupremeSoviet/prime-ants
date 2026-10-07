@@ -81,13 +81,23 @@ public final class LifecycleGameTest {
     @GameTest(maxTicks=22000,structure="prime_ants_test:idle_ground")
     public void carrierReleaseAccountingIgnoresForeignFixtureDrop(GameTestHelper c){carrier(c,true);}
     private void carrier(GameTestHelper c,boolean overlap){
-        var q=start(c,10000,6000,30);boolean[] supplied={false},saved={false},dead={false},ready={false},finished={false};UUID[] id={null};
+        var q=start(c,10000,6000,30);boolean[] supplied={false},filled={false},saved={false},dead={false},ready={false},finished={false};UUID[] id={null};
         var food=new ItemStack(Items.CHICKEN,7);food.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("T21 carrier "+UUID.randomUUID()));
         java.util.function.Predicate<ItemStack> own=s2->ItemStack.isSameItemSameComponents(food,s2);
         c.onEachTick(()->{
             if(finished[0])return;
             var p=q.founding().plan();var ws=f.workers(c,q);if(p==null)return;
             if(!supplied[0]&&ws.size()==3&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;ws.stream().filter(w->!q.founding().claimedBy(w)).forEach(w->w.setNoAi(true));f.drop(c,p.at(-3,0,1),food.copy());}
+            // T06 food shares: a forager never picks up a unit whose kind has no room, so a cache it fills itself never
+            // refuses its own chicken. Explicit negative full-storage fixture, as the nectar and prey tests use: as the
+            // forager carries its first owned chicken, its cache is a pre-T06 one, saved full of six foreign chickens.
+            if(supplied[0]&&!filled[0]&&f.cache(c,q)==null)for(var w:ws)if(own.test(w.getMainHandItem())){
+                filled[0]=true;c.getLevel().setBlock(p.cache(),dev.primeants.brood.NurseryBlocks.NEST_CACHE.defaultBlockState(),3);var n=f.cache(c,q);
+                var out=net.minecraft.world.level.storage.TagValueOutput.createWithContext(net.minecraft.util.ProblemReporter.DISCARDING,c.getLevel().registryAccess());
+                out.putString("Colony",q.getUUID().toString());out.store("Entrance",net.minecraft.core.BlockPos.CODEC,p.entrance());out.putString("Direction",p.direction().getName());
+                out.store("Contents",ItemStack.CODEC.listOf(),java.util.stream.IntStream.range(0,6).mapToObj(i->new ItemStack(Items.CHICKEN)).toList());
+                n.loadCustomOnly(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING,c.getLevel().registryAccess(),out.buildResult()));n.setChanged();break;
+            }
             if(!saved[0]&&f.cache(c,q)!=null&&f.cache(c,q).size()==6)for(var w:ws)if(own.test(w.getMainHandItem())){
                 saved[0]=true;id[0]=w.getUUID();var copy=restore(c,w);c.assertTrue(copy!=null&&copy.elapsedAgeTicks()==w.elapsedAgeTicks()&&copy.adultLife().fasting()==w.adultLife().fasting()&&ItemStack.matches(copy.getMainHandItem(),w.getMainHandItem()),"Real physical carrier restores exact clocks and cargo/components");w.discard();c.assertTrue(c.getLevel().tryAddFreshEntityWithPassengers(copy),"Same carrier identity reinserted for real mortality ticks");
             }
@@ -100,7 +110,7 @@ public final class LifecycleGameTest {
             long world=c.getLevel().getEntitiesOfClass(ItemEntity.class,c.getBounds().inflate(8),i->i.isAlive()&&own.test(i.getItem())).stream().mapToInt(i->i.getItem().getCount()).sum();
             long custody=TransferCustody.get(c.getLevel()).contents().stream().filter(t->own.test(t.stack())&&c.getBounds().inflate(8).contains(t.position())).mapToInt(t->t.stack().getCount()).sum();
             var cache=f.cache(c,q);
-            c.assertTrue(cache!=null&&cache.size()==6&&cache.contents().stream().allMatch(own)&&world+custody==1,"Seven original physical protein units remain six owned cached plus one owned custody/world release; no adult ingestion or foreign-food substitution");
+            c.assertTrue(cache!=null&&cache.size()==6&&cache.contents().stream().noneMatch(own)&&world+custody==7,"Seven original physical protein units remain: six never taken, the full cache holding no protein room, plus one owned custody/world release; no adult ingestion or foreign-food substitution");
             if(overlap){long unscoped=c.getLevel().getEntitiesOfClass(ItemEntity.class,c.getBounds().inflate(8),i->i.isAlive()&&i.getItem().is(Items.CHICKEN)).stream().mapToInt(i->i.getItem().getCount()).sum();c.assertTrue(unscoped==world+1,"Old unscoped query counts the independent foreign item; owned accounting isolates exact components");}
             var r=com.google.gson.JsonParser.parseString(AdultHistory.get(c.getLevel()).records().get(id[0].toString())).getAsJsonObject();c.assertTrue(r.get("cause").getAsString().equals("starvation")&&r.getAsJsonObject("nutrition").get("chickens").getAsLong()==0,"Terminal receipts survive removal and distinguish exact cargo from ingestion");finished[0]=true;c.succeed();
         });

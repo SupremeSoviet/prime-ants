@@ -16,30 +16,32 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /** Stage-1 T05 in real loaded ticks: the nursery's upgrade to tier 2. A colony founded from an egg and fed as a player
- * would (dropped clay, then dropped food) grows to Mature by itself, rebuilds its nursery chamber's walls with clay from
- * its own store, block by block, and its brood then develops at the tier-2 speed. Production founding, digging, hauling
- * and upgrade work; nothing assigns a stage, a tier, a job or an inventory. */
+ * would (dropped clay, and dropped food whenever it runs out) grows to Mature by itself, rebuilds its nursery chamber's
+ * walls with clay from its own store, block by block, and its brood then develops at the tier-2 speed. Production
+ * founding, digging, hauling and upgrade work; nothing assigns a stage, a tier, a job or an inventory. */
 public final class NurseryUpgradeGameTest {
     private final NestPlanFixture fx = new NestPlanFixture();
-    static long food(GameTestHelper c) {
-        return c.getLevel().getEntitiesOfClass(ItemEntity.class, c.getBounds().inflate(8), i -> i.isAlive() && WorkerTasks.food(i.getItem())).stream().mapToInt(i -> i.getItem().getCount()).sum();
-    }
-    /** A player's feeding for the long path: the fixture's growth food and the clay behind the entrance as the nest opens;
-     * once the store has held 16 clay, four apples and two chickens whenever the last drop has been collected. Once the
-     * colony is Mature the chickens come only while the cache shows fewer than two: adults eat only sugar, and without
-     * larvae to eat them chickens pile up in the six-slot cache, block apples and starve the adults (T05 diagnostic).
-     * The player watches the cache and the colony, as anyone could. fed = {opening drop done, waves, last wave tick, store
-     * held 16 clay}. */
+    /** A player's feeding for the long path, on demand, as anyone watching the colony could: the fixture's growth food and
+     * the clay behind the entrance as the nest opens. While that clay lies on the ground and the colony's confirmed store
+     * has room for it, the player drops no food, as T05's player did until the store held its clay: the colony's one
+     * forager takes materials only when it finds no food it can store, and adults fast far less than their grace while it
+     * hauls. Otherwise, four more apples whenever the cache shows no apples and none lie on the ground, and two more
+     * chickens whenever the cache shows fewer chickens than its protein share (NestCache.CAPACITY - RESERVED) and none lie
+     * on the ground. The cache keeps two slots for each kind (T06), so neither kind locks the other out. fed = {opening
+     * drop done, drops, last apple drop tick, last chicken drop tick}. */
     void feed(GameTestHelper c, LasiusNigerEntity q, int clay, long[] fed) {
         boolean[] opened = {fed[0] == 1}; fx.grow(c, q, opened);
         if (opened[0] && fed[0] == 0) { fed[0] = 1; fx.drop(c, q.founding().plan().at(-5, 0, 1), new ItemStack(Items.CLAY_BALL, clay)); }
-        var s = NestPlanFixture.store(c, q);
-        if (s != null && s.units(MaterialUnits.Material.CLAY) >= 16) fed[3] = 1;
-        if (fed[3] == 1 && food(c) == 0 && c.getTick() - fed[2] >= 200) {
-            var cache = fx.f.cache(c, q); long chickens = cache == null ? 0 : cache.contents().stream().filter(st -> st.is(Items.CHICKEN)).count();
-            var colony = ChamberRegistry.get(c.getLevel()).colony(q.getUUID()); boolean mature = colony != null && colony.stage() == ColonyStage.MATURE;
-            fed[1]++; fed[2] = c.getTick(); fx.food.supply(c, q, 4, !mature || chickens < 2 ? 2 : 0);
-        }
+        if (fed[0] == 0) return;
+        var cache = fx.f.cache(c, q); int share = NestCache.CAPACITY - NestCache.RESERVED; long tick = c.getTick();
+        long apples = cache == null ? 0 : cache.contents().stream().filter(st -> st.is(Items.APPLE)).count(), chickens = cache == null ? 0 : cache.contents().stream().filter(st -> st.is(Items.CHICKEN)).count();
+        var pile = NestPlanFixture.pile(c, q); var store = NestPlanFixture.store(c, q);
+        if (ground(c, Items.CLAY_BALL) > 0 && pile != null && NestPlanFixture.storeConfirmed(pile.stageEvaluation()) && store != null && store.room(new ItemStack(Items.CLAY_BALL))) return;
+        if (ground(c, Items.APPLE) == 0 && apples == 0 && tick - fed[2] >= 200) { fed[1]++; fed[2] = tick; fx.food.supply(c, q, 4, 0); }
+        if (ground(c, Items.CHICKEN) == 0 && chickens < share && tick - fed[3] >= 200) { fed[1]++; fed[3] = tick; fx.food.supply(c, q, 0, 2); }
+    }
+    static long ground(GameTestHelper c, net.minecraft.world.item.Item item) {
+        return c.getLevel().getEntitiesOfClass(ItemEntity.class, c.getBounds().inflate(8), i -> i.isAlive() && i.getItem().is(item)).stream().mapToInt(i -> i.getItem().getCount()).sum();
     }
     /** Every clay ball the player dropped, now: on the ground, in any worker's mandibles, in the store, rammed into the
      * colony's own walls, or in transfer custody. */
@@ -66,7 +68,7 @@ public final class NurseryUpgradeGameTest {
         for (var b : j.built()) c.assertTrue(ColonyTerrain.get(c.getLevel()).built(c.getLevel(), b, q.getUUID(), NurseryBlocks.PACKED_CLAY), "Each built cell is the colony's own packed clay: " + b);
     }
 
-    @GameTest(maxTicks=90000,structure="prime_ants_test:idle_ground")
+    @GameTest(maxTicks=60000,structure="prime_ants_test:idle_ground")
     public void youngColonyReachesMatureByRealPlayThenRebuildsItsNurseryInPackedClayAndItsBroodDevelopsFaster(GameTestHelper c){ longPath(c); }
     /** The long path: Mature by real play, the nursery's upgrade to tier 2, and its brood at the tier-2 speed. */
     private void longPath(GameTestHelper c){
@@ -109,16 +111,10 @@ public final class NurseryUpgradeGameTest {
                 c.assertTrue(p.nursery().equals(new dev.primeants.brood.BroodCapacity.Nursery(7,2)),"With its hall and earth walls the nursery keeps 7 brood at x1: "+p.nursery());
                 mature[0]=c.getTick();PrimeAnts.LOGGER.info("T05 MATURE BY REAL PLAY queen={} tick={} waves={} registry={} evaluation={}",q.getUUID(),c.getTick(),fed[1],colony,e);return;
             }
-            // From the promotion until the rebuilt nursery is confirmed at tier 2 the colony stays Mature: moving clay from
-            // the store into the walls never demotes it. Afterwards only food may cost the stage: in an eating wave a Mature
-            // colony's six-slot cache can dip below Mature's four food units (food-store capacity is T06's).
-            if(confirmed[0]<0)c.assertTrue(e.stage()==ColonyStage.MATURE&&ChamberRegistry.get(l).colony(q.getUUID()).stage()==ColonyStage.MATURE&&e.inputs().clay().known()>=16,"The colony stays Mature throughout the upgrade: "+e);
-            else{
-                // After the upgrade only food may cost the stage: the walls keep their clay and the colony its adults and rooms.
-                c.assertTrue(e.inputs().clay().known()==16&&(e.stage()==ColonyStage.MATURE||e.result().missing(ColonyStage.MATURE).stream().allMatch(m->m.requirement().name().equals("food"))),
-                    "After the upgrade the colony keeps its 16 clay and leaves Mature only for want of food: "+e);
-                if(previous.stage()!=e.stage())PrimeAnts.LOGGER.info("T05 stage after the upgrade queen={} tick={} from={} to={} missing={}",q.getUUID(),c.getTick(),previous.stage(),e.stage(),e.result().missing(ColonyStage.MATURE));
-            }
+            // From the promotion until the tier-2 brood evidence at the end of the test the colony stays Mature at every stage
+            // evaluation: moving clay from the store into the walls never demotes it, and its food store keeps Mature's four
+            // units through eating waves.
+            c.assertTrue(e.stage()==ColonyStage.MATURE&&ChamberRegistry.get(l).colony(q.getUUID()).stage()==ColonyStage.MATURE&&e.inputs().clay().known()>=16,"The colony stays Mature from its promotion to the tier-2 brood evidence: "+e);
             if(j==null)return;
             if(j.built().isEmpty()&&j.taken()==0)c.assertTrue(j.cells.equals(walls(plan))&&j.tier==2,"The job rebuilds the nursery chamber's eight wall cells to tier 2: "+j.cells);
             if(confirmed[0]<0){
@@ -144,7 +140,7 @@ public final class NurseryUpgradeGameTest {
      * mid-upgrade keeps the job, the carried unit, the store and the walls exactly once; a builder killed with a unit in
      * its mandibles releases it through transfer custody exactly once; and the next builder stops at the player's cell,
      * never converting it, and puts its unit back. The ledger is exact at every tick. */
-    @GameTest(maxTicks=72000,structure="prime_ants_test:idle_ground")
+    @GameTest(maxTicks=60000,structure="prime_ants_test:idle_ground")
     public void upgradeKeepsEveryUnitThroughReloadAndKilledBuilderAndNeverConvertsPlayerChangedWall(GameTestHelper c){
         LasiusNigerEntity[] q={fx.start(c)};long[] fed={0,0,0,0};int[] step={0};BlockPos[] changed={null};UUID[] killed={null},transfer={null};long[] pending={0};
         c.onEachTick(()->{

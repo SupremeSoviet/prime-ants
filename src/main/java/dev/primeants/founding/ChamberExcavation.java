@@ -178,8 +178,9 @@ public final class ChamberExcavation extends SavedData {
     }
 
     /** A placement validates on live terrain: every planned cell is this colony's natural or prepared soil, every shell
-     * cell too (witnessed mineral may only support a floor), nothing is fluid, and the mound can take every unit.
-     * Observed ineligibility rejects the placement; an unloaded cell only defers it (Findings precedence). */
+     * cell too (witnessed mineral may only support a floor), nothing is fluid, and the free cells of the colony's stage
+     * mound (MoundSoil) can take every unit. Observed ineligibility rejects the placement; an unloaded cell only defers it
+     * (Findings precedence). */
     static Findings validate(ServerLevel l, UUID owner, NestPlan home, Built built) {
         var r = new Findings(); var terrain = ColonyTerrain.get(l); var soil = NaturalSoil.get(l);
         for (var p : built.tasks())
@@ -191,12 +192,8 @@ public final class ChamberExcavation extends SavedData {
             if (!l.getFluidState(p).isEmpty() || !(terrain.eligible(l, p, owner) || support && soil.floorSupport(l, p))) r.fault("shell_cell_not_natural_soil_at_" + p.toShortString());
         }
         for (var p : built.connections()) if (r.cell(NestPlan.loaded(l, p), "chunk_unavailable_at_" + p.toShortString()) && !l.getFluidState(p).isEmpty()) r.fault("fluid_at_" + p.toShortString());
-        long capacity = 0; boolean unknown = false;
-        for (var p : NestExpansion.deposits(home)) {
-            if (!NestPlan.loaded(l, p) || !NestPlan.loaded(l, p.below())) { unknown = true; continue; }
-            if (NestExpansion.depositSupport(l, p, owner) && NestPlan.walkable(l, p)) capacity++;
-        }
-        if (capacity < built.tasks().size()) { if (unknown) r.unavailable("deposit_cells_unavailable"); else r.fault("mound_capacity_" + capacity + "_below_" + built.tasks().size()); }
+        var mound = MoundSoil.capacity(MoundSoil.slots(l, home, owner, MoundSoil.stage(l, home, owner)));
+        if (mound.free() < built.tasks().size()) { if (mound.unknown() > 0) r.unavailable("mound_cells_unavailable"); else r.fault("mound_capacity_" + mound.free() + "_below_" + built.tasks().size()); }
         return r;
     }
     /** The colony's latest live evaluation says it is Young and certainly lacks the room, not merely unknown. The queen's

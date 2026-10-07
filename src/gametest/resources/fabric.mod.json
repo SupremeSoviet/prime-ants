@@ -46,7 +46,10 @@
       "dev.primeants.gametest.ChamberScanGameTest",
       "dev.primeants.gametest.QueensHallGameTest",
       "dev.primeants.gametest.MaterialHaulingGameTest",
-      "dev.primeants.gametest.NurseryUpgradeGameTest"
+      "dev.primeants.gametest.NurseryUpgradeGameTest",
+      "dev.primeants.gametest.MoundGameTest",
+      "dev.primeants.gametest.FoodCacheGameTest",
+      "dev.primeants.gametest.MatureColonyGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

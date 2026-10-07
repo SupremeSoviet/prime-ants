@@ -1,7 +1,8 @@
-# Stage 1 design: colony stages, chambers, materials and upgrades (as built in T01–T05)
+# Stage 1 design: colony stages, chambers, mound, materials and upgrades (as built in T01–T06)
 
 A colony's stage comes only from live bodies and blocks (GDD v2 §1, decision 23); the stage cap is the only adult limit.
-Code: `colony/` (stages), `founding/` (plan, digging, walls, upgrades), `worker/` (stores, hauling), `brood/` (capacity).
+Code: `colony/` (stages), `founding/` (plan, digging, mound, walls, upgrades), `worker/` (food cache, stores, hauling),
+`brood/` (capacity).
 
 ## Model
 
@@ -17,52 +18,57 @@ Code: `colony/` (stages), `founding/` (plan, digging, walls, upgrades), `worker/
 | Mature | 25+ adults, queen's hall, material store, 4+ food, 16+ clay | 60 |
 | Great | 50+ adults, all four functions at tier 2+, 32+ stone | 120 |
 
-## Digging and materials (T03–T04)
+## Digging, the mound and materials (T03–T06)
 
-- **Plan** (`NestBlueprint`): two-high rooms compiled into dig queues: widening, a 3×3 material store behind the
-  founding chamber, then the queen's hall on the free widening side, enlarging her own chamber (she and the pile stay).
-  One builder at a time, 2 caregivers kept, exact soil accounting; a player's cell is never dug.
-- **Hauling**: one unit per trip (clay ball; cobblestone, stone; gravel; sand; coal, raw copper, raw iron) into the
-  confirmed store; food first, both when the trip searches and again at the moment a material would be picked up.
-- **Store**: 32 units, 16 kept for clay. It shows a clay heap (0–8 levels), an other-stock heap (0–4), four units a
-  level, and a lump per other material present: totals 8 apart or different materials never look alike (720 states).
+- **Plan** (`NestBlueprint`): two-high rooms compiled into dig queues: widening, a 3×3 material store behind the founding
+  chamber, then the queen's hall on the free widening side. One builder at a time, 2 caregivers kept, exact soil
+  accounting (removed = carried + on the mound + released + custody); a player's cell is never dug.
+- **Mound** (T06, `NestMound`, `MoundSoil`): room soil goes on the colony's current-stage mound, a declarative surface plan
+  of the old blueprint's tiers (stacked elliptical truncated cones) compiled into ordered deposit cells: two lobes behind
+  the entrance, either side of the approach lane, each growing as a dome from its centre, a cell never before the one
+  beneath it. Young: 3 layers, 15 × 8 columns, 214 cells. Mature: 5 layers, 23 × 13 columns, 798 cells, containing
+  Young; Great keeps Mature's. The lane, the exterior standing spot and the stairs stay clear. The 0.1.0 founding
+  deposits and widening keep their own lists (inside Young's lobes).
+- **Cells**: each column sits on its own ground (the highest witnessed natural soil or stone within 2 of the entrance's
+  level). A cell takes soil if it is air or a witnessed short native plant (buried, no drops) resting on natural ground
+  or the colony's own mound soil, and vanilla support survives. Fluids, players' blocks, block entities, logs, leaves,
+  crops and anything else stop their column beneath them; nothing is covered or removed. A room is planned only if the
+  plan's free cells hold its soil; a builder with nowhere to lay keeps its soil and waits. Mound soil is the colony's own
+  nest soil (`ColonyTerrain` mound records), a counted stock for structure work; regression never removes it.
+- **Survey** (T04's regions, columns and site test; GameTest seed 0): 1,809 founding sites; at all 753 placements where
+  store and hall pass terrain (100%), the Young plan's free cells hold their 24 + 12 units after the founding's 22 and
+  the widening's 12 are laid where 0.1.0 lays them (T04's deposit rule: 15). Two reruns (1,845 and 1,833 sites, as
+  witness records vary): 100% too. The land costs about 6.5% of Young's cells.
+- **Hauling** and **store** (T04–T05): one unit per trip into the confirmed store, food first; 32 units, 16 kept for
+  clay; clay heap 0–8 and other stock 0–4 levels plus a lump per other material (720 states).
 
-## Walls, tiers and upgrade work (T05: `NestWalls`, `ChamberUpgrade`)
+## Food cache (T06, `FoodShares`)
 
-- **Walls**: the horizontal faces of a chamber's open cells that the plan never opens (stairs, plugs, widening sides,
-  any placement's dug or reserved cells); not floor (may be witnessed stone) or roof (the surface layer). The founding
-  chamber, home of the nursery, has 8: front and back walls, two high.
-- **Tier** = the lowest wall tier, read live: anything solid 1; the colony's own packed clay or resin masonry 2; its own
-  nest-cut stone 3 (a `ColonyTerrain` "built" record on that exact block). A player's block never raises a tier. The new
-  blocks have no loot; a colony-built cell is an owned component for `ColonyAlarm`.
-- **Trigger**: the stage unlocks the tier (Mature → 2), the nursery chamber is confirmed below it, the confirmed store
-  holds a cell's clay, digs are done, no other builder works (shared claim rule), 2 caregivers remain. Nursery first.
-- **Work**: the builder takes 1 clay from the store, carries it and rams it into the next wall cell's own earth (1 clay
-  a cell, no soil moves). A cell no longer natural or colony earth stops the job and the unit goes back; a short store
-  pauses it. Exact: taken = carried + built + custody; a dead builder's unit leaves once through custody. Clay in a
-  confirmed chamber's own walls and in the builder's mandibles keeps counting toward Mature's 16. No repair yet.
+The 6-slot cache keeps two slots for each kind: at most 4 sugar units (apples, berries, nectar) and 4 protein units
+(chicken, rotten flesh, prey). Foragers pick up dropped food only while its kind is below its share (at search, before a
+material leaves the ground, at pickup); at a full cache they wait as in 0.1.0. Earlier saves load as they were. A cache
+full of chickens still takes apples, and four held chickens keep Mature's 4 food through hunger waves, which eat apples.
 
-## Brood capacity (T05, `BroodCapacity`)
+## Walls, upgrades and brood capacity (T05: `NestWalls`, `ChamberUpgrade`, `BroodCapacity`)
 
-Workers sustained = slots × speed × 144,000 / 36,000 (lifespan over brood time), at most 144,000 / 1,200 eggs (the
-hall's laying limit, T06). Each stage can build enough for its next threshold (checked at class load and by unit test):
+- **Tier** = the lowest tier of a chamber's walls (faces the plan never opens; founding chamber: 8), read live: anything
+  solid 1, the colony's own packed clay or resin masonry 2, its own nest-cut stone 3; a player's block never raises it.
+- **Work**: Mature unlocks tier 2, nursery chamber first; a builder rams 1 store clay into each wall cell's own earth.
+  Exact: taken = carried + built + released (released: a dead builder's units, for good); the units still in transfer
+  custody now are a separate figure (T06). Wall and mandible clay count toward Mature's 16.
+- **Brood**: workers sustained = slots × speed × 4, at most 120. Founding 3 slots (12); + hall 4 (28); + tier-2 walls 3
+  slots and ×1.5 (60); tier 3 (T07) 15 × 2 (120). Brood past three slots shows as one heap.
 
-| Built by | Cause | Slots | Speed | Workers | Needs |
-|---|---|---|---|---|---|
-| Founding | founding chamber, earth | 3 | ×1 | 12 | 5 |
-| Young | + queen's hall (+4) | 7 | ×1 | 28 | 25 |
-| Mature | + tier-2 nursery walls (+3) | 10 | ×1.5 | 60 | 50 |
-| Great | + tier-3 walls (+8, T06) | 15 | ×2 | 120 | 120 |
+## Results and limits carried forward
 
-One pile, in the queen's reach, reads the hall and nursery tier from its last evaluation (every 100 loaded ticks).
-Speed adds steps per tick to running and new stages (a saved credit). Brood past three slots shows as one heap.
-
-## Limits carried forward
-
-- **Mound room (T07)**: both rooms passed terrain at 759 of 1,809 surveyed placements, only 16 with mound room for
-  their soil; the enlarged fixtures prove the rooms possible, not that ordinary worlds get them.
-- **Clay before Mature (T07)**: Mature needs 16 clay and miners come only at Mature; T07's mining must close this.
-- **Hall entrance unload (known)**: the hall reads as lost when only its entrance chunk is unloaded
-  (`ColonyPlugs.opened` is false for an unloaded cell). No save or play damage.
-- **Food at Mature (T06)**: Mature's 4 food sit in a 6-slot cache that an eating wave drains (a brief demotion), and a
-  cache full of chickens blocks apples and starves adults. GameTests run brood ×100 with real lifespans.
+- **Holding Mature (T06, not met)**: none of six long-path copies held Mature from promotion to the tier-2 egg. Near 25
+  adults one forager delivers about a unit per 300 ticks; adults eat apples as they arrive and larvae eat chickens, so
+  food sits at 2-3, promotion comes as a delivery reaches 4, and the next meal undoes it within 100-300 ticks, before any
+  upgrade. One copy promoted while satiated held 18,600 ticks on four cached chickens but laid no egg (T22 gate).
+- **Moved to T07**: tier-2 upgrades of the material store and the queen's hall with their effects (store capacity, hall
+  laying limit); the food store's capacity effect; tier 3; the Great path; more foragers scaling with colony size.
+- **Clay before Mature (T08)**: without a player a colony gets no clay before Mature (miners come at Mature).
+- **Hall entrance unload (known)**: the hall reads as lost while only its entrance chunk is unloaded.
+- **Plug soil at tight sites (found in T06, 0.1.0 behaviour)**: 351 of 1,833 surveyed sites (19%) have only 22 or 23
+  surface deposits; after the queen's 22, the opening forager cannot lay both plug units on the 0.1.0 list, waits with
+  its soil, and the nest never opens. Owner question (route plug soil onto the stage mound?).

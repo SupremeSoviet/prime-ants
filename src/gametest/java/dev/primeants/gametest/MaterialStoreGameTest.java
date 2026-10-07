@@ -46,7 +46,7 @@ public final class MaterialStoreGameTest {
     private void soil(GameTestHelper c,LasiusNigerEntity q){
         var l=c.getLevel();var p=q.founding().plan();if(p==null||q.founding().phase()!=QueenFounding.Phase.SETTLED)return;
         var widening=NestExpansion.get(l).job(q.getUUID());var job=store(c,q);
-        long mound=NestExpansion.deposits(p).stream().filter(b->l.getBlockState(b).is(NurseryBlocks.NEST_SOIL)).count();
+        long mound=MoundSoil.cells(l,p,q.getUUID()).stream().filter(b->l.getBlockState(b).is(NurseryBlocks.NEST_SOIL)).count();
         long plugs=p.plugs().stream().filter(b->ColonyPlugs.material(l.getBlockState(b))).count();
         long held=f.workers(c,q).stream().filter(w->w.getMainHandItem().is(Items.DIRT)).mapToInt(w->w.getMainHandItem().getCount()).sum();
         long world=l.getEntitiesOfClass(ItemEntity.class,c.getBounds().inflate(8),i->i.isAlive()&&i.getItem().is(Items.DIRT)).stream().mapToInt(i->i.getItem().getCount()).sum();
@@ -94,7 +94,7 @@ public final class MaterialStoreGameTest {
             c.assertTrue(job.removed()==24&&job.deposited==24&&job.released==0,"Twenty-four real removals, all on the mound");
             c.assertTrue(q.getUUID().equals(ColonyAlarm.ownedComponent(l,marker)),"The store is an owned colony component: breaking it alarms the colony");
             for(var b:job.tasks)c.assertTrue(b.equals(marker)||ColonyTerrain.get(l).opened(l,b,q.getUUID()),"Every planned cell is this colony's worker opening: "+b);
-            Set<BlockPos> allowed=new HashSet<>(job.tasks);allowed.addAll(job.surfaces());allowed.addAll(NestExpansion.deposits(plan));allowed.add(plan.nursery());allowed.add(plan.cache());
+            Set<BlockPos> allowed=new HashSet<>(job.tasks);allowed.addAll(job.surfaces());allowed.addAll(MoundSoil.cells(l,plan,q.getUUID()));allowed.add(plan.nursery());allowed.add(plan.cache());
             before.forEach((b,old)->c.assertTrue(old.equals(l.getBlockState(b))||allowed.contains(b),"No edit outside the planned cells, their prepared shell and the mound: "+b+" "+old+" -> "+l.getBlockState(b)));
             PrimeAnts.LOGGER.info("T03 STORE CONFIRMED queen={} tick={} registry={} evaluation={}",q.getUUID(),c.getTick(),colony,e);c.succeed();
         });

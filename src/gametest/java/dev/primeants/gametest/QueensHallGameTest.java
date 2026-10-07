@@ -73,7 +73,7 @@ public final class QueensHallGameTest {
                 c.assertTrue(developed[0]>0,"Eggs developed during the dig: "+developed[0]);
                 for(var b:hall.tasks)c.assertTrue(ColonyTerrain.get(l).opened(l,b,q.getUUID()),"Every hall cell is this colony's worker opening: "+b);
                 var store=NestPlanFixture.job(c,q,ChamberExcavation.STORE);
-                Set<BlockPos> allowed=new HashSet<>(hall.tasks);allowed.addAll(hall.surfaces());allowed.addAll(store.tasks);allowed.addAll(store.surfaces());allowed.addAll(NestExpansion.deposits(plan));allowed.add(plan.nursery());allowed.add(plan.cache());
+                Set<BlockPos> allowed=new HashSet<>(hall.tasks);allowed.addAll(hall.surfaces());allowed.addAll(store.tasks);allowed.addAll(store.surfaces());allowed.addAll(MoundSoil.cells(l,plan,q.getUUID()));allowed.add(plan.nursery());allowed.add(plan.cache());
                 before.forEach((b,old)->c.assertTrue(old.equals(l.getBlockState(b))||allowed.contains(b),"No edit outside the planned cells, their prepared shell and the mound: "+b+" "+old+" -> "+l.getBlockState(b)));
                 confirmed[0]=true;confirmedAt[0]=c.getTick();PrimeAnts.LOGGER.info("T04 HALL CONFIRMED queen={} tick={} eggsDeveloped={} registry={} evaluation={}",q.getUUID(),c.getTick(),developed[0],colony,e);
                 return;

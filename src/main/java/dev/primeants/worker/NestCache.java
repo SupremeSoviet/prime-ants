@@ -21,9 +21,21 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 
-/** Six canonical one-unit stacks. Blockstate is a visible projection, never the inventory. */
+/** Six canonical one-unit stacks. Blockstate is a visible projection, never the inventory.
+ * <p>Two slots are kept for each kind of food (stage-1 T06, FoodShares): adults eat only sugar and larvae need protein, so
+ * one kind fills at most CAPACITY - RESERVED slots and a cache full of one kind never keeps the other out. Foragers pick
+ * up only food whose kind has room here (WorkerTasks). Contents saved before T06 load as they were. */
 public final class NestCache extends BlockEntity {
-    public static final int CAPACITY = 6;
+    public static final int CAPACITY = FoodShares.CAPACITY;
+    /** Slots kept for each kind of food: sugar (apples, berries, nectar) and protein (chicken, rotten flesh, prey). */
+    public static final int RESERVED = FoodShares.RESERVED;
+    public static boolean protein(ItemStack s) { return Nutrition.proteinYield(s) > 0; }
+    private int count(boolean protein) { return (int) contents.stream().filter(s -> protein(s) == protein).count(); }
+    /** This unit would be admitted now. */
+    public boolean admits(ItemStack unit) { return WorkerTasks.food(unit) && FoodShares.admits(CAPACITY, count(false), count(true), protein(unit)); }
+    /** The unit's kind is below its share: a forager may pick it up and carry it here; it waits with it while the cache is
+     * full, as 0.1.0 foragers wait at a full cache. */
+    public boolean shareRoom(ItemStack unit) { return WorkerTasks.food(unit) && FoodShares.shareRoom(CAPACITY, count(false), count(true), protein(unit)); }
     private final List<ItemStack> contents = new ArrayList<>();
     private UUID colony;
     private NestPlan plan;
@@ -42,7 +54,7 @@ public final class NestCache extends BlockEntity {
     }
     public boolean deposit(LasiusNigerEntity w, NestPlan p) {
         if (!(level instanceof ServerLevel l) || !ownedBy(w.queenId(),p) || !(w.workerTasks().authorized(l)||w.workerTasks().nursingAuthorized(l))
-                || contents.size()>=CAPACITY || !WorkerTasks.food(w.getMainHandItem()) || w.getMainHandItem().getCount()!=1
+                || !admits(w.getMainHandItem()) || w.getMainHandItem().getCount()!=1
                 || !WorkerTasks.reaches(l,w,Vec3.atBottomCenterOf(getBlockPos()).add(0,0.15,0)) || p.nurseryProblem(l,colony,true)!=null) return false;
         contents.add(w.getMainHandItem().copy()); w.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND,ItemStack.EMPTY); changed(); return true;
     }

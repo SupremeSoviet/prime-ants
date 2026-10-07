@@ -76,8 +76,10 @@ class NestWallsTest {
         var home = NestPlan.geometry(ENTRANCE, Direction.EAST);
         return NestWalls.walls(NestBlueprint.FOUNDING_CHAMBER).stream().map(c -> home.at(c.forward(), c.side(), c.dy())).toList();
     }
-    private static ChamberUpgrade.Job job(List<BlockPos> cells, List<BlockPos> built, int taken, int released, int tier) {
+    private static ChamberUpgrade.Job job(List<BlockPos> cells, List<BlockPos> built, int taken, int released, int tier) { return job(cells, built, taken, released, tier, null); }
+    private static ChamberUpgrade.Job job(List<BlockPos> cells, List<BlockPos> built, int taken, int released, int tier, JsonObject transfers) {
         var o = new JsonObject(); o.add("entrance", pos(ENTRANCE)); o.addProperty("direction", "east"); o.addProperty("chamber", "founding"); o.addProperty("tier", tier);
+        if (transfers != null) o.add("released_transfers", transfers);
         var c = new JsonArray(); cells.forEach(p -> c.add(pos(p))); o.add("cells", c);
         var b = new JsonArray(); built.forEach(p -> b.add(pos(p))); o.add("built", b);
         o.addProperty("taken", taken); o.addProperty("released", released); o.addProperty("claim", ""); o.addProperty("ticks", 0L); o.addProperty("reason", "test");
@@ -92,7 +94,8 @@ class NestWallsTest {
         var carrying = job(cells, three, 4, 0, 2); assertEquals(new NestWalls.Ledger(4, 1, 3, 0), carrying.ledger());
         var released = job(cells, three, 5, 1, 2); assertEquals(new NestWalls.Ledger(5, 1, 3, 1), released.ledger());
         var done = job(cells, cells, 9, 1, 2); assertTrue(done.complete() && done.carried() == 0);
-        for (var j : List.of(between, carrying, released, done)) assertTrue(j.ledger().exact(), "taken = carried + built + custody: " + j.ledger());
+        for (var j : List.of(between, carrying, released, done)) assertTrue(j.ledger().exact(), "taken = carried + built + released: " + j.ledger());
+        assertEquals(1, released.ledger().released(), "a dead builder's unit stays released for good, wherever custody has set it down since");
         assertEquals(cells.get(3), carrying.next(), "the next cell follows the built prefix");
         // Saves that break the accounting or the plan are refused on load.
         assertThrows(IllegalArgumentException.class, () -> job(cells, three, 5, 0, 2), "a builder carries one cell's clay at a time");
@@ -101,5 +104,11 @@ class NestWallsTest {
         assertThrows(IllegalArgumentException.class, () -> job(List.of(ENTRANCE), List.of(), 0, 0, 2), "only the chamber's own wall cells");
         assertThrows(IllegalArgumentException.class, () -> job(cells, List.of(), 0, 0, 1), "tier 1 needs no upgrade");
         assertFalse(new NestWalls.Ledger(4, 0, 3, 0).exact(), "a unit missing from the ledger");
+        // Released units name their transfer custody identities; a save naming more than were released is refused.
+        var o = new JsonObject(); o.addProperty(java.util.UUID.randomUUID().toString(), 1);
+        assertEquals(1, job(cells, three, 5, 1, 2, o).ledger().released());
+        assertThrows(IllegalArgumentException.class, () -> job(cells, three, 4, 0, 2, o), "a transfer without a release");
+        var two = new JsonObject(); two.addProperty(java.util.UUID.randomUUID().toString(), 2);
+        assertThrows(IllegalArgumentException.class, () -> job(cells, three, 5, 1, 2, two), "more in transfers than released");
     }
 }
