@@ -15,7 +15,8 @@ import net.minecraft.server.level.ServerLevel;
  * Fluids, player-placed blocks, block entities, logs, leaves, crops and every other block are never covered or removed:
  * their column stops beneath them. Each unit laid is the colony's own nest soil (ColonyTerrain "mound:nest_soil"), a
  * counted stock that later structure work can draw on; nothing removes it when the colony regresses to a smaller plan.
- * Soil from nest-plan rooms (ChamberExcavation) goes here; the 0.1.0 founding and widening deposits keep their lists. */
+ * Soil from nest-plan rooms (ChamberExcavation) goes here; the 0.1.0 founding and widening deposits keep their lists, and
+ * the nest's two plug units come here only when the founding list is full (T07; WorkerTasks). */
 public final class MoundSoil {
     private MoundSoil() { }
     /** A planned cell where it lies now (null while its column has no ground in range or is not loaded), and its state. */
@@ -54,8 +55,10 @@ public final class MoundSoil {
     }
     /** The free cells of the colony's current plan, in deposit order: where a builder looks for the next one that takes
      * a unit now. */
-    public static List<BlockPos> free(ServerLevel l, NestPlan home, UUID owner) {
-        return slots(l, home, owner, stage(l, home, owner)).stream().filter(s -> s.state() == NestMound.Slot.FREE).map(Slot::pos).toList();
+    public static List<BlockPos> free(ServerLevel l, NestPlan home, UUID owner) { return free(l, home, owner, stage(l, home, owner)); }
+    /** The free cells of a given stage's plan, in deposit order (a Founding colony's plug soil goes on Young's, T07). */
+    public static List<BlockPos> free(ServerLevel l, NestPlan home, UUID owner, ColonyStage stage) {
+        return slots(l, home, owner, stage).stream().filter(s -> s.state() == NestMound.Slot.FREE).map(Slot::pos).toList();
     }
     /** A unit may go into this cell now: air or a witnessed short plant, dry, resting on natural ground or the colony's own
      * mound soil. */

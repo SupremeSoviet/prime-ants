@@ -49,7 +49,11 @@
       "dev.primeants.gametest.NurseryUpgradeGameTest",
       "dev.primeants.gametest.MoundGameTest",
       "dev.primeants.gametest.FoodCacheGameTest",
-      "dev.primeants.gametest.MatureColonyGameTest"
+      "dev.primeants.gametest.MatureColonyGameTest",
+      "dev.primeants.gametest.StageHysteresisGameTest",
+      "dev.primeants.gametest.PlugSoilGameTest",
+      "dev.primeants.gametest.LegacyCacheGameTest",
+      "dev.primeants.gametest.ForagerScalingGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

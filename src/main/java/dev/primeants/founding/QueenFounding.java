@@ -33,7 +33,11 @@ public final class QueenFounding {
     private String reason = "not_requested";
     public enum Lifecycle { CLAUSTRAL, OPENING, OPEN }
     private Lifecycle lifecycle = Lifecycle.CLAUSTRAL;
+    /** The first forager, which opens the nest; a growing colony claims further foragers (foragerClaims, stage-1 T07) by
+     * dev.primeants.worker.Foragers. Each is a real member with its own cargo; an absent lookup never frees a claim. */
     private java.util.UUID workerClaim;
+    private final java.util.List<java.util.UUID> foragerClaims = new java.util.ArrayList<>();
+    private long nextForagerAttempt = Long.MIN_VALUE;
     public Lifecycle lifecycle() { return lifecycle; }
     /** No queen age limit: reserve-only care lasts while actual founding/first-clutch viability lasts.
      * A missing lookup in unloaded terrain remains unknown. AdultLife latches the first loss of exemption. */
@@ -48,9 +52,26 @@ public final class QueenFounding {
             &&b.ownedBy(queen.getUUID(),plan)&&b.firstClutchViable(level);
     }
     public java.util.UUID workerClaim() { return workerClaim; }
+    /** Every forager claim, the first forager's first. */
+    public List<java.util.UUID> foragers() {
+        var out = new java.util.ArrayList<java.util.UUID>(); if (workerClaim != null) out.add(workerClaim); out.addAll(foragerClaims); return List.copyOf(out);
+    }
     public boolean ready() { return phase == Phase.SETTLED && queen.level() instanceof ServerLevel level && enclosureProblem(level, lifecycle != Lifecycle.CLAUSTRAL) == null; }
-    public boolean claimedBy(LasiusNigerEntity worker) { return worker.getUUID().equals(workerClaim) && queen.getUUID().equals(worker.queenId()); }
-    public void releaseWorker(LasiusNigerEntity worker) { if (claimedBy(worker)) workerClaim = null; }
+    public boolean claimedBy(LasiusNigerEntity worker) {
+        return (worker.getUUID().equals(workerClaim) || foragerClaims.contains(worker.getUUID())) && queen.getUUID().equals(worker.queenId());
+    }
+    public void releaseWorker(LasiusNigerEntity worker) {
+        if (!claimedBy(worker)) return;
+        if (worker.getUUID().equals(workerClaim)) workerClaim = null;
+        foragerClaims.remove(worker.getUUID());
+    }
+    /** A further forager back from a trip keeps its claim only while the colony still wants it (Foragers.keep); the first
+     * forager always keeps its own. */
+    public boolean keepsForager(ServerLevel level, LasiusNigerEntity worker) {
+        if (!claimedBy(worker) || worker.getUUID().equals(workerClaim) || plan == null) return true;
+        long workers = dev.primeants.worker.ColonyMembers.get(level).occupied(queen.getUUID());
+        return dev.primeants.worker.Foragers.keep(foragers().size(), workers, NestExpansion.remainingCaregivers(level, queen.getUUID(), plan, worker), DigJob.anyClaim(level, queen.getUUID()));
+    }
     public void opened() {
         if (phase == Phase.SETTLED && plan != null && queen.level() instanceof ServerLevel level
                 && plan.plugs().stream().allMatch(p -> ColonyPlugs.get(level).opened(level,p,queen.getUUID()))) lifecycle = Lifecycle.OPEN;
@@ -147,6 +168,11 @@ public final class QueenFounding {
                 &&(!dev.primeants.worker.ColonyMembers.get(level).belongs(claimed,queen.getUUID(),plan.chamber())||!claimed.workerTasks().foraging())){
                 PrimeAnts.LOGGER.warn("Released incompatible persisted forager claim queen={} worker={} phase={} cargo={}",queen.getUUID(),claimed.getUUID(),claimed.workerTasks().phase(),claimed.getMainHandItem());workerClaim=null;
             }
+            // Each further forager claim is reconciled by the same rule.
+            foragerClaims.removeIf(id->{
+                if(!(level.getEntity(id) instanceof LasiusNigerEntity claimed)||dev.primeants.worker.ColonyMembers.get(level).belongs(claimed,queen.getUUID(),plan.chamber())&&claimed.workerTasks().foraging())return false;
+                PrimeAnts.LOGGER.warn("Released incompatible persisted forager claim queen={} worker={} phase={} cargo={}",queen.getUUID(),claimed.getUUID(),claimed.workerTasks().phase(),claimed.getMainHandItem());return true;
+            });
             NestExpansion.get(level).reconcile(level,queen);
             ChamberExcavation.get(level).reconcile(level,queen);
             if (workerClaim == null && ready()) {
@@ -168,6 +194,8 @@ public final class QueenFounding {
                         }
                     } else reason = "settled_opening_refused_plug_ownership_missing_or_revoked";
                 }
+            } else if (lifecycle == Lifecycle.OPEN && ready() && level.getGameTime() >= nextForagerAttempt) {
+                nextForagerAttempt = level.getGameTime() + 20; claimForager(level);
             }
             if(lifecycle==Lifecycle.OPEN&&ready()){
                 var members=level.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(plan.chamber()).inflate(16),w->w.isAlive()&&!w.isRemoved()&&dev.primeants.worker.ColonyMembers.get(level).belongs(w,queen.getUUID(),plan.chamber()));
@@ -215,6 +243,26 @@ public final class QueenFounding {
             }
             case SEALING -> seal(level);
             default -> { }
+        }
+    }
+    /** A growing open colony claims one more forager at a time (dev.primeants.worker.Foragers): a free, empty-handed
+     * mature member near the chamber, while the caregivers left without it keep the kept number. */
+    private void claimForager(ServerLevel level) {
+        long workers = dev.primeants.worker.ColonyMembers.get(level).occupied(queen.getUUID()); int claims = foragers().size();
+        if (claims >= dev.primeants.worker.Foragers.target(workers)) return;
+        boolean builder = DigJob.anyClaim(level, queen.getUUID());
+        var candidates = level.getEntitiesOfClass(LasiusNigerEntity.class, new AABB(plan.chamber()).inflate(4),
+                w -> w.isAlive() && !w.isRemoved() && !w.isCallow() && !w.isNoAi() && queen.getUUID().equals(w.queenId())
+                        && plan.chamber().equals(w.nurseryHome()) && w.workerTasks().canForage(plan));
+        if (candidates.isEmpty()) return;
+        var caregivers = level.getEntitiesOfClass(LasiusNigerEntity.class, new AABB(plan.chamber()).inflate(16),
+                w -> w.isAlive() && !w.isRemoved() && queen.getUUID().equals(w.queenId()) && w.workerTasks().caregiver(level, plan));
+        for (var w : candidates.stream().sorted(java.util.Comparator.comparing(w -> w.getUUID().toString())).toList()) {
+            if (!dev.primeants.worker.Foragers.another(claims, workers, caregivers.size() - (caregivers.contains(w) ? 1 : 0), builder) || !w.workerTasks().assign(plan)) continue;
+            foragerClaims.add(w.getUUID());
+            PrimeAnts.LOGGER.info("Forager claimed queen={} worker={} foragers={} workers={} target={} caregiversLeft={} builder={}", queen.getUUID(), w.getUUID(), foragers(), workers,
+                dev.primeants.worker.Foragers.target(workers), caregivers.size() - (caregivers.contains(w) ? 1 : 0), builder);
+            return;
         }
     }
     private boolean arrive(ServerLevel level, BlockPos feet) {
@@ -401,7 +449,7 @@ public final class QueenFounding {
     }
     public void die(ServerLevel level) {
         if(phase==Phase.DEAD)return;
-        queen.getNavigation().stop();workerClaim=null;
+        queen.getNavigation().stop();workerClaim=null;foragerClaims.clear();
         int count = carried();
         if (count > 0) {
             var transfer=java.util.UUID.nameUUIDFromBytes(("queen-soil:"+queen.getUUID()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -413,6 +461,7 @@ public final class QueenFounding {
     }
     public void save(ValueOutput out) {
         out.putString("Lifecycle", lifecycle.name()); if (workerClaim != null) out.putString("WorkerClaim",workerClaim.toString());
+        if (!foragerClaims.isEmpty()) out.store("ForagerClaims", com.mojang.serialization.Codec.STRING.listOf(), foragerClaims.stream().map(java.util.UUID::toString).toList());
         out.putString("Phase", phase.name()); out.putString("Reason", reason());
         out.putInt("Progress", progress); out.putInt("Deposited", deposited); out.putInt("Released", released); out.putInt("Plugged", plugged);
         out.putInt("Cooldown", cooldown); out.putInt("Stalled", stalled); out.putLong("LoadedTicks", loadedTicks);
@@ -430,6 +479,11 @@ public final class QueenFounding {
     public void load(ValueInput in) {
         lifecycle = Lifecycle.valueOf(in.getStringOr("Lifecycle","CLAUSTRAL"));
         workerClaim = in.getString("WorkerClaim").map(java.util.UUID::fromString).orElse(null);
+        // Saves from before T07 hold the first forager only; a repeated identity is one claim.
+        foragerClaims.clear();
+        for (var s : in.read("ForagerClaims", com.mojang.serialization.Codec.STRING.listOf()).orElse(List.of())) {
+            var id = java.util.UUID.fromString(s); if (!id.equals(workerClaim) && !foragerClaims.contains(id)) foragerClaims.add(id);
+        }
         try { phase = Phase.valueOf(in.getStringOr("Phase", "NONE")); } catch (IllegalArgumentException e) { phase = Phase.FAILED; }
         reason = in.getStringOr("Reason", "restored"); progress = in.getIntOr("Progress", 0);
         deposited = in.getIntOr("Deposited", 0); released = in.getIntOr("Released", 0); plugged = in.getIntOr("Plugged", 0);

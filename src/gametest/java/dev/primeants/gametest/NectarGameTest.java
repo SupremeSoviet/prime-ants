@@ -69,11 +69,12 @@ public final class NectarGameTest {
             var ws=workers(l,q);var p=q.founding().plan();
             if(!filled[0]&&ws.stream().anyMatch(w->w.getMainHandItem().is(AntItems.FLOWER_NECTAR_V2))){
                 filled[0]=true;ws.stream().filter(w->!q.founding().claimedBy(w)).forEach(w->w.setNoAi(true));
-                // Explicit negative full-storage fixture: six physical chicken stacks, separate from nectar accounting.
+                // Explicit negative full-storage fixture, separate from nectar accounting: a cache full within the food shares
+                // (four sugar units at their share, two protein units). T07: a saved cache over a share sheds for the other kind.
                 l.setBlock(p.cache(),dev.primeants.brood.NurseryBlocks.NEST_CACHE.defaultBlockState(),3);var n=cache(l,q);
                 var out=net.minecraft.world.level.storage.TagValueOutput.createWithContext(net.minecraft.util.ProblemReporter.DISCARDING,l.registryAccess());
                 out.putString("Colony",q.getUUID().toString());out.store("Entrance",BlockPos.CODEC,p.entrance());out.putString("Direction",p.direction().getName());
-                out.store("Contents",ItemStack.CODEC.listOf(),java.util.stream.IntStream.range(0,6).mapToObj(i->new ItemStack(Items.CHICKEN)).toList());
+                out.store("Contents",ItemStack.CODEC.listOf(),java.util.stream.IntStream.range(0,6).mapToObj(i->new ItemStack(i<4?Items.APPLE:Items.CHICKEN)).toList());
                 n.loadCustomOnly(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING,l.registryAccess(),out.buildResult()));n.setChanged();
             }
             if(filled[0])for(var w:ws)if(w.getMainHandItem().is(AntItems.FLOWER_NECTAR_V2)&&w.workerTasks().reason().equals("cache_full_blocked_or_foreign_cargo_retained")){

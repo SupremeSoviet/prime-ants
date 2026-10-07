@@ -34,14 +34,16 @@ public final class ColonyDevelopment {
         public ColonyStage stage() { return result.stage(); }
     }
     private ColonyDevelopment() { }
-    public static Evaluation evaluate(ServerLevel l, UUID queen, NestPlan plan, boolean operational, int bound) {
+    /** now is the colony's clock for the owner's hysteresis (StageRules): its nursery's loaded ticks. */
+    public static Evaluation evaluate(ServerLevel l, UUID queen, NestPlan plan, boolean operational, int bound, long now) {
         var registry = ChamberRegistry.get(l);
         boolean registered = registry.colony(queen) != null;
         var colony = registry.found(queen, plan);
         // A failed lookup is unknown, never dead (ColonyMembers' rule); only a recorded death removes an adult.
-        int known = 0, unknown = 0;
-        if (l.getEntity(queen) instanceof LasiusNigerEntity q) { if (q.isAlive() && !q.isRemoved()) known++; }
+        int known = 0, unknown = 0; boolean queenDead = false;
+        if (l.getEntity(queen) instanceof LasiusNigerEntity q) { if (q.isAlive() && !q.isRemoved()) known++; else queenDead = true; }
         else if (!AdultHistory.get(l).recorded(queen)) unknown++;
+        else queenDead = true;
         for (var m : ColonyMembers.get(l).members(queen)) {
             if (m.dead()) continue;
             if (l.getEntity(m.worker()) instanceof LasiusNigerEntity w) { if (w.isAlive() && !w.isRemoved()) known++; }
@@ -81,15 +83,17 @@ public final class ColonyDevelopment {
         var stored = MaterialUnits.stock(stores, storesUnknown, MaterialUnits.Material.CLAY); var carried = upgrades.carried(l, queen);
         var clay = new StageRules.Bound(stored.known() + wallClay + carried.known(), stored.possible() + wallClay + wallClayUnknown + carried.possible());
         var inputs = new StageRules.Inputs(new StageRules.Bound(known, known + unknown), bounds, new StageRules.Bound(food, food + foodUnknown),
-            clay, MaterialUnits.stock(stores, storesUnknown, MaterialUnits.Material.STONE));
-        var result = StageRules.evaluate(colony.stage(), inputs);
+            clay, MaterialUnits.stock(stores, storesUnknown, MaterialUnits.Material.STONE), queenDead);
+        var result = StageRules.evaluate(colony.stage(), inputs, colony.unmetSince(), now);
         int cap = AdultBound.effectiveCap(result.stage(), bound);
+        if (result.stage() != colony.stage() || !result.unmetSince().equals(colony.unmetSince())) registry.stage(queen, result.stage(), result.unmetSince());
         if (!registered || result.stage() != colony.stage()) {
-            if (result.stage() != colony.stage()) registry.stage(queen, result.stage());
-            PrimeAnts.LOGGER.info("Colony stage queen={} from={} to={} certain={} possible={} adults={} chambers={} food={} clay={} stone={} cap={} bound={} missing={}",
+            PrimeAnts.LOGGER.info("Colony stage queen={} from={} to={} certain={} possible={} adults={} chambers={} food={} clay={} stone={} queenDead={} cap={} bound={} pileTicks={} pending={} missing={}",
                 queen, registered ? colony.stage().serializedName() : "unregistered", result.stage().serializedName(), result.certain().serializedName(), result.possible().serializedName(),
-                inputs.adults(), states, inputs.food(), inputs.clay(), inputs.stone(), cap, bound, result.missing());
-        }
+                inputs.adults(), states, inputs.food(), inputs.clay(), inputs.stone(), queenDead, cap, bound, now, result.pending(), result.missing());
+        } else if (!result.unmetSince().keySet().equals(colony.unmetSince().keySet()))
+            PrimeAnts.LOGGER.info("Colony stage held queen={} stage={} pileTicks={} pending={} cleared={}", queen, result.stage().serializedName(), now, result.pending(),
+                colony.unmetSince().keySet().stream().filter(k -> !result.unmetSince().containsKey(k)).toList());
         return new Evaluation(colony.stage(), result, inputs, List.copyOf(states), cap);
     }
     /** One registered chamber's function by this same live rule, now: the forager's check before it hauls to or

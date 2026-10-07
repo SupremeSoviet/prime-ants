@@ -147,6 +147,19 @@ public final class MoundGameTest {
                 var chunk=l.getChunkAt(laid);var serial=net.minecraft.world.level.chunk.storage.SerializableChunkData.copyOf(l,chunk);
                 var read=net.minecraft.world.level.chunk.storage.SerializableChunkData.parse(l,l.palettedContainerFactory(),serial.write()).read(l,l.getPoiManager(),new net.minecraft.world.level.chunk.storage.RegionStorageInfo("test",l.dimension(),"chunk"),chunk.getPos());
                 c.assertTrue(read.getBlockState(laid).is(NurseryBlocks.NEST_SOIL),"A saved chunk keeps a laid mound block");
+                // T07: every mound block, every planned mound cell and the player's block, each read back from its own chunk
+                // reconstructed from a save, equals the world as it was saved.
+                var cells=new LinkedHashSet<BlockPos>(mound);cells.addAll(MoundSoil.cells(l,q[0].founding().plan(),q[0].getUUID()));cells.add(player[0]);
+                var chunks=new HashMap<net.minecraft.world.level.ChunkPos,net.minecraft.world.level.chunk.ChunkAccess>();
+                for(var b:cells){
+                    var saved=chunks.computeIfAbsent(new net.minecraft.world.level.ChunkPos(b.getX()>>4,b.getZ()>>4),cp->{var live=l.getChunk(cp.x(),cp.z());
+                        return net.minecraft.world.level.chunk.storage.SerializableChunkData.parse(l,l.palettedContainerFactory(),net.minecraft.world.level.chunk.storage.SerializableChunkData.copyOf(l,live).write())
+                            .read(l,l.getPoiManager(),new net.minecraft.world.level.chunk.storage.RegionStorageInfo("test",l.dimension(),"chunk"),cp);});
+                    c.assertTrue(saved.getBlockState(b).equals(l.getBlockState(b)),"A reconstructed chunk keeps "+b+": "+saved.getBlockState(b)+" vs "+l.getBlockState(b));
+                }
+                c.assertTrue(mound.stream().allMatch(b->chunks.get(new net.minecraft.world.level.ChunkPos(b.getX()>>4,b.getZ()>>4)).getBlockState(b).is(NurseryBlocks.NEST_SOIL))
+                    &&chunks.get(new net.minecraft.world.level.ChunkPos(player[0].getX()>>4,player[0].getZ()>>4)).getBlockState(player[0]).is(Blocks.COBBLESTONE),"Every mound block is nest soil and the player's block cobblestone in the reconstructed chunks");
+                PrimeAnts.LOGGER.info("T07 M2 RECONSTRUCTED CHUNKS queen={} moundBlocks={} cellsCompared={} chunks={}",q[0].getUUID(),mound.size(),cells.size(),chunks.keySet());
                 var after=NestPlanFixture.job(c,q[0],ChamberExcavation.STORE);
                 c.assertTrue(after!=store&&after.removed()==removed&&after.deposited==deposited&&claim.equals(after.claim)&&ItemStack.matches(loaded.getMainHandItem(),cargo)&&mound(c,q[0]).equals(mound),
                     "The job, the carried soil and every mound block reload exactly as they were: removed="+after.removed()+" deposited="+after.deposited+" cargo="+loaded.getMainHandItem());

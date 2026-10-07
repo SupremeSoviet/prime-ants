@@ -48,10 +48,27 @@ class FoodSharesTest {
     }
 
     @Test
-    void aCacheSavedFullOfOneKindBeforeTheSharesTakesTheOtherKindOnceItIsEaten() {
-        // Contents saved before T06 load as they were: six chickens admit nothing; two eaten, apples get in, chickens wait.
+    void aCacheSavedFullOfOneKindBeforeTheSharesShedsItsExcessWhenTheOtherKindArrives() {
+        // Contents saved before T06 load as they were: admission alone takes nothing into six chickens; two gone, apples get
+        // in, chickens wait.
         assertFalse(FoodShares.admits(C, 0, 6, false) || FoodShares.admits(C, 0, 6, true));
         assertTrue(FoodShares.admits(C, 0, 5, false) && !FoodShares.admits(C, 0, 5, true), "five chickens: an apple takes the free slot, a chicken does not");
         assertTrue(FoodShares.admits(C, 0, 4, false) && !FoodShares.admits(C, 0, 4, true));
+        // T07: the cache sheds the units beyond the share when the other kind arrives (NestCache, through transfer custody),
+        // so the other kind never waits for them to be eaten.
+        assertEquals(2, FoodShares.shed(C, 0, 6, false), "six chickens shed two for an apple");
+        assertEquals(2, FoodShares.shed(C, 6, 0, true), "six apples shed two for a chicken");
+        assertEquals(1, FoodShares.shed(C, 1, 5, false), "five chickens and an apple shed one chicken for a second apple");
+        assertEquals(0, FoodShares.shed(C, 0, 6, true), "a chicken sheds nothing: its own kind is over the share and it waits");
+        assertEquals(0, FoodShares.shed(C, 0, 5, false), "a free slot takes the apple without shedding");
+        assertEquals(0, FoodShares.shed(C, 2, 4, false), "a full cache within the shares sheds nothing; a third apple waits as in 0.1.0");
+        // Every split of up to six units: a unit of a kind below its share gets in after shedding unless the cache is full
+        // within the shares (then it waits, as in 0.1.0); a kind sheds exactly down to its share, never below it.
+        for (int sugar = 0; sugar <= C; sugar++) for (int protein = 0; sugar + protein <= C; protein++) for (boolean unitProtein : new boolean[]{false, true}) {
+            int n = FoodShares.shed(C, sugar, protein, unitProtein), s = unitProtein ? sugar - n : sugar, p = unitProtein ? protein : protein - n;
+            if (FoodShares.shareRoom(C, sugar, protein, unitProtein))
+                assertEquals(sugar + protein < C || n > 0, FoodShares.admits(C, s, p, unitProtein), "after shedding " + n + " from " + sugar + "/" + protein);
+            if (n > 0) assertEquals(FoodShares.share(C), unitProtein ? s : p, "sheds down to the share exactly: " + sugar + "/" + protein);
+        }
     }
 }

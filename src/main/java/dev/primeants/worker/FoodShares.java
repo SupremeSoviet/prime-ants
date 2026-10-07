@@ -17,4 +17,11 @@ public final class FoodShares {
     public static boolean shareRoom(int capacity, int sugar, int protein, boolean unitProtein) {
         return (unitProtein ? protein : sugar) < share(capacity);
     }
+    /** Units of the other kind a cache sheds so this unit gets in (stage-1 T07): only a full cache whose other kind holds
+     * more than its share, as a cache saved before the shares can, and only for a unit whose own kind is below its share.
+     * The units beyond the share leave (NestCache, through transfer custody); a cache within the shares sheds nothing. */
+    public static int shed(int capacity, int sugar, int protein, boolean unitProtein) {
+        if (admits(capacity, sugar, protein, unitProtein) || !shareRoom(capacity, sugar, protein, unitProtein)) return 0;
+        return Math.max(0, (unitProtein ? sugar : protein) - share(capacity));
+    }
 }

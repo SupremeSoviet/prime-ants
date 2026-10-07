@@ -24,7 +24,8 @@ import net.minecraft.world.phys.Vec3;
 /** Six canonical one-unit stacks. Blockstate is a visible projection, never the inventory.
  * <p>Two slots are kept for each kind of food (stage-1 T06, FoodShares): adults eat only sugar and larvae need protein, so
  * one kind fills at most CAPACITY - RESERVED slots and a cache full of one kind never keeps the other out. Foragers pick
- * up only food whose kind has room here (WorkerTasks). Contents saved before T06 load as they were. */
+ * up only food whose kind has room here (WorkerTasks). Contents saved before T06 load as they were; such a cache sheds the
+ * units beyond a kind's share when the other kind arrives (T07), so it never keeps that kind out. */
 public final class NestCache extends BlockEntity {
     public static final int CAPACITY = FoodShares.CAPACITY;
     /** Slots kept for each kind of food: sugar (apples, berries, nectar) and protein (chicken, rotten flesh, prey). */
@@ -54,9 +55,30 @@ public final class NestCache extends BlockEntity {
     }
     public boolean deposit(LasiusNigerEntity w, NestPlan p) {
         if (!(level instanceof ServerLevel l) || !ownedBy(w.queenId(),p) || !(w.workerTasks().authorized(l)||w.workerTasks().nursingAuthorized(l))
-                || !admits(w.getMainHandItem()) || w.getMainHandItem().getCount()!=1
+                || !WorkerTasks.food(w.getMainHandItem()) || w.getMainHandItem().getCount()!=1
                 || !WorkerTasks.reaches(l,w,Vec3.atBottomCenterOf(getBlockPos()).add(0,0.15,0)) || p.nurseryProblem(l,colony,true)!=null) return false;
+        shed(l, w.getMainHandItem());
+        if (!admits(w.getMainHandItem())) return false;
         contents.add(w.getMainHandItem().copy()); w.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND,ItemStack.EMPTY); changed(); return true;
+    }
+    /** Units this cache has shed so far: each shed unit's transfer identity is new (releaseId, share, count). */
+    private int shedUnits;
+    /** A cache saved before the shares (T06) can hold more of one kind than its share and so keep the other kind out. When
+     * the other kind arrives, the units beyond the share (FoodShares.shed) leave through transfer custody onto the chamber
+     * floor beside the cache, where they stay in the world until their kind has room here again; the arriving unit gets in. */
+    private void shed(ServerLevel l, ItemStack arriving) {
+        boolean unitProtein = protein(arriving); int n = FoodShares.shed(CAPACITY, count(false), count(true), unitProtein);
+        if (n == 0) return;
+        var beside = Vec3.atBottomCenterOf(plan.at(4, -1, -2)).add(0, 0.15, 0);
+        for (int k = 0; k < n; k++) {
+            int i = contents.size() - 1; while (protein(contents.get(i)) == unitProtein) i--;
+            UUID id = UUID.nameUUIDFromBytes((releaseId + ":share:" + shedUnits++).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            TransferCustody.get(l).take(id, "cache-share:" + releaseId + ":" + getBlockPos(), beside, contents.get(i));
+            dev.primeants.PrimeAnts.LOGGER.info("Cache share shed colony={} cache={} unit={} transfer={} for={} contents={}", colony, getBlockPos(), contents.get(i), id, arriving, contents);
+            contents.remove(i); setChanged();
+        }
+        changed();
+        TransferCustody.get(l).retry(l);
     }
     public boolean withdraw(LasiusNigerEntity w,NestPlan p){
         if(!(level instanceof ServerLevel l)||!ownedBy(w.queenId(),p)||!w.workerTasks().nursingAuthorized(l)||!w.getMainHandItem().isEmpty()
@@ -98,13 +120,14 @@ public final class NestCache extends BlockEntity {
         super.preRemoveSideEffects(pos,state);
     }
     @Override protected void saveAdditional(ValueOutput out) {
-        super.saveAdditional(out);out.putString("ReleaseId",releaseId.toString()); if(colony==null || plan==null)return;
+        super.saveAdditional(out);out.putString("ReleaseId",releaseId.toString()); if(shedUnits>0)out.putInt("SharesShed",shedUnits); if(colony==null || plan==null)return;
         out.putString("Colony",colony.toString()); out.store("Entrance",BlockPos.CODEC,plan.entrance());out.putString("Direction",plan.direction().getName());
         out.store("Contents",ItemStack.CODEC.listOf(),contents);
     }
     @Override protected void loadAdditional(ValueInput in) {
         super.loadAdditional(in); contents.clear();colony=null;plan=null;
         releaseId=in.getString("ReleaseId").map(UUID::fromString).orElseGet(UUID::randomUUID);
+        shedUnits=in.getIntOr("SharesShed",0); if(shedUnits<0)throw new IllegalArgumentException("Invalid shed count");
         if(in.getString("Colony").isEmpty())return;
         colony=UUID.fromString(in.getStringOr("Colony",""));Direction d=Direction.byName(in.getStringOr("Direction",""));
         if(d==null || d.getAxis().isVertical())throw new IllegalArgumentException("Invalid cache direction");

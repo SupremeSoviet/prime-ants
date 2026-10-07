@@ -12,8 +12,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.*;
 
-/** Per-colony chambers and the last evaluated stage, keyed by queen UUID. Every entry is a claim about the world:
- * ColonyDevelopment counts a function only while live blocks confirm it and recomputes the stage from live state. */
+/** Per-colony chambers, the last evaluated stage and its unmet-since clocks (StageRules), keyed by queen UUID. Every entry
+ * is a claim about the world: ColonyDevelopment counts a function only while live blocks confirm it and recomputes the
+ * stage from live state; a clock only records since which of the nursery's loaded ticks a shortfall has been certain. */
 public final class ChamberRegistry extends SavedData {
     public static final String FOUNDING = "founding";
     public static final int MAX_CHAMBERS = 32, MAX_CELLS = 512;
@@ -53,19 +54,24 @@ public final class ChamberRegistry extends SavedData {
             markers = Collections.unmodifiableMap(copy);
         }
     }
-    public record Colony(UUID queen, BlockPos entrance, Direction direction, List<Chamber> chambers, ColonyStage stage) {
+    /** unmetSince: each certain shortfall's requirement key (StageRules.Requirement.key) and the nursery's loaded tick it
+     * began; saves from before the owner's hysteresis have none. */
+    public record Colony(UUID queen, BlockPos entrance, Direction direction, List<Chamber> chambers, ColonyStage stage, Map<String, Long> unmetSince) {
         static final Codec<Colony> CODEC = RecordCodecBuilder.create(i -> i.group(
             ID.fieldOf("queen").forGetter(Colony::queen),
             BlockPos.CODEC.fieldOf("entrance").forGetter(Colony::entrance),
             Direction.CODEC.fieldOf("direction").forGetter(Colony::direction),
             Chamber.CODEC.listOf().fieldOf("chambers").forGetter(Colony::chambers),
-            STAGE.fieldOf("stage").forGetter(Colony::stage)
+            STAGE.fieldOf("stage").forGetter(Colony::stage),
+            Codec.unboundedMap(Codec.STRING, Codec.LONG).optionalFieldOf("unmet_since", Map.of()).forGetter(Colony::unmetSince)
         ).apply(i, Colony::new));
         public Colony {
             var ids = new HashSet<String>();
             if (direction.getAxis().isVertical() || chambers.isEmpty() || chambers.size() > MAX_CHAMBERS || !chambers.stream().allMatch(c -> ids.add(c.id())) || !ids.contains(FOUNDING))
                 throw new IllegalArgumentException("Invalid or duplicate registered chambers for colony " + queen);
-            entrance = entrance.immutable(); chambers = List.copyOf(chambers);
+            if (unmetSince.entrySet().stream().anyMatch(e -> !dev.primeants.colony.StageRules.clockKey(e.getKey()) || e.getValue() == null || e.getValue() < 0))
+                throw new IllegalArgumentException("Invalid stage clocks for colony " + queen);
+            entrance = entrance.immutable(); chambers = List.copyOf(chambers); unmetSince = Collections.unmodifiableMap(new TreeMap<>(unmetSince));
         }
         public Chamber chamber(String id) { return chambers.stream().filter(c -> c.id().equals(id)).findFirst().orElse(null); }
     }
@@ -91,7 +97,7 @@ public final class ChamberRegistry extends SavedData {
         var expected = foundingChamber(plan);
         var existing = colonies.get(queen);
         if (existing == null) {
-            var colony = new Colony(queen, plan.entrance(), plan.direction(), List.of(expected), ColonyStage.FOUNDING);
+            var colony = new Colony(queen, plan.entrance(), plan.direction(), List.of(expected), ColonyStage.FOUNDING, Map.of());
             colonies.put(queen, colony); setDirty(); return colony;
         }
         var saved = existing.chamber(FOUNDING);
@@ -112,7 +118,7 @@ public final class ChamberRegistry extends SavedData {
             return false;
         }
         var chambers = new ArrayList<>(c.chambers()); chambers.add(chamber);
-        colonies.put(queen, new Colony(c.queen(), c.entrance(), c.direction(), chambers, c.stage())); setDirty();
+        colonies.put(queen, new Colony(c.queen(), c.entrance(), c.direction(), chambers, c.stage(), c.unmetSince())); setDirty();
         dev.primeants.PrimeAnts.LOGGER.info("Chamber registered queen={} chamber={} functions={} tier={} markers={}", queen, chamber.id(), chamber.functions(), chamber.tier(), chamber.markers());
         return true;
     }
@@ -123,11 +129,12 @@ public final class ChamberRegistry extends SavedData {
         if (saved == null || tier <= saved.tier()) return;
         var chambers = new ArrayList<Chamber>();
         for (var ch : c.chambers()) chambers.add(ch.id().equals(id) ? new Chamber(ch.id(), ch.min(), ch.max(), ch.functions(), tier, ch.markers()) : ch);
-        colonies.put(queen, new Colony(c.queen(), c.entrance(), c.direction(), chambers, c.stage())); setDirty();
+        colonies.put(queen, new Colony(c.queen(), c.entrance(), c.direction(), chambers, c.stage(), c.unmetSince())); setDirty();
         dev.primeants.PrimeAnts.LOGGER.info("Chamber tier claimed queen={} chamber={} tier={}", queen, id, tier);
     }
-    void stage(UUID queen, ColonyStage stage) {
+    /** The stage an evaluation held and its running unmet-since clocks (StageRules.Result). */
+    void stage(UUID queen, ColonyStage stage, Map<String, Long> unmetSince) {
         var c = colonies.get(queen);
-        colonies.put(queen, new Colony(c.queen(), c.entrance(), c.direction(), c.chambers(), stage)); setDirty();
+        colonies.put(queen, new Colony(c.queen(), c.entrance(), c.direction(), c.chambers(), stage, unmetSince)); setDirty();
     }
 }

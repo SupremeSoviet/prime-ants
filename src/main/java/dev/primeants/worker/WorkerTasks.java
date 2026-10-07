@@ -106,8 +106,10 @@ public final class WorkerTasks {
             &&ColonyMembers.get(l).belongs(worker,worker.queenId(),p.chamber())&&q!=null&&q.isAlive()&&q.founding().ready()
             &&q.founding().plan()!=null&&q.founding().plan().entrance().equals(p.entrance())&&q.founding().plan().direction()==p.direction();
     }
+    /** A free, empty-handed member no forager claim holds yet; how many foragers its colony keeps is the queen's choice
+     * (QueenFounding, Foragers). */
     public boolean canForage(NestPlan p){return worker.level() instanceof ServerLevel l&&eligible(l,p)&&freeForConstruction()
-        &&worker.getMainHandItem().isEmpty()&&!constructionClaim(l)&&queen(l).founding().workerClaim()==null;}
+        &&worker.getMainHandItem().isEmpty()&&!constructionClaim(l)&&!foragerClaim(l);}
     public boolean canConstruct(NestPlan p){return worker.level() instanceof ServerLevel l&&eligible(l,p)&&freeForConstruction()
         &&worker.getMainHandItem().isEmpty()&&!constructionClaim(l)&&!foragerClaim(l)
         &&!DigJob.anyClaim(l,worker.queenId());}
@@ -574,12 +576,48 @@ public final class WorkerTasks {
             }
             if(target!=null)break;
         }
-        if(target==null) {hold("mound_full_or_blocked_soil_retained");cooldown=40;return;}
+        if(target==null) {
+            if(depositsFull(l)){plugOnMound(l);return;}
+            hold("mound_full_or_blocked_soil_retained");cooldown=40;return;
+        }
         if(!arrive(dest))return;
         if(!authorized(l)||!l.getBlockState(target).isAir()||!NaturalSoil.get(l).eligible(l,target.below())||!l.getEntities(worker,new AABB(target)).isEmpty()
                 || worker.getBoundingBox().intersects(new AABB(target)) || worker.position().distanceToSqr(Vec3.atCenterOf(target))>5.0) {hold("mound_revalidation_failed");return;}
         if(dev.primeants.founding.SupportSurvival.problem(l,target,NurseryBlocks.NEST_SOIL.defaultBlockState()) instanceof String problem){hold(problem);return;}
         if(l.setBlock(target,NurseryBlocks.NEST_SOIL.defaultBlockState(),3)) {ColonyTerrain.get(l).deposited(target,worker.queenId());worker.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);placed++;cooldown=10;next(Phase.OPENING,"plug_soil_on_mound");}
+    }
+    /** No cell of the 0.1.0 founding deposits takes a unit any more, bodies standing on them aside: each loaded cell holds
+     * the queen's soil or anything else. An unloaded cell may still be free. */
+    private boolean depositsFull(ServerLevel l){
+        for(BlockPos p:plan.deposits())if(!NestPlan.loaded(l,p)||l.getBlockState(p).isAir()&&l.getBlockState(p.below()).isSolidRender()
+            &&NaturalSoil.get(l).eligible(l,p.below())&&l.getFluidState(p).isEmpty())return false;
+        return true;
+    }
+    /** The owner's decision (stage-1 T07): a plug unit the full founding deposits cannot take goes on the colony's stage mound
+     * plan, as room soil does (MoundSoil): the first free cell in plan order that takes a unit now, from a supported stand in
+     * reach. A Founding colony has no plan of its own and lays it on Young's, its first stage mound. */
+    private void plugOnMound(ServerLevel l){
+        var stage=MoundSoil.stage(l,plan,worker.queenId());if(stage==dev.primeants.colony.ColonyStage.FOUNDING)stage=dev.primeants.colony.ColonyStage.YOUNG;
+        BlockPos target=null;Vec3 dest=null;
+        for(var p:MoundSoil.free(l,plan,worker.queenId(),stage)){
+            if(!depositable(l,true,p)||!l.getEntities(worker,new AABB(p)).isEmpty())continue;
+            for(var d:Direction.Plane.HORIZONTAL)for(int y=-1;y<=0;y++){
+                var stand=p.relative(d).offset(0,y,0);if(!NestPlan.loaded(l,stand)||!NestPlan.walkable(l,stand)||Vec3.atCenterOf(p).distanceToSqr(Vec3.atBottomCenterOf(stand).add(0,0.5,0))>3.0)continue;
+                var v=Vec3.atBottomCenterOf(stand).add(0.35*d.getStepX(),0,0.35*d.getStepZ());
+                if(!dev.primeants.entity.Nestmates.movementClear(l,worker,worker.getBoundingBox().move(v.subtract(worker.position()))))continue;
+                target=p;dest=v;break;
+            }
+            if(target!=null)break;
+        }
+        if(target==null){hold("mound_full_or_blocked_soil_retained");cooldown=40;return;} // the list and the plan alike
+        if(!arriveSupported(l,dest))return;
+        if(!authorized(l)||!depositable(l,true,target)||!l.getEntities(worker,new AABB(target)).isEmpty()
+            ||worker.getBoundingBox().intersects(new AABB(target))||worker.position().distanceToSqr(Vec3.atCenterOf(target))>5.0)return;
+        if(dev.primeants.founding.SupportSurvival.problem(l,target,NurseryBlocks.NEST_SOIL.defaultBlockState()) instanceof String problem){hold(problem);return;}
+        if(MoundSoil.lay(l,target,worker.queenId())){
+            worker.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);placed++;cooldown=10;next(Phase.OPENING,"plug_soil_on_stage_mound");
+            PrimeAnts.LOGGER.info("Plug soil on the stage mound queen={} worker={} target={} stage={} opened={} placed={}",worker.queenId(),worker.getUUID(),target,stage.serializedName(),opened,placed);
+        }
     }
     private void search(ServerLevel l) {
         if(phaseTicks>240) {next(Phase.RETURN,"bounded_search_finished");cooldown=40;return;}
@@ -730,8 +768,18 @@ public final class WorkerTasks {
         }
         return null;
     }
+    /** A trip ends empty-handed inside the nest: the next one starts, unless the colony no longer wants this further forager
+     * (QueenFounding.keepsForager), which then returns to the colony's care. */
+    private void nextTrip(ServerLevel l,String why){
+        var q=queen(l);
+        if(q!=null&&!q.founding().keepsForager(l,worker)){
+            q.founding().releaseWorker(worker);next(Phase.NURSERY,"further_forager_back_to_colony_care");
+            PrimeAnts.LOGGER.info("Forager released queen={} worker={} foragers={}",worker.queenId(),worker.getUUID(),q.founding().foragers());return;
+        }
+        next(Phase.EXIT,why);cooldown=40;
+    }
     private void deposit(ServerLevel l) {
-        if(worker.getMainHandItem().isEmpty()) {next(Phase.EXIT,"next_bounded_trip");cooldown=40;return;}
+        if(worker.getMainHandItem().isEmpty()) {nextTrip(l,"next_bounded_trip");return;}
         if(MaterialStore.material(worker.getMainHandItem())) {store(l);return;}
         if(!food(worker.getMainHandItem())) {hold("unsupported_cargo_retained");return;}
         BlockPos p=plan.cache();
@@ -740,7 +788,7 @@ public final class WorkerTasks {
             if(l.setBlock(p,NurseryBlocks.NEST_CACHE.defaultBlockState(),3) && l.getBlockEntity(p) instanceof NestCache cache)cache.establish(worker,plan);
         }
         if(l.getBlockEntity(p) instanceof NestCache cache && cache.deposit(worker,plan)) {
-            PrimeAnts.LOGGER.info("Worker delivery worker={} cache={} stored={}",worker.getUUID(),p,cache.contents());next(Phase.EXIT,"food_physically_stored");cooldown=40;
+            PrimeAnts.LOGGER.info("Worker delivery worker={} cache={} stored={}",worker.getUUID(),p,cache.contents());nextTrip(l,"food_physically_stored");
         } else {hold("cache_full_blocked_or_foreign_cargo_retained");cooldown=40;}
     }
     /** From the founding chamber the carrier walks to its colony's store block and puts its one unit in. A missing, full

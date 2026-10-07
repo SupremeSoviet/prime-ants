@@ -271,6 +271,11 @@ public final class WorkerForagingGameTest {
             if(checked[0]||q.founding().plan()==null)return;
             var actor=workers(c,q).stream().filter(w->w.getMainHandItem().is(Items.DIRT)).findFirst();if(actor.isEmpty())return;
             checked[0]=true;var w=actor.get();var p=q.founding().plan();for(var b:p.deposits())if(c.getLevel().getBlockState(b).isAir())c.getLevel().setBlock(b,Blocks.STONE.defaultBlockState(),3);
+            // Owner's decision (stage-1 T07): plug soil the full founding list cannot take goes on the stage mound plan (Young's
+            // while Founding), so a blocked mound blocks that plan too: stone on the lowest free cell of each of its columns.
+            var lowest=new HashMap<List<Integer>,MoundSoil.Slot>();
+            for(var s:MoundSoil.slots(c.getLevel(),p,q.getUUID(),dev.primeants.colony.ColonyStage.YOUNG))if(s.state()==NestMound.Slot.FREE&&s.pos()!=null)lowest.merge(List.of(s.cell().forward(),s.cell().side()),s,(a,b)->a.cell().layer()<=b.cell().layer()?a:b);
+            for(var s:lowest.values())c.getLevel().setBlock(s.pos(),Blocks.STONE.defaultBlockState(),3);
             c.runAfterDelay(100,()->{
                 c.assertTrue(w.getMainHandItem().getCount()==1&&w.workerTasks().reason().equals("mound_full_or_blocked_soil_retained")&&mound(c,p)==22,"Blocked bounded mound retains existing plug unit with no normal item dumping");
                 var out=net.minecraft.world.level.storage.TagValueOutput.createWithContext(net.minecraft.util.ProblemReporter.DISCARDING,c.getLevel().registryAccess());q.save(out);var tag=out.buildResult();q.discard();

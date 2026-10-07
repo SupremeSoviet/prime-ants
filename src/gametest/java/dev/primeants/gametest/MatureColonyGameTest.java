@@ -39,7 +39,7 @@ public final class MatureColonyGameTest {
      * identity. Its equation, taken = carried + built + released, holds at every tick, through to the eighth wall. */
     @GameTest(maxTicks=60000,structure="prime_ants_test:idle_ground")
     public void upgradeCountsEveryClayUnitInEachPlaceThroughItsBuilderDeath(GameTestHelper c){
-        var q=fx.start(c);long[] fed={0,0,0,0};UUID[] killed={null},transfer={null};long[] custodyTicks={0},groundTicks={0};
+        var q=fx.start(c);long[] fed={0,0,0,0,-1};UUID[] killed={null},transfer={null};long[] custodyTicks={0},groundTicks={0};
         c.onEachTick(()->{
             var l=c.getLevel();var p=NestPlanFixture.pile(c,q);player.feed(c,q,18,fed);fx.soil(c,q);if(p==null||fed[0]==0)return;
             var where=clay(c,q);var j=NurseryUpgradeGameTest.upgrade(c,q);

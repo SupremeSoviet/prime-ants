@@ -64,10 +64,12 @@ public final class BroodPile extends BlockEntity {
     private Object stageMembers,stageRegistry;
     /** Last live stage evaluation, without evaluating; null before this pile's first decision or slow-cadence check. */
     public ColonyDevelopment.Evaluation stageEvaluation(){return stageEvaluation;}
+    /** This pile's loaded tick of its last stage evaluation: the colony's hysteresis clock (StageRules) reads these ticks. */
+    public long stageEvaluatedAt(){return stageEvaluatedAt;}
     private ColonyDevelopment.Evaluation development(ServerLevel l){
         var members=ColonyMembers.get(l);var registry=dev.primeants.colony.ChamberRegistry.get(l);
         if(stageEvaluation==null||members!=stageMembers||members.revision()!=stageMembersRevision||registry!=stageRegistry||loadedTicks-stageEvaluatedAt>=ColonyDevelopment.INTERVAL){
-            stageEvaluation=ColonyDevelopment.evaluate(l,queenId,plan,operational,adultCapacity);
+            stageEvaluation=ColonyDevelopment.evaluate(l,queenId,plan,operational,adultCapacity,loadedTicks);
             stageEvaluatedAt=loadedTicks;stageMembers=members;stageMembersRevision=members.revision();stageRegistry=registry;
         }
         return stageEvaluation;

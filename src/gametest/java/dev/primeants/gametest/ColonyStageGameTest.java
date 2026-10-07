@@ -82,13 +82,26 @@ public final class ColonyStageGameTest {
         });
     }
 
-    @GameTest(maxTicks=32000,structure="prime_ants_test:idle_ground")
+    /** The owner's hysteresis (decision of 2026-10-07): real deaths that leave the queen and two workers are not below
+     * Founding's one adult, so the Young colony holds its stage and cap while its adults clock runs. A predator kills every
+     * new worker for as long, and a player keeps the colony fed; once the shortfall has lasted StageRules.GRACE loaded ticks
+     * the colony regresses to Founding at its nursery's next evaluation, and then regrows to Young. The bound is T01's
+     * 32,000 plus the grace, set before this test was first run under the rule. */
+    @GameTest(maxTicks=56000,structure="prime_ants_test:idle_ground")
     public void realWorkerDeathsRegressToFoundingAndTheColonyRegrowsToYoung(GameTestHelper c){
         var q=f.start(c);boolean[] supplied={false},killed={false},regressed={false},finished={false};Set<UUID> survivors=new HashSet<>(),victims=new HashSet<>(),laid=new HashSet<>();
+        long[] since={-1},held={0},fed={0,0};ColonyDevelopment.Evaluation[] seen={null};
         c.onEachTick(()->{
             if(finished[0])return;var l=c.getLevel();var p=food.pile(c,q);if(p==null)return;
             if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;food.supply(c,q,12,10);}
             var colony=colony(c,q);if(colony==null)return;var ws=f.workers(c,q);
+            // From the deaths on, a player feeds the colony on demand: two apples when its cache shows none and none lie on
+            // the ground, two chickens when it shows fewer than two and none lie on the ground.
+            if(killed[0]){
+                var cache=f.cache(c,q);long apples=cache==null?0:cache.contents().stream().filter(s->s.is(net.minecraft.world.item.Items.APPLE)).count(),chickens=cache==null?0:cache.contents().stream().filter(s->s.is(net.minecraft.world.item.Items.CHICKEN)).count();
+                if(apples==0&&NurseryUpgradeGameTest.ground(c,net.minecraft.world.item.Items.APPLE)==0&&c.getTick()-fed[0]>=200){fed[0]=c.getTick();food.supply(c,q,2,0);}
+                if(chickens<2&&NurseryUpgradeGameTest.ground(c,net.minecraft.world.item.Items.CHICKEN)==0&&c.getTick()-fed[1]>=200){fed[1]=c.getTick();food.supply(c,q,0,2);}
+            }
             for(var r:p.records())if(laid.add(r.id())&&colony.stage()==ColonyStage.FOUNDING)
                 c.assertTrue(committed(c,q,p)<=ColonyStage.FOUNDING.adultCap(),"An egg laid at Founding fits the five-adult cap: committed="+committed(c,q,p));
             if(c.getTick()%500==0)PrimeAnts.LOGGER.info("Stage-1 regression trace tick={} stage={} committed={} workers={} condition={} evaluation={}",c.getTick(),colony.stage(),committed(c,q,p),ws.size(),p.condition(),p.stageEvaluation());
@@ -104,10 +117,23 @@ public final class ColonyStageGameTest {
             }
             for(var id:survivors)c.assertTrue(l.getEntity(id) instanceof LasiusNigerEntity w&&w.isAlive()&&ColonyMembers.get(l).belongs(w,q.getUUID(),q.founding().plan().chamber()),"A lower cap never kills, evicts or removes surviving adults");
             if(!regressed[0]){
-                if(colony.stage()==ColonyStage.YOUNG)return;
-                var e=p.stageEvaluation();regressed[0]=true;
+                var e=p.stageEvaluation();
+                if(colony.stage()==ColonyStage.YOUNG){
+                    // The predator: every other worker that emerges takes real lethal damage at once, so the loss lasts.
+                    for(var w:ws)if(!survivors.contains(w.getUUID())&&victims.add(w.getUUID()))w.hurtServer(l,w.damageSources().genericKill(),1000);
+                    if(e==null||e==seen[0])return;seen[0]=e;
+                    var clock=e.result().unmetSince().get("young:adults");if(clock==null)return; // the deaths' first evaluation is still to come
+                    if(since[0]!=clock){since[0]=clock;PrimeAnts.LOGGER.info("Stage-1 HELD queen={} since={} evaluatedAt={} evaluation={}",q.getUUID(),since[0],p.stageEvaluatedAt(),e);}
+                    held[0]++;
+                    c.assertTrue(e.stage()==ColonyStage.YOUNG&&e.cap()==ColonyStage.YOUNG.adultCap()&&e.inputs().adults().possible()<5&&p.stageEvaluatedAt()-since[0]<StageRules.GRACE
+                        &&e.result().pending().stream().map(x->x.requirement().key()).toList().equals(List.of("young:adults")),"The colony holds Young and its cap while its adults shortfall is younger than the grace: "+e);
+                    return;
+                }
+                regressed[0]=true;
                 c.assertTrue(colony.stage()==ColonyStage.FOUNDING&&e!=null&&e.stage()==ColonyStage.FOUNDING&&e.inputs().adults().possible()<5&&e.cap()==ColonyStage.FOUNDING.adultCap(),"Counted deaths regress to Founding with its five-adult cap: "+e);
-                PrimeAnts.LOGGER.info("Stage-1 REGRESSION queen={} committed={} evaluation={}",q.getUUID(),committed(c,q,p),e);return;
+                c.assertTrue(held[0]>0&&p.stageEvaluatedAt()-since[0]>=StageRules.GRACE&&p.stageEvaluatedAt()-since[0]<StageRules.GRACE+ColonyDevelopment.INTERVAL&&e.result().unmetSince().isEmpty(),
+                    "The colony regresses at its nursery's first evaluation after the shortfall has lasted the grace: since="+since[0]+" evaluatedAt="+p.stageEvaluatedAt()+" held="+held[0]);
+                PrimeAnts.LOGGER.info("Stage-1 REGRESSION queen={} committed={} since={} evaluatedAt={} held={} predatorVictims={} evaluation={}",q.getUUID(),committed(c,q,p),since[0],p.stageEvaluatedAt(),held[0],victims.size(),e);return;
             }
             if(colony.stage()==ColonyStage.YOUNG){
                 var e=p.stageEvaluation();

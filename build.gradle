@@ -37,7 +37,8 @@ def serverDiagnosticGroup = providers.gradleProperty('primeAntsServerDiagnosticG
 def serverDiagnosticGroups = ['nectar':'NectarGameTest', 'colony_stage':'ColonyStageGameTest', 'material_store':'MaterialStoreGameTest',
                               'chamber_scan':'ChamberScanGameTest', 'queens_hall':'QueensHallGameTest', 'material_hauling':'MaterialHaulingGameTest',
                               'nursery_upgrade':'NurseryUpgradeGameTest', 'mound':'MoundGameTest', 'food_cache':'FoodCacheGameTest',
-                              'mature_colony':'MatureColonyGameTest']
+                              'mature_colony':'MatureColonyGameTest', 'stage_hysteresis':'StageHysteresisGameTest', 'plug_soil':'PlugSoilGameTest', 'legacy_cache':'LegacyCacheGameTest',
+                              'forager_scaling':'ForagerScalingGameTest']
 // A focused diagnostic may validate one case; it must never make check/build green.
 gradle.taskGraph.whenReady { graph ->
     if ((serverDiagnosticFilter.isPresent() || serverDiagnosticGroup.isPresent()) && graph.hasTask(':check')) {
@@ -410,7 +411,16 @@ tasks.named('runGameTest') {
             names.size()
         }.sum()
         ['mound_game_test_young_colony_lays_its_store_and_hall_soil_on_its_stage_mound_where_short_plants_cover_the_old_deposits','mound_game_test_player_block_on_the_mound_is_never_covered_and_mid_deposit_reload_keeps_every_unit_once','food_cache_game_test_cache_full_of_chickens_still_takes_apples_and_no_adult_starves','mature_colony_game_test_upgrade_counts_every_clay_unit_in_each_place_through_its_builder_death'].each{n->if(!cases.any{it.@name.text()=='prime_ants_test:'+n})throw new GradleException('Missing T06 regression '+n)}
-        if(cases.size()!=173+foodNames.size()+policyNames.size()+defenseNames.size()+stageNames.size()+storeNames.size()+t04+t05+t06)throw new GradleException('Expected complete baseline plus current additions')
+        // Stage-1 T07: stage hysteresis, plug soil, caches saved before the shares and scaled foragers.
+        def t07=['StageHysteresisGameTest':1,'PlugSoilGameTest':1,'LegacyCacheGameTest':1,'ForagerScalingGameTest':2].collect { className,count ->
+            def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+            if(names.size()!=count)throw new GradleException('T07 discovery incomplete: '+className)
+            def prefix=className.replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()
+            names.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:${prefix}_${name}"})throw new GradleException('Missing T07 test: '+prefix+'_'+name)}
+            names.size()
+        }.sum()
+        ['stage_hysteresis_game_test_destroyed_cache_drops_young_colony_to_founding_at_once','plug_soil_game_test_full_founding_deposit_list_still_opens_the_nest_with_both_plug_units_on_the_stage_mound','legacy_cache_game_test_legacy_six_chicken_cache_with_no_protein_taker_lets_apples_in_and_every_unit_is_conserved','forager_scaling_game_test_large_colony_foragers_carry_at_once_with_exact_accounting_and_claims_survive_reload','forager_scaling_game_test_scaled_foragers_grow_colony_past_thirty_adults','colony_stage_game_test_real_worker_deaths_regress_to_founding_and_the_colony_regrows_to_young','nursery_upgrade_game_test_young_colony_reaches_mature_by_real_play_then_rebuilds_its_nursery_in_packed_clay_and_its_brood_develops_faster'].each{n->if(!cases.any{it.@name.text()=='prime_ants_test:'+n})throw new GradleException('Missing T07 regression '+n)}
+        if(cases.size()!=173+foodNames.size()+policyNames.size()+defenseNames.size()+stageNames.size()+storeNames.size()+t04+t05+t06+t07)throw new GradleException('Expected complete baseline plus current additions')
         if (report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] }) {
             throw new GradleException('Server GameTest report contains a failure or skipped test')
         }

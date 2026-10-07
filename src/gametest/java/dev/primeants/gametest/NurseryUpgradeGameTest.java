@@ -21,23 +21,30 @@ import net.minecraft.world.item.Items;
  * founding, digging, hauling and upgrade work; nothing assigns a stage, a tier, a job or an inventory. */
 public final class NurseryUpgradeGameTest {
     private final NestPlanFixture fx = new NestPlanFixture();
-    /** A player's feeding for the long path, on demand, as anyone watching the colony could: the fixture's growth food and
-     * the clay behind the entrance as the nest opens. While that clay lies on the ground and the colony's confirmed store
-     * has room for it, the player drops no food, as T05's player did until the store held its clay: the colony's one
-     * forager takes materials only when it finds no food it can store, and adults fast far less than their grace while it
-     * hauls. Otherwise, four more apples whenever the cache shows no apples and none lie on the ground, and two more
-     * chickens whenever the cache shows fewer chickens than its protein share (NestCache.CAPACITY - RESERVED) and none lie
-     * on the ground. The cache keeps two slots for each kind (T06), so neither kind locks the other out. fed = {opening
-     * drop done, drops, last apple drop tick, last chicken drop tick}. */
+    /** A player's feeding for the long path, as anyone watching the colony could (T07): the fixture's growth food as the
+     * nest opens, then food on demand: four apples whenever the cache shows no apples and none lie on the ground, two
+     * chickens whenever it shows fewer chickens than its protein share (NestCache.CAPACITY - RESERVED) and none lie on the
+     * ground. Once the colony holds Mature's 25 adults the player drops the clay behind the entrance; while that clay lies
+     * on the ground and the colony's confirmed store has room for it, no food, as T05's player did: foragers take
+     * materials only when they find no food they can store. Once the clay is in, the player drops no apples until the
+     * colony has rebuilt its nursery's walls and 4,000 ticks have passed (12,000 at most), so the colony is promoted and
+     * rebuilds while hungry, and the apples that follow start its laying again (T22: a satiated colony does not lay).
+     * fed = {clay dropped, drops (the opening supply first), last apple drop tick, last chicken drop tick, tick the clay
+     * stopped waiting}. */
     void feed(GameTestHelper c, LasiusNigerEntity q, int clay, long[] fed) {
-        boolean[] opened = {fed[0] == 1}; fx.grow(c, q, opened);
-        if (opened[0] && fed[0] == 0) { fed[0] = 1; fx.drop(c, q.founding().plan().at(-5, 0, 1), new ItemStack(Items.CLAY_BALL, clay)); }
-        if (fed[0] == 0) return;
+        boolean[] opened = {fed[1] > 0}; fx.grow(c, q, opened);
+        if (!opened[0]) return;
+        if (fed[1] == 0) fed[1] = 1;
         var cache = fx.f.cache(c, q); int share = NestCache.CAPACITY - NestCache.RESERVED; long tick = c.getTick();
         long apples = cache == null ? 0 : cache.contents().stream().filter(st -> st.is(Items.APPLE)).count(), chickens = cache == null ? 0 : cache.contents().stream().filter(st -> st.is(Items.CHICKEN)).count();
-        var pile = NestPlanFixture.pile(c, q); var store = NestPlanFixture.store(c, q);
-        if (ground(c, Items.CLAY_BALL) > 0 && pile != null && NestPlanFixture.storeConfirmed(pile.stageEvaluation()) && store != null && store.room(new ItemStack(Items.CLAY_BALL))) return;
-        if (ground(c, Items.APPLE) == 0 && apples == 0 && tick - fed[2] >= 200) { fed[1]++; fed[2] = tick; fx.food.supply(c, q, 4, 0); }
+        var pile = NestPlanFixture.pile(c, q); var store = NestPlanFixture.store(c, q); var e = pile == null ? null : pile.stageEvaluation();
+        if (fed[0] == 0 && e != null && e.inputs().adults().known() >= StageRules.minAdults(ColonyStage.MATURE)) { fed[0] = 1; fx.drop(c, q.founding().plan().at(-5, 0, 1), new ItemStack(Items.CLAY_BALL, clay)); }
+        if (fed[0] == 1 && ground(c, Items.CLAY_BALL) > 0 && pile != null && NestPlanFixture.storeConfirmed(pile.stageEvaluation()) && store != null && store.room(new ItemStack(Items.CLAY_BALL))) return;
+        if (fed[0] == 1 && fed[4] < 0) fed[4] = tick;
+        var l = c.getLevel(); var walls = walls(q.founding().plan());
+        boolean rebuilt = walls.stream().allMatch(b -> ColonyTerrain.get(l).built(l, b, q.getUUID(), NurseryBlocks.PACKED_CLAY));
+        boolean hungry = fed[4] >= 0 && (tick - fed[4] < 4000 || !rebuilt) && tick - fed[4] < 12000;
+        if (!hungry && ground(c, Items.APPLE) == 0 && apples == 0 && tick - fed[2] >= 200) { fed[1]++; fed[2] = tick; fx.food.supply(c, q, 4, 0); }
         if (ground(c, Items.CHICKEN) == 0 && chickens < share && tick - fed[3] >= 200) { fed[1]++; fed[3] = tick; fx.food.supply(c, q, 0, 2); }
     }
     static long ground(GameTestHelper c, net.minecraft.world.item.Item item) {
@@ -72,7 +79,7 @@ public final class NurseryUpgradeGameTest {
     public void youngColonyReachesMatureByRealPlayThenRebuildsItsNurseryInPackedClayAndItsBroodDevelopsFaster(GameTestHelper c){ longPath(c); }
     /** The long path: Mature by real play, the nursery's upgrade to tier 2, and its brood at the tier-2 speed. */
     private void longPath(GameTestHelper c){
-        var q=fx.start(c);long[] fed={0,0,0,0};long[] mature={-1},tier2={-1},confirmed={-1};ColonyDevelopment.Evaluation[] seen={null};
+        var q=fx.start(c);long[] fed={0,0,0,0,-1};long[] mature={-1},tier2={-1},confirmed={-1};ColonyDevelopment.Evaluation[] seen={null};
         Map<UUID,long[]> stage=new HashMap<>();List<Long> tierOneEggs=new ArrayList<>();List<String> evidence=new ArrayList<>();int[] most={0};
         c.onEachTick(()->{
             var l=c.getLevel();var p=NestPlanFixture.pile(c,q);feed(c,q,16,fed);fx.soil(c,q);if(p==null)return;
@@ -142,7 +149,8 @@ public final class NurseryUpgradeGameTest {
      * never converting it, and puts its unit back. The ledger is exact at every tick. */
     @GameTest(maxTicks=60000,structure="prime_ants_test:idle_ground")
     public void upgradeKeepsEveryUnitThroughReloadAndKilledBuilderAndNeverConvertsPlayerChangedWall(GameTestHelper c){
-        LasiusNigerEntity[] q={fx.start(c)};long[] fed={0,0,0,0};int[] step={0};BlockPos[] changed={null};UUID[] killed={null},transfer={null};long[] pending={0};
+        LasiusNigerEntity[] q={fx.start(c)};long[] fed={0,0,0,0,-1};int[] step={0};BlockPos[] changed={null};UUID[] killed={null},transfer={null};long[] pending={0};
+        net.minecraft.world.entity.Entity[] holder={null};int[] custodyStep={0};
         c.onEachTick(()->{
             var l=c.getLevel();var p=NestPlanFixture.pile(c,q[0]);feed(c,q[0],18,fed);fx.soil(c,q[0]);if(p==null)return;
             var plan=q[0].founding().plan();var j=upgrade(c,q[0]);
@@ -193,10 +201,38 @@ public final class NurseryUpgradeGameTest {
                 var w=builder(c,fx,q[0],j);if(w==null)return;
                 killed[0]=w.getUUID();transfer[0]=UUID.nameUUIDFromBytes(("worker-cargo:"+w.getUUID()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
                 c.assertTrue(TransferCustody.get(l).contents().stream().noneMatch(t->t.id().equals(transfer[0]))&&l.getEntity(transfer[0])==null,"No custody record before the death");
+                // T07: custody holds a unit while the world already has an entity of its transfer identity; a marker entity
+                // takes that identity, so the release stays pending until the marker goes.
+                var marker=net.minecraft.world.entity.EntityTypes.MARKER.create(l,net.minecraft.world.entity.EntitySpawnReason.COMMAND);
+                c.assertTrue(marker!=null,"A marker entity");marker.setUUID(transfer[0]);marker.setPos(w.position());c.assertTrue(l.addFreshEntity(marker)&&l.getEntity(transfer[0])==marker,"The marker holds the transfer's identity");holder[0]=marker;
                 w.hurtServer(l,w.damageSources().genericKill(),1000);
                 c.assertTrue(!w.isAlive()&&w.getMainHandItem().isEmpty()&&ColonyMembers.get(l).member(w.getUUID()).dead()&&j.claim==null&&j.released()==1&&j.carried()==0&&j.ledger().exact(),
                     "A real lethal hit releases the builder's unit to custody once and frees the job: "+j.ledger());
                 PrimeAnts.LOGGER.info("T05 SAFETY BUILDER KILLED queen={} worker={} transfer={} ledger={}",q[0].getUUID(),w.getUUID(),transfer[0],j.ledger());step[0]=3;return;
+            }
+            if(custodyStep[0]<3){
+                // T07: the dead builder's unit pending in custody, through a save and reload, then its recovery.
+                long now=j.custody(l);
+                if(custodyStep[0]==0){
+                    c.assertTrue(now==1&&j.released()==1&&j.ledger().exact()&&TransferCustody.get(l).contents().stream().filter(t->t.id().equals(transfer[0])&&t.stack().is(Items.CLAY_BALL)).count()==1
+                        &&!(l.getEntity(transfer[0]) instanceof ItemEntity),"The unit stays pending in custody while its identity is taken: taken = carried + built + released, and custody now is 1: "+j.ledger()+" custody="+now);
+                    var ledger=j.ledger();l.getDataStorage().saveAndJoin();
+                    try(var disk=new net.minecraft.world.level.storage.SavedDataStorage(net.minecraft.world.level.dimension.DimensionType.getStorageFolder(l.dimension(),l.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT)).resolve("data"),net.minecraft.util.datafix.DataFixers.getDataFixer(),l.registryAccess())){
+                        var upgrades=disk.get(ChamberUpgrade.TYPE);var saved=disk.get(TransferCustody.TYPE);
+                        c.assertTrue(upgrades!=null&&saved!=null&&saved.contents().stream().anyMatch(t->t.id().equals(transfer[0])&&t.stack().is(Items.CLAY_BALL)),"Disk holds the job and the pending unit");
+                        l.getDataStorage().set(ChamberUpgrade.TYPE,upgrades);l.getDataStorage().set(TransferCustody.TYPE,saved);
+                    }
+                    var after=upgrade(c,q[0]);
+                    c.assertTrue(after!=j&&after.ledger().equals(ledger)&&after.ledger().exact()&&after.custody(l)==1&&clay(c,fx,q[0])==18,"After a save and reload the ledger is the same and exact, and the unit is still pending in custody: "+after.ledger()+" custody="+after.custody(l));
+                    PrimeAnts.LOGGER.info("T07 SAFETY CUSTODY PENDING THROUGH RELOAD queen={} tick={} ledger={} custodyNow={} transfer={}",q[0].getUUID(),c.getTick(),after.ledger(),after.custody(l),transfer[0]);
+                    custodyStep[0]=1;return;
+                }
+                if(custodyStep[0]==1){holder[0].discard();custodyStep[0]=2;return;} // the identity is free again
+                if(now>0)return; // custody retries every 20 server ticks
+                c.assertTrue(l.getEntity(transfer[0]) instanceof ItemEntity i&&i.isAlive()&&i.getItem().is(Items.CLAY_BALL)&&j.released()==1&&j.ledger().exact()&&clay(c,fx,q[0])==18,
+                    "Custody recovers: the unit is set down once on the ground, released stays 1 and custody now is 0: "+j.ledger());
+                PrimeAnts.LOGGER.info("T07 SAFETY CUSTODY RECOVERED queen={} tick={} ledger={} custodyTicks={}",q[0].getUUID(),c.getTick(),j.ledger(),pending[0]);
+                custodyStep[0]=3;
             }
             c.assertTrue(!killed[0].equals(j.claim),"The dead builder never builds again");
             if(!j.stopped()||j.claim!=null)return;
