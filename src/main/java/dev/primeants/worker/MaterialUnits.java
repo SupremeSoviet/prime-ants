@@ -34,6 +34,18 @@ public final class MaterialUnits {
         for (var held : confirmed) known += (int)count(held, m);
         return new StageRules.Bound(known, known + unknownStores * most(m));
     }
-    /** A visible heap level 0..4: one level per four units, full at the 16-unit share. */
-    public static int level(long units) { return (int)Math.min(4, (units + 3) / 4); }
+    /** Units per visible heap level, and the levels of a full store's clay and of its other stock's full share. */
+    public static final int LEVEL = 4, CLAY_LEVELS = CAPACITY / LEVEL, STOCK_LEVELS = (CAPACITY - CLAY_SHARE) / LEVEL;
+    /** A visible heap level: one level per four units, so a full store's 32 clay show eight levels and the 16-unit
+     * share of other stock four. */
+    public static int level(long units) { return (int)((units + LEVEL - 1) / LEVEL); }
+    /** What a store's block shows (MaterialStoreBlock): its clay heap's level, its other stock's level and which other
+     * materials lie in it. Equal displays mean equal sets of materials and totals within seven units of each other, so
+     * any two stores whose totals differ by eight or more, or whose materials differ, look different. */
+    public record Display(int clay, int stock, boolean stone, boolean gravel, boolean sand, boolean ore) { }
+    public static Display display(Collection<Material> held) {
+        long clay = count(held, Material.CLAY);
+        return new Display(level(clay), level(held.size() - clay), count(held, Material.STONE) > 0, count(held, Material.GRAVEL) > 0,
+            count(held, Material.SAND) > 0, count(held, Material.ORE) > 0);
+    }
 }

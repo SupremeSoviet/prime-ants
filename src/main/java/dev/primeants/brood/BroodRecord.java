@@ -47,7 +47,7 @@ public final class BroodRecord {
         r.neglectTicks=in.getLongOr("NeglectTicks",0);r.waitingTicks=in.getLongOr("WaitingTicks",0);r.neglectReason=in.getStringOr("NeglectReason","");
         if(r.neglectGrace<1||r.waitingBound<1||r.neglectTicks<0||r.waitingTicks<0)throw new IllegalArgumentException("Invalid persisted brood survival");
         r.founding=in.getBooleanOr("Founding",true);r.nutrition.load(in.childOrEmpty("Nutrition"),dev.primeants.worker.Nutrition.LARVA_SUGAR,dev.primeants.worker.Nutrition.LARVA_PROTEIN);
-        if (r.stage == BroodStage.EMPTY || r.slot < 0 || r.slot >= BroodPile.CAPACITY || r.progress < 0
+        if (r.stage == BroodStage.EMPTY || r.slot < 0 || r.slot >= BroodCapacity.MAX_SLOTS || r.progress < 0
                 || r.nourishment < 0 || r.nourishment > BroodPile.LARVA_COST
                 || r.stage == BroodStage.COCOON && r.nourishment != BroodPile.LARVA_COST) throw new IllegalArgumentException("Invalid brood record");
         if(!r.founding&&(r.nourishment!=r.nutrition.spentSugar()+r.nutrition.spentProtein()||r.nutrition.gainedSugar()>dev.primeants.worker.Nutrition.LARVA_SUGAR||r.nutrition.gainedProtein()>dev.primeants.worker.Nutrition.LARVA_PROTEIN))throw new IllegalArgumentException("Invalid fed larval accounting");

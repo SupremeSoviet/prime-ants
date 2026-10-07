@@ -47,7 +47,7 @@ public final class DefenseGameTest {
             public void testAddedForRerun(GameTestInfo i,GameTestInfo copy,GameTestRunner r){action.run();}
         });
     }
-    private static ServerPlayer player(GameTestHelper c,Vec3 pos,GameType mode){
+    static ServerPlayer player(GameTestHelper c,Vec3 pos,GameType mode){
         var profile=new com.mojang.authlib.GameProfile(UUID.randomUUID(),"defense-fixture");
         var p=new ServerPlayer(c.getLevel().getServer(),c.getLevel(),profile,net.minecraft.server.level.ClientInformation.createDefault()){
             @Override public boolean hurtServer(net.minecraft.server.level.ServerLevel l,net.minecraft.world.damagesource.DamageSource source,float amount){

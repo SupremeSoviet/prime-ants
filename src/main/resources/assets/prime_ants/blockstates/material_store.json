@@ -39,254 +39,98 @@
     },
     {
       "when": {
-        "stock": "1",
-        "heap": "cobblestone"
+        "clay": "5"
       },
       "apply": {
-        "model": "prime_ants:block/material_store_cobblestone_1"
+        "model": "prime_ants:block/material_store_clay_5"
       }
     },
     {
       "when": {
-        "stock": "2",
-        "heap": "cobblestone"
+        "clay": "6"
       },
       "apply": {
-        "model": "prime_ants:block/material_store_cobblestone_2"
+        "model": "prime_ants:block/material_store_clay_6"
       }
     },
     {
       "when": {
-        "stock": "3",
-        "heap": "cobblestone"
+        "clay": "7"
       },
       "apply": {
-        "model": "prime_ants:block/material_store_cobblestone_3"
+        "model": "prime_ants:block/material_store_clay_7"
       }
     },
     {
       "when": {
-        "stock": "4",
-        "heap": "cobblestone"
+        "clay": "8"
       },
       "apply": {
-        "model": "prime_ants:block/material_store_cobblestone_4"
+        "model": "prime_ants:block/material_store_clay_8"
       }
     },
     {
       "when": {
-        "stock": "1",
-        "heap": "stone"
+        "stock": "1"
       },
       "apply": {
-        "model": "prime_ants:block/material_store_stone_1"
+        "model": "prime_ants:block/material_store_stock_1"
       }
     },
     {
       "when": {
-        "stock": "2",
-        "heap": "stone"
+        "stock": "2"
       },
       "apply": {
-        "model": "prime_ants:block/material_store_stone_2"
+        "model": "prime_ants:block/material_store_stock_2"
       }
     },
     {
       "when": {
-        "stock": "3",
-        "heap": "stone"
+        "stock": "3"
       },
       "apply": {
-        "model": "prime_ants:block/material_store_stone_3"
+        "model": "prime_ants:block/material_store_stock_3"
       }
     },
     {
       "when": {
-        "stock": "4",
-        "heap": "stone"
+        "stock": "4"
       },
       "apply": {
-        "model": "prime_ants:block/material_store_stone_4"
+        "model": "prime_ants:block/material_store_stock_4"
       }
     },
     {
       "when": {
-        "stock": "1",
-        "heap": "gravel"
+        "stone": "true"
       },
       "apply": {
-        "model": "prime_ants:block/material_store_gravel_1"
+        "model": "prime_ants:block/material_store_lump_stone"
       }
     },
     {
       "when": {
-        "stock": "2",
-        "heap": "gravel"
+        "gravel": "true"
       },
       "apply": {
-        "model": "prime_ants:block/material_store_gravel_2"
+        "model": "prime_ants:block/material_store_lump_gravel"
       }
     },
     {
       "when": {
-        "stock": "3",
-        "heap": "gravel"
+        "sand": "true"
       },
       "apply": {
-        "model": "prime_ants:block/material_store_gravel_3"
+        "model": "prime_ants:block/material_store_lump_sand"
       }
     },
     {
       "when": {
-        "stock": "4",
-        "heap": "gravel"
+        "ore": "true"
       },
       "apply": {
-        "model": "prime_ants:block/material_store_gravel_4"
-      }
-    },
-    {
-      "when": {
-        "stock": "1",
-        "heap": "sand"
-      },
-      "apply": {
-        "model": "prime_ants:block/material_store_sand_1"
-      }
-    },
-    {
-      "when": {
-        "stock": "2",
-        "heap": "sand"
-      },
-      "apply": {
-        "model": "prime_ants:block/material_store_sand_2"
-      }
-    },
-    {
-      "when": {
-        "stock": "3",
-        "heap": "sand"
-      },
-      "apply": {
-        "model": "prime_ants:block/material_store_sand_3"
-      }
-    },
-    {
-      "when": {
-        "stock": "4",
-        "heap": "sand"
-      },
-      "apply": {
-        "model": "prime_ants:block/material_store_sand_4"
-      }
-    },
-    {
-      "when": {
-        "stock": "1",
-        "heap": "coal"
-      },
-      "apply": {
-        "model": "prime_ants:block/material_store_coal_1"
-      }
-    },
-    {
-      "when": {
-        "stock": "2",
-        "heap": "coal"
-      },
-      "apply": {
-        "model": "prime_ants:block/material_store_coal_2"
-      }
-    },
-    {
-      "when": {
-        "stock": "3",
-        "heap": "coal"
-      },
-      "apply": {
-        "model": "prime_ants:block/material_store_coal_3"
-      }
-    },
-    {
-      "when": {
-        "stock": "4",
-        "heap": "coal"
-      },
-      "apply": {
-        "model": "prime_ants:block/material_store_coal_4"
-      }
-    },
-    {
-      "when": {
-        "stock": "1",
-        "heap": "copper"
-      },
-      "apply": {
-        "model": "prime_ants:block/material_store_copper_1"
-      }
-    },
-    {
-      "when": {
-        "stock": "2",
-        "heap": "copper"
-      },
-      "apply": {
-        "model": "prime_ants:block/material_store_copper_2"
-      }
-    },
-    {
-      "when": {
-        "stock": "3",
-        "heap": "copper"
-      },
-      "apply": {
-        "model": "prime_ants:block/material_store_copper_3"
-      }
-    },
-    {
-      "when": {
-        "stock": "4",
-        "heap": "copper"
-      },
-      "apply": {
-        "model": "prime_ants:block/material_store_copper_4"
-      }
-    },
-    {
-      "when": {
-        "stock": "1",
-        "heap": "iron"
-      },
-      "apply": {
-        "model": "prime_ants:block/material_store_iron_1"
-      }
-    },
-    {
-      "when": {
-        "stock": "2",
-        "heap": "iron"
-      },
-      "apply": {
-        "model": "prime_ants:block/material_store_iron_2"
-      }
-    },
-    {
-      "when": {
-        "stock": "3",
-        "heap": "iron"
-      },
-      "apply": {
-        "model": "prime_ants:block/material_store_iron_3"
-      }
-    },
-    {
-      "when": {
-        "stock": "4",
-        "heap": "iron"
-      },
-      "apply": {
-        "model": "prime_ants:block/material_store_iron_4"
+        "model": "prime_ants:block/material_store_lump_ore"
       }
     }
   ]

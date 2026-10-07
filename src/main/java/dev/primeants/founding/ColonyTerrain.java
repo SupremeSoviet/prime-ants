@@ -25,13 +25,19 @@ public final class ColonyTerrain extends SavedData {
     public void invalidate(BlockPos p){if(records.remove(key(p))!=null)setDirty();}
     public UUID componentOwner(ServerLevel l,BlockPos p){
         String r=records.get(key(p));if(r==null)return null;UUID owner=UUID.fromString(r.substring(0,36));
-        return prepared(l,p,owner)||mound(l,p,owner)?owner:null;
+        return prepared(l,p,owner)||mound(l,p,owner)||built(l,p,owner,l.getBlockState(p).getBlock())?owner:null;
     }
     private void record(BlockPos p,UUID owner,String kind){records.put(key(p),owner+":"+kind);setDirty();}
     private boolean matches(ServerLevel l,BlockPos p,UUID owner,String kind,BlockState expected){return NestPlan.loaded(l,p)&&l.getBlockState(p).equals(expected)&&(owner+":"+kind).equals(records.get(key(p)));}
     public boolean prepared(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"prepared:nest_soil",NurseryBlocks.NEST_SOIL.defaultBlockState());}
     public boolean mound(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"mound:nest_soil",NurseryBlocks.NEST_SOIL.defaultBlockState());}
     public boolean opened(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"worker_open:air",Blocks.AIR.defaultBlockState());}
+    private static String id(net.minecraft.world.level.block.Block b){return net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(b).toString();}
+    /** A wall cell the colony itself rebuilt in place with this wall block (NestWalls), still exactly as it left it. */
+    public boolean built(ServerLevel l,BlockPos p,UUID owner,net.minecraft.world.level.block.Block block){return NestWalls.TIERS.containsKey(id(block))&&matches(l,p,owner,"built:"+id(block),block.defaultBlockState());}
+    /** A loaded wall cell's tier (NestWalls.tier): the colony's own built wall block gives its tier; any other solid wall
+     * is 1, whether natural or colony earth, natural stone, or a block a player placed. */
+    public int wallTier(ServerLevel l,BlockPos p,UUID owner){var block=l.getBlockState(p).getBlock();return NestWalls.tier(id(block),built(l,p,owner,block));}
     public boolean eligible(ServerLevel l,BlockPos p,UUID owner){return NaturalSoil.get(l).eligible(l,p)||prepared(l,p,owner);}
     public boolean compatible(ServerLevel l,BlockPos p,UUID owner,BlockState expected){return NaturalSoil.get(l).compatible(l,p,expected)||prepared(l,p,owner)&&l.getBlockState(p).equals(expected);}
     public String preparationProblem(ServerLevel l,BlockPos p){
@@ -49,4 +55,6 @@ public final class ColonyTerrain extends SavedData {
     }
     public void deposited(BlockPos p,UUID owner){record(p,owner,"mound:nest_soil");}
     public void removed(BlockPos p,UUID owner){record(p,owner,"worker_open:air");}
+    /** Records a wall cell the colony's worker has just rebuilt with this block (ChamberUpgrade). */
+    public void built(BlockPos p,UUID owner,net.minecraft.world.level.block.Block block){if(!NestWalls.TIERS.containsKey(id(block)))throw new IllegalArgumentException("Not a nest wall block");record(p,owner,"built:"+id(block));}
 }

@@ -80,7 +80,7 @@ public abstract class DigJob {
         if(owner==null)return false;
         var widening=NestExpansion.get(l).job(owner);if(widening!=null&&widening.claim!=null)return true;
         for(var j:ChamberExcavation.get(l).jobs(owner))if(j.claim!=null)return true;
-        return false;
+        return ChamberUpgrade.get(l).anyClaim(owner); // upgrade work shares the one-builder rule
     }
     /** An authorized opening of any of the colony's jobs. */
     public static boolean anyOpening(ServerLevel l,BlockPos p,UUID owner){

@@ -116,6 +116,16 @@ public final class ChamberRegistry extends SavedData {
         dev.primeants.PrimeAnts.LOGGER.info("Chamber registered queen={} chamber={} functions={} tier={} markers={}", queen, chamber.id(), chamber.functions(), chamber.tier(), chamber.markers());
         return true;
     }
+    /** Raises the tier a chamber's finished upgrade work claims (ChamberUpgrade). A claim only: the confirmed tier is
+     * always read from the walls, and the claim counts only while the chamber is unknown. */
+    public void claimTier(UUID queen, String id, int tier) {
+        var c = colonies.get(queen); var saved = c == null ? null : c.chamber(id);
+        if (saved == null || tier <= saved.tier()) return;
+        var chambers = new ArrayList<Chamber>();
+        for (var ch : c.chambers()) chambers.add(ch.id().equals(id) ? new Chamber(ch.id(), ch.min(), ch.max(), ch.functions(), tier, ch.markers()) : ch);
+        colonies.put(queen, new Colony(c.queen(), c.entrance(), c.direction(), chambers, c.stage())); setDirty();
+        dev.primeants.PrimeAnts.LOGGER.info("Chamber tier claimed queen={} chamber={} tier={}", queen, id, tier);
+    }
     void stage(UUID queen, ColonyStage stage) {
         var c = colonies.get(queen);
         colonies.put(queen, new Colony(c.queen(), c.entrance(), c.direction(), c.chambers(), stage)); setDirty();

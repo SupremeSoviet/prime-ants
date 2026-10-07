@@ -29,9 +29,12 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 
-/** Reusable physical nursery slots. Only the loaded server block-entity ticker advances brood or lays eggs. */
+/** Reusable physical nursery slots. Only the loaded server block-entity ticker advances brood or lays eggs. How many
+ * slots and how fast brood develops follow the nursery's physical causes (BroodCapacity), read from the pile's own last
+ * stage evaluation: one pile per colony, its brood in the queen's reach. */
 public final class BroodPile extends BlockEntity {
-    public static final int CAPACITY = 3;
+    /** The founding clutch, and the 0.1.0 nursery's slots. */
+    public static final int CAPACITY = BroodCapacity.FOUNDING_SLOTS;
     public static final long BASE_LAYING_TICKS=1200;
     public static long layingCadence(){return new SimulationTimeScale(multiplier()).ticksForGameDays(BASE_LAYING_TICKS/24000.0);}
     public static final long EGG_COST = 1000, LARVA_COST = 12000, MAX_RESERVE = CAPACITY * (EGG_COST + LARVA_COST);
@@ -85,6 +88,16 @@ public final class BroodPile extends BlockEntity {
     public long gainedSugar(){return consumedApples()*Nutrition.APPLE_SUGAR+consumedBerries()*Nutrition.BERRY_SUGAR+consumedNectar()*Nutrition.NECTAR_SUGAR+consumedNectarV2()*(Nutrition.NECTAR_V2_SUGAR-Nutrition.NECTAR_SUGAR);}
     public long gainedProtein(){return consumedChickens()*Nutrition.CHICKEN_PROTEIN+consumedFlesh()*Nutrition.FLESH_PROTEIN+consumedPrey()*Nutrition.PREY_PROTEIN;}
     private long loadedTicks, stageDuration = stageTicks();
+    /** Development steps owed below one whole step (BroodCapacity speed), saved so a faster nursery stays exact across
+     * reloads; stageDuration itself never changes. */
+    private int developmentCredit;
+    /** This nursery now: the queen's hall and the nursery chamber's wall tier as the pile's last evaluation confirmed them
+     * (a slow cadence, ColonyDevelopment.INTERVAL); the founding nursery before the first evaluation. */
+    public BroodCapacity.Nursery nursery() {
+        var e = stageEvaluation;
+        if (e == null) return BroodCapacity.nursery(false, 1);
+        return BroodCapacity.nursery(e.inputs().tier(dev.primeants.colony.ChamberFunction.QUEENS_HALL).known() >= 1, e.inputs().tier(dev.primeants.colony.ChamberFunction.NURSERY).known());
+    }
     private String condition = "unowned";
     public BroodPile(BlockPos pos, BlockState state) { super(NurseryBlocks.BROOD_TYPE, pos, state); }
     public static double multiplier() { return Double.parseDouble(System.getProperty("prime_ants.broodMultiplier", "1")); }
@@ -155,7 +168,7 @@ public final class BroodPile extends BlockEntity {
     }
     private boolean lay(ServerLevel l,LasiusNigerEntity q,boolean care){
         if(!care||!operational||!originalTerminal()||loadedTicks-lastLayingTick<layingCadence())return false;
-        if(records.size()>=CAPACITY){if(!condition.equals("larva_sugar_or_protein_exhausted"))condition="nursery_slots_full";return false;}
+        if(records.size()>=nursery().slots()){if(!condition.equals("larva_sugar_or_protein_exhausted"))condition="nursery_slots_full";return false;}
         if(ColonyMembers.get(l).occupied(queenId)+records.size()>=adultCap(l)-1){condition="colony_capacity_full_or_unloaded";return false;}
         if(!growth.allows(supply(l))){condition=growth.reason();return false;}
         if(!q.nutrition().spend(Nutrition.EGG_SUGAR,Nutrition.EGG_PROTEIN)){condition="queen_ingested_nutrition_exhausted";return false;}
@@ -168,11 +181,13 @@ public final class BroodPile extends BlockEntity {
         if (level == null || level.isClientSide()) return;
         BlockState before = getBlockState(), next = before;
         var properties = List.of(BroodPileBlock.A, BroodPileBlock.B, BroodPileBlock.C);
-        for (int slot = 0; slot < CAPACITY; slot++) {
+        for (int slot = 0; slot < properties.size(); slot++) {
             final int index = slot;
             BroodStage stage = records.stream().filter(r -> r.slot() == index).map(BroodRecord::stage).findFirst().orElse(BroodStage.EMPTY);
             next = next.setValue(properties.get(slot), stage);
         }
+        // Brood beyond the first three slots shows in aggregate: one more heap level per three brood.
+        next = next.setValue(BroodPileBlock.MORE, BroodPileBlock.more((int)records.stream().filter(r -> r.slot() >= properties.size()).count()));
         if (!next.equals(before)) level.setBlock(getBlockPos(), next, 3);
         level.sendBlockUpdated(getBlockPos(), before, next, 3);
     }
@@ -211,6 +226,8 @@ public final class BroodPile extends BlockEntity {
                 && queen.position().distanceToSqr(Vec3.atBottomCenterOf(getBlockPos())) <= CARE_REACH_SQUARED;
         condition = habitat!=null?habitat:care?"cared":"caregiver_absent_or_out_of_reach";
         boolean visual = false;
+        // A faster nursery takes more development steps per loaded tick, for running and new stages alike.
+        var nursery = nursery(); int steps = BroodCapacity.steps(developmentCredit, nursery); developmentCredit = BroodCapacity.credit(developmentCredit, nursery);
         for (BroodRecord record : List.copyOf(records)) {
             if (consumed.contains(record.id())) { records.remove(record); visual = true; continue; }
             // Verified real workers take precedence, before habitat failure and before terminal inference.
@@ -224,30 +241,32 @@ public final class BroodPile extends BlockEntity {
                 // Actual valid care and development, never mere caregiver presence.
                 record.neglectTicks=0;record.neglectReason="";
             }
-            if (record.stage == BroodStage.LARVA) {
-                long next = Math.min(stageDuration, record.progress + 1);
-                long required = (next * LARVA_COST / stageDuration) - record.nourishment;
-                if(record.founding){
-                    if(required>0||record.nourishment<LARVA_COST){
-                        if(!care||queen.bodyReserve()==0||!queen.spendReserve(required)){condition=care?"queen_reserve_exhausted":"larva_care_missing";visual|=unsupported(server,record,condition);continue;}
+            // Each step is one tick of the 0.1.0 rule; a shortfall or a waiting cocoon counts against care only on the
+            // tick's first step, so a faster nursery never neglects brood faster.
+            for (int step = 0; step < steps; step++) {
+                if (record.stage == BroodStage.LARVA) {
+                    long next = Math.min(stageDuration, record.progress + 1);
+                    long required = (next * LARVA_COST / stageDuration) - record.nourishment;
+                    if(record.founding){
+                        if(required>0||record.nourishment<LARVA_COST){
+                            if(!care||queen.bodyReserve()==0||!queen.spendReserve(required)){if(step==0){condition=care?"queen_reserve_exhausted":"larva_care_missing";visual|=unsupported(server,record,condition);}break;}
+                        }
+                    }else{
+                        long sugar=next*Nutrition.LARVA_SUGAR/stageDuration-record.nutrition().spentSugar();
+                        long protein=next*Nutrition.LARVA_PROTEIN/stageDuration-record.nutrition().spentProtein();
+                        if(record.nourishment<LARVA_COST&&(record.nutrition().sugar()==0||record.nutrition().protein()==0||!record.nutrition().spend(sugar,protein))){if(step==0){condition="larva_sugar_or_protein_exhausted";visual|=unsupported(server,record,condition);}break;}
                     }
-                }else{
-                    long sugar=next*Nutrition.LARVA_SUGAR/stageDuration-record.nutrition().spentSugar();
-                    long protein=next*Nutrition.LARVA_PROTEIN/stageDuration-record.nutrition().spentProtein();
-                    if(record.nourishment<LARVA_COST&&(record.nutrition().sugar()==0||record.nutrition().protein()==0||!record.nutrition().spend(sugar,protein))){condition="larva_sugar_or_protein_exhausted";visual|=unsupported(server,record,condition);continue;}
+                    record.nourishment = record.founding?record.nourishment+required:record.nutrition().spentSugar()+record.nutrition().spentProtein();
+                    // Zero-cost rounding and failed feeds do not renew neglected viability.
+                    if(required>0){record.neglectTicks=0;record.neglectReason="";}
                 }
-                record.nourishment = record.founding?record.nourishment+required:record.nutrition().spentSugar()+record.nutrition().spentProtein();
-                // Zero-cost rounding and failed feeds do not renew neglected viability.
-                if(required>0){record.neglectTicks=0;record.neglectReason="";}
-            }
-            if (record.progress < stageDuration) {record.progress++;if(record.stage==BroodStage.COCOON)record.waitingTicks=0;}
-            if (record.progress < stageDuration) continue;
-            if (record.stage == BroodStage.COCOON) { if (emerge(server, record)) visual = true;else visual|=unsupported(server,record,condition); }
-            else {
-                if (record.stage == BroodStage.LARVA && record.nourishment != LARVA_COST) continue;
+                if (record.progress < stageDuration) {record.progress++;if(record.stage==BroodStage.COCOON)record.waitingTicks=0;}
+                if (record.progress < stageDuration) continue;
+                if (record.stage == BroodStage.COCOON) { if (emerge(server, record)) visual = true;else if(step==0)visual|=unsupported(server,record,condition); break; }
+                if (record.stage == BroodStage.LARVA && record.nourishment != LARVA_COST) break;
                 record.stage = record.stage == BroodStage.EGG ? BroodStage.LARVA : BroodStage.COCOON;
                 record.progress = 0; visual = true;
-                PrimeAnts.LOGGER.info("Brood stage queen={} brood={} stage={} pileTicks={} nourishment={}", queenId, record.id(), record.stage, loadedTicks, record.nourishment);
+                PrimeAnts.LOGGER.info("Brood stage queen={} brood={} stage={} pileTicks={} nourishment={} slots={} speed={}", queenId, record.id(), record.stage, loadedTicks, record.nourishment, nursery().slots(), nursery().rate());
             }
         }
         if(lay(server,queen,care))visual=true;
@@ -292,7 +311,7 @@ public final class BroodPile extends BlockEntity {
         if (queenId == null || plan == null) return;
         out.putString("Queen", queenId.toString()); out.store("Entrance", BlockPos.CODEC, plan.entrance()); out.putString("Direction", plan.direction().getName());
         out.putLong("LoadedTicks", loadedTicks); out.putString("Condition", condition);
-        out.putLong("StageDuration", stageDuration);
+        out.putLong("StageDuration", stageDuration); out.putInt("DevelopmentCredit", developmentCredit);
         out.putLong("NeglectGrace",neglectGrace);out.putLong("WaitingBound",waitingBound);
         out.store("Expired",com.mojang.serialization.Codec.unboundedMap(com.mojang.serialization.Codec.STRING,com.mojang.serialization.Codec.STRING),expired.entrySet().stream().collect(java.util.stream.Collectors.toMap(e->e.getKey().toString(),java.util.Map.Entry::getValue)));
         out.putLong("AdultLifespan",adultLifespan);out.putLong("AdultFastingGrace",fastingGrace);out.putInt("AdultCapacityBound",adultCapacity);
@@ -317,8 +336,8 @@ public final class BroodPile extends BlockEntity {
         Direction direction = Direction.byName(in.getStringOr("Direction", ""));
         if (direction == null || direction.getAxis().isVertical()) throw new IllegalArgumentException("Invalid nursery direction");
         NestPlan p = NestPlan.geometry(entrance, direction);
-        stageDuration = in.getLongOr("StageDuration", stageTicks());
-        if (stageDuration < 1 || stageDuration > Long.MAX_VALUE / LARVA_COST) throw new IllegalArgumentException("Invalid brood duration");
+        stageDuration = in.getLongOr("StageDuration", stageTicks()); developmentCredit = in.getIntOr("DevelopmentCredit", 0);
+        if (stageDuration < 1 || stageDuration > Long.MAX_VALUE / LARVA_COST || developmentCredit < 0 || developmentCredit >= BroodCapacity.SPEED_DIVISOR) throw new IllegalArgumentException("Invalid brood duration");
         if (!p.nursery().equals(getBlockPos())) throw new IllegalArgumentException("Misplaced nursery");
         Set<Integer> slots = new HashSet<>(); Set<UUID> ids = new HashSet<>();
         for (var child : in.childrenListOrEmpty("Brood")) {
@@ -328,7 +347,7 @@ public final class BroodPile extends BlockEntity {
         }
         for (String s : in.read("Consumed", com.mojang.serialization.Codec.STRING.listOf()).orElse(List.of())) consumed.add(UUID.fromString(s));
         original.addAll(in.read("Original",com.mojang.serialization.Codec.STRING.listOf()).orElseGet(()->java.util.stream.Stream.concat(java.util.stream.Stream.concat(consumed.stream(),expired.keySet().stream()),records.stream().filter(BroodRecord::founding).map(BroodRecord::id)).map(UUID::toString).toList()).stream().map(UUID::fromString).toList());
-        if (records.size() > CAPACITY || ids.stream().anyMatch(consumed::contains)||original.size()!=CAPACITY||expired.keySet().stream().anyMatch(consumed::contains)||!java.util.stream.Stream.concat(java.util.stream.Stream.concat(ids.stream(),consumed.stream()),expired.keySet().stream()).toList().containsAll(original)) throw new IllegalArgumentException("Invalid reusable nursery ownership");
+        if (records.size() > BroodCapacity.MAX_SLOTS || ids.stream().anyMatch(consumed::contains)||original.size()!=CAPACITY||expired.keySet().stream().anyMatch(consumed::contains)||!java.util.stream.Stream.concat(java.util.stream.Stream.concat(ids.stream(),consumed.stream()),expired.keySet().stream()).toList().containsAll(original)) throw new IllegalArgumentException("Invalid reusable nursery ownership");
         operational=in.getBooleanOr("Operational",false);lastLayingTick=in.getLongOr("LastLayingTick",0);archivedApples=in.getLongOr("ConsumedApples",0);archivedBerries=in.getLongOr("ConsumedBerries",0);archivedChickens=in.getLongOr("ConsumedChickens",0);archivedNectar=in.getLongOr("ConsumedNectar",0);archivedNectarV2=in.getLongOr("ConsumedNectarV2",0);archivedPrey=in.getLongOr("ConsumedPrey",0);archivedFlesh=in.getLongOr("ConsumedFlesh",0);
         if(lastLayingTick<0||lastLayingTick>in.getLongOr("LoadedTicks",0)||archivedApples<0||archivedBerries<0||archivedChickens<0||archivedNectar<0||archivedNectarV2<0||archivedNectarV2>archivedNectar||archivedPrey<0||archivedFlesh<0)throw new IllegalArgumentException("Invalid nutrition history");
         queenId = id; plan = p; loadedTicks = Math.max(0, in.getLongOr("LoadedTicks", 0)); condition = in.getStringOr("Condition", "restored");

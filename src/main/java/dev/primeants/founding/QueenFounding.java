@@ -173,6 +173,7 @@ public final class QueenFounding {
                 var members=level.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(plan.chamber()).inflate(16),w->w.isAlive()&&!w.isRemoved()&&dev.primeants.worker.ColonyMembers.get(level).belongs(w,queen.getUUID(),plan.chamber()));
                 NestExpansion.get(level).consider(level,queen,members);
                 ChamberExcavation.get(level).consider(level,queen,members); // nest-plan chambers after the 0.1.0 widening
+                ChamberUpgrade.get(level).consider(level,queen,members); // wall upgrades once the stage unlocks a tier
                 for(var w:level.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(plan.chamber()).inflate(4),w->w.isAlive()&&!w.isRemoved()&&!w.isCallow()&&!w.isNoAi()))
                     if(!claimedBy(w)&&!w.workerTasks().construction()&&dev.primeants.worker.ColonyMembers.get(level).belongs(w,queen.getUUID(),plan.chamber()))w.workerTasks().assignNurse(plan);
             }

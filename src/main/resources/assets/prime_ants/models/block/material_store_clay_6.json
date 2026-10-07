@@ -1,45 +1,54 @@
 {
   "textures": {
-    "heap": "minecraft:block/cobblestone",
+    "heap": "minecraft:block/clay",
     "particle": "prime_ants:block/material_store"
   },
   "elements": [
     {
       "from": [
-        9,
+        2,
         4,
         3
       ],
       "to": [
-        14,
-        16,
+        7,
+        13.0,
         13
       ],
       "faces": {
         "up": {
           "texture": "#heap",
           "uv": [
-            9,
+            2,
             3,
-            14,
+            7,
+            13
+          ]
+        },
+        "down": {
+          "texture": "#heap",
+          "uv": [
+            2,
+            3,
+            7,
             13
           ]
         },
         "north": {
           "texture": "#heap",
           "uv": [
-            9,
-            0,
-            14,
+            2,
+            3.0,
+            7,
             12
           ]
         },
         "south": {
           "texture": "#heap",
           "uv": [
-            9,
-            0,
-            14,
+            2,
+            3.0,
+            7,
             12
           ]
         },
@@ -47,7 +56,7 @@
           "texture": "#heap",
           "uv": [
             3,
-            0,
+            3.0,
             13,
             12
           ]
@@ -56,7 +65,7 @@
           "texture": "#heap",
           "uv": [
             3,
-            0,
+            3.0,
             13,
             12
           ]

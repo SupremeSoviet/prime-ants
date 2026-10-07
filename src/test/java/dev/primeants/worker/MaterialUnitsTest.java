@@ -54,6 +54,7 @@ class MaterialUnitsTest {
 
     @Test
     void theVisibleHeapsRiseOneLevelPerFourUnitsUpToTheShare() {
-        assertEquals(List.of(0, 1, 1, 1, 1, 2, 3, 4, 4, 4), List.of(0, 1, 2, 3, 4, 5, 9, 13, 16, 32).stream().map(n -> MaterialUnits.level(n)).toList());
+        // T05: no clamp at the 16-unit share any more; a full store's 32 clay show eight levels (MaterialStoreDisplayTest).
+        assertEquals(List.of(0, 1, 1, 1, 1, 2, 3, 4, 4, 8), List.of(0, 1, 2, 3, 4, 5, 9, 13, 16, 32).stream().map(n -> MaterialUnits.level(n)).toList());
     }
 }

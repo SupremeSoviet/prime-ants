@@ -1,63 +1,72 @@
 {
   "textures": {
-    "heap": "minecraft:block/gravel",
+    "lump": "minecraft:block/raw_iron_block",
     "particle": "prime_ants:block/material_store"
   },
   "elements": [
     {
       "from": [
-        9,
+        12,
         4,
-        3
+        13
       ],
       "to": [
         14,
-        13,
-        13
+        6,
+        15
       ],
       "faces": {
         "up": {
-          "texture": "#heap",
+          "texture": "#lump",
           "uv": [
-            9,
-            3,
+            12,
+            13,
             14,
-            13
+            15
+          ]
+        },
+        "down": {
+          "texture": "#lump",
+          "uv": [
+            12,
+            13,
+            14,
+            15
           ]
         },
         "north": {
-          "texture": "#heap",
+          "texture": "#lump",
           "uv": [
-            9,
-            3,
+            12,
+            10,
             14,
             12
           ]
         },
         "south": {
-          "texture": "#heap",
+          "texture": "#lump",
           "uv": [
-            9,
-            3,
+            12,
+            10,
             14,
             12
           ]
         },
         "east": {
-          "texture": "#heap",
+          "texture": "#lump",
           "uv": [
-            3,
-            3,
             13,
+            10,
+            15,
             12
           ]
         },
         "west": {
-          "texture": "#heap",
+          "texture": "#lump",
           "uv": [
-            3,
-            3,
             13,
+            10,
+            15,
             12
           ]
         }

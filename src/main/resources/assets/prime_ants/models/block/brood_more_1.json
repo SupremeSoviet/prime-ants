@@ -1,0 +1,146 @@
+{
+  "textures": {
+    "cocoon": "prime_ants:block/brood_cocoon",
+    "larva": "prime_ants:block/brood_larva",
+    "egg": "prime_ants:block/brood_egg",
+    "particle": "prime_ants:block/brood_cocoon"
+  },
+  "elements": [
+    {
+      "from": [
+        1.0,
+        0,
+        8.5
+      ],
+      "to": [
+        3.2,
+        1.6,
+        10.1
+      ],
+      "faces": {
+        "up": {
+          "texture": "#cocoon",
+          "uv": [
+            1.0,
+            8.5,
+            3.2,
+            10.1
+          ]
+        },
+        "down": {
+          "texture": "#cocoon",
+          "uv": [
+            1.0,
+            8.5,
+            3.2,
+            10.1
+          ]
+        },
+        "north": {
+          "texture": "#cocoon",
+          "uv": [
+            1.0,
+            14.4,
+            3.2,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#cocoon",
+          "uv": [
+            1.0,
+            14.4,
+            3.2,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#cocoon",
+          "uv": [
+            8.5,
+            14.4,
+            10.1,
+            16
+          ]
+        },
+        "west": {
+          "texture": "#cocoon",
+          "uv": [
+            8.5,
+            14.4,
+            10.1,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "from": [
+        11.5,
+        0,
+        8.5
+      ],
+      "to": [
+        13.7,
+        1.6,
+        10.1
+      ],
+      "faces": {
+        "up": {
+          "texture": "#larva",
+          "uv": [
+            11.5,
+            8.5,
+            13.7,
+            10.1
+          ]
+        },
+        "down": {
+          "texture": "#larva",
+          "uv": [
+            11.5,
+            8.5,
+            13.7,
+            10.1
+          ]
+        },
+        "north": {
+          "texture": "#larva",
+          "uv": [
+            11.5,
+            14.4,
+            13.7,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#larva",
+          "uv": [
+            11.5,
+            14.4,
+            13.7,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#larva",
+          "uv": [
+            8.5,
+            14.4,
+            10.1,
+            16
+          ]
+        },
+        "west": {
+          "texture": "#larva",
+          "uv": [
+            8.5,
+            14.4,
+            10.1,
+            16
+          ]
+        }
+      }
+    }
+  ]
+}

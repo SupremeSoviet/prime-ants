@@ -17,10 +17,10 @@ import net.minecraft.world.level.block.state.BlockState;
 
 /** The queen's hall in real loaded ticks: a Young colony with a confirmed store digs the hall beside the queen's own
  * chamber, on the widening side its widening did not take. The queen and her brood pile never move, so the queen stays
- * ready and no egg misses care from the hall's planning on, and eggs laid while the hall is open develop; the hall
- * registers once and is confirmed by the colony's own nursery, and a real breach in its loaded shell loses the function.
- * Production founding, dropped food, real brood-derived workers. Laying is food-limited (T22), so the test waits for an
- * egg to develop with the hall open rather than requiring one inside the short dig. */
+ * ready and no egg misses care from the hall's planning on, and eggs develop during the dig itself; the hall registers
+ * once and is confirmed by the colony's own nursery, and a real breach in its loaded shell loses the function.
+ * Production founding, dropped food, real brood-derived workers. Laying is food-limited (T22), so the fixture drops more
+ * food when the store is planned, thousands of ticks before the hall is dug. */
 public final class QueensHallGameTest {
     private final NestPlanFixture fx = new NestPlanFixture();
 
@@ -50,7 +50,7 @@ public final class QueensHallGameTest {
                 c.assertTrue(q.founding().ready(),"The queen stays ready while her chamber's wall opens: "+q.founding().reason());
                 for(var r:p.records()){
                     c.assertTrue(!r.neglectReason().equals("egg_care_missing")&&!(r.stage()==BroodStage.EGG&&r.neglectTicks()>0),"Eggs are cared for while the hall is dug and open: "+r.id()+" "+r.neglectReason());
-                    if(hall.removed()==0)continue;
+                    if(hall.removed()==0||hall.complete())continue; // count development during the dig only
                     if(r.stage()==BroodStage.EGG){var was=eggs.put(r.id(),r.progress());if(was!=null&&r.progress()>was)developed[0]++;}
                     else if(eggs.remove(r.id())!=null)developed[0]++; // an egg became a larva
                 }
@@ -70,6 +70,7 @@ public final class QueensHallGameTest {
                 c.assertTrue(NestPlanFixture.chamber(e,ChamberExcavation.HALL).problem()==null&&e.inputs().tier(ChamberFunction.QUEENS_HALL).known()==1&&!names.contains("queens_hall")
                     &&names.contains("adults")&&e.stage()==ColonyStage.YOUNG,"The evaluator confirms the hall; the colony stays Young: "+e);
                 c.assertTrue(hall.removed()==12&&hall.deposited==12&&hall.released==0,"Twelve real removals, all on the mound");
+                c.assertTrue(developed[0]>0,"Eggs developed during the dig: "+developed[0]);
                 for(var b:hall.tasks)c.assertTrue(ColonyTerrain.get(l).opened(l,b,q.getUUID()),"Every hall cell is this colony's worker opening: "+b);
                 var store=NestPlanFixture.job(c,q,ChamberExcavation.STORE);
                 Set<BlockPos> allowed=new HashSet<>(hall.tasks);allowed.addAll(hall.surfaces());allowed.addAll(store.tasks);allowed.addAll(store.surfaces());allowed.addAll(NestExpansion.deposits(plan));allowed.add(plan.nursery());allowed.add(plan.cache());
@@ -78,7 +79,6 @@ public final class QueensHallGameTest {
                 return;
             }
             if(!broken[0]){
-                if(developed[0]==0){if((c.getTick()-confirmedAt[0])%1000==0)PrimeAnts.LOGGER.info("T04 hall waits for an egg queen={} tick={} pile={} records={}",q.getUUID(),c.getTick(),p.condition(),p.records().stream().map(r->r.stage()+":"+r.progress()).toList());return;}
                 c.assertTrue(NestPlanFixture.presence(e,ChamberExcavation.HALL,ChamberFunction.QUEENS_HALL)==ColonyDevelopment.Presence.CONFIRMED,"The hall is still confirmed while eggs develop beside it: "+e);
                 PrimeAnts.LOGGER.info("T04 HALL EGGS DEVELOPED queen={} tick={} developed={} sinceConfirmed={}",q.getUUID(),c.getTick(),developed[0],c.getTick()-confirmedAt[0]);
                 // A real breach in the hall's loaded outer wall, beside its middle floor cell.

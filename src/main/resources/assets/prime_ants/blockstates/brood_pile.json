@@ -71,6 +71,38 @@
       "apply": {
         "model": "prime_ants:block/brood_cocoon_c"
       }
+    },
+    {
+      "when": {
+        "more": "1"
+      },
+      "apply": {
+        "model": "prime_ants:block/brood_more_1"
+      }
+    },
+    {
+      "when": {
+        "more": "2"
+      },
+      "apply": {
+        "model": "prime_ants:block/brood_more_2"
+      }
+    },
+    {
+      "when": {
+        "more": "3"
+      },
+      "apply": {
+        "model": "prime_ants:block/brood_more_3"
+      }
+    },
+    {
+      "when": {
+        "more": "4"
+      },
+      "apply": {
+        "model": "prime_ants:block/brood_more_4"
+      }
     }
   ]
 }

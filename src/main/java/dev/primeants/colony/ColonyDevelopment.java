@@ -3,9 +3,13 @@ package dev.primeants.colony;
 import dev.primeants.PrimeAnts;
 import dev.primeants.brood.BroodPile;
 import dev.primeants.entity.LasiusNigerEntity;
+import dev.primeants.brood.NurseryBlocks;
 import dev.primeants.founding.ChamberExcavation;
+import dev.primeants.founding.ChamberUpgrade;
+import dev.primeants.founding.ColonyTerrain;
 import dev.primeants.founding.Findings;
 import dev.primeants.founding.NestPlan;
+import dev.primeants.founding.NestWalls;
 import dev.primeants.worker.AdultHistory;
 import dev.primeants.worker.ColonyMembers;
 import dev.primeants.worker.MaterialStore;
@@ -20,12 +24,11 @@ import net.minecraft.server.level.ServerLevel;
 public final class ColonyDevelopment {
     /** Loaded nursery ticks between slow-cadence evaluations. Membership changes re-evaluate at the next decision. */
     public static final int INTERVAL = 100;
-    /** Packed-earth walls. Tier 2 and 3 wall materials arrive with later upgrade work. */
-    static final int EARTHEN = 1;
     public enum Presence { CONFIRMED, ABSENT, UNKNOWN }
-    /** Live tier is 0 unless the chamber is open and enclosed now. */
-    public record ChamberState(String id, Map<ChamberFunction, Presence> functions, int tier, String problem) {
-        @Override public String toString() { return id + functions + " tier=" + tier + (problem == null ? "" : " problem=" + problem); }
+    /** Live tier is 0 unless the chamber is open and enclosed now; then it is the lowest tier of its walls (NestWalls),
+     * read now. clay is the clay units in its walls that the colony itself built, counted only while confirmed. */
+    public record ChamberState(String id, Map<ChamberFunction, Presence> functions, int tier, String problem, int clay) {
+        @Override public String toString() { return id + functions + " tier=" + tier + (clay == 0 ? "" : " wallClay=" + clay) + (problem == null ? "" : " problem=" + problem); }
     }
     public record Evaluation(ColonyStage previous, StageRules.Result result, StageRules.Inputs inputs, List<ChamberState> chambers, int cap) {
         public ColonyStage stage() { return result.stage(); }
@@ -46,7 +49,8 @@ public final class ColonyDevelopment {
         }
         var states = new ArrayList<ChamberState>();
         var tiers = new EnumMap<ChamberFunction, int[]>(ChamberFunction.class);
-        int food = 0, foodUnknown = 0, storesUnknown = 0;
+        int food = 0, foodUnknown = 0, storesUnknown = 0, wallClay = 0, wallClayUnknown = 0;
+        var upgrades = ChamberUpgrade.get(l);
         var stores = new ArrayList<List<MaterialUnits.Material>>();
         // One connected nest: the founding chamber's habitat covers the stairs, the widening and every dug chamber.
         var habitat = plan.nurseryFindings(l, queen, operational);
@@ -58,6 +62,9 @@ public final class ColonyDevelopment {
                 if (presence == Presence.CONFIRMED) { t[0] = Math.max(t[0], state.tier()); t[1] = Math.max(t[1], state.tier()); }
                 else if (presence == Presence.UNKNOWN) t[1] = Math.max(t[1], chamber.tier());
             });
+            // Clay the colony built into a confirmed chamber's walls still counts; an unknown chamber may hold what it built.
+            wallClay += state.clay();
+            if (state.tier() == 0 && state.functions().containsValue(Presence.UNKNOWN)) wallClayUnknown += upgrades.builtClay(queen, chamber.id());
             var store = state.functions().get(ChamberFunction.FOOD_STORE);
             if (store == Presence.CONFIRMED && l.getBlockEntity(chamber.markers().get(ChamberFunction.FOOD_STORE)) instanceof NestCache cache) food += cache.size();
             else if (store == Presence.UNKNOWN) foodUnknown += NestCache.CAPACITY;
@@ -69,8 +76,12 @@ public final class ColonyDevelopment {
         }
         var bounds = new EnumMap<ChamberFunction, StageRules.Bound>(ChamberFunction.class);
         tiers.forEach((f, t) -> bounds.put(f, new StageRules.Bound(t[0], t[1])));
+        // Clay moved from the store toward the walls stays counted: units in the upgrade builder's mandibles are known
+        // while it is seen carrying them, possible while it is unavailable (ChamberUpgrade.carried).
+        var stored = MaterialUnits.stock(stores, storesUnknown, MaterialUnits.Material.CLAY); var carried = upgrades.carried(l, queen);
+        var clay = new StageRules.Bound(stored.known() + wallClay + carried.known(), stored.possible() + wallClay + wallClayUnknown + carried.possible());
         var inputs = new StageRules.Inputs(new StageRules.Bound(known, known + unknown), bounds, new StageRules.Bound(food, food + foodUnknown),
-            MaterialUnits.stock(stores, storesUnknown, MaterialUnits.Material.CLAY), MaterialUnits.stock(stores, storesUnknown, MaterialUnits.Material.STONE));
+            clay, MaterialUnits.stock(stores, storesUnknown, MaterialUnits.Material.STONE));
         var result = StageRules.evaluate(colony.stage(), inputs);
         int cap = AdultBound.effectiveCap(result.stage(), bound);
         if (!registered || result.stage() != colony.stage()) {
@@ -100,7 +111,7 @@ public final class ColonyDevelopment {
             var room = ChamberExcavation.roomFindings(l, queen, plan, chamber.min(), chamber.max());
             if (room == null) {
                 for (var f : chamber.functions()) functions.put(f, Presence.ABSENT);
-                return new ChamberState(chamber.id(), functions, 0, "no_live_confirmation_rule");
+                return new ChamberState(chamber.id(), functions, 0, "no_live_confirmation_rule", 0);
             }
             space = habitat.copy().add(room);
         }
@@ -115,7 +126,21 @@ public final class ColonyDevelopment {
             functions.put(f, switch (check.verdict()) { case CLEAR -> Presence.CONFIRMED; case UNKNOWN -> Presence.UNKNOWN; case DAMAGED -> Presence.ABSENT; });
             all.add(check);
         }
-        return new ChamberState(chamber.id(), functions, space.verdict() == Findings.Verdict.CLEAR ? Math.min(chamber.tier(), EARTHEN) : 0, all.problem());
+        if (space.verdict() != Findings.Verdict.CLEAR) return new ChamberState(chamber.id(), functions, 0, all.problem(), 0);
+        var walls = walls(l, queen, plan, chamber);
+        return new ChamberState(chamber.id(), functions, walls[0], all.problem(), walls[1]);
+    }
+    /** A confirmed chamber's walls (NestWalls), read now: their lowest tier, and the clay units in the cells the colony
+     * itself built of packed clay. A confirmed chamber's walls are loaded (its shell scan read them); an unloaded one
+     * would only count as earth. */
+    private static int[] walls(ServerLevel l, UUID queen, NestPlan plan, ChamberRegistry.Chamber chamber) {
+        var terrain = ColonyTerrain.get(l); var tiers = new ArrayList<Integer>(); int clay = 0;
+        for (var p : ChamberUpgrade.walls(plan, chamber)) {
+            if (!NestPlan.loaded(l, p)) { tiers.add(1); continue; }
+            tiers.add(terrain.wallTier(l, p, queen));
+            if (terrain.built(l, p, queen, NurseryBlocks.PACKED_CLAY)) clay += NestWalls.CLAY_PER_CELL;
+        }
+        return new int[]{NestWalls.chamberTier(tiers), clay};
     }
     private static boolean ownedMarker(ServerLevel l, UUID queen, NestPlan plan, ChamberFunction f, BlockPos marker) {
         return switch (f) {

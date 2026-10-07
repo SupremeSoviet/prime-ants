@@ -55,10 +55,45 @@ public final class MaterialHaulingGameTest {
             c.assertTrue(count(s,Items.CLAY_BALL)==3&&count(s,Items.COBBLESTONE)==2&&count(s,Items.COAL)==1&&!onGround(c,MaterialStore::material)&&!onGround(c,st->st.is(Items.APPLE))&&pickups[0]==6,
                 "Every dropped unit is in the store, each carried once, and the dropped food was collected: "+s.contents());
             var state=s.getBlockState();
-            c.assertTrue(state.getValue(MaterialStoreBlock.CLAY)==1&&state.getValue(MaterialStoreBlock.STOCK)==1&&state.getValue(MaterialStoreBlock.HEAP)==MaterialStoreBlock.Heap.COBBLESTONE,"The store shows a clay heap and a cobblestone heap: "+state);
+            c.assertTrue(state.getValue(MaterialStoreBlock.CLAY)==1&&state.getValue(MaterialStoreBlock.STOCK)==1&&state.getValue(MaterialStoreBlock.STONE)&&state.getValue(MaterialStoreBlock.ORE)
+                &&!state.getValue(MaterialStoreBlock.GRAVEL)&&!state.getValue(MaterialStoreBlock.SAND),"The store shows a clay heap, a heap of other stock, and stone and ore lumps for its cobblestone and coal: "+state);
             if(e==null||e.inputs().clay().known()!=3)return; // the nursery's next evaluation
             c.assertTrue(e.inputs().clay().equals(new StageRules.Bound(3,3))&&e.inputs().stone().equals(new StageRules.Bound(2,2))&&NestPlanFixture.storeConfirmed(e),"The evaluator counts clay and stone from the confirmed store; coal is ore: "+e.inputs());
             PrimeAnts.LOGGER.info("T04 HAUL STORED queen={} tick={} contents={} state={} evaluation={}",q.getUUID(),c.getTick(),s.contents(),state,e);c.succeed();
+        });
+    }
+
+    /** T05 review fix: food comes first up to the moment a material leaves the ground. An apple dropped while the forager
+     * walks to the clay takes it away from the clay, which stays on the ground until the apple is collected. */
+    @GameTest(maxTicks=48000,structure="prime_ants_test:idle_ground")
+    public void foodDroppedWhileTheForagerWalksToClayIsCollectedBeforeTheClay(GameTestHelper c){
+        var q=fx.start(c);boolean[] supplied={false},dropped={false},switched={false};Map<Item,Integer> drops=new LinkedHashMap<>();UUID[] forager={null},clay={null},apple={null};ItemStack[] first={null};
+        c.onEachTick(()->{
+            var l=c.getLevel();var p=NestPlanFixture.pile(c,q);fx.grow(c,q,supplied);if(p==null)return;
+            var e=p.stageEvaluation();
+            if(!dropped[0]){
+                // Clay alone, once the store stands and the growth food is gone.
+                if(!NestPlanFixture.storeConfirmed(e)||onGround(c,WorkerTasks::food))return;
+                dropped[0]=true;drops.put(Items.CLAY_BALL,2);clay[0]=fx.drop(c,drops(q),new ItemStack(Items.CLAY_BALL,2)).getUUID();return;
+            }
+            fx.accounted(c,q,drops);
+            if(apple[0]==null){
+                var w=fx.f.workers(c,q).stream().filter(a->a.workerTasks().phase()==WorkerTasks.Phase.APPROACH&&clay[0].equals(a.workerTasks().sourceId())&&a.getMainHandItem().isEmpty()).findFirst().orElse(null);
+                if(w==null)return;
+                // The forager is on its way to the clay, mandibles empty: a player drops an apple.
+                forager[0]=w.getUUID();apple[0]=fx.drop(c,q.founding().plan().at(-3,0,1),new ItemStack(Items.APPLE,1)).getUUID();
+                PrimeAnts.LOGGER.info("T05 FOOD DROPPED DURING MATERIAL APPROACH queen={} forager={} position={} tick={}",q.getUUID(),w.getUUID(),w.position(),c.getTick());return;
+            }
+            var w=fx.f.workers(c,q).stream().filter(a->a.getUUID().equals(forager[0])).findFirst().orElse(null);
+            if(w!=null&&w.workerTasks().reason().equals("food_before_material"))switched[0]=true;
+            if(w!=null&&first[0]==null&&!w.getMainHandItem().isEmpty())first[0]=w.getMainHandItem().copy();
+            boolean appleOnGround=l.getEntity(apple[0]) instanceof ItemEntity i&&i.isAlive();
+            if(appleOnGround)c.assertTrue(fx.ledger(c,q,Items.CLAY_BALL).ground()==2&&carriers(c,q).isEmpty(),"No clay leaves the ground while the apple lies there: "+fx.ledger(c,q,Items.CLAY_BALL));
+            if(first[0]!=null)c.assertTrue(first[0].is(Items.APPLE),"The forager's next cargo is the apple, not the clay: "+first[0]);
+            var s=NestPlanFixture.store(c,q);
+            if(count(s,Items.CLAY_BALL)<2)return;
+            c.assertTrue(switched[0]&&first[0]!=null&&!appleOnGround&&fx.ledger(c,q,Items.CLAY_BALL).stored()==2,"The forager left the clay for the apple, and both clay units reached the store afterwards");
+            PrimeAnts.LOGGER.info("T05 FOOD BEFORE MATERIAL queen={} forager={} first={} tick={} contents={}",q.getUUID(),forager[0],first[0],c.getTick(),s.contents());c.succeed();
         });
     }
 
@@ -105,7 +140,8 @@ public final class MaterialHaulingGameTest {
                 "With its share full nobody takes the last cobblestone: it stays on the ground");
             if(c.getTick()-fullSince[0]<1200)return;
             var state=s.getBlockState();
-            c.assertTrue(state.getValue(MaterialStoreBlock.STOCK)==4&&state.getValue(MaterialStoreBlock.CLAY)==1&&state.getValue(MaterialStoreBlock.HEAP)==MaterialStoreBlock.Heap.COBBLESTONE,"The full share shows a full cobblestone heap: "+state);
+            c.assertTrue(state.getValue(MaterialStoreBlock.STOCK)==4&&state.getValue(MaterialStoreBlock.CLAY)==1&&state.getValue(MaterialStoreBlock.STONE)
+                &&!state.getValue(MaterialStoreBlock.GRAVEL)&&!state.getValue(MaterialStoreBlock.SAND)&&!state.getValue(MaterialStoreBlock.ORE),"The full share shows a full stock heap with only a stone lump: "+state);
             PrimeAnts.LOGGER.info("T04 HAUL FULL SHARE HELD queen={} tick={} contents={}",q.getUUID(),c.getTick(),s.contents());c.succeed();
         });
     }

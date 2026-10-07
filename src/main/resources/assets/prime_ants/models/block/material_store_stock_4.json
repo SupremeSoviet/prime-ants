@@ -1,6 +1,6 @@
 {
   "textures": {
-    "heap": "minecraft:block/stone",
+    "heap": "prime_ants:block/material_stock",
     "particle": "prime_ants:block/material_store"
   },
   "elements": [
@@ -17,6 +17,15 @@
       ],
       "faces": {
         "up": {
+          "texture": "#heap",
+          "uv": [
+            9,
+            3,
+            14,
+            13
+          ]
+        },
+        "down": {
           "texture": "#heap",
           "uv": [
             9,

@@ -6,6 +6,8 @@ import dev.primeants.colony.ChamberRegistry;
 import dev.primeants.colony.ColonyDevelopment;
 import dev.primeants.entity.LasiusNigerEntity;
 import dev.primeants.founding.ChamberExcavation;
+import dev.primeants.founding.ChamberUpgrade;
+import dev.primeants.founding.NestWalls;
 import dev.primeants.founding.NestBlueprint;
 import dev.primeants.founding.NestPlan;
 import java.util.ArrayList;
@@ -87,6 +89,25 @@ public final class MaterialStore extends BlockEntity {
                 || !WorkerTasks.reaches(l, w, Vec3.atBottomCenterOf(getBlockPos()).add(0, 0.15, 0))
                 || ColonyDevelopment.presence(l, colony, p, ChamberExcavation.STORE, ChamberFunction.MATERIAL_STORE) != ColonyDevelopment.Presence.CONFIRMED) return false;
         contents.add(cargo.copy()); w.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY); changed(); return true;
+    }
+    /** The colony's claimed upgrade builder (ChamberUpgrade), empty-handed and in reach, takes one wall cell's clay out of
+     * the store while the store's chamber is confirmed now. The unit goes into its mandibles and the job counts it taken. */
+    public boolean takeForUpgrade(LasiusNigerEntity w, NestPlan p, ChamberUpgrade.Job job) {
+        if (!(level instanceof ServerLevel l) || !upgradeReach(l, w, p, job) || !w.getMainHandItem().isEmpty() || units(MaterialUnits.Material.CLAY) < NestWalls.CLAY_PER_CELL) return false;
+        int index = 0; while (kind(contents.get(index)) != MaterialUnits.Material.CLAY) index++;
+        w.setItemSlot(EquipmentSlot.MAINHAND, contents.remove(index)); job.took(l); changed(); return true;
+    }
+    /** The claimed builder of a job that stopped while it carried clay puts the unit back; the job no longer counts it. */
+    public boolean putBack(LasiusNigerEntity w, NestPlan p, ChamberUpgrade.Job job) {
+        var cargo = w.getMainHandItem();
+        if (!(level instanceof ServerLevel l) || !upgradeReach(l, w, p, job) || !cargo.is(net.minecraft.world.item.Items.CLAY_BALL) || cargo.getCount() != NestWalls.CLAY_PER_CELL
+                || job.carried() < NestWalls.CLAY_PER_CELL || !room(cargo)) return false;
+        contents.add(cargo.copy()); w.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY); job.putBack(l); changed(); return true;
+    }
+    private boolean upgradeReach(ServerLevel l, LasiusNigerEntity w, NestPlan p, ChamberUpgrade.Job job) {
+        return w.queenId() != null && ownedBy(w.queenId(), p) && job != null && w.getUUID().equals(job.claim) && w.workerTasks().upgradeAuthorized(l)
+            && WorkerTasks.reaches(l, w, Vec3.atBottomCenterOf(getBlockPos()).add(0, 0.15, 0))
+            && ColonyDevelopment.presence(l, colony, p, ChamberExcavation.STORE, ChamberFunction.MATERIAL_STORE) == ColonyDevelopment.Presence.CONFIRMED;
     }
     /** A walkable store floor cell beside the block, nearest the worker, from which it reaches the block. */
     public BlockPos stand(ServerLevel l, LasiusNigerEntity w) {
