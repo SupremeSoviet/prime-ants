@@ -24,7 +24,8 @@ import net.minecraft.world.phys.AABB;
 /** Production egg founding, dropped food and real loaded ticks. The stage is only ever evaluated by the colony's own
  * nursery; tests read the registry. Fixtures are real damage, entity/block-entity/SavedData restores, saved tags, real
  * blocks and one injected unavailable cell (UnavailableCells). The shared 14x14 pad ends one cell beyond the founding
- * chamber's back wall, so no material-store placement validates here (MaterialStoreGameTest). */
+ * chamber's back wall, so no material-store placement validates here (MaterialStoreGameTest), except in the T04
+ * integration case, which uses the nest-plan fixture (NestPlanFixture). */
 public final class ColonyStageGameTest {
     private final WorkerForagingGameTest f=new WorkerForagingGameTest();
     private final NursingGameTest food=new NursingGameTest();
@@ -251,6 +252,33 @@ public final class ColonyStageGameTest {
                 &&e.result().missing(ColonyStage.YOUNG).toString().equals("[nursery 0/1, food_store 0/1]"),"A loaded broken wall beside an unavailable entrance is loss, not unknown: "+e);
             c.assertTrue("enclosure_shell_open".equals(plan.nurseryProblem(l,q.getUUID(),true)),"Brood care sees the same observed breach, not the unavailable entrance");
             PrimeAnts.LOGGER.info("Stage-1 HIDDEN ENTRANCE BROKEN WALL queen={} cell={} wall={} evaluation={}",q.getUUID(),cell,wall,e);step[0]=2;c.succeed();
+        });
+    }
+
+    /** T04 integration, through real play only: the colony digs its material store and its queen's hall, its forager
+     * carries clay a player dropped behind the entrance into the store, and dropped food fills its cache. The colony
+     * stays Young and Mature then lacks nothing but adults. */
+    @GameTest(maxTicks=60000,structure="prime_ants_test:idle_ground")
+    public void youngColonyMeetsEveryMatureRequirementButAdultsThroughRealPlay(GameTestHelper c){
+        var fx=new NestPlanFixture();var q=fx.start(c);boolean[] supplied={false},clay={false},fed={false};
+        c.onEachTick(()->{
+            var p=food.pile(c,q);fx.grow(c,q,supplied);fx.soil(c,q);if(p==null)return;
+            // A player drops eighteen clay balls behind the entrance as soon as the nest opens...
+            if(!clay[0]&&supplied[0]){clay[0]=true;fx.drop(c,q.founding().plan().at(-5,0,1),new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.CLAY_BALL,18));}
+            if(clay[0])fx.accounted(c,q,Map.of(net.minecraft.world.item.Items.CLAY_BALL,18));
+            var e=p.stageEvaluation();var store=NestPlanFixture.store(c,q);
+            // ...and more food once the store holds Mature's clay.
+            if(!fed[0]&&store!=null&&store.units(dev.primeants.worker.MaterialUnits.Material.CLAY)>=16){fed[0]=true;food.supply(c,q,6,4);}
+            if(c.getTick()%1000==0)PrimeAnts.LOGGER.info("T04 MATURE trace tick={} store={} cache={} evaluation={}",c.getTick(),store==null?null:store.contents().size(),f.cache(c,q)==null?null:f.cache(c,q).size(),e);
+            if(e==null||!fed[0])return;
+            var missing=e.result().missing(ColonyStage.MATURE);
+            if(missing.size()!=1||!missing.getFirst().requirement().name().equals("adults"))return;
+            var colony=colony(c,q);var ids=colony.chambers().stream().map(ChamberRegistry.Chamber::id).toList();
+            c.assertTrue(e.stage()==ColonyStage.YOUNG&&colony.stage()==ColonyStage.YOUNG&&e.result().certain()==ColonyStage.YOUNG&&missing.toString().equals("[adults "+e.inputs().adults()+"/25]")
+                &&e.inputs().adults().known()<25&&e.inputs().clay().known()>=16&&e.inputs().food().known()>=4&&e.inputs().tier(ChamberFunction.QUEENS_HALL).known()==1
+                &&e.inputs().tier(ChamberFunction.MATERIAL_STORE).known()==1&&ids.equals(List.of(ChamberRegistry.FOUNDING,dev.primeants.founding.ChamberExcavation.STORE,dev.primeants.founding.ChamberExcavation.HALL)),
+                "Every Mature requirement but adults is met by live bodies and blocks: "+e);
+            PrimeAnts.LOGGER.info("Stage-1 T04 MATURE BUT ADULTS queen={} tick={} registry={} evaluation={}",q.getUUID(),c.getTick(),colony,e);c.succeed();
         });
     }
 

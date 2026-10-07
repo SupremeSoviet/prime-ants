@@ -532,6 +532,25 @@ public final class WorkerTasks {
             var path=worker.getNavigation().createPath(p,0,48);if(path==null||!path.canReach())continue;
             flowerSource=p;flowerStand=p;flowerExpected=l.getBlockState(p).toString();harvestingTicks=0;next(Phase.NECTAR_APPROACH,"supported_ready_native_food_found");return;
         }
+        if(flowerInspections>=FLOWER_INSPECTION_BUDGET)materials(l);
+    }
+    /** Food comes first: dropped natural material is searched only once this trip found no dropped or native food.
+     * It is taken from item entities on the ground in the same search area, one unit at a time, and only while the
+     * colony's store is confirmed and has room for it. At most 8 path trials per pulse. */
+    private void materials(ServerLevel l){
+        var store=MaterialStore.confirmed(l,worker.queenId(),plan);if(store==null)return;
+        var candidates=new java.util.ArrayList<ItemEntity>();
+        l.getEntities(net.minecraft.world.level.entity.EntityTypeTest.forClass(ItemEntity.class),new AABB(plan.outside()).inflate(SEARCH_RADIUS,3,SEARCH_RADIUS),
+            i->i.isAlive()&&!i.isRemoved()&&!i.hasPickUpDelay()&&store.room(i.getItem())&&NestPlan.loaded(l,i.blockPosition()),candidates,DROPPED_TOTAL);
+        candidates.sort(java.util.Comparator.comparingDouble(worker::distanceToSqr));
+        int attempts=0;
+        for(var item:candidates){
+            if(!withinSearch(item.blockPosition())||!NestPlan.walkable(l,item.blockPosition()))continue;
+            if(++attempts>8)break;
+            var path=worker.getNavigation().createPath(item.blockPosition(),0,48);
+            if(path==null||!path.canReach())continue;
+            source=item.getUUID();next(Phase.APPROACH,"supported_dropped_material_found");return;
+        }
     }
     private double harvestNeed(ServerLevel l,boolean prey){
         var q=queen(l);if(q==null)return 0;
@@ -578,18 +597,21 @@ public final class WorkerTasks {
     }
     private void pickup(ServerLevel l) {
         var entity=source==null?null:l.getEntity(source);
-        if(!(entity instanceof ItemEntity item) || !item.isAlive()||item.isRemoved()||item.hasPickUpDelay()||!food(item.getItem())||!withinSearch(item.blockPosition())||!NestPlan.loaded(l,item.blockPosition())) {source=null;next(Phase.SEARCH,"source_unavailable");return;}
+        if(!(entity instanceof ItemEntity item) || !item.isAlive()||item.isRemoved()||item.hasPickUpDelay()||!(food(item.getItem())||MaterialStore.material(item.getItem()))||!withinSearch(item.blockPosition())||!NestPlan.loaded(l,item.blockPosition())) {source=null;next(Phase.SEARCH,"source_unavailable");return;}
         if(!worker.getMainHandItem().isEmpty()) {next(Phase.RETURN,"existing_cargo_return");return;}
         Vec3 target=item.position().add(0,0.1,0);
         if(!reaches(l,worker,target)) {arrive(Vec3.atBottomCenterOf(item.blockPosition()));return;}
-        if(!authorized(l) || !item.isAlive() || item.hasPickUpDelay() || !food(item.getItem()) || !reaches(l,worker,target))return;
+        // A material unit is taken only while the confirmed store has room for it, checked at the moment of pickup.
+        if(!authorized(l) || !item.isAlive() || item.hasPickUpDelay() || !reaches(l,worker,target)
+            || !(food(item.getItem())||MaterialStore.material(item.getItem())&&MaterialStore.confirmed(l,worker.queenId(),plan) instanceof MaterialStore store&&store.room(item.getItem())))return;
         var remaining=item.getItem().copy();var cargo=remaining.split(1);
         item.setItem(remaining);if(remaining.isEmpty())item.discard();
-        worker.setItemSlot(EquipmentSlot.MAINHAND,cargo);source=null;next(Phase.RETURN,"physical_food_in_mandibles");
+        worker.setItemSlot(EquipmentSlot.MAINHAND,cargo);source=null;next(Phase.RETURN,food(cargo)?"physical_food_in_mandibles":"physical_material_in_mandibles");
         PrimeAnts.LOGGER.info("Worker pickup worker={} item={} position={}",worker.getUUID(),cargo,worker.position());
     }
     private void deposit(ServerLevel l) {
         if(worker.getMainHandItem().isEmpty()) {next(Phase.EXIT,"next_bounded_trip");cooldown=40;return;}
+        if(MaterialStore.material(worker.getMainHandItem())) {store(l);return;}
         if(!food(worker.getMainHandItem())) {hold("unsupported_cargo_retained");return;}
         BlockPos p=plan.cache();
         if(!reaches(l,worker,Vec3.atBottomCenterOf(p).add(0,0.15,0))) {arrive(Vec3.atBottomCenterOf(plan.at(3,-1,-2)).add(0.65,0,0));return;}
@@ -599,6 +621,22 @@ public final class WorkerTasks {
         if(l.getBlockEntity(p) instanceof NestCache cache && cache.deposit(worker,plan)) {
             PrimeAnts.LOGGER.info("Worker delivery worker={} cache={} stored={}",worker.getUUID(),p,cache.contents());next(Phase.EXIT,"food_physically_stored");cooldown=40;
         } else {hold("cache_full_blocked_or_foreign_cargo_retained");cooldown=40;}
+    }
+    /** From the founding chamber the carrier walks to its colony's store block and puts its one unit in. A missing, full
+     * or unconfirmed store leaves the unit in its mandibles, and it waits; then it returns through the chamber. */
+    private void store(ServerLevel l){
+        var store=MaterialStore.owned(l,worker.queenId(),plan);
+        if(store==null){hold("material_store_unavailable_cargo_retained");cooldown=40;return;}
+        var target=Vec3.atBottomCenterOf(store.getBlockPos()).add(0,0.15,0);
+        if(!reaches(l,worker,target)){
+            var stand=store.stand(l,worker);
+            if(stand==null){hold("material_store_stand_unavailable_cargo_retained");cooldown=40;return;}
+            arriveSupported(l,Vec3.atBottomCenterOf(stand));return;
+        }
+        worker.getNavigation().stop();worker.getLookControl().setLookAt(target.x,target.y,target.z);
+        if(store.deposit(worker,plan)){
+            PrimeAnts.LOGGER.info("Material stored worker={} store={} stored={}",worker.getUUID(),store.getBlockPos(),store.contents());next(Phase.RETURN,"material_physically_stored");cooldown=40;
+        } else {hold("material_store_full_or_unconfirmed_cargo_retained");cooldown=40;}
     }
     public void die(ServerLevel l) {
         if(phase==Phase.DEAD)return;worker.getNavigation().stop();

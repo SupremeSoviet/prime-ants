@@ -1,7 +1,293 @@
 {
-  "variants": {
-    "": {
-      "model": "prime_ants:block/material_store"
+  "multipart": [
+    {
+      "apply": {
+        "model": "prime_ants:block/material_store"
+      }
+    },
+    {
+      "when": {
+        "clay": "1"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_clay_1"
+      }
+    },
+    {
+      "when": {
+        "clay": "2"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_clay_2"
+      }
+    },
+    {
+      "when": {
+        "clay": "3"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_clay_3"
+      }
+    },
+    {
+      "when": {
+        "clay": "4"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_clay_4"
+      }
+    },
+    {
+      "when": {
+        "stock": "1",
+        "heap": "cobblestone"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_cobblestone_1"
+      }
+    },
+    {
+      "when": {
+        "stock": "2",
+        "heap": "cobblestone"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_cobblestone_2"
+      }
+    },
+    {
+      "when": {
+        "stock": "3",
+        "heap": "cobblestone"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_cobblestone_3"
+      }
+    },
+    {
+      "when": {
+        "stock": "4",
+        "heap": "cobblestone"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_cobblestone_4"
+      }
+    },
+    {
+      "when": {
+        "stock": "1",
+        "heap": "stone"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_stone_1"
+      }
+    },
+    {
+      "when": {
+        "stock": "2",
+        "heap": "stone"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_stone_2"
+      }
+    },
+    {
+      "when": {
+        "stock": "3",
+        "heap": "stone"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_stone_3"
+      }
+    },
+    {
+      "when": {
+        "stock": "4",
+        "heap": "stone"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_stone_4"
+      }
+    },
+    {
+      "when": {
+        "stock": "1",
+        "heap": "gravel"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_gravel_1"
+      }
+    },
+    {
+      "when": {
+        "stock": "2",
+        "heap": "gravel"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_gravel_2"
+      }
+    },
+    {
+      "when": {
+        "stock": "3",
+        "heap": "gravel"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_gravel_3"
+      }
+    },
+    {
+      "when": {
+        "stock": "4",
+        "heap": "gravel"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_gravel_4"
+      }
+    },
+    {
+      "when": {
+        "stock": "1",
+        "heap": "sand"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_sand_1"
+      }
+    },
+    {
+      "when": {
+        "stock": "2",
+        "heap": "sand"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_sand_2"
+      }
+    },
+    {
+      "when": {
+        "stock": "3",
+        "heap": "sand"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_sand_3"
+      }
+    },
+    {
+      "when": {
+        "stock": "4",
+        "heap": "sand"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_sand_4"
+      }
+    },
+    {
+      "when": {
+        "stock": "1",
+        "heap": "coal"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_coal_1"
+      }
+    },
+    {
+      "when": {
+        "stock": "2",
+        "heap": "coal"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_coal_2"
+      }
+    },
+    {
+      "when": {
+        "stock": "3",
+        "heap": "coal"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_coal_3"
+      }
+    },
+    {
+      "when": {
+        "stock": "4",
+        "heap": "coal"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_coal_4"
+      }
+    },
+    {
+      "when": {
+        "stock": "1",
+        "heap": "copper"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_copper_1"
+      }
+    },
+    {
+      "when": {
+        "stock": "2",
+        "heap": "copper"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_copper_2"
+      }
+    },
+    {
+      "when": {
+        "stock": "3",
+        "heap": "copper"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_copper_3"
+      }
+    },
+    {
+      "when": {
+        "stock": "4",
+        "heap": "copper"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_copper_4"
+      }
+    },
+    {
+      "when": {
+        "stock": "1",
+        "heap": "iron"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_iron_1"
+      }
+    },
+    {
+      "when": {
+        "stock": "2",
+        "heap": "iron"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_iron_2"
+      }
+    },
+    {
+      "when": {
+        "stock": "3",
+        "heap": "iron"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_iron_3"
+      }
+    },
+    {
+      "when": {
+        "stock": "4",
+        "heap": "iron"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_iron_4"
+      }
     }
-  }
+  ]
 }

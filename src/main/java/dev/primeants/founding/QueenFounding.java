@@ -83,6 +83,18 @@ public final class QueenFounding {
         if (operational && lifecycle == Lifecycle.OPEN && plan.plugs().stream().anyMatch(p -> !ColonyPlugs.get(level).opened(level,p,queen.getUUID()))) return "enclosure_operational_opening_incomplete";
         String habitat = plan.nurseryProblem(level, queen.getUUID(), operational);
         if (habitat != null) return habitat;
+        return bodyProblem(level, operational);
+    }
+    /** Readiness apart from the shared habitat checks, for a caller that already reads the habitat (the queen's hall,
+     * ColonyDevelopment): she is settled, an open nest's opening is complete and her living body is inside. */
+    public String occupancyProblem(ServerLevel level) {
+        if (phase != Phase.SETTLED || plan == null) return "queen_not_settled";
+        boolean operational = lifecycle != Lifecycle.CLAUSTRAL;
+        if (operational && lifecycle == Lifecycle.OPEN && plan.plugs().stream().anyMatch(p -> !ColonyPlugs.get(level).opened(level,p,queen.getUUID()))) return "enclosure_operational_opening_incomplete";
+        return bodyProblem(level, operational);
+    }
+    /** Her living body, on the ground and dry, wholly inside the founding room or its verified extensions. */
+    private String bodyProblem(ServerLevel level, boolean operational) {
         BlockPos a = plan.at(3, -1, -2), b = plan.at(5, 1, -1);
         AABB interior = new AABB(Math.min(a.getX(), b.getX()), a.getY(), Math.min(a.getZ(), b.getZ()),
                 Math.max(a.getX(), b.getX()) + 1, b.getY() + 1, Math.max(a.getZ(), b.getZ()) + 1);

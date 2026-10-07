@@ -9,6 +9,7 @@ import dev.primeants.founding.NestPlan;
 import dev.primeants.worker.AdultHistory;
 import dev.primeants.worker.ColonyMembers;
 import dev.primeants.worker.MaterialStore;
+import dev.primeants.worker.MaterialUnits;
 import dev.primeants.worker.NestCache;
 import java.util.*;
 import net.minecraft.core.BlockPos;
@@ -45,7 +46,8 @@ public final class ColonyDevelopment {
         }
         var states = new ArrayList<ChamberState>();
         var tiers = new EnumMap<ChamberFunction, int[]>(ChamberFunction.class);
-        int food = 0, foodUnknown = 0;
+        int food = 0, foodUnknown = 0, storesUnknown = 0;
+        var stores = new ArrayList<List<MaterialUnits.Material>>();
         // One connected nest: the founding chamber's habitat covers the stairs, the widening and every dug chamber.
         var habitat = plan.nurseryFindings(l, queen, operational);
         for (var chamber : colony.chambers()) {
@@ -59,12 +61,16 @@ public final class ColonyDevelopment {
             var store = state.functions().get(ChamberFunction.FOOD_STORE);
             if (store == Presence.CONFIRMED && l.getBlockEntity(chamber.markers().get(ChamberFunction.FOOD_STORE)) instanceof NestCache cache) food += cache.size();
             else if (store == Presence.UNKNOWN) foodUnknown += NestCache.CAPACITY;
+            // Clay and stone are known only in a confirmed store; an unknown one may hold its most of each.
+            var materials = state.functions().get(ChamberFunction.MATERIAL_STORE);
+            if (materials == Presence.CONFIRMED && l.getBlockEntity(chamber.markers().get(ChamberFunction.MATERIAL_STORE)) instanceof MaterialStore s)
+                stores.add(s.contents().stream().map(MaterialStore::kind).toList());
+            else if (materials == Presence.UNKNOWN) storesUnknown++;
         }
         var bounds = new EnumMap<ChamberFunction, StageRules.Bound>(ChamberFunction.class);
         tiers.forEach((f, t) -> bounds.put(f, new StageRules.Bound(t[0], t[1])));
-        // Stores are set up empty and nothing fills them yet: clay and stone are known to be zero.
         var inputs = new StageRules.Inputs(new StageRules.Bound(known, known + unknown), bounds, new StageRules.Bound(food, food + foodUnknown),
-            StageRules.Bound.NONE, StageRules.Bound.NONE);
+            MaterialUnits.stock(stores, storesUnknown, MaterialUnits.Material.CLAY), MaterialUnits.stock(stores, storesUnknown, MaterialUnits.Material.STONE));
         var result = StageRules.evaluate(colony.stage(), inputs);
         int cap = AdultBound.effectiveCap(result.stage(), bound);
         if (!registered || result.stage() != colony.stage()) {
@@ -75,9 +81,17 @@ public final class ColonyDevelopment {
         }
         return new Evaluation(colony.stage(), result, inputs, List.copyOf(states), cap);
     }
+    /** One registered chamber's function by this same live rule, now: the forager's check before it hauls to or
+     * stores in the colony's material store. */
+    public static Presence presence(ServerLevel l, UUID queen, NestPlan plan, String chamberId, ChamberFunction f) {
+        var colony = ChamberRegistry.get(l).colony(queen); var chamber = colony == null ? null : colony.chamber(chamberId);
+        if (chamber == null || !chamber.functions().contains(f)) return Presence.ABSENT;
+        return confirm(l, queen, plan, plan.nurseryFindings(l, queen, true), chamber).functions().get(f);
+    }
     /** A function counts only with its owned marker in an open, enclosed chamber: the same live habitat predicate that
      * gates brood care (NestPlan.nurseryFindings), plus a dug chamber's own cells. Every check runs; a fault seen in
-     * loaded blocks makes the function absent even beside unavailable terrain, which alone leaves it unknown. */
+     * loaded blocks makes the function absent even beside unavailable terrain, which alone leaves it unknown. The
+     * queen's hall has no marker block: its marker is the living queen, ready in her own space. */
     private static ChamberState confirm(ServerLevel l, UUID queen, NestPlan plan, Findings habitat, ChamberRegistry.Chamber chamber) {
         var functions = new EnumMap<ChamberFunction, Presence>(ChamberFunction.class);
         Findings space;
@@ -94,7 +108,8 @@ public final class ColonyDevelopment {
         for (var f : chamber.functions()) {
             var marker = chamber.markers().get(f);
             var check = space.copy();
-            if (marker == null) check.fault(f.serializedName() + "_marker_missing");
+            if (f == ChamberFunction.QUEENS_HALL) queen(l, queen, check);
+            else if (marker == null) check.fault(f.serializedName() + "_marker_missing");
             else if (check.cell(NestPlan.loaded(l, marker), f.serializedName() + "_marker_chunk_unavailable") && !ownedMarker(l, queen, plan, f, marker))
                 check.fault(f.serializedName() + "_marker_missing_or_foreign");
             functions.put(f, switch (check.verdict()) { case CLEAR -> Presence.CONFIRMED; case UNKNOWN -> Presence.UNKNOWN; case DAMAGED -> Presence.ABSENT; });
@@ -107,8 +122,18 @@ public final class ColonyDevelopment {
             case NURSERY -> l.getBlockEntity(marker) instanceof BroodPile pile && pile.ownedBy(queen, plan);
             case FOOD_STORE -> l.getBlockEntity(marker) instanceof NestCache cache && cache.ownedBy(queen, plan);
             case MATERIAL_STORE -> l.getBlockEntity(marker) instanceof MaterialStore store && store.ownedBy(queen, plan);
-            // No queen's hall block exists yet.
+            // The queen's hall has no marker block (queen below).
             case QUEENS_HALL -> false;
         };
+    }
+    /** The living queen, settled with her body inside her room: observed, so a queen seen dead or outside is a loss even
+     * beside unavailable terrain, and only a queen whose lookup fails without a recorded death is unknown. The habitat
+     * part of her readiness is already in the chamber's findings. */
+    private static void queen(ServerLevel l, UUID queen, Findings r) {
+        if (l.getEntity(queen) instanceof LasiusNigerEntity q) {
+            if (!q.isAlive() || q.isRemoved()) r.fault("queens_hall_queen_dead");
+            else if (q.founding().occupancyProblem(l) instanceof String problem) r.fault("queens_hall_" + problem);
+        } else if (AdultHistory.get(l).recorded(queen)) r.fault("queens_hall_queen_dead");
+        else r.unavailable("queens_hall_queen_unavailable");
     }
 }

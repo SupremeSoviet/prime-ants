@@ -19,6 +19,8 @@ public final class BroodRecord {
     public static long selectedDuration(String key,long fallback){long n=Long.parseLong(System.getProperty(key,Long.toString(fallback)));if(n<1)throw new IllegalArgumentException("Brood duration must be positive: "+key);return n;}
     public long neglectGrace(){return neglectGrace;} public long waitingBound(){return waitingBound;}
     public long neglectTicks(){return neglectTicks;} public long waitingTicks(){return waitingTicks;}
+    /** Why care last failed, or empty while cared for. */
+    public String neglectReason(){return neglectReason;}
     public BroodRecord(UUID id,UUID queen,int slot,long neglect,long waiting){this(id,queen,slot);if(neglect<1||waiting<1)throw new IllegalArgumentException("Invalid brood birth policy");neglectGrace=neglect;waitingBound=waiting;}
     private final dev.primeants.worker.Nutrition nutrition=new dev.primeants.worker.Nutrition();
     public boolean founding(){return founding;}

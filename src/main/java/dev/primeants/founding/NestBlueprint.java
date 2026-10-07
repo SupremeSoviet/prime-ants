@@ -15,7 +15,15 @@ import java.util.*;
  *    8   L  L  L           R  R  R
  *    9   L  L  L           R  R  R
  * </pre>
- * A placement digs the passage and one room, and keeps the opposite room free for the queen's hall. */
+ * A store placement digs the passage and one room, and keeps the opposite room free for a later room (T03 named it
+ * for the queen's hall). The queen's hall instead adjoins the queen's own chamber: it takes the 0.1.0 widening side the
+ * colony's widening did not take, so the queen and her brood pile never move.
+ * <pre>
+ *   f\s -3 -2 -1  0  1  2  3
+ *    3   H  H  c  F  F  w  w        H hall_left (hall_right mirrors it on the w side)
+ *    4   H  H  F  F  b  w  w        c the 0.1.0 cache, b the brood pile
+ *    5   H  H  F  F  F  w  w
+ * </pre> */
 public final class NestBlueprint {
     /** Floor and ceiling cells of every two-high space. */
     public static final int FLOOR = -2, UPPER = -1;
@@ -37,10 +45,11 @@ public final class NestBlueprint {
         public Cell upper() { return new Cell(forward, side, UPPER); }
         boolean adjacent(Column o) { return Math.abs(forward - o.forward) + Math.abs(side - o.side) == 1; }
     }
-    /** A two-high room: a box of floor columns, what it is for, and the floor column that holds its marker block. */
+    /** A two-high room: a box of floor columns, what it is for, and the floor column that holds its marker block, or
+     * null for a room without one (the queen's hall: its marker is the living queen). */
     public record Room(String id, ChamberFunction function, int forward, int side, int length, int width, Column marker) {
         public Room {
-            if (length < 1 || width < 1 || !contains(forward, side, length, width, marker)) throw new IllegalArgumentException("Invalid room " + id);
+            if (length < 1 || width < 1 || marker != null && !contains(forward, side, length, width, marker)) throw new IllegalArgumentException("Invalid room " + id);
         }
         private static boolean contains(int f, int s, int length, int width, Column c) {
             return c.forward() >= f && c.forward() < f + length && c.side() >= s && c.side() < s + width;
@@ -57,10 +66,13 @@ public final class NestBlueprint {
             return out;
         }
     }
-    /** One placement: passage columns in dig order from the founding chamber, the room they open, and the rooms it
-     * keeps free for later work. */
-    public record Placement(String name, List<Column> passage, Room room, List<Room> reserved) { }
-    /** A compiled placement in plan cells. dig is the queue: passage then room, each column bottom first. */
+    /** One placement: passage columns in dig order from the founding chamber, the room they open, the rooms it keeps
+     * free for later work, and the 0.1.0 widening side (-1 or 1) a room may be instead of using a passage, else 0. */
+    public record Placement(String name, List<Column> passage, Room room, List<Room> reserved, int widening) {
+        public Placement(String name, List<Column> passage, Room room, List<Room> reserved) { this(name, passage, room, reserved, 0); }
+    }
+    /** A compiled placement in plan cells. dig is the queue: passage then room, each column bottom first. marker is
+     * null for a room without a marker block. */
     public record Plan(Placement placement, List<Cell> dig, Set<Cell> shell, Set<Cell> connections, Set<Cell> openings, Cell marker) { }
 
     // The 0.1.0 founding nest and its possible widenings, as NestPlan.geometry and NestExpansion.targets declare them.
@@ -68,6 +80,9 @@ public final class NestBlueprint {
     public static final Set<Cell> PLUGS = Set.of(new Cell(2, 0, -2), new Cell(2, 0, -1));
     public static final Set<Cell> FOUNDING_CHAMBER = box(3, 5, -1, 1);
     public static final Set<Cell> WIDENINGS = union(box(3, 5, 2, 3), box(3, 5, -3, -2));
+    /** The founding chamber's floor columns that hold the 0.1.0 cache and brood pile (NestPlan.cache, nursery): block
+     * entities no worker stands on, so a dig order never needs them as a work stand. */
+    public static final Set<Column> HELD_COLUMNS = Set.of(new Column(3, -1), new Column(4, 1));
     /** Exterior soil deposits: five rows behind the entrance, one to four cells to either side, adapted by one block up
      * or down, plus the layer above them. */
     public static final Set<Cell> DEPOSITS = deposits();
@@ -79,12 +94,17 @@ public final class NestBlueprint {
     public static final List<Placement> MATERIAL_STORE = List.of(
         new Placement("left", List.of(new Column(6, 0), new Column(7, 0), new Column(7, -1)), LEFT, List.of(hall(RIGHT))),
         new Placement("right", List.of(new Column(6, 0), new Column(7, 0), new Column(7, 1)), RIGHT, List.of(hall(LEFT))));
+    /** The queen's hall: a 3x2, two-high extension of the queen's chamber on one 0.1.0 widening side (12 cells), dug from
+     * the chamber itself. A colony takes the side its widening did not take (ChamberExcavation.candidates). */
+    public static final List<Placement> QUEENS_HALL = List.of(
+        new Placement("hall_left", List.of(), new Room("queens_hall", ChamberFunction.QUEENS_HALL, 3, -3, 3, 2, null), List.of(), -1),
+        new Placement("hall_right", List.of(), new Room("queens_hall", ChamberFunction.QUEENS_HALL, 3, 2, 3, 2, null), List.of(), 1));
     private static final Map<String, Plan> COMPILED = new LinkedHashMap<>();
-    static { for (var p : MATERIAL_STORE) COMPILED.put(p.name(), compile(p)); }
+    static { for (var p : MATERIAL_STORE) COMPILED.put(p.name(), compile(p)); for (var p : QUEENS_HALL) COMPILED.put(p.name(), compile(p)); }
     private NestBlueprint() { }
 
     public static List<Placement> placements(ChamberFunction function) {
-        return function == ChamberFunction.MATERIAL_STORE ? MATERIAL_STORE : List.of();
+        return function == ChamberFunction.MATERIAL_STORE ? MATERIAL_STORE : function == ChamberFunction.QUEENS_HALL ? QUEENS_HALL : List.of();
     }
     public static Plan plan(String placement) {
         var plan = COMPILED.get(placement);
@@ -95,12 +115,16 @@ public final class NestBlueprint {
     public static Set<Cell> foundingSpace() { return union(STAIRS, union(FOUNDING_CHAMBER, WIDENINGS)); }
 
     /** Validates a placement and compiles its dig queue. The plan must stay in bounds, dig only new cells, leave the
-     * founding nest, both widening sides, the deposits and its reserved rooms untouched, form one walkable two-high
-     * space with the founding chamber, and keep every pending cell covered while it waits (NestPlan.bottomFirst). */
+     * founding nest, the deposits, its reserved rooms and the widening sides untouched (a room without a passage may be
+     * exactly one widening side), form one walkable two-high space with the founding chamber, and keep every pending
+     * cell covered while it waits (NestPlan.bottomFirst). */
     public static Plan compile(Placement p) {
         var room = p.room().columns();
         var columns = new ArrayList<Column>(p.passage());
-        var start = p.passage().getLast();
+        if (Math.abs(p.widening()) > 1 || p.passage().isEmpty() != (p.widening() != 0)) fail(p, "only a room without a passage takes a widening side");
+        var claimed = p.widening() == 0 ? Set.<Cell>of() : box(3, 5, Math.min(2 * p.widening(), 3 * p.widening()), Math.max(2 * p.widening(), 3 * p.widening()));
+        if (p.widening() != 0 && !p.room().cells().equals(claimed)) fail(p, "a room without a passage must be exactly one widening side");
+        var start = p.passage().isEmpty() ? entry(p, room) : p.passage().getLast();
         for (var c : serpentine(room, start)) columns.add(c);
         if (new HashSet<>(columns).size() != columns.size()) fail(p, "repeated column");
         var dig = new ArrayList<Cell>();
@@ -113,7 +137,7 @@ public final class NestBlueprint {
             if (FOUNDING_CHAMBER.contains(n)) { connections.add(n); openings.add(c); }
             else shell.add(n);
         }
-        var protectedCells = union(foundingSpace(), union(PLUGS, DEPOSITS));
+        var protectedCells = new HashSet<>(union(foundingSpace(), union(PLUGS, DEPOSITS))); protectedCells.removeAll(claimed);
         for (var c : dig) {
             if (!c.inBounds()) fail(p, "dig cell out of bounds " + c);
             if (protectedCells.contains(c)) fail(p, "dig cell overlaps the founding nest, a widening or a deposit " + c);
@@ -129,7 +153,18 @@ public final class NestBlueprint {
         if (!walkableFromFounding(columns)) fail(p, "not one walkable two-high space with the founding chamber");
         if (!coveredOrder(dig, digSet)) fail(p, "dig order exposes a pending cell or lacks a supported stand");
         return new Plan(p, List.copyOf(dig), Collections.unmodifiableSet(shell), Collections.unmodifiableSet(connections),
-            Collections.unmodifiableSet(openings), p.room().marker().floor());
+            Collections.unmodifiableSet(openings), p.room().marker() == null ? null : p.room().marker().floor());
+    }
+    /** A room without a passage is dug from the founding chamber's back-row column beside it, so its rows run toward the
+     * stairs and never need the cache or brood-pile column as a stand. */
+    private static Column entry(Placement p, List<Column> room) {
+        Column best = null;
+        for (var c : FOUNDING_CHAMBER) {
+            var column = new Column(c.forward(), c.side());
+            if (room.stream().anyMatch(column::adjacent) && (best == null || column.forward() > best.forward())) best = column;
+        }
+        if (best == null) fail(p, "a room without a passage must adjoin the founding chamber");
+        return best;
     }
     /** Rows of the room ordered away from the passage, alternating direction, so each column touches the last. */
     private static List<Column> serpentine(List<Column> room, Column from) {
@@ -156,7 +191,8 @@ public final class NestBlueprint {
         return reached.containsAll(columns);
     }
     /** Replays the queue: before each removal every pending cell keeps a solid cell above it (no exposed pending soil,
-     * NestPlan.bottomFirst) and the target has an exposed face beside an open two-high column on solid support. */
+     * NestPlan.bottomFirst) and the target has an exposed face beside an open two-high column on solid support, other
+     * than the cache and brood-pile columns. */
     static boolean coveredOrder(List<Cell> dig, Set<Cell> digSet) {
         var open = new HashSet<Cell>(FOUNDING_CHAMBER);
         for (int i = 0; i < dig.size(); i++) {
@@ -169,7 +205,8 @@ public final class NestBlueprint {
                 var floor = new Cell(n.forward(), n.side(), FLOOR);
                 var upper = new Cell(n.forward(), n.side(), UPPER);
                 var support = new Cell(n.forward(), n.side(), FLOOR - 1);
-                stand |= open.contains(floor) && open.contains(upper) && !open.contains(support) && !digSet.contains(support);
+                stand |= open.contains(floor) && open.contains(upper) && !open.contains(support) && !digSet.contains(support)
+                    && !HELD_COLUMNS.contains(new Column(n.forward(), n.side()));
             }
             if (!stand) return false;
             open.add(target);

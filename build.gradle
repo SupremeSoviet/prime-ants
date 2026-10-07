@@ -34,14 +34,15 @@ def gameTestReport = layout.buildDirectory.file('test-results/gametest/server.xm
 def serverDiagnosticFilter = providers.gradleProperty('primeAntsServerDiagnosticFilter')
 def serverDiagnosticGroup = providers.gradleProperty('primeAntsServerDiagnosticGroup')
 // Diagnostic group -> the one GameTest class it runs concurrently. Never acceptance.
-def serverDiagnosticGroups = ['nectar':'NectarGameTest', 'colony_stage':'ColonyStageGameTest', 'material_store':'MaterialStoreGameTest']
+def serverDiagnosticGroups = ['nectar':'NectarGameTest', 'colony_stage':'ColonyStageGameTest', 'material_store':'MaterialStoreGameTest',
+                              'chamber_scan':'ChamberScanGameTest', 'queens_hall':'QueensHallGameTest', 'material_hauling':'MaterialHaulingGameTest']
 // A focused diagnostic may validate one case; it must never make check/build green.
 gradle.taskGraph.whenReady { graph ->
     if ((serverDiagnosticFilter.isPresent() || serverDiagnosticGroup.isPresent()) && graph.hasTask(':check')) {
         throw new GradleException('Server diagnostic filter is forbidden in check/build; use runGameTest for an explicitly labelled single-case diagnosis')
     }
     if (serverDiagnosticGroup.isPresent() && (!(serverDiagnosticGroup.get() in serverDiagnosticGroups.keySet()) || serverDiagnosticFilter.isPresent()))
-        throw new GradleException('Only the explicit concurrent nectar, colony_stage or material_store diagnostic groups are supported')
+        throw new GradleException('Only the explicit concurrent diagnostic groups are supported: ' + serverDiagnosticGroups.keySet())
     if (providers.gradleProperty('primeAntsIdleSeed').isPresent() && !serverDiagnosticFilter.isPresent()) {
         throw new GradleException('Idle seed override is diagnostic only; acceptance uses the declared regression fixtures')
     }
@@ -56,7 +57,7 @@ loom.runs.named('gameTest') {
     if (providers.gradleProperty('primeAntsOriginDiagnostics').isPresent()) systemProperties.put('prime_ants.originDiagnostics', 'true')
     systemProperties.put('fabric-api.gametest.report-file', gameTestReport.get().asFile.absolutePath)
     def groupClass = serverDiagnosticGroup.isPresent() ? serverDiagnosticGroups[serverDiagnosticGroup.get()] : null
-    if (serverDiagnosticGroup.isPresent() && groupClass == null) throw new GradleException('Only the explicit concurrent nectar, colony_stage or material_store diagnostic groups are supported')
+    if (serverDiagnosticGroup.isPresent() && groupClass == null) throw new GradleException('Only the explicit concurrent diagnostic groups are supported: ' + serverDiagnosticGroups.keySet())
     systemProperties.put('fabric-api.gametest.filter', groupClass != null ? 'prime_ants_test:' + groupClass.replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase() + '_*' : serverDiagnosticFilter.getOrElse('prime_ants_test:*'))
     if (providers.gradleProperty('primeAntsIdleSeed').isPresent()) systemProperties.put('prime_ants.idleSeed', providers.gradleProperty('primeAntsIdleSeed').get())
 }
@@ -166,6 +167,46 @@ tasks.register('verifyNestCacheAssets') {
     }
 }
 tasks.named('check') {dependsOn tasks.named('verifyNestCacheAssets')}
+// T04: every material store blockstate part, model and texture reference resolves, and every texture is 16x16. Prime Ants
+// textures come from the sources, vanilla ones from the pinned client jar; vanilla block textures need no atlas source.
+tasks.register('verifyMaterialStoreAssets') {
+    doLast {
+        def root=file('src/main/resources/assets')
+        def json=new groovy.json.JsonSlurper()
+        def properties=['clay':(0..4).collect{it.toString()},'stock':(0..4).collect{it.toString()},'heap':['cobblestone','stone','gravel','sand','coal','copper','iron']]
+        def parts=json.parse(new File(root,'prime_ants/blockstates/material_store.json')).multipart
+        def shown=[] as Set
+        parts.each{part->
+            (part.when?:[:]).each{k,v->if(!properties.containsKey(k)||!(v in properties[k]))throw new GradleException("Material store part tests an unknown state ${k}=${v}")}
+            if(part.when!=null&&!shown.add(part.when.collect{k,v->"${k}=${v}"}.sort().join(',')))throw new GradleException('Duplicate material store part '+part.when)
+        }
+        def expected=(1..4).collect{"clay=${it}".toString()}+(1..4).collectMany{n->properties.heap.collect{h->"heap=${h},stock=${n}".toString()}}
+        if(parts.size()!=1+expected.size()||shown!=(expected as Set)||parts.count{it.when==null}!=1)throw new GradleException('The pad, every clay level and every stock level of every heap need exactly one part each')
+        def clientJar=fileTree('.gradle/loom-cache/minecraftMaven/net/minecraft').matching{include 'minecraft-clientOnly-*/26.3/*-26.3.jar'}.singleFile
+        int textures=0
+        new java.util.zip.ZipFile(clientJar).withCloseable{jar->
+            parts.collect{it.apply.model}.unique().each{name->
+                if(!name.startsWith('prime_ants:block/'))throw new GradleException('Unexpected model '+name)
+                def modelFile=new File(root,'prime_ants/models/block/'+name.substring('prime_ants:block/'.length())+'.json')
+                if(!modelFile.exists())throw new GradleException('Missing model '+name)
+                def model=json.parse(modelFile)
+                if(model.parent!=null)throw new GradleException('Material store models are self-contained: '+name)
+                model.elements.each{e->e.faces.each{f,face->if(!face.texture.startsWith('#')||!model.textures.containsKey(face.texture.substring(1)))throw new GradleException("Unresolved face texture ${face.texture} in ${name}")}}
+                model.textures.each{k,ref->
+                    if(ref.startsWith('#')){if(!model.textures.containsKey(ref.substring(1)))throw new GradleException("Unresolved texture variable ${ref} in ${name}");return}
+                    def image
+                    if(ref.startsWith('prime_ants:')){def f=new File(root,'prime_ants/textures/'+ref.substring('prime_ants:'.length())+'.png');if(!f.exists())throw new GradleException('Missing texture '+ref);image=javax.imageio.ImageIO.read(f)}
+                    else if(ref.startsWith('minecraft:')){def entry=jar.getEntry('assets/minecraft/textures/'+ref.substring('minecraft:'.length())+'.png');if(entry==null)throw new GradleException('Missing pinned vanilla texture '+ref);image=javax.imageio.ImageIO.read(jar.getInputStream(entry))}
+                    else throw new GradleException('Unexpected texture namespace '+ref)
+                    if(image.width!=16||image.height!=16)throw new GradleException('Texture must be 16x16: '+ref)
+                    textures++
+                }
+            }
+        }
+        logger.lifecycle("Verified ${parts.size()} material store parts, their ${parts.collect{it.apply.model}.unique().size()} models and ${textures} 16x16 texture references")
+    }
+}
+tasks.named('check') {dependsOn tasks.named('verifyMaterialStoreAssets')}
 tasks.named('runClientGameTest') {
     doFirst {
         if (!(capturePrefix ==~ /[a-z0-9][a-z0-9-]*/)) throw new GradleException('Unsafe capture prefix')
@@ -318,14 +359,23 @@ tasks.named('runGameTest') {
         if(defenseNames.size()!=10)throw new GradleException('Defense discovery incomplete')
         defenseNames.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:defense_game_test_'+n})throw new GradleException('Missing bounded defense regression '+n)}
         def stageNames=(file('src/gametest/java/dev/primeants/gametest/ColonyStageGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
-        if(stageNames.size()!=7)throw new GradleException('Colony stage discovery incomplete')
+        if(stageNames.size()!=8)throw new GradleException('Colony stage discovery incomplete')
         stageNames.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:colony_stage_game_test_'+n})throw new GradleException('Missing colony stage regression '+n)}
         def storeNames=(file('src/gametest/java/dev/primeants/gametest/MaterialStoreGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
         if(storeNames.size()!=3)throw new GradleException('Material store discovery incomplete')
         storeNames.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:material_store_game_test_'+n})throw new GradleException('Missing material store test '+n)}
         // Stage-1 T03: confirmation precedence and the first dug chamber.
         ['colony_stage_game_test_unavailable_entrance_never_hides_loaded_broken_wall_and_the_colony_regresses','colony_stage_game_test_unavailable_entrance_never_hides_destroyed_loaded_cache_and_the_food_store_is_lost','material_store_game_test_young_colony_digs_the_material_store_and_the_evaluator_confirms_it','material_store_game_test_player_placed_block_in_planned_cell_is_never_removed_and_the_job_stops','material_store_game_test_mid_dig_reload_continues_without_duplicate_removals_and_the_finished_store_reloads_as_one_chamber'].each{n->if(!cases.any{it.@name.text()=='prime_ants_test:'+n})throw new GradleException('Missing T03 regression '+n)}
-        if(cases.size()!=173+foodNames.size()+policyNames.size()+defenseNames.size()+stageNames.size()+storeNames.size())throw new GradleException('Expected complete baseline plus current additions')
+        // Stage-1 T04: the dug-chamber scan fix, the queen's hall and material hauling.
+        def t04=['ChamberScanGameTest':2,'QueensHallGameTest':1,'MaterialHaulingGameTest':4].collect { className,count ->
+            def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+            if(names.size()!=count)throw new GradleException('T04 discovery incomplete: '+className)
+            def prefix=className.replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()
+            names.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:${prefix}_${name}"})throw new GradleException('Missing T04 test: '+prefix+'_'+name)}
+            names.size()
+        }.sum()
+        ['chamber_scan_game_test_partly_dug_store_beside_an_unavailable_completed_cell_loses_its_loaded_broken_shell_in_both_scans','chamber_scan_game_test_finished_store_beside_an_unavailable_cell_loses_its_loaded_broken_shell_in_both_scans','queens_hall_game_test_young_colony_digs_the_queens_hall_beside_her_chamber_while_eggs_develop_and_loses_it_when_its_shell_breaks','material_hauling_game_test_dropped_clay_cobblestone_and_coal_reach_the_confirmed_store_after_the_food_with_exact_accounting','material_hauling_game_test_a_carrier_keeps_its_unit_while_its_store_is_gone_and_full_share_leaves_stone_on_the_ground','material_hauling_game_test_a_carrier_killed_mid_trip_releases_its_unit_through_custody_exactly_once','material_hauling_game_test_a_mid_haul_save_and_reload_keeps_every_unit_exactly_once','colony_stage_game_test_young_colony_meets_every_mature_requirement_but_adults_through_real_play'].each{n->if(!cases.any{it.@name.text()=='prime_ants_test:'+n})throw new GradleException('Missing T04 regression '+n)}
+        if(cases.size()!=173+foodNames.size()+policyNames.size()+defenseNames.size()+stageNames.size()+storeNames.size()+t04)throw new GradleException('Expected complete baseline plus current additions')
         if (report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] }) {
             throw new GradleException('Server GameTest report contains a failure or skipped test')
         }
