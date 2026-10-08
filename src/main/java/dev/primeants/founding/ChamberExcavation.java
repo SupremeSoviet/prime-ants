@@ -55,7 +55,10 @@ public final class ChamberExcavation extends SavedData {
         return new DugSpace.Ground<>() {
             @Override public boolean loaded(BlockPos p) { return NestPlan.loaded(l, p); }
             @Override public boolean open(BlockPos p) { return p.equals(built.marker()) ? l.getBlockState(p).isAir() || ownedStore(l, owner, built) : terrain.opened(l, p, owner); }
-            @Override public boolean closed(BlockPos p) { return l.getBlockState(p).isSolidRender() && l.getFluidState(p).isEmpty(); }
+            @Override public boolean closed(BlockPos p) {
+                return l.getBlockState(p).isSolidRender() && l.getFluidState(p).isEmpty()
+                    || built.room().equals(STORE) && Mining.get(l).opening(l,p,owner);
+            }
             @Override public BlockPos face(BlockPos p, int i) { return p.relative(FACES[i]); }
         };
     }

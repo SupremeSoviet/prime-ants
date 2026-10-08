@@ -61,6 +61,8 @@ final class NestPlanFixture {
         long world = l.getEntitiesOfClass(ItemEntity.class, c.getBounds().inflate(8), i -> i.isAlive() && i.getItem().is(Items.DIRT)).stream().mapToInt(i -> i.getItem().getCount()).sum();
         long custody = TransferCustody.get(l).contents().stream().filter(t -> t.stack().is(Items.DIRT) && c.getBounds().inflate(8).contains(t.position())).mapToInt(t -> t.stack().getCount()).sum();
         long removed = 24 + (widening == null ? 0 : widening.removed());
+        var mining=Mining.get(l).job(q.getUUID());
+        if(mining!=null)removed+=mining.produced("minecraft:dirt");
         for (var j : ChamberExcavation.get(l).jobs(q.getUUID())) {
             removed += j.removed();
             c.assertTrue(j.removed() == j.deposited + j.released + (j.claim == null ? 0 : carried(c, q, j.claim)), "Job " + j.room + " removed = carried + deposited + released: " + j.removed() + " " + j.deposited + " " + j.released + " claim=" + j.claim);

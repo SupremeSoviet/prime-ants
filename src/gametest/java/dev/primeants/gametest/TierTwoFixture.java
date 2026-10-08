@@ -97,10 +97,11 @@ final class TierTwoFixture {
         c.assertTrue(fx.food.total(c,q)==apples+chickens,"Every physical food unit: "+fx.food.total(c,q)+" / "+(apples+chickens));
         c.assertTrue(foodUnits(c,q,Items.APPLE)==apples&&foodUnits(c,q,Items.CHICKEN)==chickens,"Independent apple/chicken ledgers: "+foodUnits(c,q,Items.APPLE)+"/"+apples+" "+foodUnits(c,q,Items.CHICKEN)+"/"+chickens);
         fx.food.yields(c,q);
-        c.assertTrue(NurseryUpgradeGameTest.clay(c,fx,q)==clay,"Clay is ground, carried, stored, converted once or pending custody: "+NurseryUpgradeGameTest.clay(c,fx,q)+"/"+clay);
+        var mining=Mining.get(c.getLevel()).job(q.getUUID());long minedClay=mining==null?0:mining.produced("minecraft:clay_ball");
+        c.assertTrue(NurseryUpgradeGameTest.clay(c,fx,q)==clay+minedClay,"Clay supplied + mined is ground, carried, stored, converted once or pending custody: "+NurseryUpgradeGameTest.clay(c,fx,q)+"/"+(clay+minedClay));
         var l=c.getLevel();var widening=NestExpansion.get(l).job(q.getUUID());
         long builders=(widening!=null&&widening.claim!=null?1:0)+ChamberExcavation.get(l).jobs(q.getUUID()).stream().filter(j->j.claim!=null).count()
-            +ChamberUpgrade.get(l).jobs(q.getUUID()).stream().filter(j->j.claim!=null).count();
+            +ChamberUpgrade.get(l).jobs(q.getUUID()).stream().filter(j->j.claim!=null).count()+(mining!=null&&mining.claim!=null?1:0);
         c.assertTrue(builders<=1,"One builder across digging and upgrades: "+builders);
         if(builders>0)c.assertTrue(fx.f.workers(c,q).stream().filter(w->w.workerTasks().caregiver(l,q.founding().plan())).count()>=2,"At least two caregivers remain while building");
         for(var job:ChamberUpgrade.get(l).jobs(q.getUUID()))NurseryUpgradeGameTest.ledger(c,fx,q,job);

@@ -46,6 +46,7 @@
       "dev.primeants.gametest.ChamberScanGameTest",
       "dev.primeants.gametest.QueensHallGameTest",
       "dev.primeants.gametest.MaterialHaulingGameTest",
+      "dev.primeants.gametest.MiningGameTest",
       "dev.primeants.gametest.NurseryUpgradeGameTest",
       "dev.primeants.gametest.MoundGameTest",
       "dev.primeants.gametest.FoodCacheGameTest",

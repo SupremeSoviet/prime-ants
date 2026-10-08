@@ -25,9 +25,10 @@ public abstract class TerrainGenerationFixtureMixin {
         boolean plants=dimension.equals("prime_ants_test:t16_plants") || dimension.equals("prime_ants_test:t16_protected");
         boolean slope=dimension.equals("prime_ants_test:t16_step");
         boolean food=dimension.equals("prime_ants_test:t20_food");
+        boolean mining=dimension.equals("prime_ants_test:t16_thin")&&Math.floorDiv(chunk.getPos().x(),4)==750&&Math.floorDiv(chunk.getPos().z(),4)==750;
         boolean nectar=dimension.equals("prime_ants_test:t17_nectar") || dimension.equals("prime_ants_test:placement_soil")
             &&Math.floorDiv(chunk.getPos().x(),4)==1070&&Math.floorDiv(chunk.getPos().z(),4)==1070; // source-free scan's explicit unrelated positive control
-        if(!plants && !slope && !nectar && !food)return;
+        if(!plants && !slope && !nectar && !food && !mining)return;
         long salt=context.level().getSeed()^UUID.nameUUIDFromBytes(dimension.getBytes(StandardCharsets.UTF_8)).getMostSignificantBits();
         int centerX=Math.floorDiv(chunk.getPos().x(),4)*4+1+(int)(salt&1);
         int centerZ=Math.floorDiv(chunk.getPos().z(),4)*4+1+(int)((salt>>>1)&1);
@@ -36,6 +37,10 @@ public abstract class TerrainGenerationFixtureMixin {
             for(int x=chunk.getPos().getMinBlockX();x<=chunk.getPos().getMaxBlockX();x++)
                 for(int z=chunk.getPos().getMinBlockZ();z<=chunk.getPos().getMaxBlockZ();z++) {
                     int top=generated.getHeight(Heightmap.Types.WORLD_SURFACE,x&15,z&15);
+                    if(mining&&(z&15)==1&&(x&15)>=1&&(x&15)<=7){
+                        var resources=java.util.List.of(Blocks.STONE,Blocks.CLAY,Blocks.GRAVEL,Blocks.SAND,Blocks.COAL_ORE,Blocks.COPPER_ORE,Blocks.IRON_ORE);
+                        generated.setBlockState(new BlockPos(x,context.level().getMinY()+3,z),resources.get((x&15)-1).defaultBlockState(),0);
+                    }
                     boolean late=Math.floorDiv(chunk.getPos().x(),4)==890 && Math.floorDiv(chunk.getPos().z(),4)==890;
                     // Isolated late-search source on the untouched side of the founding roof.
                     // Far fixtures also need the standard radius-3 diagnostic entity-ticking halo.

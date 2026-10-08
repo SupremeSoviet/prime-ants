@@ -74,12 +74,14 @@ public abstract class DigJob {
         var owner=w.queenId();if(owner==null)return null;
         var widening=NestExpansion.get(l).job(owner);if(widening!=null&&w.getUUID().equals(widening.claim))return widening;
         for(var j:ChamberExcavation.get(l).jobs(owner))if(w.getUUID().equals(j.claim))return j;
+        var mining=Mining.get(l).job(owner);if(mining!=null&&w.getUUID().equals(mining.claim))return mining;
         return null;
     }
     public static boolean anyClaim(ServerLevel l,UUID owner){
         if(owner==null)return false;
         var widening=NestExpansion.get(l).job(owner);if(widening!=null&&widening.claim!=null)return true;
         for(var j:ChamberExcavation.get(l).jobs(owner))if(j.claim!=null)return true;
+        var mining=Mining.get(l).job(owner);if(mining!=null&&mining.claim!=null)return true;
         return ChamberUpgrade.get(l).anyClaim(owner); // upgrade work shares the one-builder rule
     }
     /** An authorized opening of any of the colony's jobs. */
@@ -87,6 +89,7 @@ public abstract class DigJob {
         if(owner==null)return false;
         var widening=NestExpansion.get(l).job(owner);if(widening!=null&&widening.opening(l,p,owner))return true;
         for(var j:ChamberExcavation.get(l).jobs(owner))if(j.opening(l,p,owner))return true;
+        if(Mining.get(l).opening(l,p,owner))return true;
         return false;
     }
     /** Loaded conflicts are resolved from the worker's canonical task/cargo. Missing lookup stays unknown. */

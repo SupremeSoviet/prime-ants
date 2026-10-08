@@ -191,6 +191,7 @@ public final class QueenFounding {
             });
             NestExpansion.get(level).reconcile(level,queen);
             ChamberExcavation.get(level).reconcile(level,queen);
+            var mining=Mining.get(level).job(queen.getUUID());if(mining!=null)mining.reconcile(level,queen);
             if (workerClaim == null && ready()) {
                 var workers = level.getEntitiesOfClass(LasiusNigerEntity.class, new AABB(plan.chamber()).inflate(4),
                         w -> w.isAlive() && !w.isRemoved() && !w.isCallow() && !w.isNoAi() && queen.getUUID().equals(w.queenId())
@@ -218,6 +219,7 @@ public final class QueenFounding {
                 NestExpansion.get(level).consider(level,queen,members);
                 ChamberExcavation.get(level).consider(level,queen,members); // nest-plan chambers after the 0.1.0 widening
                 ChamberUpgrade.get(level).consider(level,queen,members); // wall upgrades once the stage unlocks a tier
+                Mining.get(level).consider(level,queen,members); // chambers/upgrades keep the exclusive builder first
                 for(var w:level.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(plan.chamber()).inflate(4),w->w.isAlive()&&!w.isRemoved()&&!w.isCallow()&&!w.isNoAi()))
                     if(!claimedBy(w)&&!w.workerTasks().construction()&&dev.primeants.worker.ColonyMembers.get(level).belongs(w,queen.getUUID(),plan.chamber()))w.workerTasks().assignNurse(plan);
             }

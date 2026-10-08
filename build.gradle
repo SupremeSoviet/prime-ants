@@ -70,7 +70,7 @@ def serverDiagnosticGroups = ['nectar':'NectarGameTest', 'colony_stage':'ColonyS
                               'chamber_scan':'ChamberScanGameTest', 'queens_hall':'QueensHallGameTest', 'material_hauling':'MaterialHaulingGameTest',
                               'nursery_upgrade':'NurseryUpgradeGameTest', 'mound':'MoundGameTest', 'food_cache':'FoodCacheGameTest',
                               'mature_colony':'MatureColonyGameTest', 'stage_hysteresis':'StageHysteresisGameTest', 'plug_soil':'PlugSoilGameTest', 'legacy_cache':'LegacyCacheGameTest',
-                              'forager_scaling':'ForagerScalingGameTest', 'hall_availability':'HallAvailabilityGameTest', 'expanded_brood':'ExpandedBroodGameTest', 'tier_two':'TierTwoGameTest', 'store_upgrade_safety':'StoreUpgradeSafetyGameTest']
+                              'forager_scaling':'ForagerScalingGameTest', 'hall_availability':'HallAvailabilityGameTest', 'expanded_brood':'ExpandedBroodGameTest', 'tier_two':'TierTwoGameTest', 'store_upgrade_safety':'StoreUpgradeSafetyGameTest', 'mining':'MiningGameTest']
 // A focused diagnostic may validate one case; it must never make check/build green.
 gradle.taskGraph.whenReady { graph ->
     if ((serverDiagnosticFilter.isPresent() || serverDiagnosticGroup.isPresent()) && graph.hasTask(':check')) {
@@ -438,7 +438,7 @@ tasks.named('runGameTest') {
         // Stage-1 T03: confirmation precedence and the first dug chamber.
         ['colony_stage_game_test_unavailable_entrance_never_hides_loaded_broken_wall_and_the_colony_regresses','colony_stage_game_test_unavailable_entrance_never_hides_destroyed_loaded_cache_and_the_food_store_is_lost','material_store_game_test_young_colony_digs_the_material_store_and_the_evaluator_confirms_it','material_store_game_test_player_placed_block_in_planned_cell_is_never_removed_and_the_job_stops','material_store_game_test_mid_dig_reload_continues_without_duplicate_removals_and_the_finished_store_reloads_as_one_chamber'].each{n->if(!cases.any{it.@name.text()=='prime_ants_test:'+n})throw new GradleException('Missing T03 regression '+n)}
         // Stage-1 T04: the dug-chamber scan fix, the queen's hall and material hauling.
-        def t04=['ChamberScanGameTest':2,'QueensHallGameTest':1,'MaterialHaulingGameTest':5].collect { className,count ->
+        def t04=['ChamberScanGameTest':2,'QueensHallGameTest':1,'MaterialHaulingGameTest':6].collect { className,count ->
             def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
             if(names.size()!=count)throw new GradleException('T04 discovery incomplete: '+className)
             def prefix=className.replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)
@@ -480,7 +480,22 @@ tasks.named('runGameTest') {
             names.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:${prefix}_${name}"})throw new GradleException('Missing T08 test: '+prefix+'_'+name)}
             names.size()
         }.sum()
-        if(cases.size()!=173+foodNames.size()+policyNames.size()+defenseNames.size()+stageNames.size()+storeNames.size()+t04+t05+t06+t07+t08)throw new GradleException('Expected complete baseline plus current additions')
+        def miningNames=(file('src/gametest/java/dev/primeants/gametest/MiningGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
+        if(miningNames.size()!=7)throw new GradleException('T09 mining discovery incomplete')
+        miningNames.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:mining_game_test_${name}"})throw new GradleException('Missing T09 mining test '+name)}
+        if(cases.size()!=173+foodNames.size()+policyNames.size()+defenseNames.size()+stageNames.size()+storeNames.size()+t04+t05+t06+t07+t08+miningNames.size())throw new GradleException('Expected complete baseline plus current additions')
+        // Additive exact annotation discovery: all registered permanent names, with no duplicate source/report rows.
+        def registrations=new groovy.json.JsonSlurper().parse(file('src/gametest/resources/fabric.mod.json')).entrypoints['fabric-gametest']
+        def declared=registrations.collectMany { entry ->
+            def className=entry.tokenize('.').last()
+            def prefix=className.replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)
+            def source=file('src/gametest/java/'+entry.replace('.','/')+'.java').text
+            (source =~ /@GameTest(?:\([^)]*\))?\s+public void (\w+)\(GameTestHelper \w+\)/).collect { match ->
+                "prime_ants_test:${prefix}_"+match[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)
+            }
+        }
+        def actual=cases.collect {it.@name.text()}
+        if(declared.size()!=declared.toSet().size()||actual.size()!=actual.toSet().size()||actual.toSet()!=declared.toSet())throw new GradleException('Exact permanent server discovery differs or contains duplicate names')
         if (report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] }) {
             throw new GradleException('Server GameTest report contains a failure or skipped test')
         }

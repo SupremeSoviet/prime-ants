@@ -9,7 +9,7 @@ import java.util.Map;
 public final class MaterialUnits {
     /** What a unit is. Ore waits in the store for stage 2's forge. */
     public enum Material { CLAY, STONE, GRAVEL, SAND, ORE }
-    /** The accepted items. Nothing else is a material, and only dropped items are ever hauled. */
+    /** Accepted dropped contributions and physical mining cargo. Nothing else is a material. */
     public static final Map<String, Material> ITEMS = Map.of(
         "minecraft:clay_ball", Material.CLAY, "minecraft:cobblestone", Material.STONE, "minecraft:stone", Material.STONE,
         "minecraft:gravel", Material.GRAVEL, "minecraft:sand", Material.SAND,

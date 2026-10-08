@@ -187,6 +187,21 @@ public final class ChamberUpgrade extends SavedData {
     /** A Mature colony whose nursery chamber is confirmed below tier 2 rebuilds its walls once its confirmed store holds a
      * cell's clay, no other builder works, dug rooms are finished, and a free worker leaves at least two caregivers. A
      * claimed, stopped or completed job needs no builder; a job waiting for clay resumes under the same conditions. */
+    /** Available upgrade work, including the gap before its next saved job is created. Empty miners yield;
+     * already carried units finish their physical destination first. No stage/food/care rule changes. */
+    public boolean hasPriority(ServerLevel l,UUID owner,NestPlan p){
+        if(!NestPlan.loaded(l,p.nursery())||!(l.getBlockEntity(p.nursery()) instanceof BroodPile pile)||pile.stageEvaluation()==null)return false;
+        var e=pile.stageEvaluation();if(NestWalls.unlocked(e.stage())<2)return false;
+        var store=MaterialStore.confirmed(l,owner,p);if(store==null||store.units(MaterialUnits.Material.CLAY)<NestWalls.CLAY_PER_CELL)return false;
+        for(var id:ORDER){
+            var state=e.chambers().stream().filter(s->s.id().equals(id)).findFirst().orElse(null);
+            var function=id.equals(ChamberRegistry.FOUNDING)?ChamberFunction.NURSERY:id.equals(ChamberExcavation.STORE)?ChamberFunction.MATERIAL_STORE:ChamberFunction.QUEENS_HALL;
+            if(state==null||state.functions().get(function)!=ColonyDevelopment.Presence.CONFIRMED)return false;
+            var existing=job(owner,id,2);if(existing!=null&&existing.stopped())return false;
+            if(state.tier()<2)return true; // includes completed work waiting for its next production confirmation
+        }
+        return false;
+    }
     public void consider(ServerLevel l, LasiusNigerEntity q, List<LasiusNigerEntity> workers) {
         var p = q.founding().plan(); var owner = q.getUUID(); int tier = 2;
         if (p == null || q.founding().lifecycle() != QueenFounding.Lifecycle.OPEN || !q.founding().ready()) return;

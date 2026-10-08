@@ -14,6 +14,7 @@ import dev.primeants.founding.NestExpansion;
 import dev.primeants.founding.QueenFounding;
 import dev.primeants.founding.ColonyTerrain;
 import dev.primeants.founding.MoundSoil;
+import dev.primeants.founding.Mining;
 import java.util.UUID;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -139,6 +140,9 @@ public final class WorkerTasks {
         return j!=null&&worker.getUUID().equals(j.claim)&&!foragerClaim(l)&&worker.isAlive()&&!worker.isRemoved()&&!worker.isCallow()&&!worker.isNoAi()&&plan!=null
             &&ColonyMembers.get(l).belongs(worker,worker.queenId(),plan.chamber())&&j.home.entrance().equals(plan.entrance())&&j.home.direction()==plan.direction()&&q!=null&&q.isAlive()&&q.founding().ready();
     }
+    /** Cargo delivery retains ordinary ownership checks after a stage regression; removals separately recheck Mature. */
+    public boolean miningAuthorized(ServerLevel l){return construction()&&DigJob.claimedBy(l,worker) instanceof Mining.Job&&constructionAuthorized(l);}
+    public boolean miningDeliveryAuthorized(ServerLevel l){return miningAuthorized(l)&&((Mining.Job)DigJob.claimedBy(l,worker)).pending(worker.getMainHandItem());}
     public boolean assignNurse(NestPlan p){
         if(sharing.busy()||phase!=Phase.NURSERY||!(worker.level() instanceof ServerLevel l)||!eligible(l,p)||!worker.getMainHandItem().isEmpty()||constructionClaim(l)||foragerClaim(l))return false;
         plan=p.routeGeometry();next(Phase.NURSE_CACHE,"mature_member_nursing");
@@ -398,6 +402,7 @@ public final class WorkerTasks {
     }
     private void dig(ServerLevel l){
         var j=DigJob.claimedBy(l,worker);
+        if(j instanceof Mining.Job mining){mine(l,mining);return;}
         if(j.removed()==j.tasks.size()||j.stopped()){
             if(dirt()>0){next(Phase.DIG_OUT,(j.stopped()?"stopped_":"last_")+j.label()+"_soil_transport");return;}
             var marker=j.stopped()?null:j.pendingMarker(l,worker.queenId());
@@ -466,6 +471,11 @@ public final class WorkerTasks {
         var store=MaterialStore.confirmed(l,worker.queenId(),plan);
         if(!clay&&store!=null&&store.units(MaterialUnits.Material.CLAY)<NestWalls.CLAY_PER_CELL){j.release(l,worker.queenId(),"waiting_for_store_clay");next(Phase.NURSE_CACHE,"upgrade_waits_for_store_clay");return;}
         if(store==null){hold(clay?"upgrade_store_unconfirmed_unit_retained":"upgrade_store_unconfirmed");cooldown=40;return;}
+        // Mining can yield its empty builder immediately after a real surface soil delivery.
+        // A deep store is reached through the existing stair, rather than a surface path above its roof.
+        if(worker.blockPosition().getY()>plan.entrance().getY()-2){
+            arriveSupported(l,Vec3.atBottomCenterOf(plan.at(3,0,-2)));return;
+        }
         var target=Vec3.atBottomCenterOf(store.getBlockPos()).add(0,0.15,0);
         if(!reaches(l,worker,target)){
             var stand=store.stand(l,worker);if(stand==null){hold("upgrade_store_stand_unavailable");cooldown=40;return;}
@@ -552,8 +562,9 @@ public final class WorkerTasks {
     }
     private void digOut(ServerLevel l){
         var j=DigJob.claimedBy(l,worker);
+        if(j instanceof Mining.Job mining&&!worker.getMainHandItem().is(Items.DIRT)){miningStore(l,mining);return;}
         if(dirt()==0){next(Phase.DIG,"empty_mandibles_next_work");return;}
-        boolean mound=j instanceof ChamberExcavation.Job;
+        boolean mound=j instanceof ChamberExcavation.Job||j instanceof Mining.Job;
         BlockPos target=null;Vec3 dest=null;
         for(var p:mound?MoundSoil.free(l,plan,worker.queenId()):NestExpansion.deposits(plan)){
             if(!depositable(l,mound,p)||!l.getEntities(worker,new AABB(p)).isEmpty())continue;
@@ -572,11 +583,59 @@ public final class WorkerTasks {
         if(dev.primeants.founding.SupportSurvival.problem(l,target,NurseryBlocks.NEST_SOIL.defaultBlockState()) instanceof String problem){hold(problem);return;}
         if(mound?MoundSoil.lay(l,target,worker.queenId()):l.setBlock(target,NurseryBlocks.NEST_SOIL.defaultBlockState(),3)){
             if(!mound)ColonyTerrain.get(l).deposited(target,worker.queenId());
-            j.deposited++;j.changed(l);
+            if(j instanceof Mining.Job mining)mining.delivered(l,worker.getMainHandItem());else{j.deposited++;j.changed(l);}
             worker.setItemSlot(EquipmentSlot.MAINHAND,dirt()==1?ItemStack.EMPTY:new ItemStack(Items.DIRT,dirt()-1));cooldown=QueenFounding.cadence();phaseTicks=0;
             PrimeAnts.LOGGER.info("{} deposit queen={} worker={} target={} removed={} carried={} deposited={}",j.title(),worker.queenId(),worker.getUUID(),target,j.removed(),dirt(),j.deposited);
             if(dirt()==0)next(Phase.DIG,"delivered_soil_next_work");
         }
+    }
+    private void mine(ServerLevel l,Mining.Job j){
+        if(!worker.getMainHandItem().isEmpty()){next(Phase.DIG_OUT,"mining_unit_in_mandibles");return;}
+        if(j.removed()==j.tasks.size()||j.stopped()){
+            j.claim=null;if(!j.stopped())j.reason=j.completionReason(l,worker.queenId());j.changed(l);next(Phase.NURSE_CACHE,"mining_finished_return_to_care");return;
+        }
+        if(ChamberUpgrade.get(l).hasPriority(l,worker.queenId(),plan)){
+            harvestingTicks=0;j.claim=null;j.reason="yielded_to_available_chamber_upgrade";j.changed(l);
+            next(Phase.NURSE_CACHE,"empty_miner_yields_existing_upgrade_priority");return;
+        }
+        if(!Mining.unlocked(l,plan)){harvestingTicks=0;hold("mining_stage_below_mature");return;}
+        var target=j.tasks.get(j.removed());
+        var problem=j.removalProblem(l,worker.queenId());
+        if(problem!=null){harvestingTicks=0;if(problem.equals("mining_origin_or_state_revoked"))j.stop(l,problem);else{j.reason=problem;j.changed(l);}hold(problem);return;}
+        var stand=digStand(l,target);if(stand==null){harvestingTicks=0;hold("mining_no_supported_exposed_face");return;}
+        if(!worker.blockPosition().equals(stand)||!worker.onGround()||!miningReach(l,target)){harvestingTicks=0;approach(l,j,stand);return;}
+        worker.getNavigation().stop();worker.getLookControl().setLookAt(Vec3.atCenterOf(target));
+        // A real twenty-loaded-tick work action at the actual supported face, then ALL commit guards again.
+        reason="physical_mining_action";
+        if(++harvestingTicks<20)return;
+        harvestingTicks=0;
+        if(!miningAuthorized(l)||!Mining.unlocked(l,plan)||!NestPlan.walkable(l,stand)||!exposed(l,target,stand)
+            ||!miningReach(l,target)||!worker.getMainHandItem().isEmpty()
+            ||!l.isPositionEntityTicking(target)||!l.isPositionEntityTicking(worker.blockPosition())||!l.mayInteract(worker,target)
+            ||j.removalProblem(l,worker.queenId())!=null)return;
+        var cargo=j.nextUnit();
+        if(!l.setBlock(target,Blocks.AIR.defaultBlockState(),3)){hold("mining_removal_refused");return;}
+        ColonyTerrain.get(l).removed(target,worker.queenId());j.removed(l,target);
+        worker.setItemSlot(EquipmentSlot.MAINHAND,cargo);j.reason="worker_removed_one_material_unit";j.changed(l);
+        PrimeAnts.LOGGER.info("T09 MINING REMOVED queen={} worker={} target={} cargo={} removed={} delivered={} released={} position={}",worker.queenId(),worker.getUUID(),target,cargo,j.removed(),j.deposited,j.released,worker.position());
+        next(Phase.DIG_OUT,"physical_mining_unit_to_destination");cooldown=QueenFounding.cadence();
+    }
+    private boolean miningReach(ServerLevel l,BlockPos target){
+        if(!worker.onGround()||worker.isInWater()||worker.position().distanceToSqr(Vec3.atCenterOf(target))>5.0)return false;
+        var hit=l.clip(new ClipContext(worker.position().add(0,0.25,0),Vec3.atCenterOf(target),ClipContext.Block.COLLIDER,ClipContext.Fluid.ANY,worker));
+        return hit.getType()==HitResult.Type.BLOCK&&hit.getBlockPos().equals(target);
+    }
+    private void miningStore(ServerLevel l,Mining.Job j){
+        var cargo=worker.getMainHandItem();if(cargo.isEmpty()){next(Phase.DIG,"mining_empty_next_cell");return;}
+        var store=MaterialStore.confirmed(l,worker.queenId(),plan);
+        if(store==null){hold("mining_store_unconfirmed_cargo_retained");cooldown=40;return;}
+        var target=Vec3.atBottomCenterOf(store.getBlockPos()).add(0,0.15,0);
+        if(!reaches(l,worker,target)){var stand=store.stand(l,worker);if(stand==null){hold("mining_store_stand_unavailable");return;}approach(l,j,stand);return;}
+        var delivered=cargo.copy();
+        if(store.deposit(worker,plan)){
+            j.delivered(l,delivered);PrimeAnts.LOGGER.info("T09 MINING DELIVERED queen={} worker={} store={} cargo={} deliveries={} stored={}",worker.queenId(),worker.getUUID(),store.getBlockPos(),delivered,j.deliveries(),store.contents());
+            next(Phase.DIG,"mining_material_physically_stored");cooldown=40;
+        }else{hold("mining_store_full_cargo_retained");cooldown=40;}
     }
     private void open(ServerLevel l) {
         var plugs=ColonyPlugs.get(l);
@@ -840,13 +899,14 @@ public final class WorkerTasks {
         if(phase==Phase.DEAD)return;worker.getNavigation().stop();
         int constructionSoil=constructionClaim(l)&&worker.getMainHandItem().is(Items.DIRT)?worker.getMainHandItem().getCount():0;
         int upgradeClay=upgradeClaim(l)&&worker.getMainHandItem().is(Items.CLAY_BALL)?worker.getMainHandItem().getCount():0;
+        var miningCargo=worker.getMainHandItem().copy();
         var transfer=UUID.nameUUIDFromBytes(("worker-cargo:"+worker.getUUID()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
         if(!worker.getMainHandItem().isEmpty()) {
             TransferCustody.get(l).take(transfer,"worker:"+worker.getUUID(),worker.position(),worker.getMainHandItem());
             worker.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);
             TransferCustody.get(l).retry(l);
         }
-        var job=DigJob.claimedBy(l,worker);if(job!=null)job.release(l,worker,constructionSoil);
+        var job=DigJob.claimedBy(l,worker);if(job instanceof Mining.Job mining)mining.released(l,worker,miningCargo,transfer);else if(job!=null)job.release(l,worker,constructionSoil);
         ChamberUpgrade.get(l).release(l,worker,upgradeClay,transfer);
         var q=queen(l);if(q!=null)q.founding().releaseWorker(worker);
         ColonyMembers.get(l).died(worker);

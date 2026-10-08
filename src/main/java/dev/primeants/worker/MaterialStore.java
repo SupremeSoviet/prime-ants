@@ -84,11 +84,11 @@ public final class MaterialStore extends BlockEntity {
         if (job == null || !w.getUUID().equals(job.claim) || !job.placement.equals(placement) || !job.home.entrance().equals(p.entrance()) || job.home.direction() != p.direction()) return false;
         colony = w.queenId(); plan = NestPlan.geometry(p.entrance(), p.direction()); this.placement = placement; changed(); return true;
     }
-    /** The colony's authorized forager, in reach, puts the one unit in its mandibles into this store, if the store's
+    /** The colony's authorized forager or claimed miner, in reach, puts its one physical unit into this store, if the store's
      * chamber is confirmed now and has room for that material. Otherwise the unit stays in the mandibles. */
     public boolean deposit(LasiusNigerEntity w, NestPlan p) {
         var cargo = w.getMainHandItem();
-        if (!(level instanceof ServerLevel l) || w.queenId() == null || !ownedBy(w.queenId(), p) || !w.workerTasks().authorized(l) || cargo.getCount() != 1 || !room(cargo)
+        if (!(level instanceof ServerLevel l) || w.queenId() == null || !ownedBy(w.queenId(), p) || !(w.workerTasks().authorized(l)||w.workerTasks().miningDeliveryAuthorized(l)) || cargo.getCount() != 1 || !room(cargo)
                 || !WorkerTasks.reaches(l, w, Vec3.atBottomCenterOf(getBlockPos()).add(0, 0.15, 0))
                 || ColonyDevelopment.presence(l, colony, p, ChamberExcavation.STORE, ChamberFunction.MATERIAL_STORE) != ColonyDevelopment.Presence.CONFIRMED) return false;
         contents.add(cargo.copy()); w.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY); changed(); return true;

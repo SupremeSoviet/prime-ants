@@ -431,3 +431,35 @@ Decisions 6 and 24 now have concrete numbers. The nest plan (`dev.primeants.foun
 ### Implementation validation addendum - 2026-10-08 (T08 forager recovery)
 
 The first unfiltered T08 build executed all 236 server/94 unit cases but failed f2 at 30,000 and f3 at 60,000 ticks; its model task did not execute. A full protein share retained a forager's food cargo; f3 also plateaued in Young at 21 adults with a full cache before a late clay drop. The fixture now opens with three apples/two chickens and counts all ground/cache/worker-cargo/custody food before finite refills, leaving one actual delivery slot and kind margins. It offers f2's same eight clay only when both real claimed foragers are empty and searching. No cargo, AI, nutrients, stage/growth rules, assertion or bound is changed. An intermediate recovery still missed overlap in one copy despite storing all eight clay. The final targeted recovery passes all three identical f2 bodies (ends 19,853 / 20,004 / 20,027), and f3 reaches 31 adults at 33,317 (Mature 28,083). The additional unfiltered build follows this positive recovery; its result is recorded in T08's report. Tier-two/safety production dependencies are unchanged by this test-only repair; their full-build and concurrent passes remain separate evidence.
+
+## Implementation notes - 2026-10-08 (stage-1 T09 bounded physical mining)
+
+- **Concrete mining limits.** Horizontal Euclidean radius **16 blocks from the entrance**, edited cells **1–6 blocks below
+  entrance level**, at most **64 new mining excavation cells per colony**, including connector soil. Existing founding,
+  widening and chamber bounds are unchanged. This first conservative compiler supplies one connected, supported,
+  two-high route beyond the store passage (forward 8..15, side zero, depths one/two), at most sixteen cells; it does not
+  search arbitrary deposits or replan a partially dug stopped route.
+- **Deterministic units.** One successfully removed natural resource block produces one carried item, with no vanilla
+  loot as another producer: **stone → cobblestone; clay → clay ball; gravel → gravel; sand → sand; coal ore → coal;
+  copper ore → raw copper; iron ore → raw iron**. Ore remains stockpiled without processing. Connector soil remains dirt
+  cargo on the physical soil-to-mound path and joins the existing soil ledger.
+- **Authority and work.** Only a held Mature/Great production evaluation admits mining. Separate `NaturalMaterials`
+  observations at genuine witnessed ProtoChunk-to-LevelChunk conversion cover the surface through sixteen blocks below;
+  they do not broaden `NaturalSoil` eligibility. Loading, old/retrogen terrain and geological appearance grant no mining
+  authority. Later writes, including same-state replacement, revoke it. A real claimed worker approaches, performs a
+  twenty-loaded-tick action, carries one unit and deposits within physical reach of the confirmed owned store. Loaded
+  state, expected block, positive origin, bounds, budget, ray reach, exposure, support and room are rechecked at removal.
+  Gravity stays enabled; falling roofs and survival violations are refused. Unknown or changed availability holds work
+  and cargo. A lower held stage stops new removal while ordinary authorized delivery remains possible.
+- **Priority and persistence.** One exclusive builder and two retained caregivers, existing excavation/upgrade priority
+  and food foraging remain. An empty miner yields to available upgrade work; a worker on the surface then walks through
+  the existing stair before fetching clay. Plans, claims, successful edits, deliveries and named death releases are saved,
+  without abstract mining income. Current ground/carried/store/custody/incorporated units are counted independently of
+  cumulative history; clay wall incorporation and connector soil are included. Only actual declared worker openings join
+  integrity checks. Planning inspects a bounded fixed queue on a slow cadence; mining terrain is never force-loaded.
+- **Evidence boundary.** Permanent mining/interruption bodies keep 60,000 total ticks, negative windows 600 nursery
+  loaded ticks, restoration two fresh production evaluations plus actual work, and settlement 200 loaded ticks. Test-only
+  food openings change 12 apples/10 chickens to three/two for new mining fixtures, with counted finite later waves;
+  all legacy supplies and assertions remain. Unavailable-caregiver, preparation, handoff and other diagnostic results
+  remain explicit in T09's report. Mature-gated mining does not resolve unattended pre-Mature clay supply. Placement
+  survey walking routes/dig timelines, unattended development and arbitrary deposit reliability remain uncovered.

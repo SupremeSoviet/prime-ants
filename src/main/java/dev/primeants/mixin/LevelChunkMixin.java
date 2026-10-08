@@ -19,6 +19,7 @@ public abstract class LevelChunkMixin {
     @Inject(method = "<init>(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ProtoChunk;Lnet/minecraft/world/level/chunk/LevelChunk$PostLoadProcessor;)V", at = @At("RETURN"))
     private void primeAntsObserve(ServerLevel level, ProtoChunk proto, LevelChunk.PostLoadProcessor post, CallbackInfo ci) {
         NaturalSoil.get(level).observeGenerated(proto);
+        dev.primeants.founding.NaturalMaterials.get(level).observeGenerated(proto);
         dev.primeants.founding.NativeVegetation.get(level).observeGenerated(proto);
         dev.primeants.founding.NaturalPlacement.get(level).observeGenerated(level, proto);
     }
@@ -27,6 +28,7 @@ public abstract class LevelChunkMixin {
     @Inject(method = "setBlockState", at = @At("HEAD"))
     private void primeAntsRevoke(BlockPos pos, BlockState state, int flags, CallbackInfoReturnable<BlockState> cir) {
         if (level instanceof ServerLevel server) {
+            dev.primeants.founding.NaturalMaterials.get(server).invalidate(pos);
             if(!dev.primeants.founding.NativeGrassWrite.consume(server,pos,state)) NaturalSoil.get(server).invalidate(pos);
             dev.primeants.founding.NativeVegetation.get(server).invalidate(pos);
             dev.primeants.founding.ColonyPlugs.get(server).invalidate(pos);
@@ -37,6 +39,9 @@ public abstract class LevelChunkMixin {
     }
     @Inject(method="setBlockState",at=@At("RETURN"))
     private void primeAntsFailedWrite(BlockPos pos,BlockState state,int flags,CallbackInfoReturnable<BlockState> cir) {
-        if(cir.getReturnValue()==null && level instanceof ServerLevel server) NaturalSoil.get(server).invalidate(pos);
+        if(cir.getReturnValue()==null && level instanceof ServerLevel server) {
+            NaturalSoil.get(server).invalidate(pos);
+            dev.primeants.founding.NaturalMaterials.get(server).invalidate(pos);
+        }
     }
 }

@@ -212,6 +212,7 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
         enclosedChamber(level,owner,r,footprint);
         NestExpansion.get(level).findings(level,owner,r);
         ChamberExcavation.get(level).findings(level,owner,r);
+        var mining=Mining.get(level).job(owner);if(mining!=null)mining.findings(level,owner,r);
         for (int f = 3; f <= 5; f++) for (int s = -1; s <= 1; s++) {
             BlockPos p = at(f, s, -2);
             if (!inside(level,p,footprint,r)) continue;

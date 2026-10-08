@@ -29,6 +29,28 @@ public final class MaterialHaulingGameTest {
     private List<LasiusNigerEntity> carriers(GameTestHelper c, LasiusNigerEntity q) { return fx.f.workers(c, q).stream().filter(w -> MaterialStore.material(w.getMainHandItem())).toList(); }
     private static long count(MaterialStore s, Item item) { return s == null ? 0 : s.contents().stream().filter(st -> st.is(item)).count(); }
 
+    @GameTest(maxTicks=60000,structure="prime_ants_test:idle_ground")
+    public void droppedGravelSandRawCopperAndRawIronAreFoodFirstOneUnitTripsAndSettleInStore(GameTestHelper c){
+        var q=fx.start(c);boolean[] supplied={false},dropped={false};var drops=new LinkedHashMap<Item,Integer>();var held=new HashMap<UUID,ItemStack>();long[] pickups={0},settled={-1};
+        c.onEachTick(()->{
+            fx.grow(c,q,supplied);var p=NestPlanFixture.pile(c,q);if(p==null)return;
+            if(!dropped[0]){
+                if(!NestPlanFixture.storeConfirmed(p.stageEvaluation()))return;
+                dropped[0]=true;for(var item:List.of(Items.GRAVEL,Items.SAND,Items.RAW_COPPER,Items.RAW_IRON))drops.put(item,2);
+                drops.forEach((item,n)->fx.drop(c,drops(q),new ItemStack(item,n)));fx.drop(c,q.founding().plan().at(-4,0,1),new ItemStack(Items.APPLE,2));return;
+            }
+            fx.accounted(c,q,drops);
+            for(var w:fx.f.workers(c,q)){
+                var now=w.getMainHandItem();var was=held.put(w.getUUID(),now.copy());
+                if(was!=null&&was.isEmpty()&&MaterialStore.material(now)){pickups[0]++;c.assertTrue(now.getCount()==1&&!onGround(c,WorkerTasks::food),"Missing material variants retain food priority and one-unit visible cargo");}
+            }
+            var s=NestPlanFixture.store(c,q);if(s==null||s.size()!=8||!carriers(c,q).isEmpty())return;
+            c.assertTrue(drops.keySet().stream().allMatch(item->count(s,item)==2)&&pickups[0]==8&&!onGround(c,MaterialStore::material),"Every gravel/sand/raw copper/raw iron contribution is physically carried once and stored");
+            if(settled[0]<0)settled[0]=p.loadedTicks();if(p.loadedTicks()-settled[0]<200)return;
+            PrimeAnts.LOGGER.info("T09 CONTRIBUTIONS DONE queen={} tick={} pickups={} observation={} contents={}",q.getUUID(),c.getTick(),pickups[0],p.loadedTicks()-settled[0],s.contents());c.succeed();
+        });
+    }
+
     @GameTest(maxTicks=48000,structure="prime_ants_test:idle_ground")
     public void droppedClayCobblestoneAndCoalReachTheConfirmedStoreAfterTheFoodWithExactAccounting(GameTestHelper c){
         var q=fx.start(c);boolean[] supplied={false},dropped={false};Map<Item,Integer> drops=new LinkedHashMap<>();Map<UUID,ItemStack> held=new HashMap<>();long[] pickups={0};

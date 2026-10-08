@@ -1,4 +1,4 @@
-# Stage 1 design (T01–T08)
+# Stage 1 design (T01–T09)
 
 Stages describe live bodies, owned chambers and physical stock. `ChamberRegistry` persists claims, stage and unmet-since
 clocks; `ColonyDevelopment` confirms them from loaded terrain and observed adults. Loaded damage wins over unknown cells.
@@ -51,3 +51,26 @@ two restored evaluations; bounded concurrency and final-build results are in T08
 1,846 sites / 1,842 openings / 764 store-and-hall fits (763 with support); walking routes and dig timelines are excluded.
 **Unattended pre-Mature clay remains missing:** Mature-gated mining cannot supply that earlier gap. T09 prioritizes mining
 and player contributions, with any diagnosed reliability carryovers; tier three and Great follow mining.
+
+T09 adds a conservative physical gallery beyond the store passage: forward 8..15, side 0, two high at entrance depths
+1..2. Runtime guards use a **16-block horizontal circle, depth 1..6, and 64 newly excavated mining cells per colony**,
+including connector soil; the first fixed route actually contains at most sixteen cells. Planning reads those sixteen
+cells on a 100-tick colony cadence. Unknown terrain pauses; player writes, including same-state writes, revoke origin.
+`NaturalMaterials` records only witnessed genuine new generation separately from unchanged founding/chamber soil authority.
+Standard stone/clay/gravel/sand/coal ore/copper ore/iron ore yield exactly one cobblestone/clay ball/gravel/sand/coal/raw
+copper/raw iron, without vanilla loot or processing. Each claimed worker acts at an exposed supported face for twenty
+loaded ticks, carries one unit, walks to the confirmed store and deposits. Connector soil uses the existing mound path.
+
+Mining shares one builder, leaves two caregivers, and yields empty to available upgrades. Existing unfinished dig/upgrade
+jobs can hold this first planner, including upgrades waiting for supplied clay. A miner yielding after a surface deposit
+returns through the founding stair before fetching upgrade clay. All commit guards and eventual material room are checked
+again before removal; changed availability after pickup retains the cargo. Falling roofs and survival/support breaches
+are refused. Plans, successful edits, worker claims, per-item delivery history and named death custody transfers persist;
+history is separate from current stock. Only declared, actually worker-opened gallery cells authorize chamber connections.
+
+The permanent tests retain 60,000 total ticks, 600 loaded negative windows, two restored confirmations and 200 settled
+ticks. New mining fixtures open with three apples/two chickens, then use the existing counted finite food/clay waves;
+legacy fixture supply is unchanged. T09's report separates passing supplied-gallery/contribution/origin evidence from
+unresolved interruptions and any red full build. Mature-gated mining does not resolve unattended pre-Mature clay supply.
+Placement-survey walking routes and dig timelines remain uncovered; supplied passes do not establish unattended
+development or arbitrary deposit reliability. Tier-three construction and Great growth acceptance remain deferred.
