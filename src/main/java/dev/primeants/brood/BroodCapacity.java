@@ -30,6 +30,9 @@ public final class BroodCapacity {
     public static final int SPEED_DIVISOR = 2, MAX_SLOTS = FOUNDING_SLOTS + HALL_SLOTS + 8;
     /** Default timing (decision 21): adult lifespan, one brood stage, and the queen's laying cadence, in loaded ticks. */
     public static final long LIFESPAN = dev.primeants.entity.AdultLife.DEFAULT_LIFESPAN, STAGE_TICKS = 12_000, LAYING_TICKS = BroodPile.BASE_LAYING_TICKS, STAGES = 3;
+    public static final long TIER_TWO_LAYING_TICKS = 600;
+    public static long layingTicks(int confirmedHallTier) { return confirmedHallTier >= 2 ? TIER_TWO_LAYING_TICKS : LAYING_TICKS; }
+    public static int buildableHallTier(ColonyStage s) { return s==ColonyStage.FOUNDING?0:s==ColonyStage.YOUNG?1:2; }
     public record Nursery(int slots, int speed) {
         public Nursery { if (slots < FOUNDING_SLOTS || slots > MAX_SLOTS || speed < SPEED_DIVISOR) throw new IllegalArgumentException("Invalid nursery " + slots + " x" + speed); }
         /** Development steps per loaded tick, on average. */
@@ -55,13 +58,14 @@ public final class BroodCapacity {
         double broodTicks = STAGES * stageTicks / n.rate();
         return Math.min(n.slots() * lifespan / broodTicks, lifespan / (double) layingTicks);
     }
+    public static double sustainedWorkers(Nursery n, int confirmedHallTier) { return sustainedWorkers(n,LIFESPAN,STAGE_TICKS,layingTicks(confirmedHallTier)); }
     public static double sustainedWorkers(Nursery n) { return sustainedWorkers(n, LIFESPAN, STAGE_TICKS, LAYING_TICKS); }
     /** The workers a stage must sustain: its next adult threshold, and for Great its own adult cap. */
     public static int target(ColonyStage s) { return s.next() == null ? s.adultCap() : StageRules.minAdults(s.next()); }
     static {
         // No brood deadlock: at default timing what each stage can build sustains its next threshold by workers alone
         // (T01's adult-cap check, StageRules, is the counterpart for caps).
-        for (var s : ColonyStage.values()) if (sustainedWorkers(buildable(s)) < target(s))
+        for (var s : ColonyStage.values()) if (sustainedWorkers(buildable(s), buildableHallTier(s)) < target(s))
             throw new IllegalStateException("A " + s + " colony's nursery cannot sustain " + target(s) + " workers");
     }
 }

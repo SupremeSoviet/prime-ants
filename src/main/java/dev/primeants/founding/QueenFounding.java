@@ -101,46 +101,62 @@ public final class QueenFounding {
     }
     private String enclosureProblem(ServerLevel level, boolean operational) {
         if (plan == null) return "enclosure_plan_missing";
-        if (operational && lifecycle == Lifecycle.OPEN && plan.plugs().stream().anyMatch(p -> !ColonyPlugs.get(level).opened(level,p,queen.getUUID()))) return "enclosure_operational_opening_incomplete";
+        if (operational && lifecycle == Lifecycle.OPEN && plan.plugs().stream().anyMatch(p -> NestPlan.loaded(level,p) && !ColonyPlugs.get(level).opened(level,p,queen.getUUID()))) return "enclosure_operational_opening_incomplete";
         String habitat = plan.nurseryProblem(level, queen.getUUID(), operational);
         if (habitat != null) return habitat;
         return bodyProblem(level, operational);
     }
     /** Readiness apart from the shared habitat checks, for a caller that already reads the habitat (the queen's hall,
-     * ColonyDevelopment): she is settled, an open nest's opening is complete and her living body is inside. */
-    public String occupancyProblem(ServerLevel level) {
-        if (phase != Phase.SETTLED || plan == null) return "queen_not_settled";
+     * ColonyDevelopment): she is settled, an open nest's opening is complete and her living body is inside. What loaded
+     * blocks show is a fault (a loaded plug cell not open, her body outside); an unloaded plug or entrance cell is only
+     * unavailable (stage-1 T08), so an unloaded entrance never makes the hall a loss. */
+    public void occupancyFindings(ServerLevel level, Findings r) {
+        if (phase != Phase.SETTLED || plan == null) { r.fault("queen_not_settled"); return; }
         boolean operational = lifecycle != Lifecycle.CLAUSTRAL;
-        if (operational && lifecycle == Lifecycle.OPEN && plan.plugs().stream().anyMatch(p -> !ColonyPlugs.get(level).opened(level,p,queen.getUUID()))) return "enclosure_operational_opening_incomplete";
-        return bodyProblem(level, operational);
+        if (operational && lifecycle == Lifecycle.OPEN) for (var p : plan.plugs())
+            if (r.cell(NestPlan.loaded(level, p), "entrance_chunk_unavailable") && !ColonyPlugs.get(level).opened(level,p,queen.getUUID())) r.fault("enclosure_operational_opening_incomplete");
+        bodyFindings(level, operational, r);
     }
-    /** Her living body, on the ground and dry, wholly inside the founding room or its verified extensions. */
-    private String bodyProblem(ServerLevel level, boolean operational) {
+    /** occupancyFindings' first fault, else its first unavailable cell. */
+    public String occupancyProblem(ServerLevel level) { var r = new Findings(); occupancyFindings(level, r); return r.problem(); }
+    private String bodyProblem(ServerLevel level, boolean operational) { var r = new Findings(); bodyFindings(level, operational, r); return r.problem(); }
+    /** Her living body, on the ground and dry, wholly inside the founding room or its verified extensions. The entrance
+     * cell counts as an extension only while both plugs are open; with a plug or the entrance cell unloaded that is
+     * unknown, so a body that needs the entrance cell is then unavailable rather than outside. */
+    private void bodyFindings(ServerLevel level, boolean operational, Findings r) {
         BlockPos a = plan.at(3, -1, -2), b = plan.at(5, 1, -1);
         AABB interior = new AABB(Math.min(a.getX(), b.getX()), a.getY(), Math.min(a.getZ(), b.getZ()),
                 Math.max(a.getX(), b.getX()) + 1, b.getY() + 1, Math.max(a.getZ(), b.getZ()) + 1);
         AABB body = queen.getBoundingBox();
         boolean inside=body.minX>=interior.minX&&body.minY>=interior.minY&&body.minZ>=interior.minZ
-            &&body.maxX<=interior.maxX&&body.maxY<=interior.maxY&&body.maxZ<=interior.maxZ;
+            &&body.maxX<=interior.maxX&&body.maxY<=interior.maxY&&body.maxZ<=interior.maxZ, unknown=false;
         if(!inside&&operational&&body.minY>=interior.minY&&body.maxY<=interior.maxY){
             // A body's entire footprint must be covered by the original room or currently verified
             // completed physical voids that fit this body. Planned cells and unauthorized holes confer no habitat.
             var usable=new java.util.ArrayList<BlockPos>(NestExpansion.get(level).bodyFloors(level,queen.getUUID(),body.maxY));
-            if(plan.plugs().stream().allMatch(p->ColonyPlugs.get(level).opened(level,p,queen.getUUID()))
-                &&NestPlan.walkable(level,plan.at(2,0,-2)))usable.add(plan.at(2,0,-2));
-            inside=!usable.isEmpty();
-            for(int x=(int)Math.floor(body.minX);x<Math.ceil(body.maxX)&&inside;x++)for(int z=(int)Math.floor(body.minZ);z<Math.ceil(body.maxZ)&&inside;z++){
-                var p=new BlockPos(x,(int)interior.minY,z);
-                boolean original=x>=interior.minX&&x+1<=interior.maxX&&z>=interior.minZ&&z+1<=interior.maxZ;
-                if(!original&&!usable.contains(p))inside=false;
-            }
+            var entrance=plan.at(2,0,-2);
+            boolean entranceKnown=NestPlan.loaded(level,entrance)&&plan.plugs().stream().allMatch(p->NestPlan.loaded(level,p));
+            if(entranceKnown&&plan.plugs().stream().allMatch(p->ColonyPlugs.get(level).opened(level,p,queen.getUUID()))
+                &&NestPlan.walkable(level,entrance))usable.add(entrance);
+            inside=covered(body,interior,usable);
+            if(!inside&&!entranceKnown){var with=new java.util.ArrayList<BlockPos>(usable);with.add(entrance);unknown=covered(body,interior,with);}
         }
         if (!queen.isAlive() || queen.isRemoved() || !queen.onGround() || queen.isInWater()
                 // AABB.contains is half-open for POINTS and rejects max-face contact. A physical body
                 // may touch the wall without crossing it: use inclusive box containment, with no epsilon.
-                || !inside
-                || !level.noCollision(queen, body.deflate(0.001))) return "enclosure_queen_not_inside";
-        return null;
+                || !inside && !unknown
+                || !level.noCollision(queen, body.deflate(0.001))) r.fault("enclosure_queen_not_inside");
+        else if (!inside) r.unavailable("enclosure_queen_entrance_unavailable");
+    }
+    /** Every cell under the body is the original room or one of the usable verified floors. */
+    private static boolean covered(AABB body, AABB interior, List<BlockPos> usable) {
+        boolean inside=!usable.isEmpty();
+        for(int x=(int)Math.floor(body.minX);x<Math.ceil(body.maxX)&&inside;x++)for(int z=(int)Math.floor(body.minZ);z<Math.ceil(body.maxZ)&&inside;z++){
+            var p=new BlockPos(x,(int)interior.minY,z);
+            boolean original=x>=interior.minX&&x+1<=interior.maxX&&z>=interior.minZ&&z+1<=interior.maxZ;
+            if(!original&&!usable.contains(p))inside=false;
+        }
+        return inside;
     }
     private String settledReason(ServerLevel level) {
         String problem = enclosureProblem(level, lifecycle != Lifecycle.CLAUSTRAL);

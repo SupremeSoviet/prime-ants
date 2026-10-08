@@ -4,6 +4,7 @@ param(
     [Parameter(Mandatory=$true)][string]$EvidenceDirectory
 )
 $ErrorActionPreference = 'Stop'
+$PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
 $workspace = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $workspace
 New-Item -ItemType Directory -Path $EvidenceDirectory -Force | Out-Null

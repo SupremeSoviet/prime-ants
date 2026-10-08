@@ -71,4 +71,15 @@ class FoodSharesTest {
             if (n > 0) assertEquals(FoodShares.share(C), unitProtein ? s : p, "sheds down to the share exactly: " + sugar + "/" + protein);
         }
     }
+    @Test
+    void tierTwoKeepsFourForEachKindAndAdmitsTwelveCanonicalUnits() {
+        assertEquals(6,FoodShares.capacity(1));assertEquals(12,FoodShares.capacity(2));
+        assertEquals(4,FoodShares.reserved(12));assertEquals(8,FoodShares.share(12));
+        for(int sugar=0;sugar<4;sugar++)assertTrue(FoodShares.admits(12,sugar,8,false));
+        assertFalse(FoodShares.admits(12,4,8,false));assertFalse(FoodShares.shareRoom(12,0,8,true));
+        assertEquals(4,FoodShares.shed(12,0,12,false),"A legacy single-kind inventory releases exactly four units through custody when the other kind arrives");
+        assertEquals(4,FoodShares.shed(6,0,8,false),"A preserved tier-two inventory can shed physical surplus after an observed reduction");
+        assertEquals(0,FoodShares.shed(6,6,6,false),"No automatic truncation of an overfull mixed inventory");
+    }
+
 }

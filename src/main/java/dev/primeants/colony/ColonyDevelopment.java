@@ -52,7 +52,7 @@ public final class ColonyDevelopment {
         var states = new ArrayList<ChamberState>();
         var tiers = new EnumMap<ChamberFunction, int[]>(ChamberFunction.class);
         int food = 0, foodUnknown = 0, storesUnknown = 0, wallClay = 0, wallClayUnknown = 0;
-        var upgrades = ChamberUpgrade.get(l);
+        var upgrades = ChamberUpgrade.get(l); var countedWalls = new HashSet<BlockPos>();
         var stores = new ArrayList<List<MaterialUnits.Material>>();
         // One connected nest: the founding chamber's habitat covers the stairs, the widening and every dug chamber.
         var habitat = plan.nurseryFindings(l, queen, operational);
@@ -65,11 +65,12 @@ public final class ColonyDevelopment {
                 else if (presence == Presence.UNKNOWN) t[1] = Math.max(t[1], chamber.tier());
             });
             // Clay the colony built into a confirmed chamber's walls still counts; an unknown chamber may hold what it built.
-            wallClay += state.clay();
+            if (state.tier() > 0) for (var wall : ChamberUpgrade.walls(plan, chamber))
+                if (ColonyTerrain.get(l).built(l, wall, queen, NurseryBlocks.PACKED_CLAY) && countedWalls.add(wall)) wallClay += NestWalls.CLAY_PER_CELL;
             if (state.tier() == 0 && state.functions().containsValue(Presence.UNKNOWN)) wallClayUnknown += upgrades.builtClay(queen, chamber.id());
             var store = state.functions().get(ChamberFunction.FOOD_STORE);
             if (store == Presence.CONFIRMED && l.getBlockEntity(chamber.markers().get(ChamberFunction.FOOD_STORE)) instanceof NestCache cache) food += cache.size();
-            else if (store == Presence.UNKNOWN) foodUnknown += NestCache.CAPACITY;
+            else if (store == Presence.UNKNOWN) foodUnknown += NestCache.MAX_CAPACITY;
             // Clay and stone are known only in a confirmed store; an unknown one may hold its most of each.
             var materials = state.functions().get(ChamberFunction.MATERIAL_STORE);
             if (materials == Presence.CONFIRMED && l.getBlockEntity(chamber.markers().get(ChamberFunction.MATERIAL_STORE)) instanceof MaterialStore s)
@@ -80,10 +81,10 @@ public final class ColonyDevelopment {
         tiers.forEach((f, t) -> bounds.put(f, new StageRules.Bound(t[0], t[1])));
         // Clay moved from the store toward the walls stays counted: units in the upgrade builder's mandibles are known
         // while it is seen carrying them, possible while it is unavailable (ChamberUpgrade.carried).
-        var stored = MaterialUnits.stock(stores, storesUnknown, MaterialUnits.Material.CLAY); var carried = upgrades.carried(l, queen);
+        var stored = MaterialUnits.stock(stores, storesUnknown, MaterialUnits.Material.CLAY, MaterialUnits.MAX_CAPACITY); var carried = upgrades.carried(l, queen);
         var clay = new StageRules.Bound(stored.known() + wallClay + carried.known(), stored.possible() + wallClay + wallClayUnknown + carried.possible());
         var inputs = new StageRules.Inputs(new StageRules.Bound(known, known + unknown), bounds, new StageRules.Bound(food, food + foodUnknown),
-            clay, MaterialUnits.stock(stores, storesUnknown, MaterialUnits.Material.STONE), queenDead);
+            clay, MaterialUnits.stock(stores, storesUnknown, MaterialUnits.Material.STONE, MaterialUnits.MAX_CAPACITY), queenDead);
         var result = StageRules.evaluate(colony.stage(), inputs, colony.unmetSince(), now);
         int cap = AdultBound.effectiveCap(result.stage(), bound);
         if (result.stage() != colony.stage() || !result.unmetSince().equals(colony.unmetSince())) registry.stage(queen, result.stage(), result.unmetSince());
@@ -102,6 +103,27 @@ public final class ColonyDevelopment {
         var colony = ChamberRegistry.get(l).colony(queen); var chamber = colony == null ? null : colony.chamber(chamberId);
         if (chamber == null || !chamber.functions().contains(f)) return Presence.ABSENT;
         return confirm(l, queen, plan, plan.nurseryFindings(l, queen, true), chamber).functions().get(f);
+    }
+    /** Live confirmed tier for an effect owner. Unknown or observed damage confers no upgraded effect; contents stay physical. */
+    public static int confirmedTier(ServerLevel l, UUID queen, NestPlan plan, String id, ChamberFunction function) {
+        var colony = queen == null ? null : ChamberRegistry.get(l).colony(queen);
+        var chamber = colony == null ? null : colony.chamber(id);
+        if (plan == null || chamber == null || !chamber.functions().contains(function)) return 0;
+        var state = confirm(l, queen, plan, plan.nurseryFindings(l, queen, true), chamber);
+        return state.functions().get(function) == Presence.CONFIRMED ? state.tier() : 0;
+    }
+    /** Capacity is held while its terrain is unknown. A loaded fault or a confirmed lower wall tier still reduces
+     * admission immediately, without truncating canonical contents. Unknown claims never authorize a delivery. */
+    public static int capacityTier(ServerLevel l, UUID queen, NestPlan plan, String id, ChamberFunction function) {
+        var colony = queen == null ? null : ChamberRegistry.get(l).colony(queen);
+        var chamber = colony == null ? null : colony.chamber(id);
+        if (plan == null || chamber == null || !chamber.functions().contains(function)) return 1;
+        var state = confirm(l, queen, plan, plan.nurseryFindings(l, queen, true), chamber);
+        return switch (state.functions().get(function)) {
+            case CONFIRMED -> state.tier();
+            case UNKNOWN -> chamber.tier();
+            case ABSENT -> 1;
+        };
     }
     /** A function counts only with its owned marker in an open, enclosed chamber: the same live habitat predicate that
      * gates brood care (NestPlan.nurseryFindings), plus a dug chamber's own cells. Every check runs; a fault seen in
@@ -157,11 +179,17 @@ public final class ColonyDevelopment {
     }
     /** The living queen, settled with her body inside her room: observed, so a queen seen dead or outside is a loss even
      * beside unavailable terrain, and only a queen whose lookup fails without a recorded death is unknown. The habitat
-     * part of her readiness is already in the chamber's findings. */
+     * part of her readiness is already in the chamber's findings. Her occupancy keeps an unloaded plug or entrance cell
+     * unknown (stage-1 T08): only what loaded blocks show is a loss. */
     private static void queen(ServerLevel l, UUID queen, Findings r) {
         if (l.getEntity(queen) instanceof LasiusNigerEntity q) {
-            if (!q.isAlive() || q.isRemoved()) r.fault("queens_hall_queen_dead");
-            else if (q.founding().occupancyProblem(l) instanceof String problem) r.fault("queens_hall_" + problem);
+            if (!q.isAlive() || q.isRemoved()) { r.fault("queens_hall_queen_dead"); return; }
+            var occupancy = new Findings(); q.founding().occupancyFindings(l, occupancy);
+            switch (occupancy.verdict()) {
+                case DAMAGED -> r.fault("queens_hall_" + occupancy.fault());
+                case UNKNOWN -> r.unavailable("queens_hall_" + occupancy.problem());
+                case CLEAR -> { }
+            }
         } else if (AdultHistory.get(l).recorded(queen)) r.fault("queens_hall_queen_dead");
         else r.unavailable("queens_hall_queen_unavailable");
     }

@@ -53,7 +53,11 @@
       "dev.primeants.gametest.StageHysteresisGameTest",
       "dev.primeants.gametest.PlugSoilGameTest",
       "dev.primeants.gametest.LegacyCacheGameTest",
-      "dev.primeants.gametest.ForagerScalingGameTest"
+      "dev.primeants.gametest.ForagerScalingGameTest",
+      "dev.primeants.gametest.HallAvailabilityGameTest",
+      "dev.primeants.gametest.ExpandedBroodGameTest",
+      "dev.primeants.gametest.TierTwoGameTest",
+      "dev.primeants.gametest.StoreUpgradeSafetyGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

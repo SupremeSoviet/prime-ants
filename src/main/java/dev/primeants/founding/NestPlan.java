@@ -191,13 +191,12 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
     public Findings nurseryFindings(ServerLevel level, java.util.UUID owner, boolean operational) {
         var r = new Findings();
         boolean footprint = true;
-        for (int f : new int[]{2, 6}) for (int s : new int[]{-2, 2}) {
-            BlockPos p = at(f, s, -3);
-            if (level.getChunkSource().getChunk(p.getX() >> 4, p.getZ() >> 4,
-                    net.minecraft.world.level.chunk.status.ChunkStatus.FULL, false) == null) { r.unavailable("enclosure_chunk_unavailable"); footprint = false; }
-        }
+        // The same chunk lookup as every other cell (loaded), so no corner is read differently from the cells it covers.
+        for (int f : new int[]{2, 6}) for (int s : new int[]{-2, 2})
+            if (!loaded(level, at(f, s, -3))) { r.unavailable("enclosure_chunk_unavailable"); footprint = false; }
         var plugs = ColonyPlugs.get(level);
-        for (BlockPos p : plugs()) if (inside(level,p,footprint,r)
+        // Plug availability must be checked before opened(): false can mean unavailable, not missing.
+        for (BlockPos p : plugs()) if (r.cell(loaded(level,p),"enclosure_chunk_unavailable")
                 && !(operational && plugs.opened(level,p,owner)) && !ColonyPlugs.material(level.getBlockState(p))) r.fault("enclosure_plug_missing");
         if (operational) {
             for (BlockPos p : plugs()) if (loaded(level,p) && !plugs.opened(level,p,owner) && !plugs.owned(level,p,owner)) r.fault("enclosure_plug_ownership_revoked");

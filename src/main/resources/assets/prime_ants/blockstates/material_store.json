@@ -71,6 +71,70 @@
     },
     {
       "when": {
+        "clay": "9"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_clay_9"
+      }
+    },
+    {
+      "when": {
+        "clay": "10"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_clay_10"
+      }
+    },
+    {
+      "when": {
+        "clay": "11"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_clay_11"
+      }
+    },
+    {
+      "when": {
+        "clay": "12"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_clay_12"
+      }
+    },
+    {
+      "when": {
+        "clay": "13"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_clay_13"
+      }
+    },
+    {
+      "when": {
+        "clay": "14"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_clay_14"
+      }
+    },
+    {
+      "when": {
+        "clay": "15"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_clay_15"
+      }
+    },
+    {
+      "when": {
+        "clay": "16"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_clay_16"
+      }
+    },
+    {
+      "when": {
         "stock": "1"
       },
       "apply": {
@@ -99,6 +163,38 @@
       },
       "apply": {
         "model": "prime_ants:block/material_store_stock_4"
+      }
+    },
+    {
+      "when": {
+        "stock": "5"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_stock_5"
+      }
+    },
+    {
+      "when": {
+        "stock": "6"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_stock_6"
+      }
+    },
+    {
+      "when": {
+        "stock": "7"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_stock_7"
+      }
+    },
+    {
+      "when": {
+        "stock": "8"
+      },
+      "apply": {
+        "model": "prime_ants:block/material_store_stock_8"
       }
     },
     {

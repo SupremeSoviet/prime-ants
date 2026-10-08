@@ -7,6 +7,7 @@ import dev.primeants.worker.*;
 import java.util.*;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
@@ -17,30 +18,43 @@ public final class ForagerScalingGameTest {
     private final NestPlanFixture fx = new NestPlanFixture();
     static List<LasiusNigerEntity> foragers(GameTestHelper c, NestPlanFixture fx, LasiusNigerEntity q) { return fx.f.workers(c, q).stream().filter(w -> q.founding().claimedBy(w)).toList(); }
     static long cached(NestCache n, net.minecraft.world.item.Item item) { return n == null ? 0 : n.contents().stream().filter(s -> s.is(item)).count(); }
-    /** A player's food on demand: four apples when the cache shows none and none lie on the ground, two chickens when it
-     * shows fewer than its protein share and none lie on the ground (T05/T06's long-path rule). Returns the units dropped. */
+    /** Finite player refills include food on the ground and in every worker's cargo. One free delivery slot and a
+     * per-kind margin keep pending food from blocking both foragers; every unit still travels physically. */
     long onDemand(GameTestHelper c, LasiusNigerEntity q, long[] last) {
-        var cache = fx.f.cache(c, q); long tick = c.getTick(), units = 0;
-        if (NurseryUpgradeGameTest.ground(c, Items.APPLE) == 0 && cached(cache, Items.APPLE) == 0 && tick - last[0] >= 200) { last[0] = tick; fx.food.supply(c, q, 4, 0); units += 4; }
-        if (NurseryUpgradeGameTest.ground(c, Items.CHICKEN) == 0 && cached(cache, Items.CHICKEN) < FoodShares.share(NestCache.CAPACITY) && tick - last[1] >= 200) { last[1] = tick; fx.food.supply(c, q, 0, 2); units += 2; }
-        return units;
+        var cache = fx.f.cache(c, q); long tick = c.getTick();
+        var pending = new ArrayList<ItemStack>(); if (cache != null) pending.addAll(cache.contents());
+        fx.f.workers(c,q).stream().map(w->w.getMainHandItem()).filter(WorkerTasks::food).forEach(pending::add);
+        var box=c.getBounds().inflate(8);
+        c.getLevel().getEntitiesOfClass(ItemEntity.class,box,i->i.isAlive()&&WorkerTasks.food(i.getItem())).forEach(i->pending.add(i.getItem()));
+        TransferCustody.get(c.getLevel()).contents().stream().filter(t->box.contains(t.position())&&WorkerTasks.food(t.stack())).forEach(t->pending.add(t.stack()));
+        int capacity=cache==null?NestCache.CAPACITY:cache.capacity(), target=capacity-1, proteinTarget=FoodShares.reserved(capacity), sugarTarget=target-proteinTarget;
+        long total=pending.stream().mapToLong(ItemStack::getCount).sum();
+        long protein=pending.stream().filter(NestCache::protein).mapToLong(ItemStack::getCount).sum(), sugar=total-protein;
+        if(total>=target)return 0;
+        if(sugar<sugarTarget&&tick-last[0]>=200){last[0]=tick;fx.food.supply(c,q,1,0);return 1;}
+        if(protein<proteinTarget&&tick-last[1]>=200){last[1]=tick;fx.food.supply(c,q,0,1);return 1;}
+        return 0;
     }
 
     /** (f2) A colony of twenty workers or more claims a second forager, so two or more claimed foragers carry at once.
      * Every food unit and every clay ball is exactly accounted at every tick, each further claim leaves the colony its
      * caregivers, and a reload of the queen and of each carrying forager keeps every claim, cargo and phase; the restored
      * carriers then deliver their units. Food on demand; once two foragers are claimed and the store is confirmed, eight
-     * clay balls, with no food dropped while they lie on the ground (food first would keep both foragers on food). */
-    @GameTest(maxTicks=30000,structure="prime_ants_test:idle_ground")
-    public void largeColonyForagersCarryAtOnceWithExactAccountingAndClaimsSurviveReload(GameTestHelper c) {
+     * clay balls once both foragers have actually delivered their food and are searching, with no food dropped while
+     * clay lies on the ground (food first would keep both foragers on food). Opening food is three apples/two chickens;
+     * later finite refills count ground/cache/cargo/custody and leave a physical delivery margin. */
+    @GameTest(maxTicks=30000,structure="prime_ants_test:carrier_route")
+    public void largeColonyForagersCarryAtOnceWithExactAccountingAndClaimsSurviveReload(GameTestHelper c) { simultaneousCarriers(c); }
+    private void simultaneousCarriers(GameTestHelper c) {
         LasiusNigerEntity[] q = {fx.start(c)}; boolean[] opened = {false}; long[] dropped = {0}, last = {0, 0}, claimedAt = {-1}; int[] step = {0}, most = {0};
-        List<UUID> claims = new ArrayList<>(); Map<UUID, ItemStack> carried = new HashMap<>(); Set<UUID> delivered = new HashSet<>(); boolean[] clay = {false};
+        List<UUID> claims = new ArrayList<>(); Map<UUID, ItemStack> carried = new HashMap<>(); Set<UUID> delivered = new HashSet<>(); boolean[] clay = {false}, simultaneousClay = {false};
         c.onEachTick(() -> {
             var l = c.getLevel();
-            if (!opened[0]) { fx.grow(c, q[0], opened); if (opened[0]) dropped[0] += 22; return; }
+            if (!opened[0]) { if(q[0].founding().lifecycle()==dev.primeants.founding.QueenFounding.Lifecycle.OPEN){opened[0]=true;fx.food.supply(c,q[0],3,2);dropped[0]+=5;} return; }
             var p = NestPlanFixture.pile(c, q[0]); var store = NestPlanFixture.store(c, q[0]);
             boolean clayWaits = clay[0] && NurseryUpgradeGameTest.ground(c, Items.CLAY_BALL) > 0 && store != null && store.room(new ItemStack(Items.CLAY_BALL));
-            if (!clayWaits) dropped[0] += onDemand(c, q[0], last);
+            boolean preparingClay=!clay[0]&&q[0].founding().foragers().size()>=2&&NestPlanFixture.storeConfirmed(p==null?null:p.stageEvaluation())&&store!=null;
+            if (!clayWaits&&!preparingClay) dropped[0] += onDemand(c, q[0], last);
             fx.soil(c, q[0]);
             c.assertTrue(fx.food.total(c, q[0]) == dropped[0], "Every food unit dropped is on the ground, carried, cached, in custody or eaten: " + fx.food.total(c, q[0]) + " of " + dropped[0]);
             if (clay[0]) c.assertTrue(NurseryUpgradeGameTest.clay(c, fx, q[0]) == 8, "All 8 dropped clay balls are on the ground, carried, stored, in the colony's walls or in custody: " + NurseryUpgradeGameTest.clay(c, fx, q[0]));
@@ -56,9 +70,23 @@ public final class ForagerScalingGameTest {
             }
             claims.clear(); claims.addAll(all);
             var carriers = ws.stream().filter(w -> !w.getMainHandItem().isEmpty()).toList(); most[0] = Math.max(most[0], carriers.size());
-            if (!clay[0] && all.size() >= 2 && NestPlanFixture.storeConfirmed(p == null ? null : p.stageEvaluation()) && store != null) {
-                clay[0] = true; fx.drop(c, q[0].founding().plan().at(-5, 0, 1), new ItemStack(Items.CLAY_BALL, 8));
+            if (preparingClay && ws.size()==all.size() && ws.stream().allMatch(w->w.getMainHandItem().isEmpty()&&w.workerTasks().phase()==WorkerTasks.Phase.SEARCH)
+                && NurseryUpgradeGameTest.ground(c,Items.APPLE)==0 && NurseryUpgradeGameTest.ground(c,Items.CHICKEN)==0) {
+                var plan = q[0].founding().plan();
+                // A declared supported L route, wholly inside this fixture and the unchanged search box. Three steps
+                // climb above the existing mound; no nest/mound cell is removed. A longer real carrying leg lets the
+                // half-cycle-offset foragers overlap without assigning cargo, moving bodies or changing their AI.
+                var outside=plan.outside();
+                for(int x=1;x<=7;x++)runway(c,q[0],outside.offset(x,Math.min(x,3)-1,0));
+                for(int z=1;z<=7;z++)runway(c,q[0],outside.offset(7,2,z));
+                var drop=outside.offset(7,3,7);
+                c.assertTrue(c.getBounds().contains(net.minecraft.world.phys.Vec3.atCenterOf(drop))&&ws.stream().allMatch(w->w.workerTasks().withinSearch(drop)),"The supported supply remains inside this fixture and both foragers' existing search box");
+                clay[0] = true; fx.drop(c, drop, new ItemStack(Items.CLAY_BALL, 8));
                 PrimeAnts.LOGGER.info("T07 F2 CLAY DROPPED queen={} tick={} foragers={} workers={}", q[0].getUUID(), c.getTick(), all, workers);
+            }
+            if (!simultaneousClay[0] && carriers.stream().filter(w -> w.getMainHandItem().is(Items.CLAY_BALL)).count() >= 2) {
+                simultaneousClay[0] = true;
+                PrimeAnts.LOGGER.info("T08 F2 TWO CLAIMED CLAY CARRIERS queen={} tick={} carriers={}",q[0].getUUID(),c.getTick(),carriers.stream().filter(w -> w.getMainHandItem().is(Items.CLAY_BALL)).map(w -> w.getUUID()+":"+w.getMainHandItem()).toList());
             }
             if (c.getTick() % 500 == 0) PrimeAnts.LOGGER.info("T07 F2 trace tick={} workers={} foragers={} carriers={} most={} cache={} store={} clayWaits={}", c.getTick(), workers, all.size(),
                 carriers.stream().map(w -> w.getMainHandItem().toString()).toList(), most[0], fx.f.cache(c, q[0]) == null ? null : fx.f.cache(c, q[0]).contents(), store == null ? null : store.contents(), clayWaits);
@@ -85,10 +113,21 @@ public final class ForagerScalingGameTest {
                 c.assertTrue(w != null && w.isAlive() && q[0].founding().claimedBy(w), "A restored carrier keeps its claim: " + id);
                 if (!ItemStack.matches(w.getMainHandItem(), carried.get(id))) delivered.add(id);
             }
-            if (delivered.size() < carried.size()) return;
+            if (delivered.size() < carried.size() || !simultaneousClay[0]) return;
+            c.assertTrue(simultaneousClay[0],"Two claimed foragers carried clay on the same tick");
             PrimeAnts.LOGGER.info("T07 F2 DELIVERED AFTER RELOAD queen={} tick={} carriers={} mostAtOnce={} foragers={} workers={}", q[0].getUUID(), c.getTick(), carried.keySet(), most[0], q[0].founding().foragers(), workers);
             c.succeed();
         });
+    }
+
+    /** Fixture route only: stone floors are never material items or colony excavations. Preserve recorded mound soil. */
+    private static void runway(GameTestHelper c,LasiusNigerEntity q,net.minecraft.core.BlockPos floor){
+        var l=c.getLevel();var terrain=dev.primeants.founding.ColonyTerrain.get(l);
+        c.assertTrue(!terrain.mound(l,floor.above(),q.getUUID())&&!terrain.mound(l,floor.above(2),q.getUUID()),"The route clears no recorded mound soil");
+        if(!terrain.mound(l,floor,q.getUUID()))l.setBlock(floor,net.minecraft.world.level.block.Blocks.STONE.defaultBlockState(),3);
+        l.setBlock(floor.above(),net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(),3);
+        l.setBlock(floor.above(2),net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(),3);
+        c.assertTrue(dev.primeants.founding.NestPlan.walkable(l,floor.above()),"Every runway cell is supported and two-high: "+floor);
     }
 
     /** (f3) With scaled foragers a colony grows past thirty adults, beyond the one-forager plateau of 24 to 28 adults and
@@ -100,7 +139,7 @@ public final class ForagerScalingGameTest {
         var q = fx.start(c); boolean[] opened = {false}, clay = {false}; long[] dropped = {0}, last = {0, 0}, mature = {-1}, thirty = {-1}; int[] most = {0};
         c.onEachTick(() -> {
             var l = c.getLevel();
-            if (!opened[0]) { fx.grow(c, q, opened); if (opened[0]) dropped[0] += 22; return; }
+            if (!opened[0]) { if(q.founding().lifecycle()==dev.primeants.founding.QueenFounding.Lifecycle.OPEN){opened[0]=true;fx.food.supply(c,q,3,2);dropped[0]+=5;} return; }
             var p = NestPlanFixture.pile(c, q); var store = NestPlanFixture.store(c, q); var e = p == null ? null : p.stageEvaluation();
             boolean clayWaits = clay[0] && NurseryUpgradeGameTest.ground(c, Items.CLAY_BALL) > 0 && store != null && store.room(new ItemStack(Items.CLAY_BALL));
             if (!clayWaits) dropped[0] += onDemand(c, q, last);

@@ -33,12 +33,44 @@ fabricApi {
 def gameTestReport = layout.buildDirectory.file('test-results/gametest/server.xml')
 def serverDiagnosticFilter = providers.gradleProperty('primeAntsServerDiagnosticFilter')
 def serverDiagnosticGroup = providers.gradleProperty('primeAntsServerDiagnosticGroup')
+// Loom's default Delete task targets the client run directory through acceptGameTestEula.
+// Server runs have their own fresh UUID and retention; never delete client worlds for a server invocation.
+tasks.named('deleteGameTestRunDir') { onlyIf { !gradle.taskGraph.hasTask(':runGameTest') } }
+def serverRunId = java.util.UUID.randomUUID().toString()
+def serverRunChannel = null
+def serverRunLease = null
+tasks.register('releaseServerWorldLease') {
+    doLast {
+        if (serverRunLease != null) serverRunLease.release()
+        if (serverRunChannel != null) serverRunChannel.close()
+    }
+}
+tasks.named('runGameTest') {
+    finalizedBy tasks.named('releaseServerWorldLease')
+    doFirst {
+        def root = layout.buildDirectory.dir('run/serverGameTest').get().asFile.toPath().toAbsolutePath().normalize()
+        java.nio.file.Files.createDirectories(root)
+        if (root.toRealPath() != root) throw new GradleException('Server run root resolves through a link')
+        def leases = root.resolve('.leases')
+        java.nio.file.Files.createDirectories(leases)
+        if (leases.toRealPath() != leases) throw new GradleException('Server lease directory resolves through a link')
+        def current = root.resolve(serverRunId)
+        if (java.nio.file.Files.exists(current) && current.toFile().list().length != 0) throw new GradleException('Server run must start in a fresh world')
+        java.nio.file.Files.createDirectories(current)
+        serverRunChannel = java.nio.channels.FileChannel.open(leases.resolve(serverRunId + '.lock'), java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.WRITE)
+        serverRunLease = serverRunChannel.lock()
+        def maintenance = new ProcessBuilder('python', file('scripts/retain-server-worlds.py').absolutePath, '--root', root.toString(), '--current', serverRunId).inheritIO().start()
+        if (maintenance.waitFor() != 0) throw new GradleException('Server world retention stopped; inspect its path/lock diagnostic')
+        def retention = new groovy.json.JsonSlurper().parse(current.resolve('retention.json').toFile())
+        logger.lifecycle("Server world retention: current=${retention.current} kept=${retention.retained.size()} deleted=${retention.deleted_count} freeBefore=${retention.free_before} freeAfter=${retention.free_after}")
+    }
+}
 // Diagnostic group -> the one GameTest class it runs concurrently. Never acceptance.
 def serverDiagnosticGroups = ['nectar':'NectarGameTest', 'colony_stage':'ColonyStageGameTest', 'material_store':'MaterialStoreGameTest',
                               'chamber_scan':'ChamberScanGameTest', 'queens_hall':'QueensHallGameTest', 'material_hauling':'MaterialHaulingGameTest',
                               'nursery_upgrade':'NurseryUpgradeGameTest', 'mound':'MoundGameTest', 'food_cache':'FoodCacheGameTest',
                               'mature_colony':'MatureColonyGameTest', 'stage_hysteresis':'StageHysteresisGameTest', 'plug_soil':'PlugSoilGameTest', 'legacy_cache':'LegacyCacheGameTest',
-                              'forager_scaling':'ForagerScalingGameTest']
+                              'forager_scaling':'ForagerScalingGameTest', 'hall_availability':'HallAvailabilityGameTest', 'expanded_brood':'ExpandedBroodGameTest', 'tier_two':'TierTwoGameTest', 'store_upgrade_safety':'StoreUpgradeSafetyGameTest']
 // A focused diagnostic may validate one case; it must never make check/build green.
 gradle.taskGraph.whenReady { graph ->
     if ((serverDiagnosticFilter.isPresent() || serverDiagnosticGroup.isPresent()) && graph.hasTask(':check')) {
@@ -51,9 +83,8 @@ gradle.taskGraph.whenReady { graph ->
     }
 }
 loom.runs.named('gameTest') {
-    // Loom's deleteGameTestRunDir clears the CLIENT directory only. Preserve prior
-    // server worlds as evidence; each invocation gets genuinely new generation.
-    runDirectory.set(layout.buildDirectory.dir('run/serverGameTest/' + java.util.UUID.randomUUID().toString()))
+    // Fresh server UUID for every invocation. Retention is performed only when the server task starts.
+    runDirectory.set(layout.buildDirectory.dir('run/serverGameTest/' + serverRunId))
     systemProperties.put('prime_ants.naturalPlacement','false') // Ordinary fixtures explicitly opt out; separate test checks unconfigured production default.
     systemProperties.put('prime_ants.broodMultiplier', providers.gradleProperty('primeAntsBroodMultiplier').getOrElse('100'))
     systemProperties.put('prime_ants.foundingWorkMultiplier', providers.gradleProperty('primeAntsFoundingMultiplier').getOrElse('20'))
@@ -61,7 +92,7 @@ loom.runs.named('gameTest') {
     systemProperties.put('fabric-api.gametest.report-file', gameTestReport.get().asFile.absolutePath)
     def groupClass = serverDiagnosticGroup.isPresent() ? serverDiagnosticGroups[serverDiagnosticGroup.get()] : null
     if (serverDiagnosticGroup.isPresent() && groupClass == null) throw new GradleException('Only the explicit concurrent diagnostic groups are supported: ' + serverDiagnosticGroups.keySet())
-    systemProperties.put('fabric-api.gametest.filter', groupClass != null ? 'prime_ants_test:' + groupClass.replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase() + '_*' : serverDiagnosticFilter.getOrElse('prime_ants_test:*'))
+    systemProperties.put('fabric-api.gametest.filter', groupClass != null ? 'prime_ants_test:' + groupClass.replaceAll(/([a-z])([A-Z])/, '$1_$2').toLowerCase(java.util.Locale.ROOT) + '_*' : serverDiagnosticFilter.getOrElse('prime_ants_test:*'))
     if (providers.gradleProperty('primeAntsIdleSeed').isPresent()) systemProperties.put('prime_ants.idleSeed', providers.gradleProperty('primeAntsIdleSeed').get())
 }
 apply from: 'gradle/client-evidence.gradle'
@@ -150,13 +181,32 @@ tasks.register('verifyNestCacheAssets') {
         def aliases=atlas.sources.collectEntries{[(it.sprite):it.resource]}
         if(atlas.sources.size()!=6 || !atlas.sources.every{it.type=='minecraft:single' && it.sprite.startsWith('prime_ants:block/cache_')}) throw new GradleException('Cache block atlas aliases incomplete')
         def parts=new groovy.json.JsonSlurper().parse(new File(root,'prime_ants/blockstates/nest_cache.json')).multipart
-        if(parts.size()!=36)throw new GradleException('Cache slot projection incomplete')
+        def properties=['units':(0..12).collect{it.toString()}]+['apple','chicken','berries','nectar','flesh','prey'].collectEntries{[(it):['true','false']]}
+        def conditions=[] as Set
+        parts.each{part->
+            if(part.when==null||part.when.size()!=1)throw new GradleException('Cache part needs one bounded count/kind condition')
+            part.when.each{k,v->if(!properties.containsKey(k)||!(v in properties[k]))throw new GradleException('Unknown cache projection '+part.when)}
+            if(!conditions.add(part.when.collect{k,v->"${k}=${v}"}.join(',')))throw new GradleException('Duplicate cache part '+part.when)
+        }
+        def expected=(1..12).collect{"units=${it}".toString()}+['apple','chicken','berries','nectar','flesh','prey'].collect{"${it}=true".toString()}
+        if(parts.size()!=18||conditions!=(expected as Set))throw new GradleException('Cache needs all twelve count heaps and all six kind samples')
         def clientJar=fileTree('.gradle/loom-cache/minecraftMaven/net/minecraft').matching{include 'minecraft-clientOnly-*/26.3/*-26.3.jar'}.singleFile
         new java.util.zip.ZipFile(clientJar).withCloseable{jar->
             parts.each{part->
                 def path=part.apply.model.replace('prime_ants:','prime_ants/models/')+'.json'
                 def model=new groovy.json.JsonSlurper().parse(new File(root,path))
-                if(!aliases.containsKey(model.textures.food) || model.textures.particle!=model.textures.food)throw new GradleException('Cache model must resolve food and particles from the block atlas')
+                if(model.textures.particle!=model.textures.food || model.elements==null || model.elements.isEmpty())throw new GradleException('Cache model must have geometry and matching food/particle textures')
+                model.elements.each{e->
+                    if(e.from.size()!=3||e.to.size()!=3||(0..2).any{i->e.from[i]<0||e.to[i]>16||e.from[i]>=e.to[i]})throw new GradleException('Cache geometry must stay inside its cell')
+                    e.faces.each{f,face->if(face.texture!='#food')throw new GradleException('Unresolved cache face texture')}
+                }
+                if(part.when.containsKey('units')) {
+                    if(model.textures.food!='prime_ants:block/cache_heap')throw new GradleException('Count heap must use its own food texture')
+                    def img=javax.imageio.ImageIO.read(new File(root,'prime_ants/textures/block/cache_heap.png'))
+                    if(img==null||img.width!=16||img.height!=16)throw new GradleException('Food heap sprite must be 16x16')
+                    return
+                }
+                if(!aliases.containsKey(model.textures.food))throw new GradleException('Cache food sample must resolve from the block atlas')
                 def png='assets/minecraft/textures/'+aliases[model.textures.food].replace('minecraft:','')+'.png'
                 if(aliases[model.textures.food].startsWith('prime_ants:')) {
                     def imageFile=new File(root,'prime_ants/textures/'+aliases[model.textures.food].replace('prime_ants:','')+'.png')
@@ -166,7 +216,7 @@ tasks.register('verifyNestCacheAssets') {
                 def img=javax.imageio.ImageIO.read(jar.getInputStream(entry));if(img.width!=16 || img.height!=16)throw new GradleException('Cache sprite must be 16x16')
             }
         }
-        logger.lifecycle('Verified 36 cache projections, six block-atlas aliases and 16x16 sprites')
+        logger.lifecycle('Verified 18 cache projections, 832 blockstates, six block-atlas aliases and 16x16 sprites')
     }
 }
 tasks.named('check') {dependsOn tasks.named('verifyNestCacheAssets')}
@@ -176,16 +226,16 @@ tasks.register('verifyMaterialStoreAssets') {
     doLast {
         def root=file('src/main/resources/assets')
         def json=new groovy.json.JsonSlurper()
-        // T05: clay 0..8 and other stock 0..4 levels, and a lump per other material present (MaterialUnits.display).
+        // T08: clay 0..16 and other stock 0..8 levels, and a lump per other material present (MaterialUnits.display).
         def kinds=['stone','gravel','sand','ore']
-        def properties=['clay':(0..8).collect{it.toString()},'stock':(0..4).collect{it.toString()}]+kinds.collectEntries{[(it):['true','false']]}
+        def properties=['clay':(0..16).collect{it.toString()},'stock':(0..8).collect{it.toString()}]+kinds.collectEntries{[(it):['true','false']]}
         def parts=json.parse(new File(root,'prime_ants/blockstates/material_store.json')).multipart
         def shown=[] as Set
         parts.each{part->
             (part.when?:[:]).each{k,v->if(!properties.containsKey(k)||!(v in properties[k]))throw new GradleException("Material store part tests an unknown state ${k}=${v}")}
             if(part.when!=null&&!shown.add(part.when.collect{k,v->"${k}=${v}"}.sort().join(',')))throw new GradleException('Duplicate material store part '+part.when)
         }
-        def expected=(1..8).collect{"clay=${it}".toString()}+(1..4).collect{"stock=${it}".toString()}+kinds.collect{"${it}=true".toString()}
+        def expected=(1..16).collect{"clay=${it}".toString()}+(1..8).collect{"stock=${it}".toString()}+kinds.collect{"${it}=true".toString()}
         if(parts.size()!=1+expected.size()||shown!=(expected as Set)||parts.count{it.when==null}!=1)throw new GradleException('The pad, every clay level, every stock level and every material lump need exactly one part each')
         def clientJar=fileTree('.gradle/loom-cache/minecraftMaven/net/minecraft').matching{include 'minecraft-clientOnly-*/26.3/*-26.3.jar'}.singleFile
         int textures=0
@@ -196,7 +246,10 @@ tasks.register('verifyMaterialStoreAssets') {
                 if(!modelFile.exists())throw new GradleException('Missing model '+name)
                 def model=json.parse(modelFile)
                 if(model.parent!=null)throw new GradleException('Material store models are self-contained: '+name)
-                model.elements.each{e->e.faces.each{f,face->if(!face.texture.startsWith('#')||!model.textures.containsKey(face.texture.substring(1)))throw new GradleException("Unresolved face texture ${face.texture} in ${name}")}}
+                model.elements.each{e->
+                    if(e.from.size()!=3||e.to.size()!=3||(0..2).any{i->e.from[i]<0||e.to[i]>16||e.from[i]>=e.to[i]})throw new GradleException('Material projection must stay inside its cell: '+name)
+                    e.faces.each{f,face->if(!face.texture.startsWith('#')||!model.textures.containsKey(face.texture.substring(1)))throw new GradleException("Unresolved face texture ${face.texture} in ${name}")}
+                }
                 model.textures.each{k,ref->
                     if(ref.startsWith('#')){if(!model.textures.containsKey(ref.substring(1)))throw new GradleException("Unresolved texture variable ${ref} in ${name}");return}
                     def image
@@ -281,9 +334,9 @@ tasks.named('runGameTest') {
         def cases = report.depthFirst().findAll { it.name() == 'testcase' }
         if (serverDiagnosticGroup.isPresent()) {
             def groupClass = serverDiagnosticGroups[serverDiagnosticGroup.get()]
-            def groupPrefix = groupClass.replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase()
+            def groupPrefix = groupClass.replaceAll(/([a-z])([A-Z])/, '$1_$2').toLowerCase(java.util.Locale.ROOT)
             def expected = (file("src/gametest/java/dev/primeants/gametest/${groupClass}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {
-                "prime_ants_test:${groupPrefix}_" + it[1].replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase()
+                "prime_ants_test:${groupPrefix}_" + it[1].replaceAll(/([a-z])([A-Z])/, '$1_$2').toLowerCase(java.util.Locale.ROOT)
             }
             if (cases.collect { it.@name.text() }.toSet() != expected.toSet() || cases.size() != expected.size()
                     || report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] })
@@ -330,97 +383,104 @@ tasks.named('runGameTest') {
          'queen_death_releases_carried_soil_once_and_stops_work','settled_queen_may_touch_enclosure_face_without_crossing_it','compacted_seal_keeps_owned_soil_beside_grass_over_real_ticks'].each { name ->
             if (!cases.any { it.@name.text() == "prime_ants_test:queen_founding_game_test_${name}" }) throw new GradleException("Missing founding test: ${name}")
         }
-        def broodNames = (file('src/gametest/java/dev/primeants/gametest/BroodGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect { it[1].replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase() }
+        def broodNames = (file('src/gametest/java/dev/primeants/gametest/BroodGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect { it[1].replaceAll(/([a-z])([A-Z])/, '$1_$2').toLowerCase(java.util.Locale.ROOT) }
         if (broodNames.size() != 17) throw new GradleException('Brood test discovery incomplete')
         broodNames.each { name ->
             if (!cases.any { it.@name.text() == "prime_ants_test:brood_game_test_${name}" }) throw new GradleException("Missing brood test: ${name}")
         }
-        def workerNames = (file('src/gametest/java/dev/primeants/gametest/WorkerForagingGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect { it[1].replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase() }
+        def workerNames = (file('src/gametest/java/dev/primeants/gametest/WorkerForagingGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect { it[1].replaceAll(/([a-z])([A-Z])/, '$1_$2').toLowerCase(java.util.Locale.ROOT) }
         if (workerNames.size() != 11) throw new GradleException('Worker foraging discovery incomplete')
         workerNames.each { name ->
             if (!cases.any { it.@name.text() == "prime_ants_test:worker_foraging_game_test_${name}" }) throw new GradleException("Missing worker test: ${name}")
         }
-        def transferNames = (file('src/gametest/java/dev/primeants/gametest/TransferGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect { it[1].replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase() }
+        def transferNames = (file('src/gametest/java/dev/primeants/gametest/TransferGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect { it[1].replaceAll(/([a-z])([A-Z])/, '$1_$2').toLowerCase(java.util.Locale.ROOT) }
         if (transferNames.size() != 4) throw new GradleException('Transfer refusal discovery incomplete')
         transferNames.each { name ->
             if (!cases.any { it.@name.text() == "prime_ants_test:transfer_game_test_${name}" }) throw new GradleException("Missing transfer test: ${name}")
         }
         ['NursingGameTest':1,'NursingGuardGameTest':10,'ExpansionGameTest':15,'RoleConflictGameTest':7].each { className,count ->
-            def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+            def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
             if(names.size()!=count)throw new GradleException('Nursing test discovery incomplete: '+className)
-            def prefix=className.replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()
+            def prefix=className.replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)
             names.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:${prefix}_${name}"})throw new GradleException('Missing nursing test: '+name)}
         }
-        def placementNames = (file('src/gametest/java/dev/primeants/gametest/NaturalPlacementGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect { it[1].replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase() }
+        def placementNames = (file('src/gametest/java/dev/primeants/gametest/NaturalPlacementGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect { it[1].replaceAll(/([a-z])([A-Z])/, '$1_$2').toLowerCase(java.util.Locale.ROOT) }
         if (placementNames.size()!=6) throw new GradleException('Placement discovery incomplete')
         placementNames.each { name -> if (!cases.any { it.@name.text()=="prime_ants_test:natural_placement_game_test_${name}" }) throw new GradleException('Missing placement test '+name) }
-        def durabilityNames = (file('src/gametest/java/dev/primeants/gametest/PlacementDurabilityGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect { it[1].replaceAll(/([a-z0-9])([A-Z])/, '$1_$2').toLowerCase() }
+        def durabilityNames = (file('src/gametest/java/dev/primeants/gametest/PlacementDurabilityGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect { it[1].replaceAll(/([a-z])([A-Z])/, '$1_$2').toLowerCase(java.util.Locale.ROOT) }
         if(durabilityNames.size()!=3)throw new GradleException('Placement durability discovery incomplete')
         durabilityNames.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:placement_durability_game_test_${name}"})throw new GradleException('Missing placement durability test '+name)}
         ['TerrainRulesGameTest':9,'NestmateGameTest':3,'SoilContinuityGameTest':11,'NectarGameTest':11].each { className,count ->
-            def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+            def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
             if(names.size()!=count)throw new GradleException('T16 required discovery incomplete: '+className)
-            def prefix=className.replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()
+            def prefix=className.replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)
             names.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:${prefix}_${name}"})throw new GradleException('Missing T16 test: '+name)}
         }
         def additions=['lifecycle_game_test_carrier_release_accounting_ignores_foreign_fixture_drop','lifecycle_game_test_environmental_chicken_loot_funds_new_worker_then_queen_death_ends_colony','soil_continuity_game_test_lowered_bamboo_survives_queen_preparation_and_restoration','soil_continuity_game_test_sideways_attachment_refuses_real_queen_excavation_with_read_only_survival','lifecycle_game_test_daylight_zombie_loot_travels_through_cache_and_nursing','lifecycle_game_test_genuine_unfed_workers_starve_before_their_birth_selected_age_limit','lifecycle_game_test_physical_meals_sustain_workers_until_age_death_and_persist_through_restore','lifecycle_game_test_queen_death_stops_laying_viable_cocoons_emerge_and_all_adults_die','lifecycle_game_test_birth_selected_capacity_keeps_unloaded_identities_and_death_releases_reservation','lifecycle_game_test_legacy_worker_age_adopts_stable_defaults_once_without_renewal','lifecycle_game_test_restored_protein_carrier_starves_releases_cargo_and_keeps_death_receipts']
         additions.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:'+n})throw new GradleException('Missing T18 regression '+n)}
-        def terminalNames=(file('src/gametest/java/dev/primeants/gametest/TerminalBroodGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+        def terminalNames=(file('src/gametest/java/dev/primeants/gametest/TerminalBroodGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
         if(terminalNames.size()!=15)throw new GradleException('T19 terminal discovery incomplete')
         terminalNames.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:terminal_brood_game_test_'+n})throw new GradleException('Missing T19 terminal regression '+n)}
-        def foodNames=(file('src/gametest/java/dev/primeants/gametest/NativeFoodGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+        def foodNames=(file('src/gametest/java/dev/primeants/gametest/NativeFoodGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
         foodNames.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:native_food_game_test_'+n})throw new GradleException('Missing native food test '+n)}
         if(!cases.any{it.@name.text()=='prime_ants_test:player_basics_game_test_survival_body_enters_existing_stairs_and_inventory_drop_reaches_owned_cache'})throw new GradleException('Missing survival player case')
-        def policyNames=(file('src/gametest/java/dev/primeants/gametest/CropPolicyGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+        def policyNames=(file('src/gametest/java/dev/primeants/gametest/CropPolicyGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
         policyNames.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:crop_policy_game_test_'+n})throw new GradleException('Missing crop policy regression '+n)}
-        def defenseNames=(file('src/gametest/java/dev/primeants/gametest/DefenseGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+        def defenseNames=(file('src/gametest/java/dev/primeants/gametest/DefenseGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
         if(defenseNames.size()!=10)throw new GradleException('Defense discovery incomplete')
         defenseNames.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:defense_game_test_'+n})throw new GradleException('Missing bounded defense regression '+n)}
-        def stageNames=(file('src/gametest/java/dev/primeants/gametest/ColonyStageGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+        def stageNames=(file('src/gametest/java/dev/primeants/gametest/ColonyStageGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
         if(stageNames.size()!=8)throw new GradleException('Colony stage discovery incomplete')
         stageNames.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:colony_stage_game_test_'+n})throw new GradleException('Missing colony stage regression '+n)}
-        def storeNames=(file('src/gametest/java/dev/primeants/gametest/MaterialStoreGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+        def storeNames=(file('src/gametest/java/dev/primeants/gametest/MaterialStoreGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
         if(storeNames.size()!=3)throw new GradleException('Material store discovery incomplete')
         storeNames.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:material_store_game_test_'+n})throw new GradleException('Missing material store test '+n)}
         // Stage-1 T03: confirmation precedence and the first dug chamber.
         ['colony_stage_game_test_unavailable_entrance_never_hides_loaded_broken_wall_and_the_colony_regresses','colony_stage_game_test_unavailable_entrance_never_hides_destroyed_loaded_cache_and_the_food_store_is_lost','material_store_game_test_young_colony_digs_the_material_store_and_the_evaluator_confirms_it','material_store_game_test_player_placed_block_in_planned_cell_is_never_removed_and_the_job_stops','material_store_game_test_mid_dig_reload_continues_without_duplicate_removals_and_the_finished_store_reloads_as_one_chamber'].each{n->if(!cases.any{it.@name.text()=='prime_ants_test:'+n})throw new GradleException('Missing T03 regression '+n)}
         // Stage-1 T04: the dug-chamber scan fix, the queen's hall and material hauling.
         def t04=['ChamberScanGameTest':2,'QueensHallGameTest':1,'MaterialHaulingGameTest':5].collect { className,count ->
-            def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+            def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
             if(names.size()!=count)throw new GradleException('T04 discovery incomplete: '+className)
-            def prefix=className.replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()
+            def prefix=className.replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)
             names.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:${prefix}_${name}"})throw new GradleException('Missing T04 test: '+prefix+'_'+name)}
             names.size()
         }.sum()
         ['chamber_scan_game_test_partly_dug_store_beside_an_unavailable_completed_cell_loses_its_loaded_broken_shell_in_both_scans','chamber_scan_game_test_finished_store_beside_an_unavailable_cell_loses_its_loaded_broken_shell_in_both_scans','queens_hall_game_test_young_colony_digs_the_queens_hall_beside_her_chamber_while_eggs_develop_and_loses_it_when_its_shell_breaks','material_hauling_game_test_dropped_clay_cobblestone_and_coal_reach_the_confirmed_store_after_the_food_with_exact_accounting','material_hauling_game_test_a_carrier_keeps_its_unit_while_its_store_is_gone_and_full_share_leaves_stone_on_the_ground','material_hauling_game_test_a_carrier_killed_mid_trip_releases_its_unit_through_custody_exactly_once','material_hauling_game_test_a_mid_haul_save_and_reload_keeps_every_unit_exactly_once','colony_stage_game_test_young_colony_meets_every_mature_requirement_but_adults_through_real_play'].each{n->if(!cases.any{it.@name.text()=='prime_ants_test:'+n})throw new GradleException('Missing T04 regression '+n)}
         // Stage-1 T05: food first at pickup (MaterialHaulingGameTest, counted above) and the nursery's upgrade to tier 2.
         def t05=['NurseryUpgradeGameTest':2].collect { className,count ->
-            def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+            def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
             if(names.size()!=count)throw new GradleException('T05 discovery incomplete: '+className)
-            def prefix=className.replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()
+            def prefix=className.replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)
             names.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:${prefix}_${name}"})throw new GradleException('Missing T05 test: '+prefix+'_'+name)}
             names.size()
         }.sum()
         ['material_hauling_game_test_food_dropped_while_the_forager_walks_to_clay_is_collected_before_the_clay','nursery_upgrade_game_test_young_colony_reaches_mature_by_real_play_then_rebuilds_its_nursery_in_packed_clay_and_its_brood_develops_faster','nursery_upgrade_game_test_upgrade_keeps_every_unit_through_reload_and_killed_builder_and_never_converts_player_changed_wall'].each{n->if(!cases.any{it.@name.text()=='prime_ants_test:'+n})throw new GradleException('Missing T05 regression '+n)}
         // Stage-1 T06: the stage mound, the food cache's kind shares, and a Mature colony's upgrade ledger and brood.
         def t06=['MoundGameTest':2,'FoodCacheGameTest':1,'MatureColonyGameTest':1].collect { className,count ->
-            def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+            def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
             if(names.size()!=count)throw new GradleException('T06 discovery incomplete: '+className)
-            def prefix=className.replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()
+            def prefix=className.replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)
             names.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:${prefix}_${name}"})throw new GradleException('Missing T06 test: '+prefix+'_'+name)}
             names.size()
         }.sum()
         ['mound_game_test_young_colony_lays_its_store_and_hall_soil_on_its_stage_mound_where_short_plants_cover_the_old_deposits','mound_game_test_player_block_on_the_mound_is_never_covered_and_mid_deposit_reload_keeps_every_unit_once','food_cache_game_test_cache_full_of_chickens_still_takes_apples_and_no_adult_starves','mature_colony_game_test_upgrade_counts_every_clay_unit_in_each_place_through_its_builder_death'].each{n->if(!cases.any{it.@name.text()=='prime_ants_test:'+n})throw new GradleException('Missing T06 regression '+n)}
         // Stage-1 T07: stage hysteresis, plug soil, caches saved before the shares and scaled foragers.
-        def t07=['StageHysteresisGameTest':1,'PlugSoilGameTest':1,'LegacyCacheGameTest':1,'ForagerScalingGameTest':2].collect { className,count ->
-            def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()}
+        def t07=['StageHysteresisGameTest':2,'PlugSoilGameTest':1,'LegacyCacheGameTest':1,'ForagerScalingGameTest':2].collect { className,count ->
+            def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
             if(names.size()!=count)throw new GradleException('T07 discovery incomplete: '+className)
-            def prefix=className.replaceAll(/([a-z0-9])([A-Z])/,'$1_$2').toLowerCase()
+            def prefix=className.replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)
             names.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:${prefix}_${name}"})throw new GradleException('Missing T07 test: '+prefix+'_'+name)}
             names.size()
         }.sum()
         ['stage_hysteresis_game_test_destroyed_cache_drops_young_colony_to_founding_at_once','plug_soil_game_test_full_founding_deposit_list_still_opens_the_nest_with_both_plug_units_on_the_stage_mound','legacy_cache_game_test_legacy_six_chicken_cache_with_no_protein_taker_lets_apples_in_and_every_unit_is_conserved','forager_scaling_game_test_large_colony_foragers_carry_at_once_with_exact_accounting_and_claims_survive_reload','forager_scaling_game_test_scaled_foragers_grow_colony_past_thirty_adults','colony_stage_game_test_real_worker_deaths_regress_to_founding_and_the_colony_regrows_to_young','nursery_upgrade_game_test_young_colony_reaches_mature_by_real_play_then_rebuilds_its_nursery_in_packed_clay_and_its_brood_develops_faster'].each{n->if(!cases.any{it.@name.text()=='prime_ants_test:'+n})throw new GradleException('Missing T07 regression '+n)}
-        if(cases.size()!=173+foodNames.size()+policyNames.size()+defenseNames.size()+stageNames.size()+storeNames.size()+t04+t05+t06+t07)throw new GradleException('Expected complete baseline plus current additions')
+        def t08=['HallAvailabilityGameTest':1,'ExpandedBroodGameTest':1,'TierTwoGameTest':1,'StoreUpgradeSafetyGameTest':1].collect { className,count ->
+            def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
+            if(names.size()!=count)throw new GradleException('T08 discovery incomplete: '+className)
+            def prefix=className.replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)
+            names.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:${prefix}_${name}"})throw new GradleException('Missing T08 test: '+prefix+'_'+name)}
+            names.size()
+        }.sum()
+        if(cases.size()!=173+foodNames.size()+policyNames.size()+defenseNames.size()+stageNames.size()+storeNames.size()+t04+t05+t06+t07+t08)throw new GradleException('Expected complete baseline plus current additions')
         if (report.depthFirst().any { it.name() in ['failure', 'error', 'skipped'] }) {
             throw new GradleException('Server GameTest report contains a failure or skipped test')
         }

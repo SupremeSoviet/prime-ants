@@ -390,3 +390,44 @@ Decisions 6 and 24 now have concrete numbers. The nest plan (`dev.primeants.foun
 - **Foragers.** A colony keeps one forager for every ten living workers, and at least one: up to 19 workers exactly one, as 0.1.0's test colonies (at most ten workers) and stage-1's earlier test colonies (at most seventeen) do; 20 to 29 workers two, 30 to 39 three, five at Mature's cap of 60 adults and eleven at Great's 120. A further forager is claimed only while the colony keeps two caregivers without it and, unless a builder already works, one more worker for the builder slot. A further forager that comes back from a trip when the colony no longer keeps it returns to the colony's care. Each forager carries its own cargo, and every claim is saved with the queen. The T22 growth gate is unchanged.
 - **Plug soil.** When the queen's founding deposit list is full, the forager that opens the nest lays the two plug units on the colony's stage mound plan; a Founding colony has no plan of its own and uses Young's, its first. Founding-site validation (at least 22 deposits) is unchanged.
 - **Caches saved before the food shares.** A cache that holds more of one kind than its share sheds the units beyond the share when the other kind arrives: they leave through transfer custody onto the chamber floor beside the cache, where they stay in the world until their kind has room again, and the arriving unit gets in.
+
+
+## Implementation notes - 2026-10-08 (stage-1 T08 chamber tier two)
+
+- **Catastrophic interpretation.** Observed queen death independently forces Founding/cap five at the next production
+  evaluation, clears grace clocks and prevents promotion, even with five surviving workers and intact nursery/cache.
+  Catastrophic population loss retains immediate regression to the stage supported by remaining adults; the owner may
+  override this interpretation. An unavailable entrance/plug is unknown with an observed living queen; loaded damage wins.
+- **Physical ownership.** Founding walls serve nursery and food store through one upgrade job; material store and hall
+  follow. Shared physical walls count once, each converted with one clay fetched from the confirmed store. One builder
+  and two retained caregivers, player-wall preservation, saved claims/cargo/work and exact custody accounting remain.
+  A low store heap permits a supported diagonal work stand only with actual ray visibility and the existing reach.
+- **Tier-two numbers.** Nursery retains +3 slots and ×1.5 development. Food capacity 6→12, reservation 2→4 per kind;
+  material capacity 32→64, clay reservation 16→32. Hall base cadence 1,200→600 loaded ticks uses the existing time multiplier
+  and live confirmed tier. Brood capacity calculations agree. Food gates, costs, nutrition, stage caps/thresholds,
+  founding reserve/site validation and adult lifespan/fasting remain unchanged.
+- **Inventory and display.** Canonical inventory format 2 extends only the declared ranges; old unversioned format 1
+  retains old-range validation. Unknown terrain and capacity loss never truncate contents. Overfull stores wait; food
+  share shedding uses physical, exactly-once custody. Food total plus six kind samples gives 832 runtime states/eighteen
+  model parts; material clay 0..16, other stock 0..8 and four samples gives 2,448 runtime states/twenty-nine parts. Equal
+  material projections preserve kind sets and totals within seven units. Meaningful asset and 16×16 guards remain.
+- **Evidence boundary.** q1 and restored f2 each passed with two identical concurrent copies in attempt 2. r22's XML,
+  exit metadata and milestones prove three safety passes; they passed fresh revalidation after the shared-fixture edit. Deterministic
+  five-record serialization remains separate from natural growth. Fresh tier-two original and two copies completed all
+  unchanged acceptances at 51,328 / 55,689 / 53,127 ticks, versus r23's original pass and two 60,000-tick timeouts. A finite
+  player-style twelve-apple wave after stocks fall below 24,000 restored actual sugar receipts for the stalled colony;
+  production growth/care/cadence and acceptance predicates were not changed. HallAvailability's original and two copies
+  passed the 20,000-tick bound, 600-loaded-tick unknown interval and two restored confirmations, with both actual hall
+  clock suffixes checked. Full-build and older-regression results are recorded separately in T08's report.
+- **Retention.** Fresh server UUIDs retain the newest ten direct runs, current included, with Gradle leases/session locks
+  protecting active runs and escaping/link/reparse paths rejected. Non-run entries, client worlds and evidence are untouched.
+  The existing legacy client deletion action is skipped for server runs. The prior disposable selection/junction/lock
+  fixture and initial cleanup evidence are retained; only automatic rolling retention runs now. Console evidence is
+  explicitly UTF-8; prior UTF-16 originals remain preserved.
+- **Next scope.** Placement-survey walking-route/dig-timeline exclusions and the unattended pre-Mature clay gap remain.
+  Mature-gated mining does not fill the earlier supply gap. T09 prioritizes mining/player contributions and precisely
+  diagnosed reliability carryovers; tier three and Great remain after mining.
+
+### Implementation validation addendum - 2026-10-08 (T08 forager recovery)
+
+The first unfiltered T08 build executed all 236 server/94 unit cases but failed f2 at 30,000 and f3 at 60,000 ticks; its model task did not execute. A full protein share retained a forager's food cargo; f3 also plateaued in Young at 21 adults with a full cache before a late clay drop. The fixture now opens with three apples/two chickens and counts all ground/cache/worker-cargo/custody food before finite refills, leaving one actual delivery slot and kind margins. It offers f2's same eight clay only when both real claimed foragers are empty and searching. No cargo, AI, nutrients, stage/growth rules, assertion or bound is changed. An intermediate recovery still missed overlap in one copy despite storing all eight clay. The final targeted recovery passes all three identical f2 bodies (ends 19,853 / 20,004 / 20,027), and f3 reaches 31 adults at 33,317 (Mature 28,083). The additional unfiltered build follows this positive recovery; its result is recorded in T08's report. Tier-two/safety production dependencies are unchanged by this test-only repair; their full-build and concurrent passes remain separate evidence.

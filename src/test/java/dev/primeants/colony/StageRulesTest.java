@@ -299,11 +299,12 @@ class StageRulesTest {
     @Test
     void everyCatastrophicLossAppliesAtOnce() {
         var one = Bound.exactly(1); var two = Bound.exactly(2); var none = Bound.NONE;
-        // The queen observed dead: any certain shortfall applies at once.
+        // The queen observed dead is catastrophic on its own (the owner's rule, stage-1 T08): Founding at once, whatever
+        // else still holds; Young counts her among its five adults.
         assertEquals(ColonyStage.YOUNG, stage(ColonyStage.YOUNG, tiered(Bound.exactly(4), one, one, none, none, none, 0, 0, false)));
         assertEquals(ColonyStage.FOUNDING, stage(ColonyStage.YOUNG, tiered(Bound.exactly(4), one, one, none, none, none, 0, 0, true)), "four workers and a dead queen");
-        assertEquals(ColonyStage.YOUNG, stage(ColonyStage.MATURE, tiered(Bound.exactly(30), one, one, one, one, Bound.exactly(3), 16, 0, true)), "food short with the queen dead");
-        assertEquals(ColonyStage.YOUNG, stage(ColonyStage.YOUNG, tiered(Bound.exactly(5), one, one, none, none, none, 0, 0, true)), "a dead queen alone is no shortfall of Young's table");
+        assertEquals(ColonyStage.FOUNDING, stage(ColonyStage.MATURE, tiered(Bound.exactly(30), one, one, one, one, Bound.exactly(3), 16, 0, true)), "food short with the queen dead: Founding, not Young");
+        assertEquals(ColonyStage.FOUNDING, stage(ColonyStage.YOUNG, tiered(Bound.exactly(5), one, one, none, none, none, 0, 0, true)), "a dead queen alone drops Young to Founding: five workers are not Young's queen and four workers");
         // A chamber function observed absent: no confirmed or unknown chamber holds it.
         assertEquals(ColonyStage.FOUNDING, stage(ColonyStage.YOUNG, inputs(30, 1, 0, 0, 0, 0, 0, 0)), "the food store's cache destroyed");
         assertEquals(ColonyStage.FOUNDING, stage(ColonyStage.YOUNG, inputs(30, 0, 1, 0, 0, 0, 0, 0)), "the nursery's shell breached");
@@ -321,6 +322,34 @@ class StageRulesTest {
         // Catastrophic means no clock: a running clock is never needed and none is kept for a lost stage.
         var lost = StageRules.evaluate(ColonyStage.MATURE, inputs(30, 1, 1, 1, 0, 3, 16, 0), Map.of("mature:food", 5L), 10);
         assertTrue(lost.stage() == ColonyStage.YOUNG && lost.unmetSince().isEmpty() && lost.pending().isEmpty(), "Mature lost at once with its hall; its food clock ends with it: " + lost.unmetSince());
+    }
+
+    /** The same inputs with the queen observed dead. */
+    private static Inputs deadQueen(Inputs in) { return new Inputs(in.adults(), in.tiers(), in.food(), in.clay(), in.stone(), true); }
+
+    @Test
+    void theQueensDeathAloneDropsEveryHeldStageToFoundingAtOnceAndNothingPromotesTheColony() {
+        // Stage-1 T08: every requirement of the held stage still met, only the queen observed dead.
+        for (var held : List.of(ColonyStage.YOUNG, ColonyStage.MATURE, ColonyStage.GREAT)) {
+            int adults = held == ColonyStage.GREAT ? 60 : held == ColonyStage.MATURE ? 30 : 6;
+            var alive = StageRules.evaluate(held, meeting(held, adults), Map.of(), 1_000);
+            assertEquals(held, alive.stage(), held + " is met while the queen lives");
+            var dead = StageRules.evaluate(held, deadQueen(meeting(held, adults)), allClocksAt(0), 1_000);
+            assertEquals(ColonyStage.FOUNDING, dead.stage(), held + ": the queen's death drops the colony to Founding at once");
+            assertEquals(ColonyStage.FOUNDING, dead.certain(), held + ": nothing above Founding is certain without the queen");
+            assertEquals(ColonyStage.FOUNDING, dead.possible(), held + ": nor possible");
+            assertTrue(dead.unmetSince().isEmpty() && dead.pending().isEmpty(), held + ": catastrophic, so no clock holds or survives: " + dead.unmetSince());
+            assertEquals(ColonyStage.FOUNDING, StageRules.evaluate(held, deadQueen(meeting(held, adults))).stage(), held + ": at a first observation too");
+        }
+        // A Founding colony whose queen is dead is never promoted, however many workers, chambers and stocks it holds.
+        for (var target : List.of(ColonyStage.YOUNG, ColonyStage.MATURE, ColonyStage.GREAT)) {
+            var r = StageRules.evaluate(ColonyStage.FOUNDING, deadQueen(meeting(target, 120)), Map.of(), 0);
+            assertEquals(ColonyStage.FOUNDING, r.stage(), "no promotion to " + target + " with the queen dead");
+            assertTrue(r.unmetSince().isEmpty(), "no clock");
+        }
+        // The catastrophic predicate agrees for every row of the table.
+        var in = deadQueen(meeting(ColonyStage.GREAT, 60));
+        for (var r : StageRules.TABLE) assertTrue(StageRules.catastrophic(r, r.have(in), in, ColonyStage.GREAT), "the queen observed dead is catastrophic for " + r);
     }
 
     @Test

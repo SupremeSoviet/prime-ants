@@ -57,9 +57,13 @@ public final class NurseryUpgradeGameTest {
         long ground = l.getEntitiesOfClass(ItemEntity.class, box, i -> i.isAlive() && i.getItem().is(Items.CLAY_BALL)).stream().mapToInt(i -> i.getItem().getCount()).sum();
         long carried = fx.f.workers(c, q).stream().filter(w -> w.getMainHandItem().is(Items.CLAY_BALL)).mapToInt(w -> w.getMainHandItem().getCount()).sum();
         long stored = s == null ? 0 : s.units(MaterialUnits.Material.CLAY);
-        long walls = walls(p).stream().filter(b -> ColonyTerrain.get(l).built(l, b, q.getUUID(), NurseryBlocks.PACKED_CLAY)).count() * NestWalls.CLAY_PER_CELL;
+        long walls = allWalls(c,q).stream().filter(b -> ColonyTerrain.get(l).built(l, b, q.getUUID(), NurseryBlocks.PACKED_CLAY)).count() * NestWalls.CLAY_PER_CELL;
         long custody = TransferCustody.get(l).contents().stream().filter(t -> t.stack().is(Items.CLAY_BALL) && box.contains(t.position())).mapToInt(t -> t.stack().getCount()).sum();
         return ground + carried + stored + walls + custody;
+    }
+    static List<BlockPos> allWalls(GameTestHelper c,LasiusNigerEntity q) {
+        var colony=ChamberRegistry.get(c.getLevel()).colony(q.getUUID());
+        return colony==null?List.of():colony.chambers().stream().flatMap(ch->ChamberUpgrade.walls(q.founding().plan(),ch).stream()).distinct().toList();
     }
     static List<BlockPos> walls(NestPlan p) { return ChamberUpgrade.walls(p, ChamberRegistry.foundingChamber(p)); }
     static ChamberUpgrade.Job upgrade(GameTestHelper c, LasiusNigerEntity q) { return ChamberUpgrade.get(c.getLevel()).job(q.getUUID(), ChamberRegistry.FOUNDING, 2); }

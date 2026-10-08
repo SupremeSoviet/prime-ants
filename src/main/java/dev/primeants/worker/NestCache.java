@@ -27,16 +27,16 @@ import net.minecraft.world.phys.Vec3;
  * up only food whose kind has room here (WorkerTasks). Contents saved before T06 load as they were; such a cache sheds the
  * units beyond a kind's share when the other kind arrives (T07), so it never keeps that kind out. */
 public final class NestCache extends BlockEntity {
-    public static final int CAPACITY = FoodShares.CAPACITY;
+    public static final int CAPACITY = FoodShares.CAPACITY, MAX_CAPACITY = FoodShares.MAX_CAPACITY;
     /** Slots kept for each kind of food: sugar (apples, berries, nectar) and protein (chicken, rotten flesh, prey). */
     public static final int RESERVED = FoodShares.RESERVED;
     public static boolean protein(ItemStack s) { return Nutrition.proteinYield(s) > 0; }
     private int count(boolean protein) { return (int) contents.stream().filter(s -> protein(s) == protein).count(); }
     /** This unit would be admitted now. */
-    public boolean admits(ItemStack unit) { return WorkerTasks.food(unit) && FoodShares.admits(CAPACITY, count(false), count(true), protein(unit)); }
+    public boolean admits(ItemStack unit) { return WorkerTasks.food(unit) && FoodShares.admits(capacity(), count(false), count(true), protein(unit)); }
     /** The unit's kind is below its share: a forager may pick it up and carry it here; it waits with it while the cache is
      * full, as 0.1.0 foragers wait at a full cache. */
-    public boolean shareRoom(ItemStack unit) { return WorkerTasks.food(unit) && FoodShares.shareRoom(CAPACITY, count(false), count(true), protein(unit)); }
+    public boolean shareRoom(ItemStack unit) { return WorkerTasks.food(unit) && FoodShares.shareRoom(capacity(), count(false), count(true), protein(unit)); }
     private final List<ItemStack> contents = new ArrayList<>();
     private UUID colony;
     private NestPlan plan;
@@ -44,6 +44,9 @@ public final class NestCache extends BlockEntity {
     public NestCache(BlockPos p, BlockState s) { super(NurseryBlocks.CACHE_TYPE,p,s); }
     public List<ItemStack> contents() { return contents.stream().map(ItemStack::copy).toList(); }
     public int size() { return contents.size(); }
+    public int capacity() {
+        return level instanceof ServerLevel l ? FoodShares.capacity(dev.primeants.colony.ColonyDevelopment.capacityTier(l,colony,plan,dev.primeants.colony.ChamberRegistry.FOUNDING,dev.primeants.colony.ChamberFunction.FOOD_STORE)) : CAPACITY;
+    }
     public UUID componentOwner(){return colony!=null&&plan!=null&&level instanceof ServerLevel l&&l.getBlockEntity(getBlockPos())==this&&ownedBy(colony,plan)?colony:null;}
     public boolean ownedBy(UUID id, NestPlan p) { return id.equals(colony) && plan != null && plan.entrance().equals(p.entrance()) && plan.direction()==p.direction() && getBlockPos().equals(p.cache()) && getBlockState().is(NurseryBlocks.NEST_CACHE); }
     public boolean establish(LasiusNigerEntity w, NestPlan p) {
@@ -67,7 +70,7 @@ public final class NestCache extends BlockEntity {
      * the other kind arrives, the units beyond the share (FoodShares.shed) leave through transfer custody onto the chamber
      * floor beside the cache, where they stay in the world until their kind has room here again; the arriving unit gets in. */
     private void shed(ServerLevel l, ItemStack arriving) {
-        boolean unitProtein = protein(arriving); int n = FoodShares.shed(CAPACITY, count(false), count(true), unitProtein);
+        boolean unitProtein = protein(arriving); int n = FoodShares.shed(capacity(), count(false), count(true), unitProtein);
         if (n == 0) return;
         var beside = Vec3.atBottomCenterOf(plan.at(4, -1, -2)).add(0, 0.15, 0);
         for (int k = 0; k < n; k++) {
@@ -97,13 +100,12 @@ public final class NestCache extends BlockEntity {
         }
         return false;
     }
+    public void refreshDisplay() {
+        if (level!=null && !level.isClientSide() && !NestCacheBlock.showing(getBlockState(),contents).equals(getBlockState())) changed();
+    }
     private void changed() {
         setChanged(); if (level==null || level.isClientSide()) return;
-        BlockState before=getBlockState(), next=before;
-        for(int i=0;i<CAPACITY;i++) {
-            int value= i>=contents.size()?0:contents.get(i).is(dev.primeants.item.AntItems.SMALL_PREY)?6:contents.get(i).is(Items.ROTTEN_FLESH)?5:contents.get(i).is(Items.CHICKEN)?2:contents.get(i).is(Items.SWEET_BERRIES)?3:(contents.get(i).is(dev.primeants.item.AntItems.FLOWER_NECTAR)||contents.get(i).is(dev.primeants.item.AntItems.FLOWER_NECTAR_V2))?4:1;
-            next=next.setValue(NestCacheBlock.SLOTS.get(i),value);
-        }
+        BlockState before=getBlockState(), next=NestCacheBlock.showing(before,contents);
         if(!next.equals(before)) level.setBlock(getBlockPos(),next,3);
         level.sendBlockUpdated(getBlockPos(),before,next,3);
     }
@@ -120,7 +122,7 @@ public final class NestCache extends BlockEntity {
         super.preRemoveSideEffects(pos,state);
     }
     @Override protected void saveAdditional(ValueOutput out) {
-        super.saveAdditional(out);out.putString("ReleaseId",releaseId.toString()); if(shedUnits>0)out.putInt("SharesShed",shedUnits); if(colony==null || plan==null)return;
+        super.saveAdditional(out);out.putInt("InventoryFormat",2);out.putString("ReleaseId",releaseId.toString()); if(shedUnits>0)out.putInt("SharesShed",shedUnits); if(colony==null || plan==null)return;
         out.putString("Colony",colony.toString()); out.store("Entrance",BlockPos.CODEC,plan.entrance());out.putString("Direction",plan.direction().getName());
         out.store("Contents",ItemStack.CODEC.listOf(),contents);
     }
@@ -132,8 +134,10 @@ public final class NestCache extends BlockEntity {
         colony=UUID.fromString(in.getStringOr("Colony",""));Direction d=Direction.byName(in.getStringOr("Direction",""));
         if(d==null || d.getAxis().isVertical())throw new IllegalArgumentException("Invalid cache direction");
         plan=NestPlan.geometry(in.read("Entrance",BlockPos.CODEC).orElseThrow(),d);
+        int format=in.getIntOr("InventoryFormat",1);
+        if(format!=1&&format!=2)throw new IllegalArgumentException("Unsupported food inventory format");
         var stacks=in.read("Contents",ItemStack.CODEC.listOf()).orElse(List.of());
-        if(!plan.cache().equals(getBlockPos()) || stacks.size()>CAPACITY || stacks.stream().anyMatch(s->!WorkerTasks.food(s)||s.getCount()!=1))throw new IllegalArgumentException("Invalid physical cache");
+        if(!plan.cache().equals(getBlockPos()) || stacks.size()>(format==1?CAPACITY:MAX_CAPACITY) || stacks.stream().anyMatch(s->!WorkerTasks.food(s)||s.getCount()!=1))throw new IllegalArgumentException("Invalid physical cache");
         stacks.forEach(s->contents.add(s.copy()));
     }
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider r) { return saveWithoutMetadata(r); }

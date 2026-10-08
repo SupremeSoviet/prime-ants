@@ -16,28 +16,37 @@ public final class MaterialUnits {
         "minecraft:coal", Material.ORE, "minecraft:raw_copper", Material.ORE, "minecraft:raw_iron", Material.ORE);
     /** Tier-1 store capacity in units, and the part of it kept for clay: Mature's 16 clay always fit beside up to 16
      * units of other stock, so no other material can crowd the store's clay out. */
-    public static final int CAPACITY = 32, CLAY_SHARE = 16;
+    public static final int CAPACITY = 32, CLAY_SHARE = 16, MAX_CAPACITY = 64;
+    public static int capacity(int tier) { return tier >= 2 ? MAX_CAPACITY : CAPACITY; }
+    public static int clayShare(int capacity) { return capacity / 2; }
     private MaterialUnits() { }
     /** The material one item of this id is, or null. */
     public static Material of(String item) { return ITEMS.get(item); }
     public static long count(Collection<Material> held, Material m) { return held.stream().filter(h -> h == m).count(); }
     /** Room for one more unit of this material beside the held units. */
     public static boolean room(Collection<Material> held, Material m) {
-        if (m == null || held.size() >= CAPACITY) return false;
-        return m == Material.CLAY || held.size() - count(held, Material.CLAY) < CAPACITY - CLAY_SHARE;
+        return room(held, m, CAPACITY);
+    }
+    public static boolean room(Collection<Material> held, Material m, int capacity) {
+        if (capacity != CAPACITY && capacity != MAX_CAPACITY) throw new IllegalArgumentException("Unsupported store capacity");
+        if (m == null || held.size() >= capacity) return false;
+        return m == Material.CLAY || held.size() - count(held, Material.CLAY) < capacity - clayShare(capacity);
     }
     /** The most units of a material one store can hold. An unknown store adds this to the possible count only. */
     public static int most(Material m) { return m == Material.CLAY ? CAPACITY : CAPACITY - CLAY_SHARE; }
     /** A stage input: units held in confirmed stores are known; each unknown store may hold its most. */
     public static StageRules.Bound stock(Collection<? extends Collection<Material>> confirmed, int unknownStores, Material m) {
+        return stock(confirmed, unknownStores, m, CAPACITY);
+    }
+    public static StageRules.Bound stock(Collection<? extends Collection<Material>> confirmed, int unknownStores, Material m, int capacity) {
         int known = 0;
         for (var held : confirmed) known += (int)count(held, m);
-        return new StageRules.Bound(known, known + unknownStores * most(m));
+        return new StageRules.Bound(known, known + unknownStores * (m == Material.CLAY ? capacity : capacity - clayShare(capacity)));
     }
     /** Units per visible heap level, and the levels of a full store's clay and of its other stock's full share. */
-    public static final int LEVEL = 4, CLAY_LEVELS = CAPACITY / LEVEL, STOCK_LEVELS = (CAPACITY - CLAY_SHARE) / LEVEL;
-    /** A visible heap level: one level per four units, so a full store's 32 clay show eight levels and the 16-unit
-     * share of other stock four. */
+    public static final int LEVEL = 4, CLAY_LEVELS = MAX_CAPACITY / LEVEL, STOCK_LEVELS = (MAX_CAPACITY - clayShare(MAX_CAPACITY)) / LEVEL;
+    /** One visible heap level per four units: tier one's 32 clay/eight levels and other share 16/four;
+     * tier two's 64 clay/sixteen levels and other share 32/eight. */
     public static int level(long units) { return (int)((units + LEVEL - 1) / LEVEL); }
     /** What a store's block shows (MaterialStoreBlock): its clay heap's level, its other stock's level and which other
      * materials lie in it. Equal displays mean equal sets of materials and totals within seven units of each other, so

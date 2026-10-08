@@ -1,0 +1,76 @@
+{
+  "textures": {
+    "heap": "prime_ants:block/material_stock",
+    "particle": "prime_ants:block/material_store"
+  },
+  "elements": [
+    {
+      "from": [
+        9,
+        4,
+        3
+      ],
+      "to": [
+        14,
+        13.0,
+        13
+      ],
+      "faces": {
+        "up": {
+          "texture": "#heap",
+          "uv": [
+            9,
+            3,
+            14,
+            13
+          ]
+        },
+        "down": {
+          "texture": "#heap",
+          "uv": [
+            9,
+            3,
+            14,
+            13
+          ]
+        },
+        "north": {
+          "texture": "#heap",
+          "uv": [
+            9,
+            9,
+            14,
+            12
+          ]
+        },
+        "south": {
+          "texture": "#heap",
+          "uv": [
+            9,
+            9,
+            14,
+            12
+          ]
+        },
+        "east": {
+          "texture": "#heap",
+          "uv": [
+            3,
+            9,
+            13,
+            12
+          ]
+        },
+        "west": {
+          "texture": "#heap",
+          "uv": [
+            3,
+            9,
+            13,
+            12
+          ]
+        }
+      }
+    }
+  ]
+}

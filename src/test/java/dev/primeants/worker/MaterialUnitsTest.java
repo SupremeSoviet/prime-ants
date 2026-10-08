@@ -57,4 +57,19 @@ class MaterialUnitsTest {
         // T05: no clamp at the 16-unit share any more; a full store's 32 clay show eight levels (MaterialStoreDisplayTest).
         assertEquals(List.of(0, 1, 1, 1, 1, 2, 3, 4, 4, 8), List.of(0, 1, 2, 3, 4, 5, 9, 13, 16, 32).stream().map(n -> MaterialUnits.level(n)).toList());
     }
+    @Test
+    void tierTwoDoublesCapacityAndTheClayReservationWithoutChangingTierOne() {
+        assertEquals(32,MaterialUnits.capacity(1)); assertEquals(64,MaterialUnits.capacity(2));
+        assertEquals(16,MaterialUnits.clayShare(32)); assertEquals(32,MaterialUnits.clayShare(64));
+        var held=new java.util.ArrayList<MaterialUnits.Material>();
+        for(int i=0;i<32;i++){assertTrue(MaterialUnits.room(held,MaterialUnits.Material.STONE,64));held.add(MaterialUnits.Material.STONE);}
+        assertFalse(MaterialUnits.room(held,MaterialUnits.Material.STONE,64),"Thirty-two slots remain reserved for clay");
+        for(int i=0;i<32;i++){assertTrue(MaterialUnits.room(held,MaterialUnits.Material.CLAY,64));held.add(MaterialUnits.Material.CLAY);}
+        assertFalse(MaterialUnits.room(held,MaterialUnits.Material.CLAY,64));
+        assertFalse(MaterialUnits.room(held,MaterialUnits.Material.CLAY,32),"An observed lower capacity admits nothing into the preserved overfull contents");
+        assertEquals(64,held.size(),"Capacity queries never remove units");
+        assertEquals(new dev.primeants.colony.StageRules.Bound(0,64),MaterialUnits.stock(java.util.List.of(),1,MaterialUnits.Material.CLAY,64));
+        assertEquals(new dev.primeants.colony.StageRules.Bound(0,32),MaterialUnits.stock(java.util.List.of(),1,MaterialUnits.Material.STONE,64));
+    }
+
 }

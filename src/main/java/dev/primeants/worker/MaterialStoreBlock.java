@@ -13,8 +13,8 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 /** A low tamped pad on a store chamber's floor. Ants walk over it; the block entity owns ownership and contents. The
- * state shows them (MaterialUnits.display): a clay heap of 0..8 levels and a heap of the other stock of 0..4 levels, four
- * units a level, and a sample lump for each other material present (stone, gravel, sand, ore): 9 x 5 x 16 = 720 states.
+ * state shows them (MaterialUnits.display): a clay heap of 0..16 levels and a heap of the other stock of 0..8 levels, four
+ * units a level, and a sample lump for each other material present (stone, gravel, sand, ore): 17 x 9 x 16 = 2,448 states.
  * A projection only, never the inventory. */
 public final class MaterialStoreBlock extends Block implements EntityBlock {
     public static final IntegerProperty CLAY = IntegerProperty.create("clay", 0, MaterialUnits.CLAY_LEVELS),
@@ -26,8 +26,12 @@ public final class MaterialStoreBlock extends Block implements EntityBlock {
         registerDefaultState(stateDefinition.any().setValue(CLAY, 0).setValue(STOCK, 0).setValue(STONE, false).setValue(GRAVEL, false).setValue(SAND, false).setValue(ORE, false));
     }
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> b) { b.add(CLAY, STOCK, STONE, GRAVEL, SAND, ORE); }
-    @Override protected VoxelShape getShape(BlockState s,BlockGetter l,BlockPos p,CollisionContext c) { return Block.box(1,0,1,15,Math.max(4+1.5*s.getValue(CLAY),4+3*s.getValue(STOCK)),15); }
+    @Override protected VoxelShape getShape(BlockState s,BlockGetter l,BlockPos p,CollisionContext c) { return Block.box(1,0,1,15,Math.max(4+0.75*s.getValue(CLAY),4+1.5*s.getValue(STOCK)),15); }
     @Override public BlockEntity newBlockEntity(BlockPos p,BlockState s) { return new MaterialStore(p,s); }
+    @Override public <T extends BlockEntity> net.minecraft.world.level.block.entity.BlockEntityTicker<T> getTicker(net.minecraft.world.level.Level level, BlockState state, net.minecraft.world.level.block.entity.BlockEntityType<T> type) {
+        if (level.isClientSide() || type != dev.primeants.brood.NurseryBlocks.STORE_TYPE) return null;
+        return (l,p,s,be) -> { if (l.getGameTime()%20==0) ((MaterialStore)be).refreshDisplay(); };
+    }
     /** The state that shows these contents. */
     static BlockState showing(BlockState s, List<ItemStack> contents) {
         var d = MaterialUnits.display(contents.stream().map(MaterialStore::kind).filter(java.util.Objects::nonNull).toList());

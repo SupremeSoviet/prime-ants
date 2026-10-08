@@ -25,6 +25,39 @@ public final class StageHysteresisGameTest {
             && f.workers(c, q).stream().noneMatch(LasiusNigerEntity::isCallow);
     }
 
+    @GameTest(maxTicks=20000,structure="prime_ants_test:idle_ground")
+    public void realQueenDeathAloneDropsYoungWithFiveSurvivingWorkersAtNextEvaluation(GameTestHelper c) { queenDeath(c); }
+
+    /** q1: no forged stage, adults or clock; lethal damage is the only loss. */
+    private void queenDeath(GameTestHelper c) {
+        var q = f.start(c); boolean[] supplied = {false}; boolean[] killed = {false};
+        ColonyDevelopment.Evaluation[] before = {null}; long[] at = {0};
+        java.util.Set<java.util.UUID> survivors = new java.util.HashSet<>();
+        c.onEachTick(() -> {
+            var l = c.getLevel(); var p = food.pile(c,q); if (p == null) return;
+            if (!supplied[0] && q.founding().lifecycle() == QueenFounding.Lifecycle.OPEN) { supplied[0] = true; food.supply(c,q,10,8); }
+            var e = p.stageEvaluation();
+            if (!killed[0]) {
+                if (!settledYoung(c,q,p) || f.workers(c,q).size() < 5) return;
+                f.workers(c,q).forEach(w -> survivors.add(w.getUUID()));
+                before[0] = e; at[0] = p.loadedTicks();
+                c.assertTrue(q.hurtServer(l,q.damageSources().genericKill(),1000) && !q.isAlive(),"Real lethal damage kills the observed queen");
+                killed[0] = true;
+                PrimeAnts.LOGGER.info("T08 Q1 QUEEN KILLED queen={} tick={} pileTicks={} workers={}",q.getUUID(),c.getTick(),at[0],survivors.size());
+                return;
+            }
+            if (e == before[0]) return;
+            c.assertTrue(survivors.size() >= 5 && survivors.stream().allMatch(id -> l.getEntity(id) instanceof LasiusNigerEntity w && w.isAlive()),"At least five workers survive the lethal hit");
+            c.assertTrue(founding(e).functions().equals(Map.of(ChamberFunction.NURSERY,ColonyDevelopment.Presence.CONFIRMED,ChamberFunction.FOOD_STORE,ColonyDevelopment.Presence.CONFIRMED)) && f.cache(c,q) != null,"The nursery and cache remain intact: " + e);
+            c.assertTrue(e.inputs().queenDead() && e.inputs().adults().known() >= 5 && e.stage() == ColonyStage.FOUNDING && e.cap() == 5
+                && ChamberRegistry.get(l).colony(q.getUUID()).stage() == ColonyStage.FOUNDING,"Queen death alone causes Founding, cap 5: " + e);
+            c.assertTrue(p.stageEvaluatedAt() > at[0] && p.stageEvaluatedAt() - at[0] <= ColonyDevelopment.INTERVAL
+                && e.result().unmetSince().isEmpty() && e.result().pending().isEmpty() && ChamberRegistry.get(l).colony(q.getUUID()).unmetSince().isEmpty(),"The very next production evaluation has no grace clock");
+            PrimeAnts.LOGGER.info("T08 Q1 FOUNDING AT NEXT EVALUATION queen={} tick={} killedAt={} evaluatedAt={} workers={} evaluation={}",q.getUUID(),c.getTick(),at[0],p.stageEvaluatedAt(),survivors.size(),e);
+            c.succeed();
+        });
+    }
+
     /** (h2) A catastrophic loss applies at once: the food store's cache block of a Young colony is destroyed, and the
      * nursery's very next evaluation, within one evaluation interval, drops the colony to Founding with Founding's cap.
      * No clock holds it, and every adult is still alive: the loss is the chamber function, not a count. */

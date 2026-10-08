@@ -28,7 +28,7 @@ public final class MatureColonyGameTest {
         return new Clay(l.getEntitiesOfClass(ItemEntity.class, box, i -> i.isAlive() && i.getItem().is(Items.CLAY_BALL)).stream().mapToInt(i -> i.getItem().getCount()).sum(),
             fx.f.workers(c, q).stream().filter(w -> w.getMainHandItem().is(Items.CLAY_BALL)).mapToInt(w -> w.getMainHandItem().getCount()).sum(),
             s == null ? 0 : s.units(MaterialUnits.Material.CLAY),
-            NurseryUpgradeGameTest.walls(q.founding().plan()).stream().filter(b -> ColonyTerrain.get(l).built(l, b, q.getUUID(), NurseryBlocks.PACKED_CLAY)).count() * NestWalls.CLAY_PER_CELL,
+            NurseryUpgradeGameTest.allWalls(c,q).stream().filter(b -> ColonyTerrain.get(l).built(l, b, q.getUUID(), NurseryBlocks.PACKED_CLAY)).count() * NestWalls.CLAY_PER_CELL,
             TransferCustody.get(l).contents().stream().filter(t -> t.stack().is(Items.CLAY_BALL) && box.contains(t.position())).mapToInt(t -> t.stack().getCount()).sum());
     }
 
@@ -48,7 +48,8 @@ public final class MatureColonyGameTest {
             var ledger=j.ledger();var builder=NurseryUpgradeGameTest.builder(c,fx,q,j);
             long carried=builder!=null&&builder.getMainHandItem().is(Items.CLAY_BALL)?builder.getMainHandItem().getCount():0;
             long custodyNow=transfer[0]==null?0:TransferCustody.get(l).contents().stream().filter(t->t.id().equals(transfer[0])).mapToInt(t->t.stack().getCount()).sum();
-            c.assertTrue(ledger.exact()&&ledger.carried()==carried&&ledger.built()==where.walls()&&ledger.released()==(killed[0]==null?0:1)&&j.custody(l)==custodyNow&&j.custody(l)<=ledger.released(),
+            long foundingWalls=NurseryUpgradeGameTest.walls(q.founding().plan()).stream().filter(b -> ColonyTerrain.get(l).built(l,b,q.getUUID(),NurseryBlocks.PACKED_CLAY)).count()*NestWalls.CLAY_PER_CELL;
+            c.assertTrue(ledger.exact()&&ledger.carried()==carried&&ledger.built()==foundingWalls&&ledger.released()==(killed[0]==null?0:1)&&j.custody(l)==custodyNow&&j.custody(l)<=ledger.released(),
                 "Taken = carried + built + released, each figure matching its own place; custody now is its own figure: "+ledger+" custodyNow="+j.custody(l)+" "+where);
             if(transfer[0]!=null){
                 boolean entity=l.getEntity(transfer[0]) instanceof ItemEntity i&&i.isAlive();
@@ -64,7 +65,7 @@ public final class MatureColonyGameTest {
             }
             c.assertFalse(killed[0].equals(j.claim),"The dead builder never builds again");
             if(!j.complete()||j.claim!=null)return;
-            c.assertTrue(j.ledger().equals(new NestWalls.Ledger(9,0,8,1))&&j.custody(l)==0&&where.walls()==8,"Eight walls from nine units taken, one released for good and none left in custody: "+j.ledger());
+            c.assertTrue(j.ledger().equals(new NestWalls.Ledger(9,0,8,1))&&j.custody(l)==0&&foundingWalls==8&&j.built().size()==8,"Eight walls from nine units taken, one released for good and none left in custody: "+j.ledger());
             PrimeAnts.LOGGER.info("T06 LEDGER DONE queen={} tick={} ledger={} custodyNow={} places={} custodyTicks={} releasedUnitGroundTicks={}",q.getUUID(),c.getTick(),j.ledger(),j.custody(l),where,custodyTicks[0],groundTicks[0]);
             c.succeed();
         });

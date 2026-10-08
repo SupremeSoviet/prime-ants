@@ -494,7 +494,14 @@ public final class WorkerTasks {
         if(!j.convertible(l,target,worker.queenId())){j.stop(l,"wall_cell_not_colony_earth_at_"+target.toShortString());next(Phase.UPGRADE_FETCH,"upgrade_stopped_unit_back_to_store");return;}
         var stand=wallStand(l,target);if(stand==null){hold("no_supported_stand_beside_wall");return;}
         if(!worker.blockPosition().equals(stand)||!worker.onGround()||worker.position().distanceToSqr(Vec3.atCenterOf(target))>5.0){arriveSupported(l,Vec3.atBottomCenterOf(stand));return;}
-        worker.getNavigation().stop();worker.getLookControl().setLookAt(target.getX()+0.5,target.getY()+0.5,target.getZ()+0.5);
+        var point=wallWorkPoint(l,target,stand);if(point==null)return;
+        var face=new BlockPos(stand.getX(),target.getY(),stand.getZ());
+        if(target.distManhattan(face)!=1){
+            var mouth=worker.position().add(0,0.25,0);
+            var hit=l.clip(new ClipContext(mouth,point,ClipContext.Block.COLLIDER,ClipContext.Fluid.ANY,worker));
+            if(mouth.distanceToSqr(point)>5.0||hit.getType()!=HitResult.Type.BLOCK||!hit.getBlockPos().equals(target)){arriveSupported(l,Vec3.atBottomCenterOf(stand));return;}
+        }
+        worker.getNavigation().stop();worker.getLookControl().setLookAt(point.x,point.y,point.z);
         if(!upgradeAuthorized(l)||!NestPlan.walkable(l,stand)||!wallFaceOpen(l,target,stand)||!j.convertible(l,target,worker.queenId()))return;
         var wall=NurseryBlocks.PACKED_CLAY.defaultBlockState();
         if(dev.primeants.founding.SupportSurvival.problem(l,target,wall) instanceof String problem){hold(problem);return;}
@@ -510,11 +517,33 @@ public final class WorkerTasks {
         int floor=plan.entrance().getY()-2;
         var stands=java.util.stream.StreamSupport.stream(Direction.Plane.HORIZONTAL.spliterator(),false).map(d->target.relative(d).atY(floor))
             .filter(p->NestPlan.loaded(l,p)&&NestPlan.walkable(l,p)&&wallFaceOpen(l,target,p)).sorted(java.util.Comparator.comparingLong(BlockPos::asLong)).toList();
+        // Preserve the existing cardinal work stands. Only a wall whose sole adjacent floor is occupied (the store's
+        // low heap) needs a diagonal, supported room floor and a ray-visible part of that wall within the SAME reach.
+        if(stands.isEmpty()){
+            var diagonal=new java.util.ArrayList<BlockPos>();
+            for(int x:new int[]{-1,1})for(int z:new int[]{-1,1}){
+                var p=target.offset(x,0,z).atY(floor);
+                if(NestPlan.loaded(l,p)&&NestPlan.walkable(l,p)&&wallWorkPoint(l,target,p)!=null)diagonal.add(p);
+            }
+            stands=diagonal.stream().sorted(java.util.Comparator.comparingLong(BlockPos::asLong)).toList();
+        }
         if(stands.contains(worker.blockPosition())&&worker.onGround()&&worker.position().distanceToSqr(Vec3.atCenterOf(target))<=5.0)return worker.blockPosition();
         return stands.isEmpty()?null:stands.get((phaseTicks/100)%stands.size());
     }
-    private static boolean wallFaceOpen(ServerLevel l,BlockPos target,BlockPos stand){
-        var face=new BlockPos(stand.getX(),target.getY(),stand.getZ());return target.distManhattan(face)==1&&l.getBlockState(face).isAir();
+    private boolean wallFaceOpen(ServerLevel l,BlockPos target,BlockPos stand){return wallWorkPoint(l,target,stand)!=null;}
+    /** No terrain clearing, collision bypass or longer reach. A low store heap can leave the top of the next wall's
+     * side face physically exposed from a diagonal floor; both the candidate and actual builder must see that face. */
+    private Vec3 wallWorkPoint(ServerLevel l,BlockPos target,BlockPos stand){
+        var face=new BlockPos(stand.getX(),target.getY(),stand.getZ());
+        if(target.distManhattan(face)==1&&l.getBlockState(face).isAir())return Vec3.atCenterOf(target);
+        var mouth=Vec3.atBottomCenterOf(stand).add(0,0.25,0);
+        for(var d:Direction.Plane.HORIZONTAL){
+            var point=Vec3.atCenterOf(target).add(d.getStepX()*0.49,0.49,d.getStepZ()*0.49);
+            if(mouth.distanceToSqr(point)>5.0)continue;
+            var hit=l.clip(new ClipContext(mouth,point,ClipContext.Block.COLLIDER,ClipContext.Fluid.ANY,worker));
+            if(hit.getType()==HitResult.Type.BLOCK&&hit.getBlockPos().equals(target))return point;
+        }
+        return null;
     }
     /** A cell of the job's own deposits that takes a unit now: nest-plan rooms lay their soil on the colony's stage mound
      * (MoundSoil), the 0.1.0 widening on its own two deposit layers. */
@@ -700,7 +729,7 @@ public final class WorkerTasks {
     }
     public boolean harvestRoom(ServerLevel l,boolean prey){
         if(l.getBlockEntity(plan.cache()) instanceof NestCache cache){
-            if(!cache.ownedBy(worker.queenId(),plan)||cache.size()>=NestCache.CAPACITY)return false;
+            if(!cache.ownedBy(worker.queenId(),plan)||cache.size()>=cache.capacity())return false;
             if(cache.contents().stream().filter(s->prey?Nutrition.proteinYield(s)>0:Nutrition.sugarYield(s)>0).count()>=2)return false;
         }
         return harvestNeed(l,prey)>0;

@@ -20,7 +20,8 @@
     "BambooStageFixtureMixin",
     "GameTestHelperAccessor",
     "T27PileLoadMixin",
-    "UnavailableCellMixin"
+    "UnavailableCellMixin",
+    "StageEvaluationMixin"
   ],
   "injectors": {
     "defaultRequire": 1

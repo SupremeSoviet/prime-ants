@@ -23,9 +23,10 @@ import java.util.function.Function;
  * members or chambers change nothing. Founding is the floor. Each next adult threshold fits under the current cap.
  * <p>Hysteresis (the owner's decision of 2026-10-07): promotion is immediate, but a held stage drops only once one of its
  * requirements has been certainly unmet for {@link #GRACE} loaded ticks in a row, by that requirement's unmet-since clock.
- * Catastrophic losses apply at once: the queen observed dead, a chamber function observed absent (no confirmed or unknown
- * chamber holds it), and adults certainly below the threshold of the stage beneath the one held, which drop the colony to
- * what its adults support. Shortfalls in counts, stocks and tiers wait: food, clay and stone, a chamber still confirmed
+ * Catastrophic losses apply at once: the queen observed dead, on its own and whatever else still holds (Young counts her
+ * among its five adults, so the colony is Founding; stage-1 T08), a chamber function observed absent (no confirmed or
+ * unknown chamber holds it), and adults certainly below the threshold of the stage beneath the one held, which drop the
+ * colony to what its adults support. Shortfalls in counts, stocks and tiers wait: food, clay and stone, a chamber still confirmed
  * below the tier a stage needs, and adults below the held stage's threshold but not below the lower stage's. An unknown
  * requirement never demotes and runs no clock: its clock starts again once its shortfall is certain. */
 public final class StageRules {
@@ -73,8 +74,9 @@ public final class StageRules {
         @Override public String toString() { return requirement.key() + " " + have + "/" + requirement.need() + " since " + since; }
     }
     /** missing(target) lists every requirement of the target and of each lower stage that confirmed state does not
-     * meet, lowest stage first. A stage with nothing missing is absent: every stage above the result is listed, and one
-     * at or below it only while unknowns or a running clock hold it. certain/possible are the evidence for holding a
+     * meet, lowest stage first. A stage with nothing missing is absent: every stage above the result is listed (except
+     * while the queen is observed dead, which alone holds the colony at Founding), and one at or below it only while
+     * unknowns or a running clock hold it. certain/possible are the evidence for holding a
      * stage. pending are the certain shortfalls the stage holds through, each with its clock; unmetSince is every
      * running clock, the state to save for the next evaluation. */
     public record Result(ColonyStage stage, ColonyStage certain, ColonyStage possible, Map<ColonyStage, List<Missing>> missing,
@@ -128,10 +130,14 @@ public final class StageRules {
             if (possibleChain) possible = s;
             if (!missing.isEmpty()) report.put(s, List.copyOf(missing));
         }
+        // The queen observed dead is catastrophic on its own (the owner's rule as written, stage-1 T08): Young counts her
+        // among its five adults, so no stage above Founding is met, held or promoted to, whatever else still holds.
+        if (in.queenDead()) { certain = ColonyStage.FOUNDING; possible = ColonyStage.FOUNDING; }
         // Promotion is immediate. A stage above what the inputs could support is held until, from the lowest stage up, a
         // stage has a certain shortfall that is catastrophic or has lasted GRACE: that stage is lost with all above it.
         var stage = from.compareTo(certain) < 0 ? certain : from;
-        if (from.compareTo(possible) > 0) {
+        if (in.queenDead()) stage = ColonyStage.FOUNDING;
+        else if (from.compareTo(possible) > 0) {
             for (var s = ColonyStage.YOUNG; s != null && s.compareTo(from) <= 0; s = s.next()) {
                 boolean lost = false;
                 for (var r : requirements(s)) {
@@ -152,7 +158,8 @@ public final class StageRules {
         }
         return new Result(stage, certain, possible, Collections.unmodifiableMap(report), List.copyOf(pending), Collections.unmodifiableMap(clocks));
     }
-    /** A certain shortfall that applies at once while a stage is held: the queen observed dead; a chamber function no
+    /** A certain shortfall that applies at once while a stage is held: the queen observed dead (which evaluate applies on
+     * its own, with or without another shortfall); a chamber function no
      * confirmed or unknown chamber holds (observed absent: a breached shell, a missing or foreign marker, the hall without
      * its living queen); adults certainly below the threshold of the stage beneath the one held. */
     public static boolean catastrophic(Requirement r, Bound have, Inputs in, ColonyStage held) {

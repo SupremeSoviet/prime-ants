@@ -2,290 +2,146 @@
   "multipart": [
     {
       "when": {
-        "slot0": "1"
+        "units": "1"
       },
       "apply": {
-        "model": "prime_ants:block/cache_apple_0"
+        "model": "prime_ants:block/cache_heap_1"
       }
     },
     {
       "when": {
-        "slot0": "2"
+        "units": "2"
       },
       "apply": {
-        "model": "prime_ants:block/cache_chicken_0"
+        "model": "prime_ants:block/cache_heap_2"
       }
     },
     {
       "when": {
-        "slot0": "3"
+        "units": "3"
       },
       "apply": {
-        "model": "prime_ants:block/cache_sweet_berries_0"
+        "model": "prime_ants:block/cache_heap_3"
       }
     },
     {
       "when": {
-        "slot0": "4"
+        "units": "4"
       },
       "apply": {
-        "model": "prime_ants:block/cache_flower_nectar_0"
+        "model": "prime_ants:block/cache_heap_4"
       }
     },
     {
       "when": {
-        "slot0": "5"
+        "units": "5"
       },
       "apply": {
-        "model": "prime_ants:block/cache_rotten_flesh_0"
+        "model": "prime_ants:block/cache_heap_5"
       }
     },
     {
       "when": {
-        "slot0": "6"
+        "units": "6"
       },
       "apply": {
-        "model": "prime_ants:block/cache_small_prey_0"
+        "model": "prime_ants:block/cache_heap_6"
       }
     },
     {
       "when": {
-        "slot1": "1"
+        "units": "7"
       },
       "apply": {
-        "model": "prime_ants:block/cache_apple_1"
+        "model": "prime_ants:block/cache_heap_7"
       }
     },
     {
       "when": {
-        "slot1": "2"
+        "units": "8"
       },
       "apply": {
-        "model": "prime_ants:block/cache_chicken_1"
+        "model": "prime_ants:block/cache_heap_8"
       }
     },
     {
       "when": {
-        "slot1": "3"
+        "units": "9"
       },
       "apply": {
-        "model": "prime_ants:block/cache_sweet_berries_1"
+        "model": "prime_ants:block/cache_heap_9"
       }
     },
     {
       "when": {
-        "slot1": "4"
+        "units": "10"
       },
       "apply": {
-        "model": "prime_ants:block/cache_flower_nectar_1"
+        "model": "prime_ants:block/cache_heap_10"
       }
     },
     {
       "when": {
-        "slot1": "5"
+        "units": "11"
       },
       "apply": {
-        "model": "prime_ants:block/cache_rotten_flesh_1"
+        "model": "prime_ants:block/cache_heap_11"
       }
     },
     {
       "when": {
-        "slot1": "6"
+        "units": "12"
       },
       "apply": {
-        "model": "prime_ants:block/cache_small_prey_1"
+        "model": "prime_ants:block/cache_heap_12"
       }
     },
     {
       "when": {
-        "slot2": "1"
+        "apple": "true"
       },
       "apply": {
-        "model": "prime_ants:block/cache_apple_2"
+        "model": "prime_ants:block/cache_sample_apple"
       }
     },
     {
       "when": {
-        "slot2": "2"
+        "chicken": "true"
       },
       "apply": {
-        "model": "prime_ants:block/cache_chicken_2"
+        "model": "prime_ants:block/cache_sample_chicken"
       }
     },
     {
       "when": {
-        "slot2": "3"
+        "berries": "true"
       },
       "apply": {
-        "model": "prime_ants:block/cache_sweet_berries_2"
+        "model": "prime_ants:block/cache_sample_berries"
       }
     },
     {
       "when": {
-        "slot2": "4"
+        "nectar": "true"
       },
       "apply": {
-        "model": "prime_ants:block/cache_flower_nectar_2"
+        "model": "prime_ants:block/cache_sample_nectar"
       }
     },
     {
       "when": {
-        "slot2": "5"
+        "flesh": "true"
       },
       "apply": {
-        "model": "prime_ants:block/cache_rotten_flesh_2"
+        "model": "prime_ants:block/cache_sample_flesh"
       }
     },
     {
       "when": {
-        "slot2": "6"
+        "prey": "true"
       },
       "apply": {
-        "model": "prime_ants:block/cache_small_prey_2"
-      }
-    },
-    {
-      "when": {
-        "slot3": "1"
-      },
-      "apply": {
-        "model": "prime_ants:block/cache_apple_3"
-      }
-    },
-    {
-      "when": {
-        "slot3": "2"
-      },
-      "apply": {
-        "model": "prime_ants:block/cache_chicken_3"
-      }
-    },
-    {
-      "when": {
-        "slot3": "3"
-      },
-      "apply": {
-        "model": "prime_ants:block/cache_sweet_berries_3"
-      }
-    },
-    {
-      "when": {
-        "slot3": "4"
-      },
-      "apply": {
-        "model": "prime_ants:block/cache_flower_nectar_3"
-      }
-    },
-    {
-      "when": {
-        "slot3": "5"
-      },
-      "apply": {
-        "model": "prime_ants:block/cache_rotten_flesh_3"
-      }
-    },
-    {
-      "when": {
-        "slot3": "6"
-      },
-      "apply": {
-        "model": "prime_ants:block/cache_small_prey_3"
-      }
-    },
-    {
-      "when": {
-        "slot4": "1"
-      },
-      "apply": {
-        "model": "prime_ants:block/cache_apple_4"
-      }
-    },
-    {
-      "when": {
-        "slot4": "2"
-      },
-      "apply": {
-        "model": "prime_ants:block/cache_chicken_4"
-      }
-    },
-    {
-      "when": {
-        "slot4": "3"
-      },
-      "apply": {
-        "model": "prime_ants:block/cache_sweet_berries_4"
-      }
-    },
-    {
-      "when": {
-        "slot4": "4"
-      },
-      "apply": {
-        "model": "prime_ants:block/cache_flower_nectar_4"
-      }
-    },
-    {
-      "when": {
-        "slot4": "5"
-      },
-      "apply": {
-        "model": "prime_ants:block/cache_rotten_flesh_4"
-      }
-    },
-    {
-      "when": {
-        "slot4": "6"
-      },
-      "apply": {
-        "model": "prime_ants:block/cache_small_prey_4"
-      }
-    },
-    {
-      "when": {
-        "slot5": "1"
-      },
-      "apply": {
-        "model": "prime_ants:block/cache_apple_5"
-      }
-    },
-    {
-      "when": {
-        "slot5": "2"
-      },
-      "apply": {
-        "model": "prime_ants:block/cache_chicken_5"
-      }
-    },
-    {
-      "when": {
-        "slot5": "3"
-      },
-      "apply": {
-        "model": "prime_ants:block/cache_sweet_berries_5"
-      }
-    },
-    {
-      "when": {
-        "slot5": "4"
-      },
-      "apply": {
-        "model": "prime_ants:block/cache_flower_nectar_5"
-      }
-    },
-    {
-      "when": {
-        "slot5": "5"
-      },
-      "apply": {
-        "model": "prime_ants:block/cache_rotten_flesh_5"
-      }
-    },
-    {
-      "when": {
-        "slot5": "6"
-      },
-      "apply": {
-        "model": "prime_ants:block/cache_small_prey_5"
+        "model": "prime_ants:block/cache_sample_prey"
       }
     }
   ]

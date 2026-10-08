@@ -50,7 +50,10 @@ public final class MaterialStore extends BlockEntity {
     /** Held units of one material. */
     public int units(MaterialUnits.Material m) { return (int)MaterialUnits.count(held(), m); }
     /** Room for one unit of this item's material. */
-    public boolean room(ItemStack s) { return MaterialUnits.room(held(), kind(s)); }
+    public boolean room(ItemStack s) { return MaterialUnits.room(held(), kind(s), capacity()); }
+    public int capacity() {
+        return level instanceof ServerLevel l ? MaterialUnits.capacity(ColonyDevelopment.capacityTier(l,colony,plan,ChamberExcavation.STORE,ChamberFunction.MATERIAL_STORE)) : CAPACITY;
+    }
     public String placement() { return placement; }
     public static BlockPos marker(NestPlan p, String placement) {
         var c = NestBlueprint.plan(placement).marker();
@@ -119,6 +122,10 @@ public final class MaterialStore extends BlockEntity {
         }
         return best;
     }
+    /** Restored block palettes can carry an old projection; inventory remains canonical across unavailable terrain/tier loss. */
+    public void refreshDisplay() {
+        if (level != null && !level.isClientSide() && !MaterialStoreBlock.showing(getBlockState(),contents).equals(getBlockState())) changed();
+    }
     private void changed() {
         setChanged();
         if (level == null || level.isClientSide()) return;
@@ -140,7 +147,7 @@ public final class MaterialStore extends BlockEntity {
         super.preRemoveSideEffects(pos, state);
     }
     @Override protected void saveAdditional(ValueOutput out) {
-        super.saveAdditional(out); out.putString("ReleaseId", releaseId.toString());
+        super.saveAdditional(out); out.putInt("InventoryFormat",2); out.putString("ReleaseId", releaseId.toString());
         if (colony == null || plan == null) return;
         out.putString("Colony", colony.toString()); out.store("Entrance", BlockPos.CODEC, plan.entrance()); out.putString("Direction", plan.direction().getName());
         out.putString("Placement", placement); out.store("Contents", ItemStack.CODEC.listOf(), contents);
@@ -152,10 +159,12 @@ public final class MaterialStore extends BlockEntity {
         colony = UUID.fromString(in.getStringOr("Colony", "")); Direction d = Direction.byName(in.getStringOr("Direction", ""));
         if (d == null || d.getAxis().isVertical()) throw new IllegalArgumentException("Invalid material store direction");
         plan = NestPlan.geometry(in.read("Entrance", BlockPos.CODEC).orElseThrow(), d); placement = in.getStringOr("Placement", "");
+        int format=in.getIntOr("InventoryFormat",1);
+        if(format!=1&&format!=2)throw new IllegalArgumentException("Unsupported material inventory format");
         var stacks = in.read("Contents", ItemStack.CODEC.listOf()).orElse(List.of());
         var held = new ArrayList<MaterialUnits.Material>();
         for (var s : stacks) {
-            if (s.getCount() != 1 || !MaterialUnits.room(held, kind(s))) throw new IllegalArgumentException("Invalid physical material store");
+            if (s.getCount() != 1 || !MaterialUnits.room(held, kind(s), format==1?CAPACITY:MaterialUnits.MAX_CAPACITY)) throw new IllegalArgumentException("Invalid physical material store");
             held.add(kind(s));
         }
         if (!getBlockPos().equals(marker(plan, placement))) throw new IllegalArgumentException("Invalid physical material store");

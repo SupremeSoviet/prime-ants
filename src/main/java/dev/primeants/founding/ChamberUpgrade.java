@@ -23,8 +23,8 @@ import net.minecraft.world.level.saveddata.*;
 /** Upgrade work (GDD v2 section 2): a colony that has unlocked a higher chamber tier rebuilds a chamber's walls in place,
  * block by block. One real builder at a time takes clay from the colony's confirmed store, carries it in its mandibles
  * to the next wall cell (NestWalls) and rams it into that cell's own earth: packed clay, NestWalls.CLAY_PER_CELL unit a
- * cell, no soil leaves the nest. Mature unlocks tier 2 and the nursery's chamber goes first; T06 adds the other chambers
- * and tier 3. A cell that is no longer natural or colony earth (a player placed or changed it) is never converted: it
+ * cell, no soil leaves the nest. Mature unlocks tier 2: the shared nursery/food chamber first, then the material
+ * store and queen's hall. Tier 3 work remains deferred until after mining. A cell that is no longer natural or colony earth (a player placed or changed it) is never converted: it
  * stops the job, and the builder puts its unit back into the store.
  * <p>Exact accounting at every point: taken = carried + built + released, where taken counts units out of the store net
  * of units put back, built the clay rammed into converted cells, and released the units dead builders handed to transfer
@@ -33,6 +33,8 @@ import net.minecraft.world.level.saveddata.*;
 public final class ChamberUpgrade extends SavedData {
     /** Loaded game ticks between builder assignment attempts. */
     public static final int ASSIGN_RETRY = 20;
+    /** Physical chambers, not functions: one founding job serves nursery and food store together. */
+    public static final List<String> ORDER = List.of(ChamberRegistry.FOUNDING, ChamberExcavation.STORE, ChamberExcavation.HALL);
     public static final class Job {
         static final Codec<Job> CODEC = RecordCodecBuilder.create(i -> i.group(
             BlockPos.CODEC.fieldOf("entrance").forGetter(j -> j.home.entrance()),
@@ -69,9 +71,13 @@ public final class ChamberUpgrade extends SavedData {
             this.transfers = new HashMap<>(transfers); transfers.keySet().forEach(UUID::fromString);
             if (transfers.values().stream().anyMatch(n -> n < 1) || transfers.values().stream().mapToInt(Integer::intValue).sum() > released)
                 throw new IllegalArgumentException("Invalid saved chamber upgrade releases");
-            // Only the founding chamber's walls are upgraded so far (the nursery goes first; T06 adds the others).
-            var walls = chamber.equals(ChamberRegistry.FOUNDING) ? walls(home, NestBlueprint.FOUNDING_CHAMBER) : List.<BlockPos>of();
-            if (tier < 2 || tier > 3 || cells.isEmpty() || new HashSet<>(cells).size() != cells.size() || !walls.containsAll(cells) || built.size() > cells.size()
+            // A restored job must fit one supported physical room, never a mixture of placements or arbitrary cells.
+            var allowed = new ArrayList<List<BlockPos>>();
+            if (chamber.equals(ChamberRegistry.FOUNDING)) allowed.add(walls(home, NestBlueprint.FOUNDING_CHAMBER));
+            else if (chamber.equals(ChamberExcavation.STORE) || chamber.equals(ChamberExcavation.HALL))
+                for (var placement : NestBlueprint.placements(chamber.equals(ChamberExcavation.STORE) ? ChamberFunction.MATERIAL_STORE : ChamberFunction.QUEENS_HALL))
+                    allowed.add(walls(home, placement.room().cells()));
+            if (tier < 2 || tier > 3 || cells.isEmpty() || new HashSet<>(cells).size() != cells.size() || allowed.stream().noneMatch(w -> w.containsAll(cells)) || built.size() > cells.size()
                     || !cells.subList(0, built.size()).equals(built) || released < 0 || carried() < 0 || carried() > NestWalls.CLAY_PER_CELL || ticks < 0)
                 throw new IllegalArgumentException("Invalid saved chamber upgrade");
         }
@@ -130,6 +136,8 @@ public final class ChamberUpgrade extends SavedData {
             byColony.computeIfAbsent(UUID.fromString(parts[0]), u -> new ArrayList<>()).add(job);
         }
         byColony.replaceAll((u, list) -> List.copyOf(list));
+        for (var list : byColony.values()) if (list.stream().filter(j -> j.claim != null).count() > 1)
+            throw new IllegalArgumentException("More than one upgrade builder in a colony");
         var claims = new HashSet<UUID>();
         for (var list : byColony.values()) for (var j : list) if (j.claim != null && !claims.add(j.claim)) throw new IllegalArgumentException("Duplicate chamber upgrade builder");
     }
@@ -182,8 +190,6 @@ public final class ChamberUpgrade extends SavedData {
     public void consider(ServerLevel l, LasiusNigerEntity q, List<LasiusNigerEntity> workers) {
         var p = q.founding().plan(); var owner = q.getUUID(); int tier = 2;
         if (p == null || q.founding().lifecycle() != QueenFounding.Lifecycle.OPEN || !q.founding().ready()) return;
-        var job = job(owner, ChamberRegistry.FOUNDING, tier);
-        if (job != null && (job.claim != null || job.stopped() || job.complete())) return;
         long now = l.getGameTime();
         if (now < nextAttempt.getOrDefault(owner, Long.MIN_VALUE)) return;
         nextAttempt.put(owner, now + ASSIGN_RETRY);
@@ -194,8 +200,19 @@ public final class ChamberUpgrade extends SavedData {
         if (!(l.getBlockEntity(p.nursery()) instanceof BroodPile pile) || pile.stageEvaluation() == null) return;
         var e = pile.stageEvaluation();
         if (NestWalls.unlocked(e.stage()) < tier) return;
-        var state = e.chambers().stream().filter(s -> s.id().equals(ChamberRegistry.FOUNDING)).findFirst().orElse(null);
-        if (state == null || state.functions().get(ChamberFunction.NURSERY) != ColonyDevelopment.Presence.CONFIRMED || state.tier() >= tier) return;
+        ColonyDevelopment.ChamberState state = null; Job job = null;
+        for (var id : ORDER) {
+            var next = e.chambers().stream().filter(s -> s.id().equals(id)).findFirst().orElse(null);
+            var function = id.equals(ChamberRegistry.FOUNDING) ? ChamberFunction.NURSERY : id.equals(ChamberExcavation.STORE) ? ChamberFunction.MATERIAL_STORE : ChamberFunction.QUEENS_HALL;
+            if (next == null || next.functions().get(function) != ColonyDevelopment.Presence.CONFIRMED) return;
+            var existing = job(owner,id,tier);
+            if (existing != null && (existing.claim != null || existing.stopped())) return;
+            if (next.tier() >= tier) continue;
+            if (existing != null && existing.complete()) return; // Wait for the next production confirmation before the next room.
+            state = next; job = existing; break;
+        }
+        if (state == null) return;
+        var chamber = ChamberRegistry.get(l).colony(owner).chamber(state.id());
         var store = MaterialStore.confirmed(l, owner, p);
         if (store == null || store.units(MaterialUnits.Material.CLAY) < NestWalls.CLAY_PER_CELL) return;
         var eligible = workers.stream().filter(w -> w.workerTasks().canConstruct(p) && NestExpansion.remainingCaregivers(l, owner, p, w) >= 2)
@@ -203,15 +220,15 @@ public final class ChamberUpgrade extends SavedData {
         if (eligible.isEmpty()) return;
         if (job == null) {
             var terrain = ColonyTerrain.get(l); var cells = new ArrayList<BlockPos>();
-            for (var c : walls(p, NestBlueprint.FOUNDING_CHAMBER)) {
+            for (var c : walls(p, chamber)) {
                 if (!NestPlan.loaded(l, c)) return;
                 if (terrain.wallTier(l, c, owner) < tier) cells.add(c);
             }
             if (cells.isEmpty()) return;
-            job = new Job(p.entrance(), p.direction().getName(), ChamberRegistry.FOUNDING, tier, cells, List.of(), 0, 0, "", 0, "planned_mature_colony_nursery_below_tier_" + tier, Map.of());
-            jobs.put(key(owner, ChamberRegistry.FOUNDING, tier), job); index(); setDirty();
+            job = new Job(p.entrance(), p.direction().getName(), chamber.id(), tier, cells, List.of(), 0, 0, "", 0, "planned_mature_colony_" + chamber.id() + "_below_tier_" + tier, Map.of());
+            jobs.put(key(owner, chamber.id(), tier), job); index(); setDirty();
             dev.primeants.PrimeAnts.LOGGER.info("Chamber upgrade planned queen={} chamber={} tier={} cells={} storeClay={} stage={} chamberTier={}",
-                owner, ChamberRegistry.FOUNDING, tier, cells.size(), store.units(MaterialUnits.Material.CLAY), e.stage().serializedName(), state.tier());
+                owner, chamber.id(), tier, cells.size(), store.units(MaterialUnits.Material.CLAY), e.stage().serializedName(), state.tier());
         }
         var w = eligible.getFirst();
         if (w.workerTasks().assignUpgrade(p)) {

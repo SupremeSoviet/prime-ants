@@ -111,4 +111,23 @@ class NestWallsTest {
         var two = new JsonObject(); two.addProperty(java.util.UUID.randomUUID().toString(), 2);
         assertThrows(IllegalArgumentException.class, () -> job(cells, three, 5, 1, 2, two), "more in transfers than released");
     }
+    @Test
+    void materialStoreAndHallJobsRestoreOnlyTheirOwnPlacementAndExactCargo() {
+        var home=NestPlan.geometry(ENTRANCE,Direction.EAST);
+        for(var function:List.of(dev.primeants.colony.ChamberFunction.MATERIAL_STORE,dev.primeants.colony.ChamberFunction.QUEENS_HALL))
+            for(var placement:NestBlueprint.placements(function)){
+                var cells=ChamberUpgrade.walls(home,placement.room().cells());
+                var o=ChamberUpgrade.Job.CODEC.encodeStart(JsonOps.INSTANCE,job(walls(),List.of(),0,0,2)).getOrThrow().getAsJsonObject();
+                o.addProperty("chamber",function==dev.primeants.colony.ChamberFunction.MATERIAL_STORE?ChamberExcavation.STORE:ChamberExcavation.HALL);
+                var all=new JsonArray();cells.forEach(p->all.add(pos(p)));o.add("cells",all);
+                var built=new JsonArray();cells.subList(0,2).forEach(p->built.add(pos(p)));o.add("built",built);o.addProperty("taken",3);
+                var claim=UUID.randomUUID();o.addProperty("claim",claim.toString());
+                var restored=ChamberUpgrade.Job.CODEC.parse(JsonOps.INSTANCE,o).getOrThrow();
+                assertEquals(new NestWalls.Ledger(3,1,2,0),restored.ledger());assertEquals(claim,restored.claim);assertEquals(cells.get(2),restored.next());
+                var again=ChamberUpgrade.Job.CODEC.parse(JsonOps.INSTANCE,ChamberUpgrade.Job.CODEC.encodeStart(JsonOps.INSTANCE,restored).getOrThrow()).getOrThrow();
+                assertEquals(restored.cells,again.cells);assertEquals(restored.built(),again.built());assertEquals(restored.ledger(),again.ledger());
+                o.addProperty("chamber","founding");assertThrows(IllegalArgumentException.class,()->ChamberUpgrade.Job.CODEC.parse(JsonOps.INSTANCE,o).getOrThrow(),"Foreign room cells cannot load as a founding job");
+            }
+    }
+
 }

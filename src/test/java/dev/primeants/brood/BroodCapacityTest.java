@@ -63,4 +63,17 @@ class BroodCapacityTest {
         while (progress < 120) { progress += BroodCapacity.steps(credit, fast); credit = BroodCapacity.credit(credit, fast); ticks++; }
         assertEquals(100, ticks);
     }
+    @Test
+    void theConfirmedHallOwnsTheLayingCadenceAndTheSustainedCalculationUsesIt() {
+        assertEquals(1200,BroodCapacity.layingTicks(0));assertEquals(1200,BroodCapacity.layingTicks(1));assertEquals(600,BroodCapacity.layingTicks(2));
+        var scale=new dev.primeants.time.SimulationTimeScale(100);
+        assertEquals(12,scale.ticksForGameDays(BroodCapacity.layingTicks(1)/24000.0));
+        assertEquals(6,scale.ticksForGameDays(BroodCapacity.layingTicks(2)/24000.0));
+        var n=BroodCapacity.nursery(true,2);
+        assertEquals(60,BroodCapacity.sustainedWorkers(n,2));
+        assertEquals(120,BroodCapacity.sustainedWorkers(n,144000,1,BroodCapacity.layingTicks(1)));
+        assertEquals(240,BroodCapacity.sustainedWorkers(n,144000,1,BroodCapacity.layingTicks(2)),"The cadence ceiling actually doubles when it binds");
+        for(var s:ColonyStage.values())assertTrue(BroodCapacity.sustainedWorkers(BroodCapacity.buildable(s),BroodCapacity.buildableHallTier(s))>=BroodCapacity.target(s));
+    }
+
 }

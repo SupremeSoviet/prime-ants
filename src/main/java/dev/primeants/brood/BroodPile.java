@@ -36,7 +36,10 @@ public final class BroodPile extends BlockEntity {
     /** The founding clutch, and the 0.1.0 nursery's slots. */
     public static final int CAPACITY = BroodCapacity.FOUNDING_SLOTS;
     public static final long BASE_LAYING_TICKS=1200;
-    public static long layingCadence(){return new SimulationTimeScale(multiplier()).ticksForGameDays(BASE_LAYING_TICKS/24000.0);}
+    public static long layingCadence(){return layingCadence(1);}
+    public static long layingCadence(int hallTier){return new SimulationTimeScale(multiplier()).ticksForGameDays(BroodCapacity.layingTicks(hallTier)/24000.0);}
+    /** The hall's live confirmed walls own the laying effect, including immediately after a player replacement. */
+    public long layingInterval(ServerLevel l){return layingCadence(dev.primeants.colony.ColonyDevelopment.confirmedTier(l,queenId,plan,dev.primeants.founding.ChamberExcavation.HALL,dev.primeants.colony.ChamberFunction.QUEENS_HALL));}
     public static final long EGG_COST = 1000, LARVA_COST = 12000, MAX_RESERVE = CAPACITY * (EGG_COST + LARVA_COST);
     public static final double CARE_REACH_SQUARED = 2.25 * 2.25;
     private final dev.primeants.worker.FoodLimitedGrowth growth=new dev.primeants.worker.FoodLimitedGrowth();
@@ -169,14 +172,15 @@ public final class BroodPile extends BlockEntity {
         return new dev.primeants.worker.FoodLimitedGrowth.Supply(complete,hungry,incomeS,incomeP,stockS,stockP,commitS,commitP,adults,records.size());
     }
     private boolean lay(ServerLevel l,LasiusNigerEntity q,boolean care){
-        if(!care||!operational||!originalTerminal()||loadedTicks-lastLayingTick<layingCadence())return false;
+        if(!care||!operational||!originalTerminal())return false;
+        long cadence=layingInterval(l); if(loadedTicks-lastLayingTick<cadence)return false;
         if(records.size()>=nursery().slots()){if(!condition.equals("larva_sugar_or_protein_exhausted"))condition="nursery_slots_full";return false;}
         if(ColonyMembers.get(l).occupied(queenId)+records.size()>=adultCap(l)-1){condition="colony_capacity_full_or_unloaded";return false;}
         if(!growth.allows(supply(l))){condition=growth.reason();return false;}
         if(!q.nutrition().spend(Nutrition.EGG_SUGAR,Nutrition.EGG_PROTEIN)){condition="queen_ingested_nutrition_exhausted";return false;}
         int slot=0;while(true){final int index=slot;if(records.stream().noneMatch(r->r.slot()==index))break;slot++;}
         var r=new BroodRecord(UUID.randomUUID(),queenId,slot,neglectGrace,waitingBound);r.founding=false;records.add(r);lastLayingTick=loadedTicks;condition="food_fed_egg_laid";
-        PrimeAnts.LOGGER.info("Food-fed egg queen={} brood={} slot={} pileTicks={} cadence={} sugarCost={} proteinCost={}",queenId,r.id(),slot,loadedTicks,layingCadence(),Nutrition.EGG_SUGAR,Nutrition.EGG_PROTEIN);return true;
+        PrimeAnts.LOGGER.info("Food-fed egg queen={} brood={} slot={} pileTicks={} cadence={} sugarCost={} proteinCost={}",queenId,r.id(),slot,loadedTicks,cadence,Nutrition.EGG_SUGAR,Nutrition.EGG_PROTEIN);return true;
     }
     private void changed() {
         setChanged();

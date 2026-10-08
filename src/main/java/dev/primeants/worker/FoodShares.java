@@ -4,10 +4,12 @@ package dev.primeants.worker;
  * Adults eat only sugar and larvae need protein, so the cache keeps RESERVED of its slots for each kind: one kind fills at
  * most capacity - RESERVED slots, and a cache full of one kind never keeps the other kind out. */
 public final class FoodShares {
-    public static final int CAPACITY = 6, RESERVED = 2;
+    public static final int CAPACITY = 6, RESERVED = 2, MAX_CAPACITY = 12;
+    public static int capacity(int tier) { return tier >= 2 ? MAX_CAPACITY : CAPACITY; }
+    public static int reserved(int capacity) { return capacity / 3; }
     private FoodShares() { }
     /** The most units of one kind a cache of this capacity admits. */
-    public static int share(int capacity) { return capacity - RESERVED; }
+    public static int share(int capacity) { return capacity - reserved(capacity); }
     /** A unit of this kind fits a cache of this capacity that holds this much sugar and protein: a free slot, and its own
      * kind below its share, so the other kind's reserved slots stay free. */
     public static boolean admits(int capacity, int sugar, int protein, boolean unitProtein) {

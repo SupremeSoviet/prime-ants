@@ -56,8 +56,28 @@ class MaterialStoreDisplayTest {
     @Test
     void theStateCountStaysSmall() {
         // clay 0..8, stock 0..4, four presence lumps: the block's whole state space.
-        assertEquals(720, (MaterialUnits.CLAY_LEVELS + 1) * (MaterialUnits.STOCK_LEVELS + 1) * 16);
+        assertEquals(720,(MaterialUnits.CAPACITY/MaterialUnits.LEVEL+1)*((MaterialUnits.CAPACITY-MaterialUnits.CLAY_SHARE)/MaterialUnits.LEVEL+1)*16,"Tier-one range stays intact");
+        assertEquals(2448, (MaterialUnits.CLAY_LEVELS + 1) * (MaterialUnits.STOCK_LEVELS + 1) * 16,"Expanded projection is bounded");
         var shown = new HashSet<Display>(); reachable().forEach(h -> shown.add(MaterialUnits.display(h)));
         assertTrue(shown.size() <= 720, "reachable displays fit the state space: " + shown.size());
     }
+    @Test
+    void tierTwoDisplaysSeparateAllReachableTotalsAndMaterialSets() {
+        // Projection depends only on clay count, total other count and presence, so one representative covers every allocation with those inputs.
+        var spans=new HashMap<Display,int[]>();var sets=new HashMap<Display,Set<Material>>();int checked=0;
+        for(int clay=0;clay<=64;clay++)for(int other=0;other<=32&&clay+other<=64;other++)for(int mask=0;mask<16;mask++){
+            int kinds=Integer.bitCount(mask);if((other==0)!=(mask==0)||kinds>other)continue;
+            int[] counts=new int[4];int first=-1;for(int k=0;k<4;k++)if((mask&(1<<k))!=0){counts[k]=1;if(first<0)first=k;}
+            if(first>=0)counts[first]+=other-kinds;
+            var h=held(clay,counts);var d=MaterialUnits.display(h);checked++;
+            spans.merge(d,new int[]{h.size(),h.size()},(a,b)->new int[]{Math.min(a[0],b[0]),Math.max(a[1],b[1])});
+            var previous=sets.putIfAbsent(d,kinds(h));assertTrue(previous==null||previous.equals(kinds(h)),"Exact kind set for "+d);
+            assertTrue(d.clay()<=16&&d.stock()<=8,"Expanded range "+d);
+        }
+        spans.forEach((d,span)->assertTrue(span[1]-span[0]<=7,"Eight-unit differences always look different: "+d+" "+Arrays.toString(span)));
+        assertTrue(checked>20000);assertTrue(spans.size()<=2448);
+        assertNotEquals(MaterialUnits.display(held(32)),MaterialUnits.display(held(64)));
+        assertEquals(new Display(16,0,false,false,false,false),MaterialUnits.display(held(64)));
+    }
+
 }
