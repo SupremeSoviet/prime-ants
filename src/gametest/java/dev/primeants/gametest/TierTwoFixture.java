@@ -75,6 +75,23 @@ final class TierTwoFixture {
         if(NurseryUpgradeGameTest.ground(c,Items.CHICKEN)==0&&heldChicken<proteinShare&&tick-lastChicken>=200){lastChicken=tick;supply(c,q,0,(int)Math.min(2,proteinShare-heldChicken));}
     }
     private long incomingChicken(GameTestHelper c,LasiusNigerEntity q){return fx.f.workers(c,q).stream().filter(w->q.founding().claimedBy(w)&&w.getMainHandItem().is(Items.CHICKEN)).mapToInt(w->w.getMainHandItem().getCount()).sum();}
+    /** Owner decision, 2026-10-09 15:25: an unknown habitat pauses work, but valid retained nurse roles count.
+     * Every qualification except habitat authorization remains physical; DAMAGED keeps the ordinary active predicate. */
+    static boolean retainedNurse(GameTestHelper c,LasiusNigerEntity q,LasiusNigerEntity w){
+        var l=c.getLevel();var home=q.founding().plan();var tasks=w.workerTasks();var roleHome=tasks.plan();
+        return home!=null&&home.nurseryFindings(l,q.getUUID(),true).verdict()==Findings.Verdict.UNKNOWN
+            &&l.getEntity(q.getUUID())==q&&q.isAlive()&&q.founding().occupancyProblem(l)==null
+            &&l.getEntity(w.getUUID())==w&&w.isAlive()&&!w.isRemoved()&&!w.isCallow()&&!w.isNoAi()
+            &&NestPlan.loaded(l,w.blockPosition())&&l.isPositionEntityTicking(w.blockPosition())
+            &&tasks.nursing()&&roleHome!=null&&roleHome.entrance().equals(home.entrance())&&roleHome.direction()==home.direction()
+            &&ColonyMembers.get(l).belongs(w,q.getUUID(),home.chamber())
+            &&!q.founding().claimedBy(w)&&DigJob.claimedBy(l,w)==null&&ChamberUpgrade.get(l).claimedBy(w)==null
+            &&l.getBlockEntity(home.nursery()) instanceof BroodPile p&&p.ownedBy(q.getUUID(),home)&&p.operational();
+    }
+    static long caregivers(GameTestHelper c,LasiusNigerEntity q){
+        var home=q.founding().plan();var unknown=home.nurseryFindings(c.getLevel(),q.getUUID(),true).verdict()==Findings.Verdict.UNKNOWN;
+        return new WorkerForagingGameTest().workers(c,q).stream().filter(w->unknown?retainedNurse(c,q,w):w.workerTasks().caregiver(c.getLevel(),home)).count();
+    }
     private long foodUnits(GameTestHelper c,LasiusNigerEntity q,Item item){
         var l=c.getLevel();var box=c.getBounds().inflate(8);var cache=fx.f.cache(c,q);var pile=NestPlanFixture.pile(c,q);
         long total=l.getEntitiesOfClass(ItemEntity.class,box,i->i.isAlive()&&i.getItem().is(item)).stream().mapToInt(i->i.getItem().getCount()).sum();
@@ -105,10 +122,10 @@ final class TierTwoFixture {
         c.assertTrue(builders<=1,"One builder across digging and upgrades: "+builders);
         if(builders>0){
             var workers=fx.f.workers(c,q);long active=workers.stream().filter(w->w.workerTasks().caregiver(l,q.founding().plan())).count();
-            if(active<2)PrimeAnts.LOGGER.info("T09 CAREGIVER DIAGNOSIS queen={} tick={} builders={} active={} nursingRoles={} habitat={} mining={} workerTasks={}",q.getUUID(),c.getTick(),builders,active,
+            if(active<2&&c.getTick()%100==0)PrimeAnts.LOGGER.info("T09 CAREGIVER DIAGNOSIS queen={} tick={} builders={} active={} nursingRoles={} habitat={} mining={} workerTasks={}",q.getUUID(),c.getTick(),builders,active,
                 workers.stream().filter(w->w.workerTasks().nursing()).count(),q.founding().plan().nurseryFindings(l,q.getUUID(),true).problem(),mining==null?null:mining.reason,
                 workers.stream().map(w->w.getUUID()+":"+w.workerTasks().phase()+":"+w.workerTasks().reason()+":"+w.getMainHandItem()).toList());
-            c.assertTrue(fx.f.workers(c,q).stream().filter(w->w.workerTasks().caregiver(l,q.founding().plan())).count()>=2,"At least two caregivers remain while building");
+            c.assertTrue(caregivers(c,q)>=2,"At least two caregivers remain while building (valid retained nurses only during UNKNOWN habitat)");
         }
         for(var job:ChamberUpgrade.get(l).jobs(q.getUUID()))NurseryUpgradeGameTest.ledger(c,fx,q,job);
     }

@@ -511,3 +511,21 @@ absolute runtime properties remain rooted for the client's different working dir
 and existing tracked text for profile absolute paths without printing their contents, and preserves binary assets.
 Model/validator tasks precede the server workload so even a red build can record fresh model execution. Acceptance names,
 assertions and bounds are unchanged. No surface-structure checkpoint or semantic caregiver repair is included.
+
+## Implementation notes - 2026-10-09 (T09 owner caregiver decision, 15:25)
+
+The owner decided that during an **unknown habitat** pause, living colony members retaining valid nursing roles count
+toward the requirement for at least two caregivers; their work remains paused. This supersedes the formerly unanswered
+interpretation recorded in the strict-interruption and retry notes above. Historical evidence and those notes are retained.
+
+The fixture uses `Findings.Verdict.UNKNOWN`, so loaded damage retains precedence. It counts real loaded, ticking, living,
+mature, enabled members with the correct brood lineage, home and nursing task plan, an owned operational nursery and
+living physically present queen, excluding every forager, digging/mining builder and upgrade claim. It requires ordinary
+authorized caregivers again after restoration and keeps that predicate for `DAMAGED` habitat. Production nursing,
+feeding, excavation, upgrade and delivery authorization is unchanged; unknown terrain grants no work authority.
+
+The targeted recovery completed the two unknown windows and their restored evaluations, then exposed the prescribed
+observed-damage stop condition at tick 42,849. A loaded foreign-owned store is a revoked completed chamber opening
+(`material_store_completed_opening_revoked`), hence `DAMAGED`: nursing authorization pauses while the miner retains
+one clay ball and its existing claim. The ordinary two-authorized-caregiver assertion remains red. The recovery stops
+without extending the decision to damage or changing existing production handling; later interruption phases are unverified.

@@ -76,10 +76,17 @@ unresolved interruptions and any red full build. Mature-gated mining does not re
 Placement-survey walking routes and dig timelines remain uncovered; supplied passes do not establish unattended
 development or arbitrary deposit reliability. Tier-three construction and Great growth acceptance remain deferred.
 
-T09 recovery retains the stricter active-caregiver assertion: an unavailable adjacent gallery face makes the connected
-habitat unknown, so nursing authorization pauses even with saved nursery roles. The permanent interruption remains red;
-later unavailable-store/foreign-store/worker replacement phases are not established by that failure. The shape guard
-retains loaded-breach precedence. Restored-recipe isolated galleries pass at 46,049 / 46,371 / 48,638, tier two at 51,452,
+The owner's 2026-10-09 15:25 decision allows real living members retaining valid nursing roles to count toward two
+caregivers only while connected habitat has `Findings.Verdict.UNKNOWN`. Their work authorization still pauses. The fixture
+checks lineage, home, nursing plan, actual loaded/ticking body, enabled mature state, queen occupancy and the owned nursery,
+excluding every builder and forager claim. Loaded damage retains precedence and the ordinary authorized-caregiver predicate.
+Fresh targeted recovery completed both 600-loaded-tick target/store unknown windows and two restored evaluations after
+each, then failed at 42,849: a loaded foreign store revokes an actual chamber opening, making habitat `DAMAGED` and
+pausing nursing while mining cargo retains its builder claim. The unknown exception was not extended. The foreign-store
+window, same-state replacement and settlement remain unverified; T09 stopped at the prescribed observed-damage boundary.
+Food component/identity and full-store preparation observers remain for subsequent diagnosis; no accounting, supply,
+production or material-placement repair is claimed. The shape guard retains loaded-breach precedence.
+Historical restored-recipe isolated galleries pass at 46,049 / 46,371 / 48,638, tier two at 51,452,
 and reload/death at 46,790. The last inherited unfiltered run passes gallery at 47,346, tier two at 51,127, reload/death at
 46,003, full-store at 56,913 and contributions at 22,143. Its only server failure is the active-caregiver assertion at
 43,175 (zero active, 27 saved nursing roles); its model XML is stale. These supplied results are separate from the retry's

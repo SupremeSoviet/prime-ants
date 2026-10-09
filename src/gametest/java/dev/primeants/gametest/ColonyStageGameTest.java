@@ -57,10 +57,16 @@ public final class ColonyStageGameTest {
     @GameTest(maxTicks=24000,structure="prime_ants_test:idle_ground")
     public void eggFoundedColonyLaysBeyondTheFoundingCapOnlyAfterPromotionToYoung(GameTestHelper c){
         var q=f.start(c);boolean[] supplied={false},promoted={false};
+        NursingGameTest.FoodSnapshot[] before={null};
         c.onEachTick(()->{
             var p=food.pile(c,q);if(p==null)return;
             if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;food.supply(c,q,10,8);}
-            if(supplied[0])c.assertTrue(food.total(c,q)==18,"Eighteen real supplied food units are conserved");
+            if(supplied[0]){
+                var now=food.snapshot(c,q);
+                if(now.total()!=18)PrimeAnts.LOGGER.info("T09 FOOD FIRST DIVERGENCE queen={} tick={} before={} after={}",q.getUUID(),c.getTick(),before[0],now);
+                c.assertTrue(food.total(c,q)==18,"Eighteen real supplied food units are conserved: actual="+food.total(c,q)+" components="+now);
+                before[0]=now;
+            }
             var colony=colony(c,q);if(colony==null)return;long committed=committed(c,q,p);
             if(c.getTick()%500==0)PrimeAnts.LOGGER.info("Stage-1 promotion trace tick={} stage={} committed={} condition={} evaluation={}",c.getTick(),colony.stage(),committed,p.condition(),p.stageEvaluation());
             if(colony.stage()==ColonyStage.FOUNDING){

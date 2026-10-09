@@ -129,10 +129,14 @@ public final class MiningGameTest {
                 }
                 case 1->{
                     c.assertTrue(j.removed()==baseline[0]&&w!=null&&w.getMainHandItem().isEmpty(),"Unavailable target never becomes a successful removal or cargo");
+                    c.assertTrue(plan.nurseryFindings(l,q.getUUID(),true).verdict()==Findings.Verdict.UNKNOWN&&TierTwoFixture.caregivers(c,q)>=2
+                        &&player.fx.f.workers(c,q).stream().noneMatch(a->a.workerTasks().nursingAuthorized(l)),"Unknown habitat retains valid nursing roles while all nursing authorization pauses");
                     if(p.loadedTicks()-since[0]<600)return;hidden[0].close();hidden[0]=null;evals[0]=0;seen[0]=e;step[0]=2;
                 }
                 case 2->{
                     if(evals[0]<2||j.removed()<=baseline[0]||w==null||w.getMainHandItem().isEmpty())return;
+                    c.assertTrue(plan.nurseryFindings(l,q.getUUID(),true).verdict()==Findings.Verdict.CLEAR
+                        &&player.fx.f.workers(c,q).stream().filter(a->a.workerTasks().caregiver(l,plan)).count()>=2,"Restored habitat again requires two actually authorized caregivers");
                     kept[0]=w.getMainHandItem().copy();baseline[0]=j.removed();since[0]=p.loadedTicks();hidden[0]=UnavailableCells.hide(c,NestPlanFixture.store(c,q).getBlockPos());step[0]=3;
                     PrimeAnts.LOGGER.info("T09 STORE UNKNOWN START queen={} tick={} cargo={} restoredTargetEvaluations={}",q.getUUID(),c.getTick(),kept[0],evals[0]);
                 }
@@ -184,11 +188,20 @@ public final class MiningGameTest {
     public void fullStorePreventsRemovalThenPhysicalStockReleaseAndTwoEvaluationsResumeMining(GameTestHelper c){
         var player=new TierTwoFixture(40,true);var q=player.fx.start(c);boolean[] seeded={false},supplied={false};int[] step={0},evals={0};long[] since={-1},settled={-1};
         UnavailableCells[] hidden={null};ColonyDevelopment.Evaluation[] seen={null};
+        String[] preparation={""};
         c.onEachTick(()->{
             var l=c.getLevel();var plan=q.founding().plan();if(plan!=null&&!seeded[0]){geology(c,q);seeded[0]=true;hidden[0]=UnavailableCells.hide(c,plan.at(15,0,-2));}
             feedMining(c,player,q);player.ledgers(c,q);traceMining(c,player,q,"FULL STORE");var p=NestPlanFixture.pile(c,q);if(p==null)return;var e=p.stageEvaluation();var s=NestPlanFixture.store(c,q);var j=Mining.get(l).job(q.getUUID());
             if(!supplied[0]&&e!=null&&e.inputs().tier(ChamberFunction.NURSERY).known()==2){supplied[0]=true;player.fx.drop(c,plan.at(-5,0,1),new ItemStack(Items.COBBLESTONE,32));}
             long made=j==null?0:j.produced("minecraft:cobblestone");c.assertTrue(player.fx.ledger(c,q,Items.COBBLESTONE).total()==(supplied[0]?32:0)+made,"Full-store contribution and mined stone are independently conserved");
+            if(step[0]==0){
+                var ledger=player.fx.ledger(c,q,Items.COBBLESTONE);
+                var milestone="stage="+(e==null?null:e.stage())+" stone="+ledger+" upgrades="+ChamberUpgrade.get(l).jobs(q.getUUID()).stream().map(a->a.chamber+":"+a.built().size()+"/"+a.cells.size()+":"+(a.claim==null)+":"+a.reason).toList();
+                if(!milestone.equals(preparation[0])){
+                    preparation[0]=milestone;PrimeAnts.LOGGER.info("T09 FULL STORE PREPARATION queen={} tick={} loaded={} {} foragers={}",q.getUUID(),c.getTick(),p.loadedTicks(),milestone,
+                        player.fx.f.workers(c,q).stream().filter(a->q.founding().claimedBy(a)).map(a->a.getUUID()+":"+a.position()+":"+a.workerTasks().phase()+":"+a.workerTasks().reason()+":"+a.workerTasks().sourceId()+":"+a.getMainHandItem()).toList());
+                }
+            }
             if(j!=null)miningLedger(c,player,q,Map.of(Items.COBBLESTONE,32));
             if(e!=null&&seen[0]!=e){seen[0]=e;if(step[0]==3&&e.inputs().tier(ChamberFunction.MATERIAL_STORE).known()>=1)evals[0]++;}
             switch(step[0]){

@@ -24,6 +24,28 @@ public final class NursingGameTest {
         long custody=TransferCustody.get(c.getLevel()).contents().stream().filter(p->WorkerTasks.food(p.stack())&&c.getBounds().inflate(8).contains(p.position())).mapToInt(p->p.stack().getCount()).sum();
         return world+carried+custody+(n==null?0:n.size())+consumed(c,q);
     }
+    record FoodSnapshot(long ground,long carried,long cache,long custody,long queen,long brood,long adults,long history,String identities){
+        long total(){return ground+carried+cache+custody+queen+brood+adults+history;}
+    }
+    /** Read-only first-divergence evidence; receipts are terminal consumption, never current stock. */
+    FoodSnapshot snapshot(GameTestHelper c,LasiusNigerEntity q){
+        var l=c.getLevel();var box=c.getBounds().inflate(8);var p=pile(c,q);var cache=fixture.cache(c,q);
+        var ground=l.getEntitiesOfClass(ItemEntity.class,box,i->i.isAlive()&&WorkerTasks.food(i.getItem()));
+        var workers=fixture.workers(c,q);var pending=TransferCustody.get(l).contents().stream().filter(t->WorkerTasks.food(t.stack())&&box.contains(t.position())).toList();
+        long adults=0,history=0;var receipts=new ArrayList<String>();
+        for(var entity:l.getAllEntities())if(entity instanceof LasiusNigerEntity w&&w.isAlive()&&q.getUUID().equals(w.queenId())){adults+=w.nutrition().consumedUnits();receipts.add(w.getUUID()+":"+w.position()+":"+w.nutrition().consumedUnits());}
+        var archived=new ArrayList<String>();
+        for(var entry:AdultHistory.get(l).records().entrySet())if(!entry.getKey().equals(q.getUUID().toString())){
+            var row=com.google.gson.JsonParser.parseString(entry.getValue()).getAsJsonObject();if(!row.get("queen").getAsString().equals(q.getUUID().toString()))continue;
+            var n=row.getAsJsonObject("nutrition");long units=0;for(String key:new String[]{"apples","berries","chickens","nectar","flesh","prey"})units+=n.has(key)?n.get(key).getAsLong():0;
+            history+=units;archived.add(entry.getKey()+":"+units);
+        }
+        String identities="ground="+ground.stream().map(i->i.getUUID()+":"+i.position()+":"+i.getItem()).toList()
+            +" carried="+workers.stream().filter(w->WorkerTasks.food(w.getMainHandItem())).map(w->w.getUUID()+":"+w.position()+":"+w.workerTasks().phase()+":"+w.workerTasks().reason()+":"+w.getMainHandItem()).toList()
+            +" cache="+(cache==null?null:cache.contents())+" pending="+pending+" adults="+receipts+" history="+archived
+            +" brood="+(p==null?null:p.records().stream().map(r->r.id()+":"+r.stage()+":"+r.nutrition().consumedUnits()).toList());
+        return new FoodSnapshot(ground.stream().mapToLong(i->i.getItem().getCount()).sum(),workers.stream().filter(w->WorkerTasks.food(w.getMainHandItem())).mapToLong(w->w.getMainHandItem().getCount()).sum(),cache==null?0:cache.size(),pending.stream().mapToLong(t->t.stack().getCount()).sum(),q.nutrition().consumedUnits(),p==null?0:p.consumedFood(),adults,history,identities);
+    }
     void supply(GameTestHelper c,LasiusNigerEntity q,int sugar,int protein){var p=q.founding().plan();if(sugar>0)fixture.drop(c,p.at(-3,0,1),new ItemStack(Items.APPLE,sugar));if(protein>0)fixture.drop(c,p.at(-4,0,1),new ItemStack(Items.CHICKEN,protein));}
     void yields(GameTestHelper c,LasiusNigerEntity q){
         var p=pile(c,q);var n=q.nutrition();
