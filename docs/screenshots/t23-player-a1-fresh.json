@@ -841,7 +841,7 @@
   "loading_only": false,
   "prior_scenario_ticks": 3002,
   "additional_tick_bound": 20998,
-  "source_archive": "C:\\Users\\user\\Documents\\turnloop\\directions\\prime-ants-slice1\\turns\\T22\\t22-fresh-a4-world.zip",
+  "source_archive": "<turnloop>\\directions\\prime-ants-slice1\\turns\\T22\\t22-fresh-a4-world.zip",
   "route": [
     {
       "priority": "primary",
@@ -864,7 +864,7 @@
   ],
   "archive_world_root": "New World/",
   "additional_start_tick": 0,
-  "save": "C:\\Users\\user\\Documents\\prime-ants\\build\\run\\clientGameTest\\saves\\t23-player-a1",
+  "save": "build\\run\\clientGameTest\\saves\\t23-player-a1",
   "persisted_observer_dead": true,
   "join_protection": "First living server body becomes spectator before physics",
   "respawn_recovery": "Normal deathScreen.respawn button; no health edits",
@@ -922,7 +922,7 @@
   "daytime_observer_command": "time set day; production loaded clocks continue",
   "watch": true,
   "unprovoked_watch_ticks": 100,
-  "entrance_image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t23-player-a1-entrance.png",
+  "entrance_image": "docs\\screenshots\\t23-player-a1-entrance.png",
   "entrance_rendered_ants": [],
   "additional_ticks_through_close": 7082,
   "accumulated_scenario_ticks": 10084,

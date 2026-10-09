@@ -1,6 +1,6 @@
 # T23 player checkpoint evidence appendix
 
-Evidence root: `C:/Users/user/Documents/turnloop/directions/prime-ants-slice1/turns/T23`.
+Evidence root: `<turnloop>/directions/prime-ants-slice1/turns/T23`.
 The summary-first current result is in [slice-1-report.md](slice-1-report.md).
 T22's original current report is preserved verbatim in [t22-status-historical.md](t22-status-historical.md).
 
@@ -23,7 +23,7 @@ runClientGameTest --console=plain
 -PprimeAntsPriorScenarioTicks=3002
 -PprimeAntsBroodMultiplier=100
 -PprimeAntsFoundingMultiplier=20
--PprimeAntsFreshWorldArchive=C:\Users\user\Documents\turnloop\directions\prime-ants-slice1\turns\T22\t22-fresh-a4-world.zip
+-PprimeAntsFreshWorldArchive=<turnloop>\directions\prime-ants-slice1\turns\T22\t22-fresh-a4-world.zip
 -PprimeAntsKnownSiteRoute=t22-a4-primary-fallback
 ```
 
@@ -104,7 +104,7 @@ client-a4-sync-recovery.ps1 and client-a5.ps1. Final repeat adds:
 
 ```text
 -PprimeAntsPlayerFood=raw-chicken
--PprimeAntsPriorAppleEvidence=C:\Users\user\Documents\prime-ants\docs\screenshots\t23-player-a3-fresh.json
+-PprimeAntsPriorAppleEvidence=docs\screenshots\t23-player-a3-fresh.json
 ```
 
 The optional chicken cannot replace the required same-colony apple trace. No apple repeat or other player food was supplied.

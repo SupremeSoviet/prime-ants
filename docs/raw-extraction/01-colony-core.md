@@ -2,7 +2,7 @@
 
 Scope: castes, ants (entity, AI, model, textures), jobs, resources and economy, instincts, progression (ranks and stages), research, cultures, personalities, identity labels, guide chapters, persistence (`ColonyData`), and the sim unit tests.
 
-Source: repo `C:\Users\user\Documents\Codex\2026-04-26\new-chat`, branch `rebuild/anthills-from-scratch`, HEAD `75a70f7` ("Redesign ant castes and Formic equipment art", 2026-07-13). Read-only; nothing was built or run. §6.3 uses numbers from my own Python re-implementation of the sim passes, not from running the mod.
+Source: repo `<original-project>`, branch `rebuild/anthills-from-scratch`, HEAD `75a70f7` ("Redesign ant castes and Formic equipment art", 2026-07-13). Read-only; nothing was built or run. §6.3 uses numbers from my own Python re-implementation of the sim passes, not from running the mod.
 
 ## 0. Conventions
 

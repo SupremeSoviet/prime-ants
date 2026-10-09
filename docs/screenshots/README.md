@@ -17,7 +17,7 @@ Automatically captured by Fabric client GameTest in a freshly generated normal s
 - Path: `docs/screenshots/t01-infrastructure.png`.
 - Dimensions: `1280 × 720`; size: `1,118,552` bytes.
 - SHA-256: `0a8a35b2fece3dd9dcbf5142dba3c3ea4e037ff2cd75097ca35d3f49b9508609`.
-- Provenance and complete logs: `C:\Users\user\Documents\turnloop\directions\prime-ants-slice1\turns\T01\capture-provenance.json` and `09-client-capture-attempt-1.{json,log}`.
+- Provenance and complete logs: `<turnloop>\directions\prime-ants-slice1\turns\T01\capture-provenance.json` and `09-client-capture-attempt-1.{json,log}`.
 
 
 ## T02 debug entity specimens; colony not implemented

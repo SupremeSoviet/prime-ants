@@ -74,7 +74,7 @@ scripts\zai-codex-proxy.cmd
 codex exec -p zai-glm52 --sandbox read-only "Return READY only."
 ```
 
-The profile lives at `C:\Users\user\.codex\zai-glm52.config.toml` and points
+The profile lives at `%USERPROFILE%\.codex\zai-glm52.config.toml` and points
 Codex at `http://127.0.0.1:11452/v1`. `ZAI_CODEX_PROXY_TOKEN` is a temporary
 local bearer token for the localhost proxy; it prevents Codex from sending any
 other provider auth token to the proxy. The Z.AI API key must stay in the

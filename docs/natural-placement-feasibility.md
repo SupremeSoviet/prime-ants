@@ -80,7 +80,7 @@ Two native queens stopped after two removals each because current soil differed 
 
 There is no retained traffic failure in current focused/full evidence. Broader layouts/populations and client physics still need observation. Fresh readable views, MSPT, broader restart/unload behavior, natural-food reliability, adult mortality, nuptial flights, defense, release and later Phase 2 work remain gaps. Headless timings/sprint are not MSPT measurements. No client, screenshot or benchmark ran: lifetime client history remains **24 launches, native 16/8, tasks 11/13**. Conditional two-block-throat authorization was unused; legacy throat geometry remains intact. Default-enabled founding is not proof of a complete unattended colony.
 
-Detailed commands/exits/timings, all failures, actor UUIDs, hashes and commit: [Report T16](C:/Users/user/Documents/turnloop/directions/prime-ants-slice1/turns/T16/report.md). Native worlds/results: `T16/seed-*/`, `t16-native-*-world.zip`, `native-*-independent-audit.json`; live traffic: `focused-traffic-evidence.json`, `full-traffic-live-excerpts.txt`. T15 originals remain in T15, with pre-T16 docs copied in T16.
+Detailed commands/exits/timings, all failures, actor UUIDs, hashes and commit: [Report T16](<turnloop>/directions/prime-ants-slice1/turns/T16/report.md). Native worlds/results: `T16/seed-*/`, `t16-native-*-world.zip`, `native-*-independent-audit.json`; live traffic: `focused-traffic-evidence.json`, `full-traffic-live-excerpts.txt`. T15 originals remain in T15, with pre-T16 docs copied in T16.
 
 
 ## T19 lifecycle checkpoint closure and final bounded native follow-up (2026-10-05)

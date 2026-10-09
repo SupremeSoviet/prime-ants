@@ -16,7 +16,7 @@
   "ai_pauses": 0,
   "loading_only": false,
   "prior_scenario_ticks": 501,
-  "save": "C:\\Users\\user\\Documents\\prime-ants\\build\\run\\clientGameTest\\saves\\New World",
+  "save": "build\\run\\clientGameTest\\saves\\New World",
   "generation": {
     "dimension": "minecraft:overworld",
     "generator": "net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator",
@@ -43,7 +43,7 @@
       -21.5
     ]
   },
-  "terrain_image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t22-fresh-a4-terrain.png",
+  "terrain_image": "docs\\screenshots\\t22-fresh-a4-terrain.png",
   "additional_start_tick": 59,
   "additional_tick_bound": 23499,
   "discovery_radius": 128,

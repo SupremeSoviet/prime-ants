@@ -96,7 +96,7 @@
       "navigation_done": false,
       "waited_client_ticks": 28,
       "capture_utc": "2026-10-04T11:15:39.634352Z",
-      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t02-a4-worker-walking-1.png"
+      "image": "docs\\screenshots\\t02-a4-worker-walking-1.png"
     },
     {
       "uuid": "b6dbc54f-b790-40fb-856a-d998af428dd1",
@@ -122,7 +122,7 @@
       "navigation_done": false,
       "waited_client_ticks": 1,
       "capture_utc": "2026-10-04T11:15:39.988244700Z",
-      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t02-a4-worker-walking-2.png"
+      "image": "docs\\screenshots\\t02-a4-worker-walking-2.png"
     },
     {
       "uuid": "b6dbc54f-b790-40fb-856a-d998af428dd1",
@@ -148,7 +148,7 @@
       "navigation_done": false,
       "waited_client_ticks": 1,
       "capture_utc": "2026-10-04T11:15:40.337732300Z",
-      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t02-a4-worker-walking-3.png"
+      "image": "docs\\screenshots\\t02-a4-worker-walking-3.png"
     },
     {
       "uuid": "f428e324-bddc-48cf-95c1-cc2bb00a9ec5",
@@ -197,7 +197,7 @@
       "navigation_done": false,
       "waited_client_ticks": 3,
       "capture_utc": "2026-10-04T11:15:40.785341Z",
-      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t02-a4-queen-walking-1.png"
+      "image": "docs\\screenshots\\t02-a4-queen-walking-1.png"
     },
     {
       "uuid": "f428e324-bddc-48cf-95c1-cc2bb00a9ec5",
@@ -223,7 +223,7 @@
       "navigation_done": false,
       "waited_client_ticks": 1,
       "capture_utc": "2026-10-04T11:15:41.132599Z",
-      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t02-a4-queen-walking-2.png"
+      "image": "docs\\screenshots\\t02-a4-queen-walking-2.png"
     },
     {
       "uuid": "f428e324-bddc-48cf-95c1-cc2bb00a9ec5",
@@ -249,7 +249,7 @@
       "navigation_done": false,
       "waited_client_ticks": 1,
       "capture_utc": "2026-10-04T11:15:41.489134500Z",
-      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t02-a4-queen-walking-3.png"
+      "image": "docs\\screenshots\\t02-a4-queen-walking-3.png"
     }
   ],
   "terrain_edits": 0,

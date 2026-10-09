@@ -1,5 +1,5 @@
 """One development 20 TPS sample from a verified unedited T11 colony copy. No sprint."""
-import argparse, copy, datetime, hashlib, json, pathlib, re, subprocess, tempfile, time, zipfile
+import argparse, copy, datetime, hashlib, json, os, pathlib, re, subprocess, tempfile, time, zipfile
 import xml.etree.ElementTree as ET
 import importlib.util
 _spec=importlib.util.spec_from_file_location('restart_verification',pathlib.Path(__file__).with_name('restart-verification.py'))
@@ -12,7 +12,8 @@ def inputs():
  return manifest
 
 ROOT=pathlib.Path(__file__).resolve().parents[1]
-SOURCE=pathlib.Path(r'C:/Users/user/Documents/turnloop/directions/prime-ants-slice1/turns/T11/t11-a4-world.zip')
+TURNLOOP=pathlib.Path(os.environ.get('TURNLOOP_HOME') or pathlib.Path(__file__).resolve().parents[2]/'turnloop')
+SOURCE=TURNLOOP/'directions/prime-ants-slice1/turns/T11/t11-a4-world.zip'
 EXPECTED='d88c675faca2ca162c172445636c30b718e4b43ef5d0722719f729477993411f'
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def write(p,v):p.write_text(json.dumps(v,indent=2),encoding='utf-8')

@@ -4,28 +4,28 @@
   "method": "Every original PNG opened and visually inspected; no editing or generated imagery",
   "colony_uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
   "entrance": {
-    "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t23-player-a5-entrance.png",
+    "image": "docs\\screenshots\\t23-player-a5-entrance.png",
     "readable": true,
     "width": 1600,
     "height": 1000,
     "finding": "Actual worker at the explicitly framed worker-opened natural stair entrance/mound edges during100 benign survival ticks; same naturally placed primary colony."
   },
   "interior": {
-    "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t23-player-a5-interior.png",
+    "image": "docs\\screenshots\\t23-player-a5-interior.png",
     "readable": true,
     "width": 1600,
     "height": 1000,
     "finding": "Existing natural chamber, intact mineral floor and living queen during ordinary survival entry/return; empty post-first-clutch nursery, no cutaway or terrain clearing."
   },
   "feeding": {
-    "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t23-player-a5-feeding.png",
+    "image": "docs\\screenshots\\t23-player-a5-feeding.png",
     "readable": true,
     "width": 1600,
     "height": 1000,
     "finding": "Actual supplied raw chicken visibly carried at the forager mandibles after client equipment sync; ordinary drop and4.115m retreat, genuine pickup then owned-cache delivery. Required earlier one-apple trace remains A3; no autonomous-intake claim."
   },
   "defense": {
-    "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t23-player-a5-defense.png",
+    "image": "docs\\screenshots\\t23-player-a5-defense.png",
     "readable": true,
     "width": 1600,
     "height": 1000,

@@ -1,8 +1,9 @@
 """Development-only copy/save/exit/reopen check. Each invocation owns a new attempt; never erases old worlds."""
-import argparse, datetime, hashlib, json, pathlib, subprocess, sys, time, zipfile
+import argparse, datetime, hashlib, json, os, pathlib, subprocess, sys, time, zipfile
 
 ROOT=pathlib.Path(__file__).resolve().parents[1]
-SOURCE=pathlib.Path(r'C:\Users\user\Documents\turnloop\directions\prime-ants-slice1\turns\T08\46-a4-world.zip')
+TURNLOOP=pathlib.Path(os.environ.get('TURNLOOP_HOME') or pathlib.Path(__file__).resolve().parents[2]/'turnloop')
+SOURCE=TURNLOOP/'directions/prime-ants-slice1/turns/T08/46-a4-world.zip'
 def sha(p): return hashlib.sha256(p.read_bytes()).hexdigest()
 def read(p): return json.loads(p.read_text(encoding='utf-8-sig'))
 def write(p,v): p.write_text(json.dumps(v,indent=2),encoding='utf-8')

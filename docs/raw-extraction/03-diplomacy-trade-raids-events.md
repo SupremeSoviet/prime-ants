@@ -2,7 +2,7 @@
 
 Extraction from the old "Prime Ants" project (`formic_frontier`, package `com.formicfrontier`), branch
 `rebuild/anthills-from-scratch` at commit `75a70f7`. All paths are relative to the repo root
-`C:\Users\user\Documents\Codex\2026-04-26\new-chat`. Citations are `path:line`. Abbreviations used below:
+`<original-project>`. Citations are `path:line`. Abbreviations used below:
 `sim/` = `src/main/java/com/formicfrontier/sim/`, `world/` = `src/main/java/com/formicfrontier/world/`,
 `net/` = `src/main/java/com/formicfrontier/network/`, `client/` = `src/client/java/com/formicfrontier/client/`,
 `GT` = `src/gametest/java/com/formicfrontier/test/FormicFrontierGameTest.java`,

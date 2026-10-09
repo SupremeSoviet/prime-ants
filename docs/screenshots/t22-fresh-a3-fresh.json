@@ -15,7 +15,7 @@
   "terrain_edits": 0,
   "ai_pauses": 0,
   "loading_only": false,
-  "save": "C:\\Users\\user\\Documents\\prime-ants\\build\\run\\clientGameTest\\saves\\New World",
+  "save": "build\\run\\clientGameTest\\saves\\New World",
   "generation": {
     "dimension": "minecraft:overworld",
     "seed": 2026100501,
@@ -42,7 +42,7 @@
     ],
     "input": "keyUp held 20 client ticks"
   },
-  "terrain_image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t22-fresh-a3-terrain.png",
+  "terrain_image": "docs\\screenshots\\t22-fresh-a3-terrain.png",
   "additional_start_tick": 57,
   "additional_tick_bound": 24000,
   "discovery_radius": 128,

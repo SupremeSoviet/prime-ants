@@ -5,7 +5,7 @@
 контента и набитых шишек.
 
 **Где старый код:** ветка [`archive`](https://github.com/SupremeSoviet/prime-ants/tree/archive) на GitHub (коммит `75a70f7`
-от 13.07.2026) и локальная папка `C:\Users\user\Documents\Codex\2026-04-26\new-chat`.
+от 13.07.2026) и локальная папка `<original-project>`.
 
 ## С чего начать
 

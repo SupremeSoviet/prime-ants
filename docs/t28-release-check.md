@@ -10,7 +10,7 @@ One ordinary populated documentation client: exit0, three saved/closed world ope
 
 **Final unfiltered acceptance passed:15 unit /201 server /26 model**, exit0/891.371s,21/21 tasks executed. All200 prior server names and26 model names remain; one substantive nursery case added. Both production jars exclude helpers. The original acceptance validator passes with464 current inputs and unchanged sources;463 before/after hashes match. The sole difference is the formerly stale generated sources JAR, now verified against every current production Java source entry. No full-build rerun was needed.
 
-Replacement: `C:\Users\user\Documents\prime-ants\build\libs\prime_ants-0.1.0.jar`. SHA-256: `6cab3264ecf1e3c34ce7a3edcfc5ef2937eba5b845e8bce890f91fd68692f367`. Runtime jar and all ZIP entries exactly match the screenshot candidate. The frozen copy, detailed verification and master commit are recorded in T28 `candidate.json`, `final-verification.json` and `commit.json`.
+Replacement: `build\libs\prime_ants-0.1.0.jar`. SHA-256: `6cab3264ecf1e3c34ce7a3edcfc5ef2937eba5b845e8bce890f91fd68692f367`. Runtime jar and all ZIP entries exactly match the screenshot candidate. The frozen copy, detailed verification and master commit are recorded in T28 `candidate.json`, `final-verification.json` and `commit.json`.
 
 **Replacement clean-client verification remains pending T30.** T27's successful fresh-world smoke belongs only to predecessor SHA-256 `dbc40379edeab3f148ccb6d91cf0f7eb1b65972e36222d7b5ba340e7d4b795ae`. The populated screenshot session is not a replacement for that final check. One clean startup is not a universal C2 fix, and no broad long-client stability claim is made.
 

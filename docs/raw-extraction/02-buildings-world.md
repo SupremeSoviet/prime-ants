@@ -2,7 +2,7 @@
 
 Extraction from the old "Prime Ants" / `formic_frontier` project for a from-scratch rebuild.
 
-- Repo (read-only): `C:\Users\user\Documents\Codex\2026-04-26\new-chat`, branch `rebuild/anthills-from-scratch` at `75a70f7` (2026-07-13). `master` = `946ea44` (it is the merge-base; master has no commits the rebuild branch lacks).
+- Repo (read-only): `<original-project>`, branch `rebuild/anthills-from-scratch` at `75a70f7` (2026-07-13). `master` = `946ea44` (it is the merge-base; master has no commits the rebuild branch lacks).
 - Citations are `path:line`, relative to the repo root. `src/main/java/com/formicfrontier/` is abbreviated as `…/` where it helps readability.
 - Status tags: **[IMPL]** implemented and reachable in normal play · **[PARTIAL]** · **[STUB]** · **[DEAD]** dead code / unreachable · **[QA-ONLY]** only used by visual-QA scenes · **[BUG]** confirmed from code · **[LIKELY-BUG]** reasoned from code + vanilla behaviour, not verified at runtime.
 - Axes: Minecraft convention, +X east, +Z south, **−Z north**. Every building entrance ("mouth") lies on the **−Z side (north)**. The code and docs call these "south-facing" mouths (`…/world/structure/TieredMoundBlueprint.java:381-382` requires `frontZ < 0`; `docs/llm-minecraft-building-workflow.md:57`). That word is wrong for the world axes: ant patrol points use `.north(n)` (`…/entity/AntEntity.java:390-398`), and QA "front" cameras sit at −Z (`…/qa/VisualQaScenes.java:1500`).

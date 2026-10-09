@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "artDirectionOnly": true,
-  "retrievalNote": "User provided three local reference images from C:/Users/user/Downloads on 2026-06-22. They are copied into this directory as stable art-direction references. Two legacy filenames are swapped; roles below describe the actual image content.",
+  "retrievalNote": "User provided three local reference images from ~/Downloads on 2026-06-22. They are copied into this directory as stable art-direction references. Two legacy filenames are swapped; roles below describe the actual image content.",
   "references": [
     {
       "id": "forest_foraging",

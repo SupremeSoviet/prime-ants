@@ -4,7 +4,7 @@ Minecraft Java 26.3 foundation (T01), production Lasius niger adults (T02/T04), 
 
 ## Pinned toolchain
 
-Verified on 2026-10-04. The fetched metadata is preserved in the T01 evidence directory (`C:\Users\user\Documents\turnloop\directions\prime-ants-slice1\turns\T01`). No newer stable patch appeared in the requested version lines.
+Verified on 2026-10-04. The fetched metadata is preserved in the T01 evidence directory (`<turnloop>\directions\prime-ants-slice1\turns\T01`). No newer stable patch appeared in the requested version lines.
 
 | Dependency | Pin | Primary source |
 | --- | --- | --- |
@@ -29,7 +29,7 @@ Local game source jars:
 - `.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-common-7e9a32a5b8/26.3/minecraft-common-7e9a32a5b8-26.3-sources.jar`
 - `.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-clientOnly-7e9a32a5b8/26.3/minecraft-clientOnly-7e9a32a5b8-26.3-sources.jar`
 
-Matching API/Loom source jars are under `C:\Users\user\.gradle\caches\prime-ants-source-inspection\`; their exact URLs and SHA-256 hashes are in `api-source-downloads.json`:
+Matching API/Loom source jars are under `%USERPROFILE%\.gradle\caches\prime-ants-source-inspection\`; their exact URLs and SHA-256 hashes are in `api-source-downloads.json`:
 
 - `fabric-gametest-api-v1-4.0.32+3434d6d95d-sources.jar`
 - `fabric-client-gametest-api-v1-6.0.7+4be74c3f5d-sources.jar`
@@ -93,7 +93,7 @@ One owner advances biological age: the living server entity's `tick()` increment
 
 ### Resolved-source chronology
 
-Evidence lives in `C:\Users\user\Documents\turnloop\directions\prime-ants-slice1\turns\T02`. `inspect_sources.py` preserves reading start/end timestamps, its exact arguments, archive/entry paths, file hashes, full output, and extracted sources. `01-api-read.log` began at `2026-10-04T10:42:59Z`; entity/item files were created at `10:47:14Z`; model files at `10:49:51Z` (creation-time inventory in `artifact-verification.json`). Subsequent numbered readings precede navigation, clock, capture, and goal corrections.
+Evidence lives in `<turnloop>\directions\prime-ants-slice1\turns\T02`. `inspect_sources.py` preserves reading start/end timestamps, its exact arguments, archive/entry paths, file hashes, full output, and extracted sources. `01-api-read.log` began at `2026-10-04T10:42:59Z`; entity/item files were created at `10:47:14Z`; model files at `10:49:51Z` (creation-time inventory in `artifact-verification.json`). Subsequent numbered readings precede navigation, clock, capture, and goal corrections.
 
 The first broad cache probe also encountered old Fabric source jars and overwrote some extracted copies; its immutable full reading log/manifests remain. Inspection was restricted to generated 26.3 game sources and matching API archives; `03-matching-api-read.log` replaces those API readings with correct versions. Current rendering sources: `27.0.14+901a437c5d`; object builder: `24.1.9+3434d6d95d`, downloaded from Fabric Maven with hashes in `03-source-downloads.json`. Earlier stale copies are not implementation evidence. An excerpt query stopped with `StopIteration` on a not-yet-extracted `Model`; the next extraction included it.
 
@@ -257,7 +257,7 @@ Final fresh unfiltered `t07-build-final-complete`: exit 0, 52.154 seconds; 15 un
 
 Only the exact designated owned pile is admitted to the former air cell; live shell/plug/queen/obstruction checks remain required. First-clutch adults stay in their nursery; diagnostic summons stay mature. Restoration checks cover valid resumed larval care, refused insertion, saved cocoon/live adult overlap, reserve/lineage/callow state and worker death. They are running-process entity/block-entity/FULL-chunk checks plus retained origin SavedData disk reads, not a full restart.
 
-Failure/recovery evidence is in `C:\Users\user\Documents\turnloop\directions\prime-ants-slice1\turns\T07/report.md`: placement clearance/path-center diagnosis, controlled grass fixture decay, A1 fixed-mound plant blockage, A2 genuine lifecycle rejected for regrown grass and foliage view, native dirt preparation and retained breach expectations, then A3/A4 success. T07 native 3 success/1 failure and tasks 2 success/2 failures bring history to thirteen launches: native 9/4, tasks 7/6. All older artifacts remain; A2 captions explicitly mark rejection. No machine-launch failure or settings change occurred.
+Failure/recovery evidence is in `<turnloop>\directions\prime-ants-slice1\turns\T07/report.md`: placement clearance/path-center diagnosis, controlled grass fixture decay, A1 fixed-mound plant blockage, A2 genuine lifecycle rejected for regrown grass and foliage view, native dirt preparation and retained breach expectations, then A3/A4 success. T07 native 3 success/1 failure and tasks 2 success/2 failures bring history to thirteen launches: native 9/4, tasks 7/6. All older artifacts remain; A2 captions explicitly mark rejection. No machine-launch failure or settings change occurred.
 
 Repeated clutches, full restart/offline catch-up, lifespan, external feeding, worker nursing/foraging/excavation/expansion and 20+ ant performance remain absent. Adult geometry is unchanged. Commit: see the external T07 report and master history. NEXT: verified founding can raise the first real workers through finite care.
 
@@ -304,7 +304,7 @@ The first restart diagnostic exposed a watchdog in `NaturalSoil`'s existing DFU 
 
 Accepted build: `t09-build-final-recovered`, fresh unfiltered `build --console=plain --rerun-tasks`, exit 0, **59.773 s**, **15 unit / 65 server / 24 model**, including every accepted T08 server name and four additional refusal regressions. Source/build changes after the first green build were development harness loading corrections; the rebuild preceded fresh restart `final-02`. Filtered-build rejection, origin/opening/discovery guards and 18 cache projections remain. `28-green-acceptance.json` and `accepted-production/` verify that both production archives exclude harnesses, fault injection, test resources and inspectors.
 
-`python scripts/restart-verification.py --attempt final-02 --evidence C:\Users\user\Documents\turnloop\directions\prime-ants-slice1\turns\T09\final-02` copies the accepted T08 A4 archive into a new owned development path. The original archive remains unchanged. Reproduction requires a fresh attempt name. Only the dedicated harness reuses its world for B; ordinary GameTests retain fresh UUID directories. Loopback server settings, nonpersistent development tickets and native tick sprint are confined to this run. No client, actor reconstruction, NBT edit, terrain clearing or forced shutdown occurs.
+`python scripts/restart-verification.py --attempt final-02 --evidence <turnloop>\directions\prime-ants-slice1\turns\T09\final-02` copies the accepted T08 A4 archive into a new owned development path. The original archive remains unchanged. Reproduction requires a fresh attempt name. Only the dedicated harness reuses its world for B; ordinary GameTests retain fresh UUID directories. Loopback server settings, nonpersistent development tickets and native tick sprint are confined to this run. No client, actor reconstruction, NBT edit, terrain clearing or forced shutdown occurs.
 
 A **41916** and B **57432** were distinct JVMs; each native/Gradle exit was 0, with normal save/flush/stop callbacks. A was confirmed exited before B. The same unedited world is `build/run/t09-restart/final-02/world`; source, compiled classes/resources and production jars stayed frozen across both runs. A had the original queen/three workers, two component-bearing cache units, one living carrier in another chunk, and three pending transfers: the removed original apple/chicken cache units plus one dirt unit excavated by a second production egg queen before her ordinary death cleanup. Three explicitly supplied food units bring the total from the original two to five; one real companion excavation brings soil from 24 to 25. The companion site (24,85,-83) was found by read-only saved-file inspection and live production revalidation, with no new permission.
 
@@ -583,7 +583,7 @@ One untouched T18B copy completed 36,000 server ticks including loading: primary
 
 The optional loading probe started a real client, then deadlocked: Test thread waits for clientbound packets at PlayerBasicsScenario:57; Server thread synchronously waits for a chunk inside Player.travel/getOnPos; Render thread waits on the Fabric phase barrier. Matching 26.3 Entity source shows this getOnPos path reads the cached supporting block; a stale support after the setup cross-dimension move is a hypothesis, not a validated correction. Daylight clock changes are separate from LevelData.getGameTime. Normal window close failed; only owned client PID 45304 was terminated, and the interrupted copy/logs/two thread dumps were archived immediately. Its saved 154 FULL census does not establish the volatile construction count. The stopping counter never ran, so no further chunk allowance or client retry is released. Client guard remains unverified in a completed probe; feeding and readable images stay T22-T23 gaps. Native/world lifecycle evidence is separate. Client history 26 launches, native startup 17/9, tasks 11/15; four retry headless server launches are separate. No OS performance-counter/settings changes were attempted.
 
-Evidence: C:/Users/user/Documents/turnloop/directions/prime-ants-slice1/turns/T21/retry-a2/{final-verification.json,native-review.json,native-conservation.json,last-6000-accounting.json,client-outcome.json}. T20 negative evidence is unchanged. Defense, multi-colony MSPT, save/reload, T24-T26 visuals and T27-T30 release remain scheduled.
+Evidence: <turnloop>/directions/prime-ants-slice1/turns/T21/retry-a2/{final-verification.json,native-review.json,native-conservation.json,last-6000-accounting.json,client-outcome.json}. T20 negative evidence is unchanged. Defense, multi-colony MSPT, save/reload, T24-T26 visuals and T27-T30 release remain scheduled.
 
 
 ## T22: actual-stock admission and bounded player defense (2026-10-06)

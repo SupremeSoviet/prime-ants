@@ -3,7 +3,7 @@ report exact solid-cell statistics for every blueprint. Read-only on the repo.""
 import json, math, os, sys
 from collections import Counter
 
-REPO = r"C:/Users/user/Documents/Codex/2026-04-26/new-chat/src/main/resources/formic_blueprints"
+REPO = sys.argv[1] if len(sys.argv) > 1 else "src/main/resources/formic_blueprints"  # run from the original project
 M64 = (1 << 64) - 1
 
 

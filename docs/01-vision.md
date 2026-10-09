@@ -20,7 +20,7 @@ Fabric-мод для Minecraft про **живые колонии крупных
 | Внутреннее название | Formic Frontier |
 | Mod id | `formic_frontier` |
 | Java-пакет / Gradle-проект | `com.formicfrontier` / `formic-frontier` |
-| Старый код | ветка `archive` на GitHub (коммит `75a70f7`, 13.07.2026) и папка `C:\Users\user\Documents\Codex\2026-04-26\new-chat` |
+| Старый код | ветка `archive` на GitHub (коммит `75a70f7`, 13.07.2026) и папка `<original-project>` |
 
 Раз перезапуск с нуля, совместимость сохранений не нужна, и id можно выбрать заново.
 

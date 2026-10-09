@@ -15,7 +15,7 @@
   "terrain_edits": 0,
   "ai_pauses": 0,
   "loading_only": true,
-  "save": "C:\\Users\\user\\Documents\\prime-ants\\build\\run\\clientGameTest\\saves\\New World",
+  "save": "build\\run\\clientGameTest\\saves\\New World",
   "generation": {
     "seed": 2026100501,
     "generator": "net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator",
@@ -42,6 +42,6 @@
       -10.481532564739505
     ]
   },
-  "terrain_image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t22-fresh-a2-terrain.png",
+  "terrain_image": "docs\\screenshots\\t22-fresh-a2-terrain.png",
   "normal_close": true
 }

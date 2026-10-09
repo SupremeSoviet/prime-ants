@@ -9,7 +9,7 @@
       "stage": "entrance",
       "event": "player_frame",
       "capture_started_utc": "2026-10-05T19:29:54.997091200Z",
-      "image": "C:\\Users\\user\\Documents\\prime-ants\\docs\\screenshots\\t20-player-a1-entrance.png",
+      "image": "docs\\screenshots\\t20-player-a1-entrance.png",
       "width": 1600,
       "height": 1000,
       "modified_epoch_ms": 1791228595128,
@@ -17,7 +17,7 @@
     }
   ],
   "queen_uuid": "fcbd4373-abaf-3eb3-bb01-c1281fc43fba",
-  "source_world": "C:/Users/user/Documents/turnloop/directions/prime-ants-slice1/turns/T20/t20-native-replay-b-world.zip",
+  "source_world": "<turnloop>/directions/prime-ants-slice1/turns/T20/t20-native-replay-b-world.zip",
   "native_balance": "FAILED: original primary worker took starvation damage; this local smoke cannot satisfy the requested balanced-world predicate",
   "setup_player_moves": 1,
   "measured_teleports": 0,

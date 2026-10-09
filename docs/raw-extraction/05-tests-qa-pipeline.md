@@ -1,7 +1,7 @@
 # Extraction 05 — Automated tests, visual QA harness, autonomous development pipeline
 
 Project: "Prime Ants" (mod id `formic_frontier`, Gradle project `formic-frontier`, package `com.formicfrontier`, Minecraft 1.21.11 / Fabric Loader 0.19.2 / Fabric API 0.141.3+1.21.11).
-Source: `C:\Users\user\Documents\Codex\2026-04-26\new-chat`, branch `rebuild/anthills-from-scratch`, HEAD `75a70f7` (2026-07-13). Extracted read-only on 2026-09-25.
+Source: `<original-project>`, branch `rebuild/anthills-from-scratch`, HEAD `75a70f7` (2026-07-13). Extracted read-only on 2026-09-25.
 
 This document is raw material. It records what the old project's tests guaranteed, how the visual QA harness and the model-based assessment worked, and how the autonomous loop was orchestrated, with `path:line` citations.
 
@@ -1149,7 +1149,7 @@ It includes the failure detail, a new marker, the CWD guard, the ban on destruct
 
 - **Worker:** Codex CLI `codex exec` (`LOOP:948-961`).
   - The model is not pinned in the repo: `-Model` defaults to empty, so Codex's default model is used. The user reports GPT 5.4 and 5.5. The string "gpt-5.5" appears nowhere in the repo.
-  - With `-CodexProfile zai-glm52`, the user-level config `C:\Users\user\.codex\zai-glm52.config.toml` (not in the repo) points Codex at `http://127.0.0.1:11452/v1`, i.e. the proxy, which forwards to Z.AI model **glm-5.2** at `https://api.z.ai/api/coding/paas/v4/chat/completions` (`scripts/zai-codex-proxy.py:17-21`; `docs/autonomous-dev.md:64-90`).
+  - With `-CodexProfile zai-glm52`, the user-level config `%USERPROFILE%\.codex\zai-glm52.config.toml` (not in the repo) points Codex at `http://127.0.0.1:11452/v1`, i.e. the proxy, which forwards to Z.AI model **glm-5.2** at `https://api.z.ai/api/coding/paas/v4/chat/completions` (`scripts/zai-codex-proxy.py:17-21`; `docs/autonomous-dev.md:64-90`).
 - **Vision assessors:** GPT-5.4 mini (Codex CLI auth or the OpenAI Responses API), GLM-5V-Turbo (Z.AI), or "manual" (§7.1).
 - **Claude Opus 4.8** appears only as `Co-Authored-By` on 3 commits from 2026-06-28 (`cc9db89`, `f5e9857`, `c3a7aeb`). These were interactive sessions; nothing in the loop calls Anthropic APIs.
 - The local-stack docs include digests of Anthropic engineering posts and the Codex docs, framed as "harness rules" for offline GLM workers (`docs/local-stack/*.md`).
@@ -1321,7 +1321,7 @@ The guard-rails are countermeasures, so the failures they target are **inferred*
 
 ### 9.3 Repository hygiene and portability
 
-- `gradle.properties:1` sets `-Djdk.net.hosts.file=/mnt/c/Users/user/Documents/Codex/2026-04-26/new-chat/.local/hosts.gradle` (a WSL-style path; `.local/` is gitignored and absent). This has been present since the first harness commit. If the file does not exist, JDK name resolution for the Gradle daemon is redirected to a missing hosts file. The effect is unverified; it plausibly breaks dependency downloads on a fresh machine.
+- `gradle.properties:1` sets `-Djdk.net.hosts.file=<original-project>/.local/hosts.gradle` (a WSL-style path; `.local/` is gitignored and absent). This has been present since the first harness commit. If the file does not exist, JDK name resolution for the Gradle daemon is redirected to a missing hosts file. The effect is unverified; it plausibly breaks dependency downloads on a fresh machine.
 - Committed binaries and junk: `scripts/__pycache__/zai-codex-proxy.cpython-312.pyc`, `tools/__pycache__/*.pyc`, `src/main/resources/assets/formic_frontier/textures/block.zip` (added in `cc9db89`), and the `.gitignore` line `/II, data*` (`.gitignore:14`). `__pycache__/` is not ignored.
 - `.gitattributes` does not cover `*.ps1`, `*.cmd` or `*.py` (`.gitattributes:1-14`); the `.cmd` wrappers are stored with LF line endings.
 - The manual playtest checklist is unmaintained: step "20." appears four times (`docs/manual-playtest.md:22-25`).
@@ -1431,7 +1431,7 @@ The guard-rails are countermeasures, so the failures they target are **inferred*
   - `OPENAI_API_KEY`: API transport only.
   - Optional overrides: `OPENAI_VISION_MODEL`, `OPENAI_VISION_ASSESSOR`, `OPENAI_RESPONSES_ENDPOINT`, `ZAI_VISION_MODEL`, `ZAI_VISION_ENDPOINT`, `ZAI_GLM5V_ENDPOINT`, `CODEX_HOME`, `JAVA_HOME`.
   - JVM properties: `-DpythonExecutable`, and `formic.visualQa*`.
-- **External configuration:** the user-level `C:\Users\user\.codex\zai-glm52.config.toml` (not in the repo).
+- **External configuration:** the user-level `%USERPROFILE%\.codex\zai-glm52.config.toml` (not in the repo).
 - **Endpoints:**
   - `https://api.z.ai/api/coding/paas/v4/chat/completions` (GLM-5.2 through the proxy; GLM-5V fallback)
   - `https://api.z.ai/api/paas/v4/chat/completions` (GLM-5V primary)

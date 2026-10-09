@@ -2,7 +2,7 @@
 
 **Tested candidate for the bounded release predicates. Appearance remains closed with limitations.**
 
-Evidence root: `C:\Users\user\Documents\turnloop\directions\prime-ants-slice1\turns\T27`; artifact names below are relative to that directory. Scoped master commit/status are in `commit.json`.
+Evidence root: `<turnloop>\directions\prime-ants-slice1\turns\T27`; artifact names below are relative to that directory. Scoped master commit/status are in `commit.json`.
 
 | Predicate | Verdict | Evidence / boundary |
 |---|---|---|
@@ -14,7 +14,7 @@ Evidence root: `C:\Users\user\Documents\turnloop\directions\prime-ants-slice1\tu
 | Appearance completion / T26 recorder runtime recovery | **untested** | T26 stays closed: current queen/brood-stage acceptance missing, four interior frames rejected, rendered transitions0; sampler freshness/contiguous-stop and teardown recovery unverified. No appearance campaign or promotion. |
 | Nonempty in-flight cargo/custody, nonempty expiry/death ledgers, abrupt-crash persistence, long client/JVM stability | **untested** | Those states were absent/not exercised. One clean startup does not establish a universal C2 fix; historical T25 failure/workaround remain separate. |
 
-Candidate: `C:\Users\user\Documents\prime-ants\build\libs\prime_ants-0.1.0.jar`
+Candidate: `build\libs\prime_ants-0.1.0.jar`
 
 SHA-256: `dbc40379edeab3f148ccb6d91cf0f7eb1b65972e36222d7b5ba340e7d4b795ae`
 
