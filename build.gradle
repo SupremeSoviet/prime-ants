@@ -104,9 +104,9 @@ def captureRunId = java.util.UUID.randomUUID().toString()
 def captureStart = System.currentTimeMillis()
 def currentModelReport = file("build/test-results/client-model/${capturePrefix}-model.xml")
 def captureRequest = [run_id:captureRunId, capture_prefix:capturePrefix, started_epoch_ms:captureStart,
-                      scenario:providers.gradleProperty('primeAntsClientScenario').getOrElse(providers.gradleProperty('primeAntsPlayerBasicsWorld').isPresent()?'player_basics':'expansion'), capture_directory:file('docs/screenshots').absolutePath,
-                      model_report:currentModelReport.absolutePath,
-                      provenance:file("docs/screenshots/${capturePrefix}-provenance.json").absolutePath]
+                      scenario:providers.gradleProperty('primeAntsClientScenario').getOrElse(providers.gradleProperty('primeAntsPlayerBasicsWorld').isPresent()?'player_basics':'expansion'), capture_directory:'docs/screenshots',
+                      model_report:"build/test-results/client-model/${capturePrefix}-model.xml".toString(),
+                      provenance:"docs/screenshots/${capturePrefix}-provenance.json".toString()]
 loom.runs.named('clientGameTest') {
     systemProperties.put('prime_ants.clientWorkload','true')
     if(providers.gradleProperty('primeAntsClientScenario').isPresent()){
@@ -148,6 +148,9 @@ loom.runs.named('clientGameTest') {
     }
     systemProperties.put('prime_ants.foundingWorkMultiplier', providers.gradleProperty('primeAntsFoundingMultiplier').getOrElse('20'))
     systemProperties.put('prime_ants.broodMultiplier', providers.gradleProperty('primeAntsBroodMultiplier').getOrElse('1'))
+    // Runtime paths must remain rooted: the client runs under build/run/clientGameTest.
+    // CapturePaths uses this explicit root only when serializing public JSON.
+    systemProperties.put('prime_ants.repositoryRoot', projectDir.absolutePath)
     systemProperties.put('prime_ants.captureDir', file('docs/screenshots').absolutePath)
     systemProperties.put('prime_ants.capturePrefix', capturePrefix)
     systemProperties.put('prime_ants.runId', captureRunId)
@@ -173,7 +176,17 @@ tasks.register('inspectAntBaselineProfiles', JavaExec) {
     systemProperty 'prime_ants.modelReport', layout.buildDirectory.file('test-results/client-model/baseline-profiles.xml').get().asFile.absolutePath
     systemProperty 'prime_ants.runId', 'baseline-profile-inspection'
 }
-tasks.named('check') { dependsOn tasks.named('verifyAntModel'), tasks.named('testClientEvidenceValidator') }
+tasks.register('verifyPublicPaths', Exec) {
+    commandLine 'python', file('scripts/verify-public-paths.py').absolutePath
+}
+tasks.register('testPublicPaths', Exec) {
+    commandLine 'python', file('scripts/test-public-paths.py').absolutePath
+}
+tasks.named('check') { dependsOn tasks.named('verifyAntModel'), tasks.named('testClientEvidenceValidator'), tasks.named('verifyPublicPaths'), tasks.named('testPublicPaths') }
+// Execute the path guard before starting the long server workload, including a direct build.
+tasks.named('runGameTest') {
+    mustRunAfter tasks.named('verifyPublicPaths'), tasks.named('testPublicPaths'), tasks.named('verifyAntModel'), tasks.named('testClientEvidenceValidator')
+}
 tasks.register('verifyNestCacheAssets') {
     doLast {
         def root=file('src/main/resources/assets')

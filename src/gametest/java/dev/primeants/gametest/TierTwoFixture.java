@@ -103,7 +103,13 @@ final class TierTwoFixture {
         long builders=(widening!=null&&widening.claim!=null?1:0)+ChamberExcavation.get(l).jobs(q.getUUID()).stream().filter(j->j.claim!=null).count()
             +ChamberUpgrade.get(l).jobs(q.getUUID()).stream().filter(j->j.claim!=null).count()+(mining!=null&&mining.claim!=null?1:0);
         c.assertTrue(builders<=1,"One builder across digging and upgrades: "+builders);
-        if(builders>0)c.assertTrue(fx.f.workers(c,q).stream().filter(w->w.workerTasks().caregiver(l,q.founding().plan())).count()>=2,"At least two caregivers remain while building");
+        if(builders>0){
+            var workers=fx.f.workers(c,q);long active=workers.stream().filter(w->w.workerTasks().caregiver(l,q.founding().plan())).count();
+            if(active<2)PrimeAnts.LOGGER.info("T09 CAREGIVER DIAGNOSIS queen={} tick={} builders={} active={} nursingRoles={} habitat={} mining={} workerTasks={}",q.getUUID(),c.getTick(),builders,active,
+                workers.stream().filter(w->w.workerTasks().nursing()).count(),q.founding().plan().nurseryFindings(l,q.getUUID(),true).problem(),mining==null?null:mining.reason,
+                workers.stream().map(w->w.getUUID()+":"+w.workerTasks().phase()+":"+w.workerTasks().reason()+":"+w.getMainHandItem()).toList());
+            c.assertTrue(fx.f.workers(c,q).stream().filter(w->w.workerTasks().caregiver(l,q.founding().plan())).count()>=2,"At least two caregivers remain while building");
+        }
         for(var job:ChamberUpgrade.get(l).jobs(q.getUUID()))NurseryUpgradeGameTest.ledger(c,fx,q,job);
     }
     void trace(GameTestHelper c,LasiusNigerEntity q,String label){

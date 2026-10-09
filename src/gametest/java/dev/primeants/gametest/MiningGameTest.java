@@ -259,6 +259,11 @@ public final class MiningGameTest {
             }
             if(evals[0]<2||j.removed()<=baseline[0]||!j.complete()||j.claim!=null)return;
             c.assertTrue(resumed[0]&&j.released==1&&j.deposited==15&&j.removed()==16&&j.transfers().size()==1,"Reload resumes actual delivery; a fresh real miner completes the remaining gallery after death");
+            var releasedEntity=l.getEntity(transfer[0]);var recoveryCache=player.fx.f.cache(c,q);
+            PrimeAnts.LOGGER.info("T09 DEATH RECOVERY CHECK queen={} tick={} ledger={} releasedEntity={} pending={} foodCache={} foragers={}",q.getUUID(),c.getTick(),player.fx.ledger(c,q,Items.COBBLESTONE),
+                releasedEntity instanceof net.minecraft.world.entity.item.ItemEntity item?item.getItem()+"@"+item.position()+" alive="+item.isAlive()+" removed="+item.isRemoved():releasedEntity,
+                TransferCustody.get(l).contents().stream().filter(t->t.id().equals(transfer[0])).count(),recoveryCache==null?null:recoveryCache.contents(),
+                player.fx.f.workers(c,q).stream().filter(a->q.founding().claimedBy(a)).map(a->a.getUUID()+":"+a.workerTasks().phase()+":"+a.workerTasks().reason()+":"+a.getMainHandItem()+":"+a.position()).toList());
             c.assertTrue(TransferCustody.get(l).contents().stream().noneMatch(t->t.id().equals(transfer[0]))&&l.getEntity(transfer[0])==null&&player.fx.ledger(c,q,Items.COBBLESTONE).stored()==j.produced("minecraft:cobblestone"),"The released unit is subsequently physically picked up and stored exactly once");
             if(settled[0]<0)settled[0]=p.loadedTicks();if(p.loadedTicks()-settled[0]<200)return;
             PrimeAnts.LOGGER.info("T09 RELOAD DEATH DONE queen={} tick={} resumed=true custodyWindow=600 restoredEvaluations={} settled={} deliveries={} releases={}",q.getUUID(),c.getTick(),evals[0],p.loadedTicks()-settled[0],j.deliveries(),j.transfers());c.succeed();

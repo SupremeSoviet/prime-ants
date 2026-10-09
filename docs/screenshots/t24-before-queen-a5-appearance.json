@@ -9,7 +9,7 @@
   "captures": [
     {
       "name": "queen-daylight",
-      "image": "docs\\screenshots\\t24-before-queen-a5-queen-daylight.png",
+      "image": "docs/screenshots/t24-before-queen-a5-queen-daylight.png",
       "subject_uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
       "server_tick": 265,
       "recipe": {
@@ -104,9 +104,9 @@
     1000
   ],
   "camera_policy": "Living spectator on verified dry FULL support; separate observer lens follows natural body heading. No actor or animation writes.",
-  "source_archive": "<turnloop>\\directions\\prime-ants-slice1\\turns\\T22\\t22-fresh-a4-world.zip",
+  "source_archive": "<turnloop>/directions/prime-ants-slice1/turns/T22/t22-fresh-a4-world.zip",
   "archive_root": "New World",
-  "save": "build\\run\\clientGameTest\\saves\\t24-before-queen-a5",
+  "save": "build/run/clientGameTest/saves/t24-before-queen-a5",
   "respawn_recovery": "ordinary respawn button",
   "safe_observer_feet": [
     165,

@@ -16,7 +16,7 @@
       "captures": [
         {
           "name": "worker-daylight",
-          "image": "docs\\screenshots\\t24-after-comparisons-a6-nest-worker-daylight.png",
+          "image": "docs/screenshots/t24-after-comparisons-a6-nest-worker-daylight.png",
           "subject_uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
           "server_tick": 108,
           "recipe": {
@@ -99,7 +99,7 @@
         },
         {
           "name": "worker-walk-1",
-          "image": "docs\\screenshots\\t24-after-comparisons-a6-nest-worker-walk-1.png",
+          "image": "docs/screenshots/t24-after-comparisons-a6-nest-worker-walk-1.png",
           "subject_uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
           "server_tick": 113,
           "recipe": {
@@ -182,7 +182,7 @@
         },
         {
           "name": "worker-walk-2",
-          "image": "docs\\screenshots\\t24-after-comparisons-a6-nest-worker-walk-2.png",
+          "image": "docs/screenshots/t24-after-comparisons-a6-nest-worker-walk-2.png",
           "subject_uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
           "server_tick": 118,
           "recipe": {
@@ -265,7 +265,7 @@
         },
         {
           "name": "worker-walk-3",
-          "image": "docs\\screenshots\\t24-after-comparisons-a6-nest-worker-walk-3.png",
+          "image": "docs/screenshots/t24-after-comparisons-a6-nest-worker-walk-3.png",
           "subject_uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
           "server_tick": 123,
           "recipe": {
@@ -348,7 +348,7 @@
         },
         {
           "name": "queen-interior",
-          "image": "docs\\screenshots\\t24-after-comparisons-a6-nest-queen-interior.png",
+          "image": "docs/screenshots/t24-after-comparisons-a6-nest-queen-interior.png",
           "subject_uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
           "server_tick": 125,
           "recipe": {
@@ -446,9 +446,9 @@
         1000
       ],
       "camera_policy": "Living spectator on verified dry FULL support; separate observer lens follows natural body heading. No actor or animation writes.",
-      "source_archive": "<turnloop>\\directions\\prime-ants-slice1\\turns\\T23\\t23-player-a5-world.zip",
+      "source_archive": "<turnloop>/directions/prime-ants-slice1/turns/T23/t23-player-a5-world.zip",
       "archive_root": "t23-player-a5",
-      "save": "build\\run\\clientGameTest\\saves\\t24-after-comparisons-a6-nest",
+      "save": "build/run/clientGameTest/saves/t24-after-comparisons-a6-nest",
       "safe_observer_feet": [
         165,
         68,
@@ -472,7 +472,7 @@
       "captures": [
         {
           "name": "queen-daylight",
-          "image": "docs\\screenshots\\t24-after-comparisons-a6-queen-queen-daylight.png",
+          "image": "docs/screenshots/t24-after-comparisons-a6-queen-queen-daylight.png",
           "subject_uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
           "server_tick": 275,
           "recipe": {
@@ -575,9 +575,9 @@
         1000
       ],
       "camera_policy": "Living spectator on verified dry FULL support; separate observer lens follows natural body heading. No actor or animation writes.",
-      "source_archive": "<turnloop>\\directions\\prime-ants-slice1\\turns\\T22\\t22-fresh-a4-world.zip",
+      "source_archive": "<turnloop>/directions/prime-ants-slice1/turns/T22/t22-fresh-a4-world.zip",
       "archive_root": "New World",
-      "save": "build\\run\\clientGameTest\\saves\\t24-after-comparisons-a6-queen",
+      "save": "build/run/clientGameTest/saves/t24-after-comparisons-a6-queen",
       "respawn_recovery": "ordinary respawn button",
       "safe_observer_feet": [
         165,
@@ -595,7 +595,7 @@
   "captures": [
     {
       "name": "worker-daylight",
-      "image": "docs\\screenshots\\t24-after-comparisons-a6-nest-worker-daylight.png",
+      "image": "docs/screenshots/t24-after-comparisons-a6-nest-worker-daylight.png",
       "subject_uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
       "server_tick": 108,
       "recipe": {
@@ -678,7 +678,7 @@
     },
     {
       "name": "worker-walk-1",
-      "image": "docs\\screenshots\\t24-after-comparisons-a6-nest-worker-walk-1.png",
+      "image": "docs/screenshots/t24-after-comparisons-a6-nest-worker-walk-1.png",
       "subject_uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
       "server_tick": 113,
       "recipe": {
@@ -761,7 +761,7 @@
     },
     {
       "name": "worker-walk-2",
-      "image": "docs\\screenshots\\t24-after-comparisons-a6-nest-worker-walk-2.png",
+      "image": "docs/screenshots/t24-after-comparisons-a6-nest-worker-walk-2.png",
       "subject_uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
       "server_tick": 118,
       "recipe": {
@@ -844,7 +844,7 @@
     },
     {
       "name": "worker-walk-3",
-      "image": "docs\\screenshots\\t24-after-comparisons-a6-nest-worker-walk-3.png",
+      "image": "docs/screenshots/t24-after-comparisons-a6-nest-worker-walk-3.png",
       "subject_uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",
       "server_tick": 123,
       "recipe": {
@@ -927,7 +927,7 @@
     },
     {
       "name": "queen-interior",
-      "image": "docs\\screenshots\\t24-after-comparisons-a6-nest-queen-interior.png",
+      "image": "docs/screenshots/t24-after-comparisons-a6-nest-queen-interior.png",
       "subject_uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
       "server_tick": 125,
       "recipe": {
@@ -1013,7 +1013,7 @@
     },
     {
       "name": "queen-daylight",
-      "image": "docs\\screenshots\\t24-after-comparisons-a6-queen-queen-daylight.png",
+      "image": "docs/screenshots/t24-after-comparisons-a6-queen-queen-daylight.png",
       "subject_uuid": "9c71829b-25f1-3b96-acbb-96252228271d",
       "server_tick": 275,
       "recipe": {

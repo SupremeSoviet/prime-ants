@@ -172,7 +172,7 @@ ext.validateClientEvidence = { Map request ->
                 && frame.screenshot_render_extractions.findAll { it.form == 'worker' && it.callow_visual < 1000 }.collect { it.uuid }.toSet() == frame.workers.collect { it.uuid }.toSet(), 'Missing pale worker renders')
         }
         File png = file(frame.image)
-        File expectedPng = new File(request.capture_directory, "${request.capture_prefix}-${frame.stage}.png")
+        File expectedPng = new File(file(request.capture_directory), "${request.capture_prefix}-${frame.stage}.png")
         require(png.canonicalPath == expectedPng.canonicalPath, 'Mismatched PNG path')
         require(png.isFile(), 'Missing PNG')
         require(png.lastModified() == frame.modified_epoch_ms && png.lastModified() >= request.started_epoch_ms, 'Stale or mismatched PNG timestamp')
@@ -220,6 +220,13 @@ tasks.register('testClientEvidenceValidator') {
         def save = { value -> file(request.provenance).text = JsonOutput.toJson(value) }
         save(capture)
         def results = [[fixture:'valid-current', result:validateClientEvidence(request).status]]
+        // Public requests and Java frames use repository-relative paths; all existing checks still apply.
+        def relativeRequest = request + [capture_directory:relativePath(file(request.capture_directory)),
+            model_report:relativePath(file(request.model_report)), provenance:relativePath(file(request.provenance))]
+        def relativeCapture = capture + [observations:capture.observations.collect { it + [image:relativePath(file(it.image))] }]
+        save(relativeCapture)
+        results.add([fixture:'valid-repository-relative', result:validateClientEvidence(relativeRequest).status])
+        save(capture)
         def reject = { String name, Map changedRequest, Map changedCapture ->
             save(changedCapture)
             if (name == 'stale-provenance') file(request.provenance).setLastModified(started - 1000)

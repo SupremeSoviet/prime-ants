@@ -1652,7 +1652,7 @@
       "run_id": "f393f25a-25da-4b3f-a099-aba17955d313",
       "work_multiplier": 20.0,
       "capture_started_utc": "2026-10-04T21:15:12.391970500Z",
-      "image": "docs\\screenshots\\t08-a3-traffic.png",
+      "image": "docs/screenshots/t08-a3-traffic.png",
       "capture_completed_utc": "2026-10-04T21:15:12.539524100Z",
       "screenshot_render_extractions": [
         {
@@ -2130,7 +2130,7 @@
       "run_id": "f393f25a-25da-4b3f-a099-aba17955d313",
       "work_multiplier": 20.0,
       "capture_started_utc": "2026-10-04T21:15:16.884081300Z",
-      "image": "docs\\screenshots\\t08-a3-sugar.png",
+      "image": "docs/screenshots/t08-a3-sugar.png",
       "capture_completed_utc": "2026-10-04T21:15:17.028732Z",
       "screenshot_render_extractions": [
         {
@@ -2535,7 +2535,7 @@
       "run_id": "f393f25a-25da-4b3f-a099-aba17955d313",
       "work_multiplier": 20.0,
       "capture_started_utc": "2026-10-04T21:15:28.643195200Z",
-      "image": "docs\\screenshots\\t08-a3-protein.png",
+      "image": "docs/screenshots/t08-a3-protein.png",
       "capture_completed_utc": "2026-10-04T21:15:28.754604500Z",
       "screenshot_render_extractions": [
         {
@@ -2827,7 +2827,7 @@
       "run_id": "f393f25a-25da-4b3f-a099-aba17955d313",
       "work_multiplier": 20.0,
       "capture_started_utc": "2026-10-04T21:15:33.292001500Z",
-      "image": "docs\\screenshots\\t08-a3-cache.png",
+      "image": "docs/screenshots/t08-a3-cache.png",
       "capture_completed_utc": "2026-10-04T21:15:33.434502500Z",
       "screenshot_render_extractions": [
         {

@@ -4532,7 +4532,7 @@
       "subject_uuid": "26e2bd44-5633-3fd1-9c2c-a820ecf7475b",
       "work_multiplier": 20.0,
       "capture_started_utc": "2026-10-05T05:05:06.040995300Z",
-      "image": "docs\\screenshots\\t11-a4-excavation.png",
+      "image": "docs/screenshots/t11-a4-excavation.png",
       "capture_completed_utc": "2026-10-05T05:05:06.265711100Z",
       "screenshot_render_extractions": [
         {
@@ -7524,7 +7524,7 @@
       "subject_uuid": "26e2bd44-5633-3fd1-9c2c-a820ecf7475b",
       "work_multiplier": 20.0,
       "capture_started_utc": "2026-10-05T05:06:12.735858Z",
-      "image": "docs\\screenshots\\t11-a4-soil-carrying.png",
+      "image": "docs/screenshots/t11-a4-soil-carrying.png",
       "capture_completed_utc": "2026-10-05T05:06:12.885635600Z",
       "screenshot_render_extractions": [
         {
@@ -11306,7 +11306,7 @@
       "subject_uuid": "3f1959e8-7efc-3697-9fdd-57af4390ec0a",
       "work_multiplier": 20.0,
       "capture_started_utc": "2026-10-05T05:07:29.515711Z",
-      "image": "docs\\screenshots\\t11-a4-expanded-mound.png",
+      "image": "docs/screenshots/t11-a4-expanded-mound.png",
       "capture_completed_utc": "2026-10-05T05:07:29.729738900Z",
       "screenshot_render_extractions": [
         {
@@ -12559,7 +12559,7 @@
       "subject_uuid": "25a58d95-7560-303f-a33b-6438ca2c2e41",
       "work_multiplier": 20.0,
       "capture_started_utc": "2026-10-05T05:07:32.027621900Z",
-      "image": "docs\\screenshots\\t11-a4-usable-interior.png",
+      "image": "docs/screenshots/t11-a4-usable-interior.png",
       "capture_completed_utc": "2026-10-05T05:07:32.242472200Z",
       "screenshot_render_extractions": [
         {

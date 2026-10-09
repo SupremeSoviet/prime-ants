@@ -20,9 +20,9 @@
     1000
   ],
   "camera_policy": "Living spectator on verified dry FULL support; separate observer lens follows natural body heading. No actor or animation writes.",
-  "source_archive": "<turnloop>\\directions\\prime-ants-slice1\\turns\\T26\\t26-brood-a1-world.zip",
+  "source_archive": "<turnloop>/directions/prime-ants-slice1/turns/T26/t26-brood-a1-world.zip",
   "archive_root": "t26-brood-a1",
-  "save": "build\\run\\clientGameTest\\saves\\t26-brood-a2",
+  "save": "build/run/clientGameTest/saves/t26-brood-a2",
   "safe_observer_feet": [
     165,
     68,

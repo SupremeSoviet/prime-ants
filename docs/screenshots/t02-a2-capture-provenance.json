@@ -88,7 +88,7 @@
       "normal_physics": true,
       "waited_client_ticks": 1,
       "capture_utc": "2026-10-04T11:06:16.520236900Z",
-      "image": "docs\\screenshots\\t02-worker-walking-1.png"
+      "image": "docs/screenshots/t02-worker-walking-1.png"
     },
     {
       "uuid": "b6e42dc5-9fa9-4fcd-97e7-b1e3ce8b070e",
@@ -112,7 +112,7 @@
       "normal_physics": true,
       "waited_client_ticks": 1,
       "capture_utc": "2026-10-04T11:06:16.914271200Z",
-      "image": "docs\\screenshots\\t02-worker-walking-2.png"
+      "image": "docs/screenshots/t02-worker-walking-2.png"
     },
     {
       "uuid": "b6e42dc5-9fa9-4fcd-97e7-b1e3ce8b070e",
@@ -136,7 +136,7 @@
       "normal_physics": true,
       "waited_client_ticks": 1,
       "capture_utc": "2026-10-04T11:06:17.257991500Z",
-      "image": "docs\\screenshots\\t02-worker-walking-3.png"
+      "image": "docs/screenshots/t02-worker-walking-3.png"
     },
     {
       "uuid": "8234fb61-afdc-4bd5-8844-f97fab1ba3d5",
@@ -181,7 +181,7 @@
       "normal_physics": true,
       "waited_client_ticks": 1,
       "capture_utc": "2026-10-04T11:06:17.606621400Z",
-      "image": "docs\\screenshots\\t02-queen-walking-1.png"
+      "image": "docs/screenshots/t02-queen-walking-1.png"
     },
     {
       "uuid": "8234fb61-afdc-4bd5-8844-f97fab1ba3d5",
@@ -205,7 +205,7 @@
       "normal_physics": true,
       "waited_client_ticks": 1,
       "capture_utc": "2026-10-04T11:06:17.966663200Z",
-      "image": "docs\\screenshots\\t02-queen-walking-2.png"
+      "image": "docs/screenshots/t02-queen-walking-2.png"
     },
     {
       "uuid": "8234fb61-afdc-4bd5-8844-f97fab1ba3d5",
@@ -229,7 +229,7 @@
       "normal_physics": true,
       "waited_client_ticks": 1,
       "capture_utc": "2026-10-04T11:06:18.361066400Z",
-      "image": "docs\\screenshots\\t02-queen-walking-3.png"
+      "image": "docs/screenshots/t02-queen-walking-3.png"
     }
   ],
   "terrain_edits": 0,

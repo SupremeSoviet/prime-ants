@@ -10,7 +10,7 @@
   "opened_original_resolution": true,
   "images": {
     "queen-interior": {
-      "path": "docs\\screenshots\\t24-before-comparisons-a4-nest-queen-interior.png",
+      "path": "docs/screenshots/t24-before-comparisons-a4-nest-queen-interior.png",
       "dimensions": [
         1600,
         1000
@@ -20,7 +20,7 @@
       "reason": "Complete queen body/legs with native room/workers, no viewport clipping or darkness issue; scene context only, no brood assessment."
     },
     "queen-daylight": {
-      "path": "docs\\screenshots\\t24-before-comparisons-a4-queen-queen-daylight.png",
+      "path": "docs/screenshots/t24-before-comparisons-a4-queen-queen-daylight.png",
       "dimensions": [
         1600,
         1000

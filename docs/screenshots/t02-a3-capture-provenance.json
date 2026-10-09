@@ -130,7 +130,7 @@
       "normal_physics": true,
       "waited_client_ticks": 94,
       "capture_utc": "2026-10-04T11:10:02.286071700Z",
-      "image": "docs\\screenshots\\t02-a3-worker-walking-1.png"
+      "image": "docs/screenshots/t02-a3-worker-walking-1.png"
     },
     {
       "uuid": "08cd443d-da8b-495e-8dcd-24fde76bc8dd",
@@ -154,7 +154,7 @@
       "normal_physics": true,
       "waited_client_ticks": 1,
       "capture_utc": "2026-10-04T11:10:02.691822700Z",
-      "image": "docs\\screenshots\\t02-a3-worker-walking-2.png"
+      "image": "docs/screenshots/t02-a3-worker-walking-2.png"
     },
     {
       "uuid": "08cd443d-da8b-495e-8dcd-24fde76bc8dd",
@@ -178,7 +178,7 @@
       "normal_physics": true,
       "waited_client_ticks": 1,
       "capture_utc": "2026-10-04T11:10:03.041828600Z",
-      "image": "docs\\screenshots\\t02-a3-worker-walking-3.png"
+      "image": "docs/screenshots/t02-a3-worker-walking-3.png"
     },
     {
       "uuid": "410e6ea4-029e-471e-9863-6f381d0395b3",

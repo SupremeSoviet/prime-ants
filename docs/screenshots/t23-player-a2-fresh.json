@@ -169,7 +169,7 @@
   ],
   "prior_scenario_ticks": 10084,
   "additional_tick_bound": 13916,
-  "source_archive": "<turnloop>\\directions\\prime-ants-slice1\\turns\\T23\\t23-player-a1-world.zip",
+  "source_archive": "<turnloop>/directions/prime-ants-slice1/turns/T23/t23-player-a1-world.zip",
   "route": [
     {
       "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
@@ -193,7 +193,7 @@
   "archive_world_root": "t23-player-a1/",
   "additional_start_tick": 0,
   "join_protection": "First living server body becomes spectator before physics",
-  "save": "build\\run\\clientGameTest\\saves\\t23-player-a2",
+  "save": "build/run/clientGameTest/saves/t23-player-a2",
   "persisted_observer_dead": false,
   "generation": {
     "dimension": "minecraft:overworld",
@@ -258,7 +258,7 @@
   "daytime_observer_command": "time set day; production loaded clocks continue",
   "watch": true,
   "unprovoked_watch_ticks": 100,
-  "entrance_image": "docs\\screenshots\\t23-player-a2-entrance.png",
+  "entrance_image": "docs/screenshots/t23-player-a2-entrance.png",
   "entrance_rendered_ants": [
     {
       "uuid": "c6aabfad-4c5c-39e7-bb2d-96f01f1fa75d",

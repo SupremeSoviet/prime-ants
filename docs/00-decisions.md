@@ -463,3 +463,51 @@ The first unfiltered T08 build executed all 236 server/94 unit cases but failed 
   all legacy supplies and assertions remain. Unavailable-caregiver, preparation, handoff and other diagnostic results
   remain explicit in T09's report. Mature-gated mining does not resolve unattended pre-Mature clay supply. Placement
   survey walking routes/dig timelines, unattended development and arbitrary deposit reliability remain uncovered.
+
+## Implementation notes - 2026-10-09 (T09 strict interruption diagnosis)
+
+- **Preserved physical scope.** Radius sixteen, depths one-six and sixty-four new mining edits including connector
+  soil remain the runtime guards. The supplied fixed gallery still exercises sixteen actual cells, fourteen resource
+  units and two mound-soil units; it does not establish excavation of the whole sixty-four-cell budget or arbitrary veins.
+  The seven deterministic natural-block/item mappings and unchanged soil authority are in the preceding T09 notes.
+- **Unknown habitat.** The next face is also the shell of the already excavated connector. Its unavailability correctly
+  makes the connected habitat unknown and pauses nursing authorization. Fresh diagnosis records zero active caregivers
+  but twenty-seven saved nursery roles in the latest unfiltered run (the earlier isolated diagnosis had thirty-one);
+  the unchanged two-active-caregiver assertion fails. It is not silently reinterpreted
+  as retained roles. The permanent failure and its incomplete 600-tick window remain. Later unavailable/foreign-store and
+  same-state-replacement phases in that body are unverified. A new shape guard confirms that this unknown cannot hide a
+  separately loaded gallery breach. No production protection or acceptance assertion is relaxed.
+- **Recovery evidence.** The main gallery and two identical isolated concurrent copies pass at 45,444 / 46,766 / 54,041
+  total ticks with every material, exact custody/soil/clay-wall accounting, confirmed functions and two-hundred settled
+  loaded ticks. The last copy performs the surface-soil/available-hall-upgrade handoff and continues actual work. The
+  tier-two diagnostic passes at 49,146, including four natural brood, normal reload/first resumed step and 600 unknown
+  loaded ticks plus two restored evaluations. Separate safety and unfiltered build outcomes are recorded in T09's report.
+- **Restored-recipe evidence.** Final targeted main copies pass at 46,049 / 46,371 / 48,638; tier two at 51,452 and
+  reload/death at 46,790, with current stone stock eight, ground/carried/custody zero and the release entity absent.
+  r02's successful gravity and stage-regression windows remain separate evidence. The restored targeted full-store
+  preparation timed out, then passed in the unfiltered r06 build at 56,913. All fifty mining assertions and all original bounds stay identical; only diagnostic
+  observers and the shape guard remain in the recovery diff. Fresh unfiltered acceptance is reported independently.
+- **Abandoned supply experiment.** A temporary fixture-only late hall-wave trigger 24,000 to 8,000 retained the same
+  twelve physical apples, initial supplies, production gates, nutrition and bounds. The r01 natural-four/reload recovery
+  occurred during unchanged work meals before any late hall wave, so it did not establish a causal repair. r02 added a
+  final death-unit recovery failure and a 60,000-tick full-store preparation timeout. The accepted 24,000 trigger was
+  restored before final recovery and acceptance. No supply change remains in the delivery. A test-only observer records current
+  ground/carried/store/custody, transfer-entity state, food cache and real foragers at the unchanged death endpoint.
+- **Limits retained.** Mature-gated mining does not resolve unattended pre-Mature clay supply. Placement-survey walking
+  routes/dig timelines remain uncovered; supplied fixtures do not establish unattended development or arbitrary deposit
+  reliability. Tier-three construction, Great growth acceptance and release work remain deferred.
+
+### Closeout addendum - 2026-10-09 (T09 retry)
+
+The recovered r06 build executed 244 server cases (243 passing; strict caregiver failure at 43,175) and 98 passing unit
+cases in 7,574.56 seconds, exit 1. Source stayed unchanged. Its model XML predates that invocation and is not fresh model
+execution. Gallery, tier two, reload/death, full-store backpressure and contributions passed supplied scenarios; T09's
+report records the retry independently. Unknown gallery terrain still pauses nursing authorization while the miner
+retains its claim. The unanswered requirement is preserved: two currently authorized caregivers, not merely saved roles.
+Later store/foreign-store/worker replacement phases in the failing body remain unverified.
+
+Public client evidence now serializes repository-relative capture/save paths and placeholders for external inputs;
+absolute runtime properties remain rooted for the client's different working directory. The build checks newly indexed
+and existing tracked text for profile absolute paths without printing their contents, and preserves binary assets.
+Model/validator tasks precede the server workload so even a red build can record fresh model execution. Acceptance names,
+assertions and bounds are unchanged. No surface-structure checkpoint or semantic caregiver repair is included.

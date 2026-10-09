@@ -62,7 +62,7 @@ public final class AppearanceScenario {
         c.runOnClient(client->{client.options.renderDistance().set(8);client.options.simulationDistance().set(8);client.getWindow().setWindowed(1600,1000);client.options.guiScale().set(2);client.options.fovEffectScale().set(0.0);});
         Path closed=null;
         try(var w=open(c)){
-            closed=w.getWorldSave().getSaveDirectory();evidence.put("save",closed.toString());
+            closed=w.getWorldSave().getSaveDirectory();evidence.put("save",CapturePaths.repositoryRelative(closed));
             if(w.getServer().computeOnServer(s->!w.getConnection().getServerPlayer().isAlive())){c.waitForScreen(net.minecraft.client.gui.screens.DeathScreen.class);c.waitTicks(25);c.clickScreenButton("deathScreen.respawn");c.waitFor(client->client.player!=null&&client.player.isAlive(),200);evidence.put("respawn_recovery","ordinary respawn button");}
             c.waitForScreen(null);w.getConnection().waitForChunksRender(false);
             w.getServer().runCommand("time set noon");w.getServer().runCommand("weather clear");
@@ -174,7 +174,7 @@ public final class AppearanceScenario {
         var target=Path.of("saves",prefix).toAbsolutePath();require(!Files.exists(target),"Fresh immutable source copy");Files.createDirectories(target);
         try(var z=new ZipFile(source)){require(z.getEntry(selected+"/level.dat")!=null,"Actual source root");require(z.stream().noneMatch(e->e.getName().startsWith(selected+"/dimensions/prime_ants_test/")),"Ordinary client world only");
             for(var entry:z.stream().toList())if(entry.getName().startsWith(selected+"/")){var p=target.resolve(entry.getName().substring(selected.length()+1)).normalize();require(p.startsWith(target),"Safe archive path");if(entry.isDirectory())Files.createDirectories(p);else{Files.createDirectories(p.getParent());try(var in=z.getInputStream(entry)){Files.copy(in,p);}}}}
-        evidence.put("source_archive",source);evidence.put("archive_root",selected);save();return new TestWorldSaveImpl(c,target).open();
+        evidence.put("source_archive",CapturePaths.publicPath(Path.of(source)));evidence.put("archive_root",selected);save();return new TestWorldSaveImpl(c,target).open();
     }
     void wait(ClientGameTestContext c,TestSingleplayerContext w,int ticks){int before=w.getServer().computeOnServer(s->s.getTickCount());require(attemptSpent+before-start+ticks<attemptBound-100&&prior+before-start+ticks<totalBound-100,"Appearance wait bound");c.waitTicks(ticks);require(w.getServer().computeOnServer(s->s.getTickCount()>before&&w.getConnection().getServerPlayer().isAlive()),"Live observer and advancing ticks");}
     void captureWhenClear(ClientGameTestContext c,TestSingleplayerContext w,UUID id,String name,boolean exterior,int fov,double side,double forward,double height,double target){
@@ -212,7 +212,7 @@ public final class AppearanceScenario {
         c.runOnClient(client->AntRenderRecorder.arm(id));
         var png=c.takeScreenshot(TestScreenshotOptions.of(prefix+"-"+name).disableCounterPrefix().withDeltaTicks(1).withDestinationDir(dir));
         var bound=c.computeOnClient(client->AntRenderRecorder.finishCapture());
-        var frame=new LinkedHashMap<String,Object>();frame.put("name",name);frame.put("image",png.toString());frame.put("subject_uuid",id.toString());
+        var frame=new LinkedHashMap<String,Object>();frame.put("name",name);frame.put("image",CapturePaths.repositoryRelative(png));frame.put("subject_uuid",id.toString());
         frame.put("recipe",Map.of("side",cameraSide,"forward",cameraForward,"height",cameraHeight,"target_height",targetHeight));
         frame.put("camera",bound);
         var rendered=(List<?>)bound.get("rendered_ants");frame.put("rendered_ants",rendered);

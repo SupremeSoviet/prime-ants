@@ -9,7 +9,7 @@
   "captures": [
     {
       "name": "brood-cocoon-overview",
-      "image": "docs\\screenshots\\t26-brood-a5-brood-cocoon-overview.png",
+      "image": "docs/screenshots/t26-brood-a5-brood-cocoon-overview.png",
       "camera": {
         "eye": [
           168.4903479546403,
@@ -244,7 +244,7 @@
     },
     {
       "name": "brood-cocoon-detail",
-      "image": "docs\\screenshots\\t26-brood-a5-brood-cocoon-detail.png",
+      "image": "docs/screenshots/t26-brood-a5-brood-cocoon-detail.png",
       "camera": {
         "eye": [
           168.4903479546403,
@@ -491,9 +491,9 @@
     1000
   ],
   "camera_policy": "Living spectator on verified dry FULL support; separate observer lens follows natural body heading. No actor or animation writes.",
-  "source_archive": "<turnloop>\\directions\\prime-ants-slice1\\turns\\T26\\t26-final-interior-a4-world.zip",
+  "source_archive": "<turnloop>/directions/prime-ants-slice1/turns/T26/t26-final-interior-a4-world.zip",
   "archive_root": "t26-final-interior-a4-nest",
-  "save": "build\\run\\clientGameTest\\saves\\t26-brood-a5",
+  "save": "build/run/clientGameTest/saves/t26-brood-a5",
   "safe_observer_feet": [
     165,
     68,

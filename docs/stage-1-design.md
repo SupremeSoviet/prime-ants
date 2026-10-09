@@ -70,7 +70,22 @@ history is separate from current stock. Only declared, actually worker-opened ga
 
 The permanent tests retain 60,000 total ticks, 600 loaded negative windows, two restored confirmations and 200 settled
 ticks. New mining fixtures open with three apples/two chickens, then use the existing counted finite food/clay waves;
-legacy fixture supply is unchanged. T09's report separates passing supplied-gallery/contribution/origin evidence from
+legacy supplies retain the accepted recipe. The attempted 8,000-sugar late hall-wave trigger was abandoned and restored
+to 24,000 before final recovery and acceptance. T09's report separates passing supplied-gallery/contribution/origin evidence from
 unresolved interruptions and any red full build. Mature-gated mining does not resolve unattended pre-Mature clay supply.
 Placement-survey walking routes and dig timelines remain uncovered; supplied passes do not establish unattended
 development or arbitrary deposit reliability. Tier-three construction and Great growth acceptance remain deferred.
+
+T09 recovery retains the stricter active-caregiver assertion: an unavailable adjacent gallery face makes the connected
+habitat unknown, so nursing authorization pauses even with saved nursery roles. The permanent interruption remains red;
+later unavailable-store/foreign-store/worker replacement phases are not established by that failure. The shape guard
+retains loaded-breach precedence. Restored-recipe isolated galleries pass at 46,049 / 46,371 / 48,638, tier two at 51,452,
+and reload/death at 46,790. The last inherited unfiltered run passes gallery at 47,346, tier two at 51,127, reload/death at
+46,003, full-store at 56,913 and contributions at 22,143. Its only server failure is the active-caregiver assertion at
+43,175 (zero active, 27 saved nursing roles); its model XML is stale. These supplied results are separate from the retry's
+fresh acceptance in `<turnloop>/directions/prime-ants-stage1/turns/T09/report.md`.
+
+Client capture JSON uses repository-relative paths, with an explicit repository root for serialization and absolute
+runtime locations for the client working directory. Existing image/model/provenance validators remain enforced. A build
+guard scans all tracked text, including newly indexed files, for profile absolute paths; diagnostics show filenames and
+lines only. Binary assets are preserved. Fresh model verification precedes server acceptance even when that server run fails.

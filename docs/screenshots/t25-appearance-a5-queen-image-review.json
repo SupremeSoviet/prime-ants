@@ -7,7 +7,7 @@
   ],
   "frames": [
     {
-      "image": "t25-appearance-a5-queen-queen-daylight.png",
+      "image": "docs/screenshots/t25-appearance-a5-queen-queen-daylight.png",
       "classification": "accepted",
       "capture_valid": true,
       "reason": "Intact anatomy, clear head/antennae/mandibles, coherent cuticle; no clipped anatomy or bottom-edge strip. Camera/frame checks passed."

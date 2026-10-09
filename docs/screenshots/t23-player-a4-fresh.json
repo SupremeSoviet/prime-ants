@@ -90,7 +90,7 @@
   ],
   "prior_scenario_ticks": 10849,
   "additional_tick_bound": 13151,
-  "source_archive": "<turnloop>\\directions\\prime-ants-slice1\\turns\\T23\\t23-player-a3-world.zip",
+  "source_archive": "<turnloop>/directions/prime-ants-slice1/turns/T23/t23-player-a3-world.zip",
   "route": [
     {
       "queen": "9c71829b-25f1-3b96-acbb-96252228271d",
@@ -114,7 +114,7 @@
   "archive_world_root": "t23-player-a3/",
   "additional_start_tick": 0,
   "join_protection": "First living server body becomes spectator before physics",
-  "save": "build\\run\\clientGameTest\\saves\\t23-player-a4",
+  "save": "build/run/clientGameTest/saves/t23-player-a4",
   "persisted_observer_dead": false,
   "generation": {
     "dimension": "minecraft:overworld",
@@ -171,7 +171,7 @@
   "selected_priority": "primary",
   "colony_origin": "Existing production automatic queen in closed T22 A4 client-created ordinary overworld; known-site access, not spawn discovery",
   "recovery_supply": "none; passive existing/native food only",
-  "food-sync_image": "docs\\screenshots\\t23-player-a4-food-sync.png",
+  "food-sync_image": "docs/screenshots/t23-player-a4-food-sync.png",
   "food-sync_rendered_ants": [
     {
       "uuid": "9a5b931b-bb9b-332d-b42a-34a6202eccca",

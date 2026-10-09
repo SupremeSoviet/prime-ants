@@ -9,7 +9,7 @@
       "stage": "entrance",
       "event": "player_frame",
       "capture_started_utc": "2026-10-05T19:29:54.997091200Z",
-      "image": "docs\\screenshots\\t20-player-a1-entrance.png",
+      "image": "docs/screenshots/t20-player-a1-entrance.png",
       "width": 1600,
       "height": 1000,
       "modified_epoch_ms": 1791228595128,

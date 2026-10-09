@@ -1652,7 +1652,7 @@
       "run_id": "8b9a932f-764c-4afb-8a8d-08a518d05dc7",
       "work_multiplier": 20.0,
       "capture_started_utc": "2026-10-04T21:41:47.390201Z",
-      "image": "docs\\screenshots\\t08-a4-traffic.png",
+      "image": "docs/screenshots/t08-a4-traffic.png",
       "capture_completed_utc": "2026-10-04T21:41:47.532013Z",
       "screenshot_render_extractions": [
         {
@@ -2130,7 +2130,7 @@
       "run_id": "8b9a932f-764c-4afb-8a8d-08a518d05dc7",
       "work_multiplier": 20.0,
       "capture_started_utc": "2026-10-04T21:41:51.773638300Z",
-      "image": "docs\\screenshots\\t08-a4-sugar.png",
+      "image": "docs/screenshots/t08-a4-sugar.png",
       "capture_completed_utc": "2026-10-04T21:41:51.917466700Z",
       "screenshot_render_extractions": [
         {
@@ -2721,7 +2721,7 @@
       "run_id": "8b9a932f-764c-4afb-8a8d-08a518d05dc7",
       "work_multiplier": 20.0,
       "capture_started_utc": "2026-10-04T21:42:03.635208800Z",
-      "image": "docs\\screenshots\\t08-a4-protein.png",
+      "image": "docs/screenshots/t08-a4-protein.png",
       "capture_completed_utc": "2026-10-04T21:42:03.778938600Z",
       "screenshot_render_extractions": [
         {
@@ -3199,7 +3199,7 @@
       "run_id": "8b9a932f-764c-4afb-8a8d-08a518d05dc7",
       "work_multiplier": 20.0,
       "capture_started_utc": "2026-10-04T21:42:08.315260Z",
-      "image": "docs\\screenshots\\t08-a4-cache.png",
+      "image": "docs/screenshots/t08-a4-cache.png",
       "capture_completed_utc": "2026-10-04T21:42:08.461610200Z",
       "screenshot_render_extractions": [
         {

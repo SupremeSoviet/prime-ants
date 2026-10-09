@@ -166,7 +166,7 @@ public final class AntCaptureTest implements FabricClientGameTest {
         c.runOnClient(client->AntRenderRecorder.start(tracked));
         Path png=c.takeScreenshot(TestScreenshotOptions.of(prefix+"-"+stage).disableCounterPrefix().withDeltaTicks(1).withSize(1600,1000)
                 .withDestinationDir(Path.of(System.getProperty("prime_ants.captureDir"))));
-        frame.put("image",png.toAbsolutePath().toString());frame.put("capture_completed_utc",Instant.now().toString());
+        frame.put("image",CapturePaths.repositoryRelative(png));frame.put("capture_completed_utc",Instant.now().toString());
         var renders=c.computeOnClient(client->AntRenderRecorder.finish());frame.put("screenshot_render_extractions",renders);
         require(renders.stream().anyMatch(r->subject.toString().equals(r.get("uuid"))),"Actual feeding/growth subject renders");
         if(stage.equals("excavation")||stage.equals("soil-carrying"))require(renders.stream().anyMatch(r->subject.toString().equals(r.get("uuid"))&&Boolean.TRUE.equals(r.get("carried_soil_rendered"))&&"minecraft:dirt".equals(r.get("carried_item"))),"Actual builder soil in production mandible render");
