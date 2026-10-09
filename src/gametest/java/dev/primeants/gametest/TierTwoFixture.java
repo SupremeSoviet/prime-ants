@@ -109,7 +109,38 @@ final class TierTwoFixture {
         }
         return total;
     }
-    void ledgers(GameTestHelper c,LasiusNigerEntity q){
+    /** A snapshot of the already productive miner, used only by the foreign-store interruption body. */
+    record DamagePause(LasiusNigerEntity miner,ItemStack cargo,int removed,int deposited,int released,Map<String,String> transfers,Set<UUID> foragers,Set<UUID> nurses){
+        static DamagePause begin(GameTestHelper c,LasiusNigerEntity q,LasiusNigerEntity w){
+            var l=c.getLevel();var j=Mining.get(l).job(q.getUUID());var plan=q.founding().plan();
+            c.assertTrue(w!=null&&w.isAlive()&&w.workerTasks().construction()&&w.getUUID().equals(j.claim)&&j.pending(w.getMainHandItem())
+                &&w.getMainHandItem().getCount()==1&&j.removed()>j.deposited&&j.deposited>0&&Mining.unlocked(l,plan)
+                &&plan.nurseryFindings(l,q.getUUID(),true).verdict()==Findings.Verdict.CLEAR
+                &&MaterialStore.confirmed(l,q.getUUID(),plan)!=null&&caregivers(c,q)>=2,"The existing miner genuinely removed and delivered before foreign-store damage");
+            var workers=new WorkerForagingGameTest().workers(c,q);
+            return new DamagePause(w,w.getMainHandItem().copy(),j.removed(),j.deposited,j.released,Map.copyOf(j.transfers()),
+                Set.copyOf(q.founding().foragers()),workers.stream().filter(a->a.workerTasks().nursing()).map(LasiusNigerEntity::getUUID).collect(java.util.stream.Collectors.toSet()));
+        }
+        void waiting(GameTestHelper c,LasiusNigerEntity q){
+            var l=c.getLevel();var plan=q.founding().plan();var j=Mining.get(l).job(q.getUUID());var store=NestPlanFixture.store(c,q);
+            c.assertTrue(plan.nurseryFindings(l,q.getUUID(),true).verdict()==Findings.Verdict.DAMAGED
+                &&store!=null&&NestPlan.loaded(l,store.getBlockPos())&&!store.ownedBy(q.getUUID(),plan)&&MaterialStore.confirmed(l,q.getUUID(),plan)==null,
+                "Specific loaded foreign-store damage remains observed and unauthorized");
+            c.assertTrue(l.getEntity(miner.getUUID())==miner&&miner.isAlive()&&!miner.isRemoved()&&NestPlan.loaded(l,miner.blockPosition())
+                &&miner.getUUID().equals(j.claim)&&miner.workerTasks().construction()&&ItemStack.matches(cargo,miner.getMainHandItem()),
+                "The same living worker retains the same mining claim and exact cargo during damage");
+            c.assertTrue(j.removed()==removed&&j.deposited==deposited&&j.released==released&&j.transfers().equals(transfers),
+                "Damage waiting has no additional removal, delivery credit or release");
+            var workers=new WorkerForagingGameTest().workers(c,q);
+            c.assertTrue(workers.stream().noneMatch(a->a.workerTasks().nursingAuthorized(l)),"All nursing remains unauthorized during loaded damage");
+            c.assertTrue(Set.copyOf(q.founding().foragers()).equals(foragers)
+                &&workers.stream().filter(a->nurses.contains(a.getUUID())).allMatch(a->a.workerTasks().nursing()&&!q.founding().claimedBy(a)
+                    &&DigJob.claimedBy(l,a)==null&&ChamberUpgrade.get(l).claimedBy(a)==null),"Damage waiting diverts no nurse and introduces no replacement builder or forager");
+        }
+    }
+    void ledgers(GameTestHelper c,LasiusNigerEntity q){ledgers(c,q,null);}
+    void ledgers(GameTestHelper c,LasiusNigerEntity q,DamagePause pause){
+        if(pause!=null)pause.waiting(c,q);
         fx.soil(c,q);if(!opened)return;
         c.assertTrue(fx.food.total(c,q)==apples+chickens,"Every physical food unit: "+fx.food.total(c,q)+" / "+(apples+chickens));
         c.assertTrue(foodUnits(c,q,Items.APPLE)==apples&&foodUnits(c,q,Items.CHICKEN)==chickens,"Independent apple/chicken ledgers: "+foodUnits(c,q,Items.APPLE)+"/"+apples+" "+foodUnits(c,q,Items.CHICKEN)+"/"+chickens);
@@ -125,7 +156,7 @@ final class TierTwoFixture {
             if(active<2&&c.getTick()%100==0)PrimeAnts.LOGGER.info("T09 CAREGIVER DIAGNOSIS queen={} tick={} builders={} active={} nursingRoles={} habitat={} mining={} workerTasks={}",q.getUUID(),c.getTick(),builders,active,
                 workers.stream().filter(w->w.workerTasks().nursing()).count(),q.founding().plan().nurseryFindings(l,q.getUUID(),true).problem(),mining==null?null:mining.reason,
                 workers.stream().map(w->w.getUUID()+":"+w.workerTasks().phase()+":"+w.workerTasks().reason()+":"+w.getMainHandItem()).toList());
-            c.assertTrue(caregivers(c,q)>=2,"At least two caregivers remain while building (valid retained nurses only during UNKNOWN habitat)");
+            if(pause==null)c.assertTrue(caregivers(c,q)>=2,"At least two caregivers remain while building (valid retained nurses only during UNKNOWN habitat)");
         }
         for(var job:ChamberUpgrade.get(l).jobs(q.getUUID()))NurseryUpgradeGameTest.ledger(c,fx,q,job);
     }

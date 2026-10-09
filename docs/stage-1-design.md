@@ -96,3 +96,21 @@ Client capture JSON uses repository-relative paths, with an explicit repository 
 runtime locations for the client working directory. Existing image/model/provenance validators remain enforced. A build
 guard scans all tracked text, including newly indexed files, for profile absolute paths; diagnostics show filenames and
 lines only. Binary assets are preserved. Fresh model verification precedes server acceptance even when that server run fails.
+
+T10 recovery applies the owner's 2026-10-09 damage-pause decision only to the foreign-store interruption's existing
+productive miner. A phase-specific snapshot requires its same living body, claim and exact cargo, observed loaded
+DAMAGED habitat, unauthorized store and nursing, unchanged removal/delivery/release history, no nurse diversion,
+one-builder exclusivity and every physical ledger. Shared UNKNOWN nurse qualifications and damage precedence remain;
+ordinary authorized caregivers apply again on restoration. Production is unchanged. The body also waits for restored
+Mature admission and an actual resumed action before replacement, and observes the full window after claim release.
+Fresh completion is 44,755 ticks, including four 600-loaded-tick negatives, restored evaluations and 200 settled ticks.
+
+The full-store stone contribution uses a checked supported approach-lane cell at forward -1, retaining the same 32
+units, nursery-tier timing and all real one-unit trips. Instrumented original preparation identified delayed pickup at
+45,644 after all upgrades; corrected original/copies finish at 56,141 / 54,110 / 55,527, preserving ownership, available
+worker checks, 600 ready backpressure ticks, physical release, restored evaluations, observed cargo/delivery and 200
+settled ticks. The 10-apple/8-chicken campaign passes all three identical bodies with unchanged diagnostics and 24,000
+bound; the historical cause remains unknown. Additional mining diagnostics expose untouched regression/death assertions
+and late gravity preparation. Fresh dependency and final-build results are in `<turnloop>/directions/prime-ants-stage1/turns/T10/report.md`.
+Surface construction remains deferred. Unattended pre-Mature clay, arbitrary veins, all sixty-four edits, placement-survey
+walking routes/dig timelines and unattended development remain outside the demonstrated coverage.

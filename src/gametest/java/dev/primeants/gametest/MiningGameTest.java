@@ -114,10 +114,13 @@ public final class MiningGameTest {
     public void unavailableTargetAndStoreForeignOwnershipAndSameStateReplacementRetainExactCargo(GameTestHelper c){
         var player=new TierTwoFixture(40,true);var q=player.fx.start(c);boolean[] seeded={false};int[] step={0},evals={0},baseline={0};long[] since={-1},settled={-1};
         UnavailableCells[] hidden={null};ColonyDevelopment.Evaluation[] seen={null};ItemStack[] kept={null};net.minecraft.nbt.CompoundTag[] originalStore={null};BlockPos[] replaced={null};
+        TierTwoFixture.DamagePause[] damagePause={null};
         c.onEachTick(()->{
             var l=c.getLevel();var plan=q.founding().plan();if(plan!=null&&!seeded[0]){geology(c,q);seeded[0]=true;}
-            feedMining(c,player,q);player.ledgers(c,q);miningLedger(c,player,q);traceMining(c,player,q,"AVAILABILITY");
-            var p=NestPlanFixture.pile(c,q);var j=Mining.get(l).job(q.getUUID());if(p==null||j==null||j.claim==null&&step[0]<8)return;
+            feedMining(c,player,q);player.ledgers(c,q,step[0]==5?damagePause[0]:null);miningLedger(c,player,q);traceMining(c,player,q,"AVAILABILITY");
+            // Once replacement stops the plan, its empty claim is expected to clear. Continue the full negative
+            // observation and settlement with no worker; requiring a claim here skipped the phase completion.
+            var p=NestPlanFixture.pile(c,q);var j=Mining.get(l).job(q.getUUID());if(p==null||j==null||j.claim==null&&step[0]<7)return;
             var w=player.fx.f.workers(c,q).stream().filter(a->a.getUUID().equals(j.claim)).findFirst().orElse(null);var e=p.stageEvaluation();
             if(e!=null&&seen[0]!=e){seen[0]=e;if((step[0]==2||step[0]==4||step[0]==6)&&e.inputs().tier(ChamberFunction.MATERIAL_STORE).known()>=1)evals[0]++;}
             switch(step[0]){
@@ -131,7 +134,7 @@ public final class MiningGameTest {
                     c.assertTrue(j.removed()==baseline[0]&&w!=null&&w.getMainHandItem().isEmpty(),"Unavailable target never becomes a successful removal or cargo");
                     c.assertTrue(plan.nurseryFindings(l,q.getUUID(),true).verdict()==Findings.Verdict.UNKNOWN&&TierTwoFixture.caregivers(c,q)>=2
                         &&player.fx.f.workers(c,q).stream().noneMatch(a->a.workerTasks().nursingAuthorized(l)),"Unknown habitat retains valid nursing roles while all nursing authorization pauses");
-                    if(p.loadedTicks()-since[0]<600)return;hidden[0].close();hidden[0]=null;evals[0]=0;seen[0]=e;step[0]=2;
+                    if(p.loadedTicks()-since[0]<600)return;PrimeAnts.LOGGER.info("T10 TARGET UNKNOWN END queen={} tick={} loadedWindow={}",q.getUUID(),c.getTick(),p.loadedTicks()-since[0]);hidden[0].close();hidden[0]=null;evals[0]=0;seen[0]=e;step[0]=2;
                 }
                 case 2->{
                     if(evals[0]<2||j.removed()<=baseline[0]||w==null||w.getMainHandItem().isEmpty())return;
@@ -142,21 +145,29 @@ public final class MiningGameTest {
                 }
                 case 3->{
                     c.assertTrue(w!=null&&ItemStack.matches(kept[0],w.getMainHandItem())&&j.removed()==baseline[0],"Unavailable store retains the same physical cargo and permits no additional edit");
-                    if(p.loadedTicks()-since[0]<600)return;hidden[0].close();hidden[0]=null;evals[0]=0;seen[0]=e;step[0]=4;
+                    if(p.loadedTicks()-since[0]<600)return;PrimeAnts.LOGGER.info("T10 STORE UNKNOWN END queen={} tick={} loadedWindow={}",q.getUUID(),c.getTick(),p.loadedTicks()-since[0]);hidden[0].close();hidden[0]=null;evals[0]=0;seen[0]=e;step[0]=4;
                 }
                 case 4->{
                     if(evals[0]<2||j.deposited<baseline[0]||w==null||w.getMainHandItem().isEmpty())return;
+                    damagePause[0]=TierTwoFixture.DamagePause.begin(c,q,w);
                     var s=NestPlanFixture.store(c,q);kept[0]=w.getMainHandItem().copy();baseline[0]=j.removed();since[0]=p.loadedTicks();originalStore[0]=s.saveWithFullMetadata(l.registryAccess());
                     var foreign=originalStore[0].copy();foreign.putString("Colony",UUID.randomUUID().toString());restoreStore(c,s,foreign);step[0]=5;
-                    PrimeAnts.LOGGER.info("T09 FOREIGN STORE START queen={} tick={} cargo={} restoredStoreEvaluations={}",q.getUUID(),c.getTick(),kept[0],evals[0]);
+                    PrimeAnts.LOGGER.info("T10 FOREIGN STORE START queen={} tick={} worker={} claim={} cargo={} removed={} deposited={} released={} nurses={} restoredStoreEvaluations={}",q.getUUID(),c.getTick(),w.getUUID(),j.claim,kept[0],j.removed(),j.deposited,j.released,damagePause[0].nurses(),evals[0]);
                 }
                 case 5->{
                     c.assertTrue(w!=null&&ItemStack.matches(kept[0],w.getMainHandItem())&&j.removed()==baseline[0]&&MaterialStore.confirmed(l,q.getUUID(),plan)==null,"Foreign store authorization cannot consume or credit mining cargo");
                     if(p.loadedTicks()-since[0]<600)return;c.assertTrue(e.stage()!=ColonyStage.MATURE&&e.stage()!=ColonyStage.GREAT,"Actual production evaluation regresses after observed foreign store loss");
+                    PrimeAnts.LOGGER.info("T10 FOREIGN STORE END queen={} tick={} loadedWindow={} worker={} claim={} cargo={} removed={} deposited={} released={} habitat={} activeCaregivers={}",q.getUUID(),c.getTick(),p.loadedTicks()-since[0],w.getUUID(),j.claim,w.getMainHandItem(),j.removed(),j.deposited,j.released,plan.nurseryFindings(l,q.getUUID(),true).verdict(),TierTwoFixture.caregivers(c,q));
                     restoreStore(c,NestPlanFixture.store(c,q),originalStore[0]);evals[0]=0;seen[0]=e;step[0]=6;
                 }
                 case 6->{
                     if(evals[0]<2||j.deposited<baseline[0]||w==null||!w.getMainHandItem().isEmpty()||j.removed()==j.tasks.size())return;
+                    // Damage really regressed the held stage. Observe restored production admission and a resumed
+                    // physical action before replacing its target; delivery alone also works below Mature.
+                    if(!Mining.unlocked(l,plan)||!q.founding().ready()||!w.workerTasks().reason().equals("physical_mining_action")||w.workerTasks().harvestingTicks()<1)return;
+                    c.assertTrue(plan.nurseryFindings(l,q.getUUID(),true).verdict()==Findings.Verdict.CLEAR&&TierTwoFixture.caregivers(c,q)>=2
+                        &&w==damagePause[0].miner()&&j.deposited>damagePause[0].deposited(),"Restoration requires two fresh evaluations, ordinary authorized caregivers and actual delivery by the retained miner");
+                    PrimeAnts.LOGGER.info("T10 FOREIGN RESTORED queen={} tick={} evaluations={} worker={} authorizedCaregivers={} removed={} deposited={}",q.getUUID(),c.getTick(),evals[0],w.getUUID(),TierTwoFixture.caregivers(c,q),j.removed(),j.deposited);
                     replaced[0]=j.tasks.get(j.removed());var state=l.getBlockState(replaced[0]);c.assertTrue(j.compatible(l,q.getUUID(),replaced[0],j.expected.get(j.removed())),"Live next target positive before same-state player replacement");
                     l.setBlock(replaced[0],state,3);c.assertTrue(!NaturalMaterials.get(l).eligible(l,replaced[0])&&!ColonyTerrain.get(l).eligible(l,replaced[0],q.getUUID()),"Same-state player replacement revokes both origins; never relabelled natural");
                     baseline[0]=j.removed();since[0]=p.loadedTicks();step[0]=7;
@@ -164,7 +175,8 @@ public final class MiningGameTest {
                 }
                 case 7->{
                     c.assertTrue(j.removed()==baseline[0]&&!l.getBlockState(replaced[0]).isAir(),"Ready Mature miner never removes the replaced target");
-                    if(p.loadedTicks()-since[0]<600)return;c.assertTrue(j.stopped()&&j.claim==null,"Revoked origin stops the descriptive plan and releases the empty worker");settled[0]=p.loadedTicks();step[0]=8;
+                    c.assertTrue(Mining.unlocked(l,plan)&&q.founding().ready(),"The same-state negative window observes genuinely restored Mature mining eligibility");
+                    if(p.loadedTicks()-since[0]<600)return;c.assertTrue(j.stopped()&&j.claim==null,"Revoked origin stops the descriptive plan and releases the empty worker");PrimeAnts.LOGGER.info("T10 SAME STATE END queen={} tick={} loadedWindow={}",q.getUUID(),c.getTick(),p.loadedTicks()-since[0]);settled[0]=p.loadedTicks();step[0]=8;
                 }
                 case 8->{
                     c.assertTrue(j.removed()==baseline[0]&&j.deposited==j.removed()&&plan.nurseryProblem(l,q.getUUID(),true)==null,"Stopped connected partial gallery preserves exact custody and integrity");
@@ -188,21 +200,33 @@ public final class MiningGameTest {
     public void fullStorePreventsRemovalThenPhysicalStockReleaseAndTwoEvaluationsResumeMining(GameTestHelper c){
         var player=new TierTwoFixture(40,true);var q=player.fx.start(c);boolean[] seeded={false},supplied={false};int[] step={0},evals={0};long[] since={-1},settled={-1};
         UnavailableCells[] hidden={null};ColonyDevelopment.Evaluation[] seen={null};
+        int[] observedCargo={0};
         String[] preparation={""};
         c.onEachTick(()->{
             var l=c.getLevel();var plan=q.founding().plan();if(plan!=null&&!seeded[0]){geology(c,q);seeded[0]=true;hidden[0]=UnavailableCells.hide(c,plan.at(15,0,-2));}
             feedMining(c,player,q);player.ledgers(c,q);traceMining(c,player,q,"FULL STORE");var p=NestPlanFixture.pile(c,q);if(p==null)return;var e=p.stageEvaluation();var s=NestPlanFixture.store(c,q);var j=Mining.get(l).job(q.getUUID());
-            if(!supplied[0]&&e!=null&&e.inputs().tier(ChamberFunction.NURSERY).known()==2){supplied[0]=true;player.fx.drop(c,plan.at(-5,0,1),new ItemStack(Items.COBBLESTONE,32));}
+            if(!supplied[0]&&e!=null&&e.inputs().tier(ChamberFunction.NURSERY).known()==2){
+                // Player contribution on the existing approach lane, nearer than the remaining clay. The original
+                // farther drop waited until all clay trips ended, leaving too little time for the frozen windows.
+                var at=plan.at(-1,0,1);c.assertTrue(NestPlan.walkable(l,at),"Stone contribution rests on the supported clear approach lane");
+                supplied[0]=true;var source=player.fx.drop(c,at,new ItemStack(Items.COBBLESTONE,32));
+                PrimeAnts.LOGGER.info("T10 FULL STORE CONTRIBUTION queen={} tick={} source={} at={} units=32 supported=true",q.getUUID(),c.getTick(),source.getUUID(),at);
+            }
             long made=j==null?0:j.produced("minecraft:cobblestone");c.assertTrue(player.fx.ledger(c,q,Items.COBBLESTONE).total()==(supplied[0]?32:0)+made,"Full-store contribution and mined stone are independently conserved");
             if(step[0]==0){
                 var ledger=player.fx.ledger(c,q,Items.COBBLESTONE);
                 var milestone="stage="+(e==null?null:e.stage())+" stone="+ledger+" upgrades="+ChamberUpgrade.get(l).jobs(q.getUUID()).stream().map(a->a.chamber+":"+a.built().size()+"/"+a.cells.size()+":"+(a.claim==null)+":"+a.reason).toList();
-                if(!milestone.equals(preparation[0])){
+                if(!milestone.equals(preparation[0])||c.getTick()%500==0){
                     preparation[0]=milestone;PrimeAnts.LOGGER.info("T09 FULL STORE PREPARATION queen={} tick={} loaded={} {} foragers={}",q.getUUID(),c.getTick(),p.loadedTicks(),milestone,
                         player.fx.f.workers(c,q).stream().filter(a->q.founding().claimedBy(a)).map(a->a.getUUID()+":"+a.position()+":"+a.workerTasks().phase()+":"+a.workerTasks().reason()+":"+a.workerTasks().sourceId()+":"+a.getMainHandItem()).toList());
                 }
             }
             if(j!=null)miningLedger(c,player,q,Map.of(Items.COBBLESTONE,32));
+            if(j!=null&&j.removed()>observedCargo[0]){
+                var carrier=player.fx.f.workers(c,q).stream().filter(w->w.getUUID().equals(j.claim)).findFirst().orElseThrow();
+                c.assertTrue(j.pending(carrier.getMainHandItem()),"Resumed removal is observed as exact cargo in the real miner before delivery");
+                observedCargo[0]=j.removed();PrimeAnts.LOGGER.info("T10 FULL STORE RESUMED CARGO queen={} tick={} worker={} cargo={} removed={}",q.getUUID(),c.getTick(),carrier.getUUID(),carrier.getMainHandItem(),j.removed());
+            }
             if(e!=null&&seen[0]!=e){seen[0]=e;if(step[0]==3&&e.inputs().tier(ChamberFunction.MATERIAL_STORE).known()>=1)evals[0]++;}
             switch(step[0]){
                 case 0->{
@@ -217,16 +241,21 @@ public final class MiningGameTest {
                 }
                 case 2->{
                     c.assertTrue(j.removed()==0&&j.claim==null&&s.units(MaterialUnits.Material.STONE)==32,"Six hundred loaded ticks of demonstrated ready mining backpressure, no destruction/income");
+                    c.assertTrue(Mining.unlocked(l,plan)&&q.founding().ready()&&MaterialStore.confirmed(l,q.getUUID(),plan)==s
+                        &&player.fx.f.workers(c,q).stream().anyMatch(w->w.workerTasks().canConstruct(plan)&&NestExpansion.remainingCaregivers(l,q.getUUID(),plan,w)>=2),
+                        "Every backpressure tick retains confirmed ownership, Mature admission and a genuinely available worker");
                     if(p.loadedTicks()-since[0]<600)return;
+                    PrimeAnts.LOGGER.info("T10 FULL STORE BACKPRESSURE END queen={} tick={} loadedWindow={}",q.getUUID(),c.getTick(),p.loadedTicks()-since[0]);
                     // A declared player break releases every actual stock unit through ordinary store custody.
                     var marker=s.getBlockPos();l.setBlock(marker,Blocks.AIR.defaultBlockState(),3);
                     for(var item:l.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,new net.minecraft.world.phys.AABB(marker).inflate(2),i->i.isAlive()&&MaterialStore.material(i.getItem())))item.setPickUpDelay(32767);
                     c.assertTrue(player.fx.ledger(c,q,Items.COBBLESTONE).ground()+player.fx.ledger(c,q,Items.COBBLESTONE).custody()==32,"All full-share units remain physical on ground/in custody during restored capacity");
+                    PrimeAnts.LOGGER.info("T10 FULL STORE RELEASE queen={} tick={} ledger={}",q.getUUID(),c.getTick(),player.fx.ledger(c,q,Items.COBBLESTONE));
                     evals[0]=0;seen[0]=e;step[0]=3;
                 }
                 case 3->{
                     if(evals[0]<2||MaterialStore.confirmed(l,q.getUUID(),plan)==null||j.deposited<3)return;
-                    if(settled[0]<0)settled[0]=p.loadedTicks();if(p.loadedTicks()-settled[0]<200)return;
+                    if(settled[0]<0){settled[0]=p.loadedTicks();PrimeAnts.LOGGER.info("T10 FULL STORE RESTORED queen={} tick={} evaluations={} removed={} deposited={} observedCargo={}",q.getUUID(),c.getTick(),evals[0],j.removed(),j.deposited,observedCargo[0]);}if(p.loadedTicks()-settled[0]<200)return;
                     c.assertTrue(j.removed()>=3&&j.deliveries().getOrDefault("minecraft:cobblestone",0)>0,"A genuine fresh removal, visible cargo and store delivery resume after two fresh evaluations");
                     PrimeAnts.LOGGER.info("T09 FULL STORE DONE queen={} tick={} negativeLoaded=600 evaluations={} settled={} removed={} deliveries={} ledger={}",q.getUUID(),c.getTick(),evals[0],p.loadedTicks()-settled[0],j.removed(),j.deliveries(),player.fx.ledger(c,q,Items.COBBLESTONE));c.succeed();
                 }
@@ -327,7 +356,12 @@ public final class MiningGameTest {
                 hidden[0].close();hidden[0]=null;restoredSince[0]=p.loadedTicks();seen[0]=e;evals[0]=0;return;
             }
             if(e!=null&&seen[0]!=e&&MaterialStore.confirmed(l,q.getUUID(),plan)!=null){seen[0]=e;evals[0]++;}
-            if(j.deposited==3){delivered[0]=true;c.assertTrue(carrier.getMainHandItem().isEmpty()&&e.stage()!=ColonyStage.MATURE&&e.stage()!=ColonyStage.GREAT,"Ordinary ownership permits actual cargo delivery while the held production stage remains below Mature");}
+            if(j.deposited==3){
+                delivered[0]=true;
+                if(!carrier.getMainHandItem().isEmpty()||e.stage()==ColonyStage.MATURE||e.stage()==ColonyStage.GREAT)
+                    PrimeAnts.LOGGER.info("T10 REGRESSION DELIVERY ASSERTION queen={} tick={} worker={} cargo={} phase={} reason={} stage={} removed={} deposited={} released={} nutrition={}/{}",q.getUUID(),c.getTick(),carrier.getUUID(),carrier.getMainHandItem(),carrier.workerTasks().phase(),carrier.workerTasks().reason(),e.stage(),j.removed(),j.deposited,j.released,carrier.nutrition().sugar(),carrier.nutrition().protein());
+                c.assertTrue(carrier.getMainHandItem().isEmpty()&&e.stage()!=ColonyStage.MATURE&&e.stage()!=ColonyStage.GREAT,"Ordinary ownership permits actual cargo delivery while the held production stage remains below Mature");
+            }
             if(evals[0]<2||!delivered[0]||p.loadedTicks()-restoredSince[0]<600)return;
             c.assertTrue(q.founding().ready()&&MaterialStore.confirmed(l,q.getUUID(),plan)!=null&&carrier.workerTasks().reason().equals("mining_stage_below_mature"),"Actual empty miner is ready at the confirmed nest but the held lower stage blocks work for 600 loaded ticks");
             if(settled[0]<0)settled[0]=p.loadedTicks();if(p.loadedTicks()-settled[0]<200)return;

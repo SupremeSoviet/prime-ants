@@ -529,3 +529,37 @@ observed-damage stop condition at tick 42,849. A loaded foreign-owned store is a
 (`material_store_completed_opening_revoked`), hence `DAMAGED`: nursing authorization pauses while the miner retains
 one clay ball and its existing claim. The ordinary two-authorized-caregiver assertion remains red. The recovery stops
 without extending the decision to damage or changing existing production handling; later interruption phases are unverified.
+
+## Implementation notes - 2026-10-09 (T10 owner damage-pause decision)
+
+The owner decided that while loaded damage pauses all nursing, an existing miner retains its cargo and claim until
+habitat restoration even with zero authorized caregivers. The two-caregiver admission guard prevents taking nurses
+away for work; no worker is newly taken during this pause. This supersedes the historical unanswered damage
+interpretation in the T09 notes above, which remain preserved.
+
+The expectation changes only in the foreign-store interruption phase. Its snapshot proves prior productive mining,
+the same living worker, claim and exact cargo, loaded DAMAGED habitat, foreign-store and nursing nonauthorization,
+unchanged removal/delivery/release history, no replacement builder or nurse diversion, one-builder exclusivity and
+all physical food, clay, soil and mining ledgers. The shared UNKNOWN nurse qualifications and loaded-damage precedence
+remain unchanged. Ordinary authorized caregivers apply again immediately after restoration, with two fresh production
+evaluations and actual retained-miner delivery before the same-state replacement phase. Production handling is unchanged.
+The permanent interruption now observes a genuinely resumed Mature mining action before replacing its next target;
+a delivery below Mature alone is insufficient. Its replacement observation continues after the empty claim clears,
+correcting a fixture completion guard that skipped the negative window. Fresh recovery finishes at 44,755 total ticks:
+four separate 600-nursery-loaded-tick windows, two fresh restored evaluations and 200 settled ticks. During foreign
+damage the same living miner holds one clay ball and its claim with zero authorized caregivers, unchanged removal /
+delivery / release counts 5 / 4 / 0; restored delivery is observed with 30 authorized caregivers. All physical ledgers hold.
+
+The instrumented full-store original offered 32 stone at 28,711, first picked up at 45,644 and filled its share at 55,782;
+upgrade completion was already 42,698. The supported contribution moves from forward -5 to -1 on the existing clear
+approach lane, at the same nursery-tier trigger. Quantities, one-unit trips, food/clay waves and the 24,000 hall trigger
+remain unchanged. Original and two identical concurrent copies finish at 56,141 / 54,110 / 55,527 with all frozen windows.
+The three eighteen-unit food bodies also pass; the historical 10,323 cause remains unresolved. The broader diagnostic
+exposes untouched regression/death endpoint assertions and a gravity preparation timeout. Their negative evidence remains
+in T10's report; no further assertion relaxation, production change or deadline extension is claimed.
+Fresh T10 dependency revalidation is separate from the passing mining interruption/full-store bodies. The isolated
+tier-two body times out at 60,000: all four functions are tier two by 41,738, but natural expanded brood, fractional
+reload, faster hall laying and the later unknown/restoration window remain unobserved. At 59,000 it holds Mature,
+41 adults, no brood, eight food units and 36 stored clay; the recent-income gate is closed. Its accepted recipe,
+24,000 hall trigger, growth/care predicates and bound are preserved. Store-upgrade safety passes fresh. Final unfiltered
+acceptance and any unresolved red results are recorded independently in T10's report. No further expectation is relaxed.
