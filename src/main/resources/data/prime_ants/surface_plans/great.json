@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "stage": "great",
+  "palette": "earth",
+  "mound": "mature",
+  "entrance": {
+    "forward": -1,
+    "width": 3,
+    "height": 3
+  },
+  "moundCrests": {
+    "count": 1,
+    "forward": -4,
+    "side": 3,
+    "height": 4
+  },
+  "fortification": {
+    "span": 4,
+    "rampartHeight": 2,
+    "postHeight": 5,
+    "posts": 2
+  }
+}

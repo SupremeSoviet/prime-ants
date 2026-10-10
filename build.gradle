@@ -70,7 +70,7 @@ def serverDiagnosticGroups = ['nectar':'NectarGameTest', 'colony_stage':'ColonyS
                               'chamber_scan':'ChamberScanGameTest', 'queens_hall':'QueensHallGameTest', 'material_hauling':'MaterialHaulingGameTest',
                               'nursery_upgrade':'NurseryUpgradeGameTest', 'mound':'MoundGameTest', 'food_cache':'FoodCacheGameTest',
                               'mature_colony':'MatureColonyGameTest', 'stage_hysteresis':'StageHysteresisGameTest', 'plug_soil':'PlugSoilGameTest', 'legacy_cache':'LegacyCacheGameTest',
-                              'forager_scaling':'ForagerScalingGameTest', 'hall_availability':'HallAvailabilityGameTest', 'expanded_brood':'ExpandedBroodGameTest', 'tier_two':'TierTwoGameTest', 'store_upgrade_safety':'StoreUpgradeSafetyGameTest', 'mining':'MiningGameTest']
+                              'forager_scaling':'ForagerScalingGameTest', 'hall_availability':'HallAvailabilityGameTest', 'expanded_brood':'ExpandedBroodGameTest', 'tier_two':'TierTwoGameTest', 'store_upgrade_safety':'StoreUpgradeSafetyGameTest', 'mining':'MiningGameTest', 'surface':'SurfaceGameTest']
 // A focused diagnostic may validate one case; it must never make check/build green.
 gradle.taskGraph.whenReady { graph ->
     if ((serverDiagnosticFilter.isPresent() || serverDiagnosticGroup.isPresent()) && graph.hasTask(':check')) {
@@ -276,7 +276,7 @@ tasks.register('verifyMaterialStoreAssets') {
         }
         logger.lifecycle("Verified ${parts.size()} material store parts, their ${parts.collect{it.apply.model}.unique().size()} models and ${textures} 16x16 texture references")
         // T05: each nest wall block has one blockstate variant, a cube model with its own 16x16 texture, and EN/RU names.
-        def walls=['packed_clay','resin_masonry','nest_cut_stone']
+        def walls=['packed_clay','resin_masonry','nest_cut_stone','mound_gate']
         def langs=['en_us','ru_ru'].collectEntries{[(it):json.parse(new File(root,"prime_ants/lang/${it}.json"),'UTF-8')]}
         walls.each{name->
             def variants=json.parse(new File(root,"prime_ants/blockstates/${name}.json")).variants
@@ -496,7 +496,10 @@ tasks.named('runGameTest') {
         def miningNames=(file('src/gametest/java/dev/primeants/gametest/MiningGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
         if(miningNames.size()!=8)throw new GradleException('T11 mining discovery incomplete')
         miningNames.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:mining_game_test_${name}"})throw new GradleException('Missing T09 mining test '+name)}
-        if(cases.size()!=173+foodNames.size()+policyNames.size()+defenseNames.size()+stageNames.size()+storeNames.size()+t04+t05+t06+t07+t08+miningNames.size())throw new GradleException('Expected complete baseline plus current additions')
+        def surfaceNames=(file('src/gametest/java/dev/primeants/gametest/SurfaceGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
+        if(surfaceNames.size()!=4)throw new GradleException('T12 surface discovery incomplete')
+        surfaceNames.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:surface_game_test_${name}"})throw new GradleException('Missing physical surface test '+name)}
+        if(cases.size()!=surfaceNames.size()+173+foodNames.size()+policyNames.size()+defenseNames.size()+stageNames.size()+storeNames.size()+t04+t05+t06+t07+t08+miningNames.size())throw new GradleException('Expected complete baseline plus current additions')
         // Additive exact annotation discovery: all registered permanent names, with no duplicate source/report rows.
         def registrations=new groovy.json.JsonSlurper().parse(file('src/gametest/resources/fabric.mod.json')).entrypoints['fabric-gametest']
         def declared=registrations.collectMany { entry ->

@@ -136,3 +136,25 @@ assertion conflict remains explicit and unchanged, despite a later permanent-bod
 cargo identities, accepted supplies, ingestion and valid food-gate pauses. Full acceptance is recorded separately in
 `<turnloop>/directions/prime-ants-stage1/turns/T11/report.md`; a green execution cannot erase these negatives. The historical
 eighteen-unit failure remains unexplained. Surface construction remains deferred and its T12 checkpoint is at risk.
+
+
+### T12 bounded surface pipeline (2026-10-10)
+
+
+T12 adds separate bundled semantic surface plans and a physical soil relocation owner after existing builder work.
+The spoil envelopes remain 214/798 capacities; nineteen Mature and fifty-seven Great desired structural cells do not
+create material. Each new cell takes one already owned recoverable mound unit through a twenty-loaded-tick worker
+action; two gate conversions retain their existing paid unit. Current locations include gates, while historical
+excavation deposits stay unchanged. Current owned paid structures survive regression; unavailable or player-revoked
+targets remain incomplete. Stand goals are descriptive persisted destinations, with actual loaded support, collision,
+visibility, reach and ground contact still checked at work.
+
+Physical T12 delivery is partial: fifteen Mature cells in a controlled Great habitat, with eighty soil conserved,
+then no reachable stand for the next raised mound step. No finished arch, crest or fortification is claimed. Same-state
+protection passes 600/200; target protection, real hauling reload and named worker-death release are observed, but that
+construction misses its fixed 12,000 bound. The independent death-unit recovery phase keeps 6,000 loaded ticks inside
+60,000 total and requires direct named pickup/deposit. An early isolated pass and one late concurrent recovery pass
+remain separate from two preparation/mining timeouts. See the T12 report for fresh unfiltered acceptance; all historical
+coverage gaps in the preceding notes remain.
+
+A bounded surface route stall releases the shared builder and preserves any paid cargo through named custody.

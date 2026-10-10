@@ -15,6 +15,7 @@ import dev.primeants.founding.QueenFounding;
 import dev.primeants.founding.ColonyTerrain;
 import dev.primeants.founding.MoundSoil;
 import dev.primeants.founding.Mining;
+import dev.primeants.founding.SurfaceWork;
 import java.util.UUID;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -34,7 +35,7 @@ import net.minecraft.world.phys.Vec3;
 
 /** Sole movement/action owner for brood workers. Mutations run sequentially on the level's server thread. */
 public final class WorkerTasks {
-    public enum Phase { NURSERY, OPENING, SOIL_OUT, EXIT, SEARCH, APPROACH, NECTAR_APPROACH, HARVEST, RETURN, DEPOSIT, NURSE_CACHE, NURSE_FEED, NURSE_RETURN, DIG, DIG_OUT, DEAD, UPGRADE_FETCH, UPGRADE_BUILD }
+    public enum Phase { NURSERY, OPENING, SOIL_OUT, EXIT, SEARCH, APPROACH, NECTAR_APPROACH, HARVEST, RETURN, DEPOSIT, NURSE_CACHE, NURSE_FEED, NURSE_RETURN, DIG, DIG_OUT, DEAD, UPGRADE_FETCH, UPGRADE_BUILD, SURFACE_FETCH, SURFACE_BUILD }
     private final LasiusNigerEntity worker;
     private final CropSharing sharing;
     public CropSharing sharing(){return sharing;}
@@ -51,6 +52,7 @@ public final class WorkerTasks {
     private Phase phase=Phase.NURSERY;
     private UUID source;
     private BlockPos flowerSource,flowerStand;
+    private BlockPos surfaceStand,surfaceTarget,surfaceBuildStand;
     private String flowerExpected;
     private int harvestingTicks,searchTicks,flowerInspections;
     public static final int SEARCH_RADIUS=24, FLOWER_INSPECTIONS_PER_PULSE=1536, FLOWER_INSPECTION_BUDGET=49*49*7;
@@ -93,13 +95,14 @@ public final class WorkerTasks {
     }
     public boolean nursingAuthorized(ServerLevel l){
         return nursing()&&!worker.isCallow()&&!worker.isNoAi()&&worker.isAlive()&&!worker.isRemoved()&&plan!=null
-                &&!constructionClaim(l)&&!foragerClaim(l)&&!upgradeClaim(l)
+                &&!constructionClaim(l)&&!surfaceClaim(l)&&!foragerClaim(l)&&!upgradeClaim(l)
                 &&ColonyMembers.get(l).belongs(worker,worker.queenId(),plan.chamber())
                 &&l.getBlockEntity(plan.nursery()) instanceof dev.primeants.brood.BroodPile p&&p.ownedBy(worker.queenId(),plan)&&p.operational()
                 &&plan.nurseryProblem(l,worker.queenId(),true)==null;
     }
     public boolean freeForConstruction(){return !defending&&!sharing.busy()&&(phase==Phase.NURSERY||phase==Phase.NURSE_CACHE);}
     private boolean constructionClaim(ServerLevel l){return DigJob.claimedBy(l,worker)!=null;}
+    private boolean surfaceClaim(ServerLevel l){return SurfaceWork.get(l).claimedBy(worker)!=null;}
     private boolean upgradeClaim(ServerLevel l){return ChamberUpgrade.get(l).claimedBy(worker)!=null;}
     private boolean foragerClaim(ServerLevel l){var q=queen(l);return q!=null&&q.founding().claimedBy(worker);}
     private boolean eligible(ServerLevel l,NestPlan p){
@@ -110,9 +113,9 @@ public final class WorkerTasks {
     /** A free, empty-handed member no forager claim holds yet; how many foragers its colony keeps is the queen's choice
      * (QueenFounding, Foragers). */
     public boolean canForage(NestPlan p){return worker.level() instanceof ServerLevel l&&eligible(l,p)&&freeForConstruction()
-        &&worker.getMainHandItem().isEmpty()&&!constructionClaim(l)&&!foragerClaim(l);}
+        &&worker.getMainHandItem().isEmpty()&&!constructionClaim(l)&&!surfaceClaim(l)&&!foragerClaim(l);}
     public boolean canConstruct(NestPlan p){return worker.level() instanceof ServerLevel l&&eligible(l,p)&&freeForConstruction()
-        &&worker.getMainHandItem().isEmpty()&&!constructionClaim(l)&&!foragerClaim(l)
+        &&worker.getMainHandItem().isEmpty()&&!constructionClaim(l)&&!surfaceClaim(l)&&!foragerClaim(l)
         &&!DigJob.anyClaim(l,worker.queenId());}
     public boolean caregiver(ServerLevel l,NestPlan p){return l.getEntity(worker.getUUID())==worker&&NestPlan.loaded(l,worker.blockPosition())&&l.isPositionEntityTicking(worker.blockPosition())
         &&eligible(l,p)&&nursingAuthorized(l)&&plan.entrance().equals(p.entrance())&&plan.direction()==p.direction();}
@@ -143,8 +146,57 @@ public final class WorkerTasks {
     /** Cargo delivery retains ordinary ownership checks after a stage regression; removals separately recheck Mature. */
     public boolean miningAuthorized(ServerLevel l){return construction()&&DigJob.claimedBy(l,worker) instanceof Mining.Job&&constructionAuthorized(l);}
     public boolean miningDeliveryAuthorized(ServerLevel l){return miningAuthorized(l)&&((Mining.Job)DigJob.claimedBy(l,worker)).pending(worker.getMainHandItem());}
+    public boolean surfaceWorking(){return phase==Phase.SURFACE_FETCH||phase==Phase.SURFACE_BUILD;}
+    public boolean assignSurface(NestPlan p,boolean alreadyPaid,BlockPos target,BlockPos stand,BlockPos buildStand){
+        if(!canConstruct(p)||NestExpansion.remainingCaregivers((ServerLevel)worker.level(),worker.queenId(),p,worker)<2)return false;
+        plan=p.routeGeometry();surfaceTarget=target;surfaceStand=stand;surfaceBuildStand=buildStand;harvestingTicks=0;next(alreadyPaid?Phase.SURFACE_BUILD:Phase.SURFACE_FETCH,"assigned_paid_surface_work");return true;
+    }
+    public boolean surfaceAuthorized(ServerLevel l){
+        var j=SurfaceWork.get(l).claimedBy(worker);var q=queen(l);
+        return j!=null&&surfaceWorking()&&!constructionClaim(l)&&!upgradeClaim(l)&&!foragerClaim(l)&&eligible(l,plan)
+            &&j.home.entrance().equals(plan.entrance())&&j.home.direction()==plan.direction()&&q!=null&&q.founding().ready();
+    }
+    private void surface(ServerLevel l){
+        var work=SurfaceWork.get(l);var j=work.claimedBy(worker);if(j==null){hold("surface_claim_missing_cargo_retained");return;}
+        j.ticks++;work.setDirty();
+        if(j.stopped()||!j.unlocked(l,worker.queenId())||j.carried()==0&&work.priority(l,worker.queenId(),plan)){
+            if(j.carried()==1)work.abandonCargo(l,worker,j,"surface_stage_or_priority_changed");
+            else work.relinquish(l,worker,j,"surface_yielded_existing_priorities");
+            harvestingTicks=0;next(Phase.NURSE_CACHE,"surface_yielded_actual_worker");return;
+        }
+        if(j.complete()){work.relinquish(l,worker,j,"completed_paid_surface");next(Phase.NURSE_CACHE,"surface_complete");return;}
+        var problem=SurfaceWork.targetProblem(l,worker.queenId(),j);
+        if(problem!=null){
+            harvestingTicks=0;
+            if(j.carried()==0){work.relinquish(l,worker,j,"waiting_"+problem);next(Phase.NURSE_CACHE,"surface_empty_worker_released");}
+            else if(problem.contains("revoked")||problem.equals("obstructed_target")||problem.equals("unsupported_target")){
+                work.abandonCargo(l,worker,j,problem);next(Phase.NURSE_CACHE,"surface_blocked_unit_in_named_custody");
+            }else hold("surface_"+problem+"_cargo_retained");return;
+        }
+        boolean fetch=phase==Phase.SURFACE_FETCH;var target=fetch?j.source:j.next();
+        if(fetch&&!SurfaceWork.recoverable(l,plan,worker.queenId(),target)){
+            harvestingTicks=0;work.relinquish(l,worker,j,"waiting_source_changed");next(Phase.NURSE_CACHE,"surface_empty_source_yield");return;
+        }
+        boolean empty=!fetch&&j.carried()==1;
+        // A navigation search during a normal stair jump may return no path. Keep the previously selected
+        // actual supported goal, revalidated against loaded terrain, collision and visibility every tick.
+        if(!target.equals(surfaceTarget)||!SurfaceWork.validStand(l,worker,target,empty,surfaceStand)){
+            surfaceTarget=target;surfaceStand=SurfaceWork.stand(l,worker,target,empty);
+        }
+        var stand=surfaceStand;
+        if(stand==null){harvestingTicks=0;
+            if(j.carried()==0){work.relinquish(l,worker,j,"waiting_no_supported_surface_stand");next(Phase.NURSE_CACHE,"surface_empty_stand_yield");}
+            else {work.abandonCargo(l,worker,j,"no_supported_surface_stand");next(Phase.NURSE_CACHE,"surface_stand_blocked_unit_released");}return;
+        }
+        if(!worker.blockPosition().equals(stand)||!worker.onGround()||SurfaceWork.point(l,worker,target,empty)==null){harvestingTicks=0;arriveSupported(l,Vec3.atBottomCenterOf(stand));return;}
+        worker.getNavigation().stop();var point=SurfaceWork.point(l,worker,target,empty);worker.getLookControl().setLookAt(point.x,point.y,point.z);
+        if(!surfaceAuthorized(l)||!NestPlan.walkable(l,stand)||!NestPlan.loaded(l,target)||SurfaceWork.point(l,worker,target,empty)==null){harvestingTicks=0;return;}
+        if(++harvestingTicks<SurfaceWork.ACTION_TICKS)return;harvestingTicks=0;
+        if(fetch){if(work.recover(l,worker,j)){next(Phase.SURFACE_BUILD,"owned_soil_unit_in_mandibles");surfaceTarget=j.next();surfaceStand=surfaceBuildStand;}}
+        else if(work.place(l,worker,j)){work.relinquish(l,worker,j,"worker_paid_one_surface_cell");next(Phase.NURSE_CACHE,"surface_cell_paid_return_to_care");}
+    }
     public boolean assignNurse(NestPlan p){
-        if(sharing.busy()||phase!=Phase.NURSERY||!(worker.level() instanceof ServerLevel l)||!eligible(l,p)||!worker.getMainHandItem().isEmpty()||constructionClaim(l)||foragerClaim(l))return false;
+        if(sharing.busy()||phase!=Phase.NURSERY||!(worker.level() instanceof ServerLevel l)||!eligible(l,p)||!worker.getMainHandItem().isEmpty()||constructionClaim(l)||surfaceClaim(l)||foragerClaim(l))return false;
         plan=p.routeGeometry();next(Phase.NURSE_CACHE,"mature_member_nursing");
         return true;
     }
@@ -182,7 +234,7 @@ public final class WorkerTasks {
         if(sharing.tick(l))return;
         if(adultMeal(l))return;
         if(worker.isCallow() || phase==Phase.NURSERY) {hold(worker.isCallow()?"callow_shelter":"nursery_shelter");return;}
-        if(!(construction()?constructionAuthorized(l):upgrading()?upgradeAuthorized(l):nursing()?nursingAuthorized(l):!constructionClaim(l)&&authorized(l))) {hold("home_unavailable_or_invalid_cargo_retained");feedingTicks=0;harvestingTicks=0;return;}
+        if(!(surfaceWorking()?surfaceAuthorized(l):construction()?constructionAuthorized(l):upgrading()?upgradeAuthorized(l):nursing()?nursingAuthorized(l):!constructionClaim(l)&&authorized(l))) {hold("home_unavailable_or_invalid_cargo_retained");feedingTicks=0;harvestingTicks=0;return;}
         // The existing 240-tick SEARCH window ends when a source is found. Approach/action
         // keep the normal 1200-tick controller bound; late discovery cannot shorten harvesting.
         if(phase==Phase.SEARCH) {
@@ -196,6 +248,14 @@ public final class WorkerTasks {
             if(phase==Phase.OPENING || phase==Phase.SOIL_OUT) {hold("opening_route_stalled_retry_no_remote_completion");phaseTicks=0;cooldown=40;}
             else if(construction()){hold("construction_route_stalled_cargo_retained");phaseTicks=0;cooldown=40;}
             else if(upgrading()){hold("upgrade_route_stalled_cargo_retained");phaseTicks=0;cooldown=40;}
+            else if(surfaceWorking()){
+                var work=SurfaceWork.get(l);var job=work.claimedBy(worker);
+                // Surface work must free the shared builder on a bounded impossible route. Its paid unit
+                // enters named physical custody, never another excavation receipt or a remote placement.
+                if(job!=null){if(job.carried()==1)work.abandonCargo(l,worker,job,"bounded_surface_route_stalled");
+                    else work.relinquish(l,worker,job,"waiting_bounded_surface_route_stalled");}
+                harvestingTicks=0;next(Phase.NURSE_CACHE,"surface_stalled_worker_released");cooldown=40;
+            }
             else if(nursing()){hold("nursing_route_stalled_cargo_retained");phaseTicks=0;cooldown=40;}
             else if(worker.getMainHandItem().isEmpty()) {source=null;next(Phase.RETURN,"trip_limit_return");}
             else {hold("physical_route_stalled_cargo_retained_retry");phaseTicks=0;cooldown=40;}
@@ -223,6 +283,7 @@ public final class WorkerTasks {
             case DIG_OUT -> digOut(l);
             case UPGRADE_FETCH -> upgradeFetch(l);
             case UPGRADE_BUILD -> upgradeBuild(l);
+            case SURFACE_FETCH, SURFACE_BUILD -> surface(l);
             default -> { }
         }
     }
@@ -908,6 +969,7 @@ public final class WorkerTasks {
         }
         var job=DigJob.claimedBy(l,worker);if(job instanceof Mining.Job mining)mining.released(l,worker,miningCargo,transfer);else if(job!=null)job.release(l,worker,constructionSoil);
         ChamberUpgrade.get(l).release(l,worker,upgradeClay,transfer);
+        SurfaceWork.get(l).released(l,worker,transfer);
         var q=queen(l);if(q!=null)q.founding().releaseWorker(worker);
         ColonyMembers.get(l).died(worker);
         source=null;next(Phase.DEAD,"worker_dead_no_replacement");
@@ -922,6 +984,9 @@ public final class WorkerTasks {
         if(plan!=null) {out.store("Entrance",BlockPos.CODEC,plan.entrance());out.putString("Direction",plan.direction().getName());
             out.store("SurfaceDeposits",BlockPos.CODEC.listOf(),plan.surfaceDeposits());
             if(plan.exteriorStand()!=null)out.store("ExteriorStand",BlockPos.CODEC,plan.exteriorStand());}
+        if(surfaceStand!=null)out.store("SurfaceWorkStand",BlockPos.CODEC,surfaceStand);
+        if(surfaceTarget!=null)out.store("SurfaceWorkTarget",BlockPos.CODEC,surfaceTarget);
+        if(surfaceBuildStand!=null)out.store("SurfaceBuildStand",BlockPos.CODEC,surfaceBuildStand);
         if(source!=null)out.putString("Source",source.toString());
         if(flowerSource!=null){out.store("FlowerSource",BlockPos.CODEC,flowerSource);out.store("FlowerStand",BlockPos.CODEC,flowerStand);out.putString("FlowerExpected",flowerExpected);}
         out.putInt("HarvestingTicks",harvestingTicks);out.putInt("SearchTicks",searchTicks);out.putInt("FlowerInspections",flowerInspections);
@@ -937,6 +1002,7 @@ public final class WorkerTasks {
         droppedQueue.clear();in.read("DroppedQueue",com.mojang.serialization.Codec.STRING.listOf()).orElse(List.of()).forEach(v->droppedQueue.add(UUID.fromString(v)));droppedCursor=in.getIntOr("DroppedCursor",0);
         if(droppedQueue.size()>DROPPED_TOTAL||droppedCursor<0||droppedCursor>droppedQueue.size())throw new IllegalArgumentException("Invalid dropped continuation");
         phase=Phase.valueOf(in.getStringOr("Phase","NURSERY"));reason=in.getStringOr("Reason","restored");opened=in.getIntOr("Opened",0);placed=in.getIntOr("Placed",0);phaseTicks=in.getIntOr("PhaseTicks",0);cooldown=in.getIntOr("Cooldown",0);
+        surfaceStand=in.read("SurfaceWorkStand",BlockPos.CODEC).orElse(null);surfaceTarget=in.read("SurfaceWorkTarget",BlockPos.CODEC).orElse(null);surfaceBuildStand=in.read("SurfaceBuildStand",BlockPos.CODEC).orElse(null);
         source=in.getString("Source").map(UUID::fromString).orElse(null);
         flowerSource=in.read("FlowerSource",BlockPos.CODEC).orElse(null);flowerStand=in.read("FlowerStand",BlockPos.CODEC).orElse(null);flowerExpected=in.getString("FlowerExpected").orElse(null);
         harvestingTicks=in.getIntOr("HarvestingTicks",0);searchTicks=in.getIntOr("SearchTicks",0);flowerInspections=in.getIntOr("FlowerInspections",0);

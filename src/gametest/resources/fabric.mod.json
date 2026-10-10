@@ -58,7 +58,8 @@
       "dev.primeants.gametest.HallAvailabilityGameTest",
       "dev.primeants.gametest.ExpandedBroodGameTest",
       "dev.primeants.gametest.TierTwoGameTest",
-      "dev.primeants.gametest.StoreUpgradeSafetyGameTest"
+      "dev.primeants.gametest.StoreUpgradeSafetyGameTest",
+      "dev.primeants.gametest.SurfaceGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

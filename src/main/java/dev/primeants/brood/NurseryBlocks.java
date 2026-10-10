@@ -14,6 +14,8 @@ import java.util.Set;
 
 public final class NurseryBlocks {
     public static final Block NEST_SOIL = soil();
+    /** Paid earth gate masonry; passage remains between its two jambs. */
+    public static final Block MOUND_GATE = wall("mound_gate", Blocks.PACKED_MUD);
     public static final BroodPileBlock BROOD_PILE = pile();
     public static final dev.primeants.worker.NestCacheBlock NEST_CACHE = Registry.register(BuiltInRegistries.BLOCK,key("nest_cache"),new dev.primeants.worker.NestCacheBlock(BlockBehaviour.Properties.of().setId(key("nest_cache")).noCollision().noOcclusion().strength(0.1F)));
     public static final BlockEntityType<dev.primeants.worker.NestCache> CACHE_TYPE = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,id("nest_cache"),new BlockEntityType<>(dev.primeants.worker.NestCache::new,Set.of(NEST_CACHE)));

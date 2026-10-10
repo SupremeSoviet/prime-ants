@@ -220,6 +220,7 @@ public final class QueenFounding {
                 ChamberExcavation.get(level).consider(level,queen,members); // nest-plan chambers after the 0.1.0 widening
                 ChamberUpgrade.get(level).consider(level,queen,members); // wall upgrades once the stage unlocks a tier
                 Mining.get(level).consider(level,queen,members); // chambers/upgrades keep the exclusive builder first
+                SurfaceWork.get(level).consider(level,queen,members); // only after all existing claimed/available work
                 for(var w:level.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(plan.chamber()).inflate(4),w->w.isAlive()&&!w.isRemoved()&&!w.isCallow()&&!w.isNoAi()))
                     if(!claimedBy(w)&&!w.workerTasks().construction()&&dev.primeants.worker.ColonyMembers.get(level).belongs(w,queen.getUUID(),plan.chamber()))w.workerTasks().assignNurse(plan);
             }

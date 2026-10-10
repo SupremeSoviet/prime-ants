@@ -149,7 +149,7 @@ final class TierTwoFixture {
         c.assertTrue(NurseryUpgradeGameTest.clay(c,fx,q)==clay+minedClay,"Clay supplied + mined is ground, carried, stored, converted once or pending custody: "+NurseryUpgradeGameTest.clay(c,fx,q)+"/"+(clay+minedClay));
         var l=c.getLevel();var widening=NestExpansion.get(l).job(q.getUUID());
         long builders=(widening!=null&&widening.claim!=null?1:0)+ChamberExcavation.get(l).jobs(q.getUUID()).stream().filter(j->j.claim!=null).count()
-            +ChamberUpgrade.get(l).jobs(q.getUUID()).stream().filter(j->j.claim!=null).count()+(mining!=null&&mining.claim!=null?1:0);
+            +ChamberUpgrade.get(l).jobs(q.getUUID()).stream().filter(j->j.claim!=null).count()+(mining!=null&&mining.claim!=null?1:0)+SurfaceWork.get(l).jobs(q.getUUID()).stream().filter(j->j.claim!=null).count();
         c.assertTrue(builders<=1,"One builder across digging and upgrades: "+builders);
         if(builders>0){
             var workers=fx.f.workers(c,q);long active=workers.stream().filter(w->w.workerTasks().caregiver(l,q.founding().plan())).count();

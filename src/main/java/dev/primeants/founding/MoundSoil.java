@@ -32,7 +32,7 @@ public final class MoundSoil {
     /** One block of a mound column, read live (NestMound.Read). */
     public static NestMound.Read read(ServerLevel l, BlockPos p, UUID owner) {
         if (!NestPlan.loaded(l, p)) return NestMound.Read.UNLOADED;
-        if (ColonyTerrain.get(l).mound(l, p, owner)) return NestMound.Read.MOUND;
+        if (ColonyTerrain.get(l).mound(l, p, owner) || ColonyTerrain.get(l).surface(l,p,owner)) return NestMound.Read.MOUND;
         if (l.getBlockState(p).isAir() && l.getFluidState(p).isEmpty()) return NestMound.Read.OPEN;
         if (NativeVegetation.get(l).eligible(l, p)) return NestMound.Read.PLANT;
         if (NaturalSoil.get(l).floorSupport(l, p)) return NestMound.Read.NATURAL_GROUND;
@@ -82,6 +82,7 @@ public final class MoundSoil {
     public static Set<BlockPos> cells(ServerLevel l, NestPlan home, UUID owner) {
         var out = new LinkedHashSet<BlockPos>(NestExpansion.deposits(home));
         for (var s : slots(l, home, owner, ColonyStage.GREAT)) if (s.pos() != null) out.add(s.pos());
+        for(var j:SurfaceWork.get(l).jobs(owner))out.addAll(j.cells());
         return out;
     }
 }

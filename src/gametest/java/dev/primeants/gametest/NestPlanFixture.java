@@ -55,7 +55,7 @@ final class NestPlanFixture {
     void soil(GameTestHelper c, LasiusNigerEntity q) {
         var l = c.getLevel(); var p = q.founding().plan(); if (p == null || q.founding().phase() != QueenFounding.Phase.SETTLED) return;
         var widening = NestExpansion.get(l).job(q.getUUID());
-        long mound = MoundSoil.cells(l, p, q.getUUID()).stream().filter(b -> l.getBlockState(b).is(NurseryBlocks.NEST_SOIL)).count();
+        long mound = MoundSoil.cells(l, p, q.getUUID()).stream().filter(b -> l.getBlockState(b).is(NurseryBlocks.NEST_SOIL)||l.getBlockState(b).is(NurseryBlocks.MOUND_GATE)).count();
         long plugs = p.plugs().stream().filter(b -> ColonyPlugs.material(l.getBlockState(b))).count();
         long held = f.workers(c, q).stream().filter(w -> w.getMainHandItem().is(Items.DIRT)).mapToInt(w -> w.getMainHandItem().getCount()).sum();
         long world = l.getEntitiesOfClass(ItemEntity.class, c.getBounds().inflate(8), i -> i.isAlive() && i.getItem().is(Items.DIRT)).stream().mapToInt(i -> i.getItem().getCount()).sum();

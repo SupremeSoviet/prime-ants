@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "stage": "mature",
+  "palette": "earth",
+  "mound": "mature",
+  "entrance": {
+    "forward": -1,
+    "width": 3,
+    "height": 3
+  },
+  "moundCrests": {
+    "count": 1,
+    "forward": -4,
+    "side": 3,
+    "height": 4
+  }
+}

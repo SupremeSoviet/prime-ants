@@ -22,7 +22,11 @@
     "T27PileLoadMixin",
     "UnavailableCellMixin",
     "StageEvaluationMixin",
-    "MiningConsiderationMixin"
+    "MiningConsiderationMixin",
+    "NamedRecoveryMixin",
+    "CanonicalCargoObservationMixin",
+    "InitialHabitatTerrainMixin",
+    "InitialHabitatConnectionMixin"
   ],
   "injectors": {
     "defaultRequire": 1

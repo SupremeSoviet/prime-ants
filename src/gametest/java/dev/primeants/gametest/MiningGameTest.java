@@ -300,20 +300,18 @@ public final class MiningGameTest {
 
     @GameTest(maxTicks=60000,structure="prime_ants_test:idle_ground")
     public void midHaulDiskReloadResumesThenMinerDeathReleasesOneUnitExactlyOnce(GameTestHelper c){
-        var player=new TierTwoFixture(40,true);LasiusNigerEntity[] queen={player.fx.start(c)};boolean[] seeded={false},resumed={false};int[] step={0},baseline={0},evals={0};long[] since={-1},settled={-1};UUID[] worker={null},transfer={null};UnavailableCells[] hidden={null};ColonyDevelopment.Evaluation[] seen={null};
-        String[] custodyTransition={""};var previousSources=new HashMap<UUID,UUID>();UUID[] recoveryCarrier={null};
+        var player=new TierTwoFixture(40,true);LasiusNigerEntity[] queen={player.fx.start(c)};boolean[] seeded={false},resumed={false};int[] step={0},baseline={0},evals={0};long[] since={-1},settled={-1},gallery={-1};UUID[] worker={null},transfer={null};UnavailableCells[] hidden={null};ColonyDevelopment.Evaluation[] seen={null};
+        String[] custodyTransition={""};UUID[] recoveryCarrier={null};
+        var recovery=NamedMaterialRecovery.watch(c,queen[0].getUUID());
         c.onEachTick(()->{
             var q=queen[0];var l=c.getLevel();var plan=q.founding().plan();if(plan!=null&&!seeded[0]){geology(c,q);seeded[0]=true;}
             feedMining(c,player,q);player.ledgers(c,q);miningLedger(c,player,q);traceMining(c,player,q,"RELOAD DEATH");var p=NestPlanFixture.pile(c,q);var j=Mining.get(l).job(q.getUUID());if(p==null||j==null)return;
             var w=player.fx.f.workers(c,q).stream().filter(a->a.getUUID().equals(j.claim)).findFirst().orElse(null);var e=p.stageEvaluation();if(e!=null&&seen[0]!=e){seen[0]=e;if(step[0]==3&&e.inputs().tier(ChamberFunction.MATERIAL_STORE).known()>=1)evals[0]++;}
             if(transfer[0]!=null){
                 var entity=l.getEntity(transfer[0]);var workers=player.fx.f.workers(c,q);
-                for(var a:workers){
-                    if(transfer[0].equals(previousSources.get(a.getUUID()))&&a.workerTasks().sourceId()==null&&a.getMainHandItem().is(Items.COBBLESTONE)&&entity==null){
-                        recoveryCarrier[0]=a.getUUID();PrimeAnts.LOGGER.info("T11 NAMED RELEASE PICKUP queen={} tick={} transfer={} worker={} cargo={} ledger={}",q.getUUID(),c.getTick(),transfer[0],a.getUUID(),a.getMainHandItem(),player.fx.ledger(c,q,Items.COBBLESTONE));
-                    }
-                    previousSources.put(a.getUUID(),a.workerTasks().sourceId());
-                }
+                var pickups=recovery.pickups(transfer[0]);var deposits=recovery.deposits(transfer[0]);
+                c.assertTrue(pickups.size()<=1&&deposits.size()<=1,"The named unit has at most one directly observed pickup and owned-store deposit");
+                if(!pickups.isEmpty())recoveryCarrier[0]=pickups.getFirst().worker();
                 var carrier=workers.stream().filter(a->a.getUUID().equals(recoveryCarrier[0])).findFirst().orElse(null);
                 var ledger=player.fx.ledger(c,q,Items.COBBLESTONE);
                 String transition="pending="+TransferCustody.get(l).contents().stream().filter(t->t.id().equals(transfer[0])).count()+" ground="+(entity instanceof net.minecraft.world.entity.item.ItemEntity item?item.getItem()+":"+item.isAlive():entity)
@@ -349,18 +347,32 @@ public final class MiningGameTest {
             }
             if(step[0]==2){
                 c.assertTrue(j.removed()==baseline[0]&&j.released==1&&TransferCustody.get(l).contents().stream().filter(t->t.id().equals(transfer[0])).count()==1&&l.getEntity(transfer[0])==null,"Six hundred loaded ticks retain one custody unit without duplicate falling/ground resource");
-                if(p.loadedTicks()-since[0]<600)return;hidden[0].close();hidden[0]=null;evals[0]=0;seen[0]=e;step[0]=3;return;
+                if(p.loadedTicks()-since[0]<600)return;
+                PrimeAnts.LOGGER.info("T12 DEATH CUSTODY END queen={} tick={} loadedWindow={}",q.getUUID(),c.getTick(),p.loadedTicks()-since[0]);
+                hidden[0].close();hidden[0]=null;evals[0]=0;seen[0]=e;step[0]=3;return;
             }
-            if(evals[0]<2||j.removed()<=baseline[0]||!j.complete()||j.claim!=null)return;
-            c.assertTrue(resumed[0]&&j.released==1&&j.deposited==15&&j.removed()==16&&j.transfers().size()==1,"Reload resumes actual delivery; a fresh real miner completes the remaining gallery after death");
-            var releasedEntity=l.getEntity(transfer[0]);var recoveryCache=player.fx.f.cache(c,q);
-            PrimeAnts.LOGGER.info("T09 DEATH RECOVERY CHECK queen={} tick={} ledger={} releasedEntity={} pending={} foodCache={} foragers={}",q.getUUID(),c.getTick(),player.fx.ledger(c,q,Items.COBBLESTONE),
-                releasedEntity instanceof net.minecraft.world.entity.item.ItemEntity item?item.getItem()+"@"+item.position()+" alive="+item.isAlive()+" removed="+item.isRemoved():releasedEntity,
-                TransferCustody.get(l).contents().stream().filter(t->t.id().equals(transfer[0])).count(),recoveryCache==null?null:recoveryCache.contents(),
-                player.fx.f.workers(c,q).stream().filter(a->q.founding().claimedBy(a)).map(a->a.getUUID()+":"+a.workerTasks().phase()+":"+a.workerTasks().reason()+":"+a.getMainHandItem()+":"+a.position()).toList());
+            if(gallery[0]<0){
+                if(evals[0]<2||j.removed()<=baseline[0]||!j.complete()||j.claim!=null)return;
+                c.assertTrue(resumed[0]&&j.released==1&&j.deposited==15&&j.removed()==16&&j.transfers().size()==1,"Reload resumes actual delivery; a fresh real miner completes the remaining gallery after death");
+                gallery[0]=p.loadedTicks();
+                PrimeAnts.LOGGER.info("T12 DEATH GALLERY MILESTONE queen={} tick={} loaded={} restoredEvaluations={} transfer={} ledger={}",q.getUUID(),c.getTick(),gallery[0],evals[0],transfer[0],player.fx.ledger(c,q,Items.COBBLESTONE));
+            }
+            c.assertTrue(j.complete()&&j.claim==null&&j.removed()==16&&j.deposited==15&&j.released==1&&j.transfers().size()==1,"Frozen completed gallery and exact delivery/release history remain stable throughout recovery");
+            var pickups=recovery.pickups(transfer[0]);var deposits=recovery.deposits(transfer[0]);
+            if(deposits.isEmpty()){
+                c.assertTrue(p.loadedTicks()-gallery[0]<6000,"Independent named-unit recovery finishes within 6,000 nursery-loaded ticks of the frozen gallery milestone");return;
+            }
+            c.assertTrue(pickups.size()==1&&deposits.size()==1&&ItemStack.matches(pickups.getFirst().cargo(),new ItemStack(Items.COBBLESTONE))
+                &&deposits.getFirst().pickup()==pickups.getFirst()&&deposits.getFirst().store().equals(NestPlanFixture.store(c,q).getBlockPos())
+                &&player.fx.f.workers(c,q).stream().anyMatch(a->a.getUUID().equals(pickups.getFirst().worker())&&q.founding().claimedBy(a)),
+                "The named released unit is directly picked up by an ordinary colony forager and deposited exactly once into the actual owned store");
             c.assertTrue(TransferCustody.get(l).contents().stream().noneMatch(t->t.id().equals(transfer[0]))&&l.getEntity(transfer[0])==null&&player.fx.ledger(c,q,Items.COBBLESTONE).stored()==j.produced("minecraft:cobblestone"),"The released unit is subsequently physically picked up and stored exactly once");
-            if(settled[0]<0)settled[0]=p.loadedTicks();if(p.loadedTicks()-settled[0]<200)return;
-            PrimeAnts.LOGGER.info("T09 RELOAD DEATH DONE queen={} tick={} resumed=true custodyWindow=600 restoredEvaluations={} settled={} deliveries={} releases={}",q.getUUID(),c.getTick(),evals[0],p.loadedTicks()-settled[0],j.deliveries(),j.transfers());c.succeed();
+            if(settled[0]<0){
+                c.assertTrue(p.loadedTicks()-gallery[0]<=6000,"Recovery deadline is fixed at the first gallery milestone");settled[0]=p.loadedTicks();
+                PrimeAnts.LOGGER.info("T12 DEATH RECOVERED queen={} tick={} transfer={} pickup={} deposit={} recoveryLoaded={}",q.getUUID(),c.getTick(),transfer[0],pickups.getFirst(),deposits.getFirst(),settled[0]-gallery[0]);
+            }
+            if(p.loadedTicks()-settled[0]<200)return;
+            PrimeAnts.LOGGER.info("T12 RELOAD DEATH DONE queen={} tick={} resumed=true custodyWindow=600 restoredEvaluations={} settled={} recoveryLoaded={} deliveries={} releases={}",q.getUUID(),c.getTick(),evals[0],p.loadedTicks()-settled[0],settled[0]-gallery[0],j.deliveries(),j.transfers());c.succeed();
         });
     }
 

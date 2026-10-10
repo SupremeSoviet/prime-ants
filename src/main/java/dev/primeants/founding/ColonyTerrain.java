@@ -25,12 +25,24 @@ public final class ColonyTerrain extends SavedData {
     public void invalidate(BlockPos p){if(records.remove(key(p))!=null)setDirty();}
     public UUID componentOwner(ServerLevel l,BlockPos p){
         String r=records.get(key(p));if(r==null)return null;UUID owner=UUID.fromString(r.substring(0,36));
-        return prepared(l,p,owner)||mound(l,p,owner)||built(l,p,owner,l.getBlockState(p).getBlock())?owner:null;
+        return prepared(l,p,owner)||mound(l,p,owner)||surface(l,p,owner)||built(l,p,owner,l.getBlockState(p).getBlock())?owner:null;
     }
     private void record(BlockPos p,UUID owner,String kind){records.put(key(p),owner+":"+kind);setDirty();}
     private boolean matches(ServerLevel l,BlockPos p,UUID owner,String kind,BlockState expected){return NestPlan.loaded(l,p)&&l.getBlockState(p).equals(expected)&&(owner+":"+kind).equals(records.get(key(p)));}
     public boolean prepared(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"prepared:nest_soil",NurseryBlocks.NEST_SOIL.defaultBlockState());}
     public boolean mound(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"mound:nest_soil",NurseryBlocks.NEST_SOIL.defaultBlockState());}
+    /** Surface locations own one paid soil unit, including an in-place gate conversion. */
+    public boolean surface(ServerLevel l,BlockPos p,UUID owner){
+        if(!NestPlan.loaded(l,p))return false;var block=l.getBlockState(p).getBlock();return (block==NurseryBlocks.NEST_SOIL||block==NurseryBlocks.MOUND_GATE)&&matches(l,p,owner,"surface:"+id(block),block.defaultBlockState());
+    }
+    public void surfaceBuilt(BlockPos p,UUID owner,net.minecraft.world.level.block.Block block){
+        if(block!=NurseryBlocks.NEST_SOIL&&block!=NurseryBlocks.MOUND_GATE)throw new IllegalArgumentException("Surface palette");record(p,owner,"surface:"+id(block));
+    }
+    public void permitSurface(ServerLevel l,BlockPos p,UUID owner){
+        if(!NestPlan.loaded(l,p)||records.containsKey(key(p))||!(l.getBlockState(p).isAir()&&l.getFluidState(p).isEmpty()||NativeVegetation.get(l).eligible(l,p)))return;
+        record(p,owner,"surface_target:"+l.getBlockState(p));
+    }
+    public boolean surfacePermission(ServerLevel l,BlockPos p,UUID owner){return NestPlan.loaded(l,p)&&(owner+":surface_target:"+l.getBlockState(p)).equals(records.get(key(p)));}
     public boolean opened(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"worker_open:air",Blocks.AIR.defaultBlockState());}
     private static String id(net.minecraft.world.level.block.Block b){return net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(b).toString();}
     /** A wall cell the colony itself rebuilt in place with this wall block (NestWalls), still exactly as it left it. */

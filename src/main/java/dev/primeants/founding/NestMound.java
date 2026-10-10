@@ -12,7 +12,7 @@ import java.util.function.IntFunction;
  * ground. The mound lies behind the entrance in two lobes, one either side of the approach lane, which stays clear, as do
  * the stairs ahead of the entrance and the exterior standing spot in the lane. Young builds the small mound; Mature a
  * wider, taller one that contains it. Founding has none: its 0.1.0 deposits stay as they are, inside Young's lobes. Great
- * keeps Mature's until a later plan.
+ * keeps Mature's spoil capacity; SurfacePlan describes its separately paid structural additions.
  * <pre>
  *   Young: layers per column (. lane, E entrance)       Mature: two wider lobes, 23 x 13 columns, 5 layers high
  *   f=-8        1 1 1 1   .   1 1 1 1

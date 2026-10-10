@@ -12,5 +12,6 @@
   "block.prime_ants.nest_cut_stone": "Тёсаный камень гнезда",
   "item.prime_ants.flower_nectar": "Порция цветочного нектара",
   "item.prime_ants.small_prey": "Мелкая добыча",
-  "item.prime_ants.flower_nectar_v2": "Порция цветочного нектара"
+  "item.prime_ants.flower_nectar_v2": "Порция цветочного нектара",
+  "block.prime_ants.mound_gate": "Ворота кургана"
 }
