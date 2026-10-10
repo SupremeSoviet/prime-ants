@@ -30,7 +30,7 @@ class SurfacePrefixTest {
         if(body.intersects(new AABB(target)))return false;var mouth=Vec3.atBottomCenterOf(stand).add(0,0.25,0);
         for(double y:new double[]{0.5,0.01,0.99})for(double x:new double[]{0.5,0.01,0.99})for(double z:new double[]{0.5,0.01,0.99}){
             var point=new Vec3(target.getX()+x,target.getY()+y,target.getZ()+z);if(mouth.distanceToSqr(point)>5.0)continue;
-            boolean clipped=paid.stream().anyMatch(p->new AABB(p).clip(mouth,point).isPresent());if(!clipped)return true;
+            boolean clipped=paid.stream().filter(p->!p.equals(target)).anyMatch(p->new AABB(p).clip(mouth,point).isPresent());if(!clipped)return true;
         }return false;
     }
     private static Set<BlockPos> stands(Set<BlockPos> paid,BlockPos target,int ceiling){
@@ -76,5 +76,28 @@ class SurfacePrefixTest {
         assertEquals("-4,3,2",next.key(),"T12's actual compiled receipt prefix, not its mislabelled narrative");
         assertFalse(stands(paid,target,8).isEmpty(),"The same prefix is accessible without the artificial ceiling");
         assertTrue(stands(paid,target,4).isEmpty(),"A ceiling four above local ground rejects all supported visible candidates");
+    }
+    @Test void greatStartsWithEveryMatureCellAndRemainingPhysicalSpoilAndRetainsBothGatePayments(){
+        var paid=new HashSet<BlockPos>();
+        for(var c:SurfacePlan.bundled(ColonyStage.MATURE).cells())paid.add(new BlockPos(c.forward(),1+c.layer(),c.side()));
+        var spoil=new HashSet<BlockPos>();
+        var structural=SurfacePlan.bundled(ColonyStage.GREAT).cells().stream().map(SurfacePlan.Cell::column).collect(java.util.stream.Collectors.toSet());
+        // The real controlled recipe starts with eighty owned units outside structural columns.
+        for(var c:NestMound.plan(ColonyStage.YOUNG))if(!structural.contains(c.forward()+","+c.side())){
+            spoil.add(new BlockPos(c.forward(),1+c.layer(),c.side()));if(spoil.size()==80)break;
+        }
+        assertEquals(80,spoil.size());
+        var used=spoil.stream().sorted(Comparator.<BlockPos>comparingInt(p->p.getY()).reversed().thenComparingLong(BlockPos::asLong)).limit(19).toList();spoil.removeAll(used);
+        assertEquals(61,spoil.size());int inherited=0,conversions=0,placements=0;
+        for(var c:SurfacePlan.bundled(ColonyStage.GREAT).cells()){
+            var target=new BlockPos(c.forward(),1+c.layer(),c.side());
+            if(paid.contains(target)&&!c.material().equals("gate")){inherited++;continue;}
+            var occupied=new HashSet<BlockPos>(paid);occupied.addAll(spoil);
+            assertFalse(stands(occupied,target,12).isEmpty(),"Real Mature starting geometry/spoil at Great prefix "+c);
+            if(c.material().equals("gate")){assertTrue(paid.contains(target));conversions++;}
+            else {assertTrue(paid.add(target));spoil.remove(spoil.stream().max(Comparator.<BlockPos>comparingInt(p->p.getY()).thenComparingLong(BlockPos::asLong)).orElseThrow());placements++;}
+        }
+        assertEquals(17,inherited);assertEquals(2,conversions);assertEquals(38,placements);assertEquals(57,paid.size());assertEquals(23,spoil.size());
+        assertEquals(80,paid.size()+spoil.size(),"Conversions retain already-paid units and inheritance consumes none");
     }
 }

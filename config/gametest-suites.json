@@ -1,0 +1,2274 @@
+{
+  "schema": 1,
+  "basis": "Frozen before T14 suite execution; audited local tick paths and T13 evidence. Declared tick weights are scheduling estimates, not wall time or colony MSPT.",
+  "cases": [
+    {
+      "name": "prime_ants_test:bootstrap_game_test_food_item_lifecycle",
+      "max_ticks": 80,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\BootstrapGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 80,
+      "reason": "Local actor/origin/placement/serialization guard, at most 80 declared ticks, without a developed colony",
+      "t13_seconds": 1.069
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_capture_ground_rejects_obstructions_and_incomplete_footprints",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "Local actor/origin/placement/serialization guard, at most 20 declared ticks, without a developed colony",
+      "t13_seconds": 0.001
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_worker_navigates_ground_around_wall",
+      "max_ticks": 220,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 220,
+      "reason": "Local actor/origin/placement/serialization guard, at most 220 declared ticks, without a developed colony",
+      "t13_seconds": 2.445
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_queen_navigates_ground_around_wall",
+      "max_ticks": 600,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 600,
+      "reason": "Local actor/origin/placement/serialization guard, at most 600 declared ticks, without a developed colony",
+      "t13_seconds": 4.919
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_worker_age_ignores_daylight_changes",
+      "max_ticks": 60,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 60,
+      "reason": "Local actor/origin/placement/serialization guard, at most 60 declared ticks, without a developed colony",
+      "t13_seconds": 1.024
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_queen_age_ignores_daylight_changes",
+      "max_ticks": 60,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 60,
+      "reason": "Local actor/origin/placement/serialization guard, at most 60 declared ticks, without a developed colony",
+      "t13_seconds": 1.023
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_queen_wanders_after_long_idle",
+      "max_ticks": 240,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 240,
+      "reason": "Local actor/origin/placement/serialization guard, at most 240 declared ticks, without a developed colony",
+      "t13_seconds": 2.438
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_queen_wanders_after_long_idle_odd_phase",
+      "max_ticks": 240,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 240,
+      "reason": "Local actor/origin/placement/serialization guard, at most 240 declared ticks, without a developed colony",
+      "t13_seconds": 0.986
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_queen_wanders_after_sparse_land_candidates",
+      "max_ticks": 240,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 240,
+      "reason": "Local actor/origin/placement/serialization guard, at most 240 declared ticks, without a developed colony",
+      "t13_seconds": 2.006
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_queen_wanders_after_sparse_land_candidates_even_phase",
+      "max_ticks": 240,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 240,
+      "reason": "Local actor/origin/placement/serialization guard, at most 240 declared ticks, without a developed colony",
+      "t13_seconds": 1.771
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_queen_wanders_after_null_land_candidates",
+      "max_ticks": 240,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 240,
+      "reason": "Local actor/origin/placement/serialization guard, at most 240 declared ticks, without a developed colony",
+      "t13_seconds": 1.099
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_queen_wanders_after_null_land_candidates_even_phase",
+      "max_ticks": 240,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 240,
+      "reason": "Local actor/origin/placement/serialization guard, at most 240 declared ticks, without a developed colony",
+      "t13_seconds": 2.525
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_queen_wanders_to_adjacent_land_candidate",
+      "max_ticks": 240,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 240,
+      "reason": "Local actor/origin/placement/serialization guard, at most 240 declared ticks, without a developed colony",
+      "t13_seconds": 2.547
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_worker_lethal_damage_has_no_replacement",
+      "max_ticks": 60,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 60,
+      "reason": "Local actor/origin/placement/serialization guard, at most 60 declared ticks, without a developed colony",
+      "t13_seconds": 1.305
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_queen_lethal_damage_has_no_replacement",
+      "max_ticks": 60,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 60,
+      "reason": "Local actor/origin/placement/serialization guard, at most 60 declared ticks, without a developed colony",
+      "t13_seconds": 1.304
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_worker_entity_serialization_preserves_identity",
+      "max_ticks": 60,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 60,
+      "reason": "Local actor/origin/placement/serialization guard, at most 60 declared ticks, without a developed colony",
+      "t13_seconds": 1.114
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_queen_entity_serialization_preserves_identity",
+      "max_ticks": 60,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 60,
+      "reason": "Local actor/origin/placement/serialization guard, at most 60 declared ticks, without a developed colony",
+      "t13_seconds": 1.1
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_survival_egg_creates_nothing",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "Local actor/origin/placement/serialization guard, at most 20 declared ticks, without a developed colony",
+      "t13_seconds": 0.008
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_creative_egg_creates_exactly_one_queen",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "Local actor/origin/placement/serialization guard, at most 20 declared ticks, without a developed colony",
+      "t13_seconds": 0.018
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_operator_survival_egg_creates_exactly_one_queen",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "Local actor/origin/placement/serialization guard, at most 20 declared ticks, without a developed colony",
+      "t13_seconds": 0.001
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_null_player_egg_cannot_spawn",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "Local actor/origin/placement/serialization guard, at most 20 declared ticks, without a developed colony",
+      "t13_seconds": 0.0
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_debug_egg_cannot_configure_spawner",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "Local actor/origin/placement/serialization guard, at most 20 declared ticks, without a developed colony",
+      "t13_seconds": 0.002
+    },
+    {
+      "name": "prime_ants_test:ant_entity_game_test_dispenser_cannot_bypass_egg_restriction",
+      "max_ticks": 30,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AntEntityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 30,
+      "reason": "Local actor/origin/placement/serialization guard, at most 30 declared ticks, without a developed colony",
+      "t13_seconds": 0.818
+    },
+    {
+      "name": "prime_ants_test:queen_founding_game_test_compacted_seal_keeps_owned_soil_beside_grass_over_real_ticks",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\QueenFoundingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 38.156
+    },
+    {
+      "name": "prime_ants_test:queen_founding_game_test_settled_queen_may_touch_enclosure_face_without_crossing_it",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\QueenFoundingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 35.552
+    },
+    {
+      "name": "prime_ants_test:queen_founding_game_test_founding_excavates_transports_walks_and_seals_over_real_ticks",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\QueenFoundingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 35.452
+    },
+    {
+      "name": "prime_ants_test:queen_founding_game_test_side_wall_opened_during_sealing_prevents_settlement",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\QueenFoundingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 36.077
+    },
+    {
+      "name": "prime_ants_test:queen_founding_game_test_transport_finishes_vertical_column_before_leaving_exposed_pending_soil",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\QueenFoundingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 35.551
+    },
+    {
+      "name": "prime_ants_test:queen_founding_game_test_placed_plug_removed_before_settlement_prevents_settlement",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\QueenFoundingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 35.898
+    },
+    {
+      "name": "prime_ants_test:queen_founding_game_test_chamber_obstructed_during_sealing_prevents_settlement",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\QueenFoundingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 35.755
+    },
+    {
+      "name": "prime_ants_test:queen_founding_game_test_invalid_settled_enclosure_stays_unready_through_save_load",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\QueenFoundingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 35.897
+    },
+    {
+      "name": "prime_ants_test:queen_founding_game_test_settled_readiness_requires_queen_inside",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\QueenFoundingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 35.903
+    },
+    {
+      "name": "prime_ants_test:queen_founding_game_test_genuine_native_soil_generation_records_and_revokes_origin",
+      "max_ticks": 60,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\QueenFoundingGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 60,
+      "reason": "Local actor/origin/placement/serialization guard, at most 60 declared ticks, without a developed colony",
+      "t13_seconds": 0.14
+    },
+    {
+      "name": "prime_ants_test:queen_founding_game_test_unknown_origin_soil_remains_untouched",
+      "max_ticks": 50,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\QueenFoundingGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 50,
+      "reason": "Local actor/origin/placement/serialization guard, at most 50 declared ticks, without a developed colony",
+      "t13_seconds": 0.533
+    },
+    {
+      "name": "prime_ants_test:queen_founding_game_test_pre_queen_player_placed_matching_soil_remains_untouched",
+      "max_ticks": 50,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\QueenFoundingGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 50,
+      "reason": "Local actor/origin/placement/serialization guard, at most 50 declared ticks, without a developed colony",
+      "t13_seconds": 0.524
+    },
+    {
+      "name": "prime_ants_test:queen_founding_game_test_unsuitable_substrates_remain_untouched",
+      "max_ticks": 50,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\QueenFoundingGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 50,
+      "reason": "Local actor/origin/placement/serialization guard, at most 50 declared ticks, without a developed colony",
+      "t13_seconds": 0.537
+    },
+    {
+      "name": "prime_ants_test:queen_founding_game_test_ordinary_player_replacement_invalidates_planned_task",
+      "max_ticks": 100,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\QueenFoundingGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 100,
+      "reason": "Local actor/origin/placement/serialization guard, at most 100 declared ticks, without a developed colony",
+      "t13_seconds": 0.765
+    },
+    {
+      "name": "prime_ants_test:queen_founding_game_test_genuine_generation_and_chunk_reload_cannot_grant_unknown_origin",
+      "max_ticks": 60,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\QueenFoundingGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 60,
+      "reason": "Local actor/origin/placement/serialization guard, at most 60 declared ticks, without a developed colony",
+      "t13_seconds": 0.091
+    },
+    {
+      "name": "prime_ants_test:queen_founding_game_test_interrupted_founding_and_protection_persist_through_save_load",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\QueenFoundingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 35.659
+    },
+    {
+      "name": "prime_ants_test:queen_founding_game_test_queen_death_releases_carried_soil_once_and_stops_work",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\QueenFoundingGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 1000,
+      "reason": "Local actor/origin/placement/serialization guard, at most 1000 declared ticks, without a developed colony",
+      "t13_seconds": 1.236
+    },
+    {
+      "name": "prime_ants_test:brood_game_test_occupied_nursery_preserves_torch_and_reserve_until_player_removal",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\BroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 55.812
+    },
+    {
+      "name": "prime_ants_test:brood_game_test_floor_and_wall_torches_keep_genuine_brood_developing",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\BroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 54.407
+    },
+    {
+      "name": "prime_ants_test:brood_game_test_solid_chamber_obstacle_still_stalls_genuine_brood",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\BroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 52.264
+    },
+    {
+      "name": "prime_ants_test:brood_game_test_chamber_fluid_still_stalls_genuine_brood",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\BroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 36.34
+    },
+    {
+      "name": "prime_ants_test:brood_game_test_collision_free_foreign_components_still_require_canonical_ownership",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\BroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 36.432
+    },
+    {
+      "name": "prime_ants_test:brood_game_test_authorized_queen_raises_identified_first_clutch_through_every_stage",
+      "max_ticks": 65000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\BroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 65000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 37.113
+    },
+    {
+      "name": "prime_ants_test:brood_game_test_caregiver_absence_stalls_dependent_larvae",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\BroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 37.394
+    },
+    {
+      "name": "prime_ants_test:brood_game_test_finite_production_reserve_stalls_unsupported_larvae",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\BroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 36.677
+    },
+    {
+      "name": "prime_ants_test:brood_game_test_queen_death_leaves_viable_cocoons_to_emerge",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\BroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 37.094
+    },
+    {
+      "name": "prime_ants_test:brood_game_test_insertion_refusal_and_restored_cocoon_cannot_duplicate_emergence",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\BroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 54.492
+    },
+    {
+      "name": "prime_ants_test:brood_game_test_occupied_emergence_space_retains_cocoons",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\BroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 37.238
+    },
+    {
+      "name": "prime_ants_test:brood_game_test_callow_loaded_tick_maturation_restores_and_worker_death_has_no_replacement",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\BroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 37.671
+    },
+    {
+      "name": "prime_ants_test:brood_game_test_interrupted_larval_care_restores_and_finishes_with_same_identities",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\BroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 36.92
+    },
+    {
+      "name": "prime_ants_test:brood_game_test_nursery_handoff_retains_live_obstruction_and_breach_guards_through_restoration",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\BroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 36.572
+    },
+    {
+      "name": "prime_ants_test:brood_game_test_mound_balance_and_only_exposed_native_underground_grass_convert",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\BroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 50.457
+    },
+    {
+      "name": "prime_ants_test:brood_game_test_blocked_declared_mound_retains_carried_soil_without_dumping",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\BroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 3.785
+    },
+    {
+      "name": "prime_ants_test:brood_game_test_bounded_mound_skips_plants_and_revoked_player_supports",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\BroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 49.46
+    },
+    {
+      "name": "prime_ants_test:worker_foraging_game_test_competing_egg_founded_workers_cannot_duplicate_single_source_stack",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\WorkerForagingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 77.239
+    },
+    {
+      "name": "prime_ants_test:worker_foraging_game_test_egg_founded_mature_worker_opens_and_delivers_sugar_and_protein",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\WorkerForagingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 69.588
+    },
+    {
+      "name": "prime_ants_test:worker_foraging_game_test_same_state_player_plug_replacement_revokes_opening_through_disk_reload",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\WorkerForagingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 63.98
+    },
+    {
+      "name": "prime_ants_test:worker_foraging_game_test_missing_historical_plug_ownership_fails_closed",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\WorkerForagingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 63.964
+    },
+    {
+      "name": "prime_ants_test:worker_foraging_game_test_premature_player_plug_removal_cannot_authorize_operational_nest",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\WorkerForagingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 64.066
+    },
+    {
+      "name": "prime_ants_test:worker_foraging_game_test_operational_nest_still_rejects_unrelated_breach_and_obstruction",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\WorkerForagingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 64.636
+    },
+    {
+      "name": "prime_ants_test:worker_foraging_game_test_impassable_barrier_prevents_remote_food_pickup",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\WorkerForagingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 80.124
+    },
+    {
+      "name": "prime_ants_test:worker_foraging_game_test_blocked_cache_retains_food_through_restore_and_physical_retry",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\WorkerForagingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 71.554
+    },
+    {
+      "name": "prime_ants_test:worker_foraging_game_test_restored_opening_cargo_food_and_cache_conserve_all_objects",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\WorkerForagingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 71.074
+    },
+    {
+      "name": "prime_ants_test:worker_foraging_game_test_full_cache_retains_cargo_and_death_releases_once_reassigning_living_worker",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\WorkerForagingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 88.943
+    },
+    {
+      "name": "prime_ants_test:worker_foraging_game_test_blocked_mound_retains_recovered_plug_soil_and_unavailable_home_retains_cargo",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\WorkerForagingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 60.601
+    },
+    {
+      "name": "prime_ants_test:transfer_game_test_dying_worker_refusal_survives_normal_cleanup",
+      "max_ticks": 200,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TransferGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 200,
+      "reason": "Local actor/origin/placement/serialization guard, at most 200 declared ticks, without a developed colony",
+      "t13_seconds": 3.062
+    },
+    {
+      "name": "prime_ants_test:transfer_game_test_cache_replacement_partial_refusal_conserves_physical_stacks",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TransferGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 71.282
+    },
+    {
+      "name": "prime_ants_test:transfer_game_test_cache_removal_complete_refusal_conserves_physical_stacks",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TransferGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 71.072
+    },
+    {
+      "name": "prime_ants_test:transfer_game_test_founding_queen_soil_refusal_preserves_components_after_death",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TransferGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 3.407
+    },
+    {
+      "name": "prime_ants_test:nursing_game_test_physical_nurses_raise_new_identities_and_continue_laying",
+      "max_ticks": 24000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NursingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 24000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 106.389
+    },
+    {
+      "name": "prime_ants_test:nursing_guard_game_test_nurses_feed_displaced_queen_at_her_live_position",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NursingGuardGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 65.481
+    },
+    {
+      "name": "prime_ants_test:nursing_guard_game_test_disabled_absent_out_of_reach_and_foreign_nurses_cannot_withdraw",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NursingGuardGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 72.761
+    },
+    {
+      "name": "prime_ants_test:nursing_guard_game_test_sugar_alone_cannot_fund_new_eggs_and_full_queen_retains_stock",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NursingGuardGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 76.249
+    },
+    {
+      "name": "prime_ants_test:nursing_guard_game_test_protein_absent_from_food_fed_larvae_stalls_despite_sugar",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NursingGuardGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 77.89
+    },
+    {
+      "name": "prime_ants_test:nursing_guard_game_test_exhausted_food_nutrition_stops_unsupported_larvae",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NursingGuardGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 76.275
+    },
+    {
+      "name": "prime_ants_test:nursing_guard_game_test_interrupted_refused_feeding_and_restoration_conserve_cargo_once",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NursingGuardGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 75.145
+    },
+    {
+      "name": "prime_ants_test:nursing_guard_game_test_nurse_death_refusal_uses_persisted_custody_without_nutrition_credit",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NursingGuardGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 67.322
+    },
+    {
+      "name": "prime_ants_test:nursing_guard_game_test_food_fed_larval_stores_and_real_member_registry_persist",
+      "max_ticks": 24000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NursingGuardGameTest.java",
+      "suite": "long",
+      "weight_ticks": 24000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 94.184
+    },
+    {
+      "name": "prime_ants_test:nursing_guard_game_test_reused_slots_restored_refusal_and_dead_worker_never_duplicate_identities",
+      "max_ticks": 24000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NursingGuardGameTest.java",
+      "suite": "long",
+      "weight_ticks": 24000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 117.459
+    },
+    {
+      "name": "prime_ants_test:nursing_guard_game_test_dead_queen_ends_laying_while_fed_open_nest_cocoons_remain_viable",
+      "max_ticks": 24000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NursingGuardGameTest.java",
+      "suite": "long",
+      "weight_ticks": 24000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 98.628
+    },
+    {
+      "name": "prime_ants_test:expansion_game_test_chamber_lighting_survives_real_nursing_and_shared_expansion_guards",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ExpansionGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 118.458
+    },
+    {
+      "name": "prime_ants_test:expansion_game_test_cargo_observer_can_see_overhead_between_opaque_mound_blocks",
+      "max_ticks": 100,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ExpansionGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 100,
+      "reason": "Local actor/origin/placement/serialization guard, at most 100 declared ticks, without a developed colony",
+      "t13_seconds": 0.003
+    },
+    {
+      "name": "prime_ants_test:expansion_game_test_room_columns_keep_pending_lower_soil_covered_across_real_actions",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ExpansionGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 52.237
+    },
+    {
+      "name": "prime_ants_test:expansion_game_test_automatic_worker_builds_connected_useful_extension_with_conserved_soil",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ExpansionGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 118.125
+    },
+    {
+      "name": "prime_ants_test:expansion_game_test_same_state_replacement_after_planning_revokes_prepared_target",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ExpansionGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 98.342
+    },
+    {
+      "name": "prime_ants_test:expansion_game_test_completed_excavation_can_relieve_traffic_before_final_soil_delivery",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ExpansionGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 118.023
+    },
+    {
+      "name": "prime_ants_test:expansion_game_test_player_hole_in_planned_cell_cannot_become_usable_space",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ExpansionGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 98.428
+    },
+    {
+      "name": "prime_ants_test:expansion_game_test_unrelated_shell_hole_cannot_be_legitimized_by_plan",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ExpansionGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 98.064
+    },
+    {
+      "name": "prime_ants_test:expansion_game_test_removed_support_prevents_worker_action_and_pauses_habitat",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ExpansionGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 98.218
+    },
+    {
+      "name": "prime_ants_test:expansion_game_test_blocked_exterior_mound_retains_builder_cargo",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ExpansionGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 99.162
+    },
+    {
+      "name": "prime_ants_test:expansion_game_test_mid_work_entity_and_saved_data_restoration_keeps_one_claim_and_soil",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ExpansionGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 118.627
+    },
+    {
+      "name": "prime_ants_test:expansion_game_test_builder_death_uses_custody_and_actual_worker_reassignment",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ExpansionGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 121.455
+    },
+    {
+      "name": "prime_ants_test:expansion_game_test_replacement_builder_recovers_from_observed_nursery_crowding",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ExpansionGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 121.922
+    },
+    {
+      "name": "prime_ants_test:expansion_game_test_protected_unknown_foreign_and_historical_lining_fail_closed",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ExpansionGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 98.394
+    },
+    {
+      "name": "prime_ants_test:expansion_game_test_same_state_mound_replacement_cannot_authorize_support_or_excavation",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ExpansionGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 61.398
+    },
+    {
+      "name": "prime_ants_test:role_conflict_game_test_occupied_canonical_job_rejects_direct_nurse_assignment_without_mutation",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\RoleConflictGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 119.793
+    },
+    {
+      "name": "prime_ants_test:role_conflict_game_test_enabled_real_food_and_soil_carriers_reject_assignments_with_empty_hand_controls",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\RoleConflictGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 138.274
+    },
+    {
+      "name": "prime_ants_test:role_conflict_game_test_dead_forager_cannot_steal_empty_handed_partial_builder",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\RoleConflictGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 141.373
+    },
+    {
+      "name": "prime_ants_test:role_conflict_game_test_restored_partial_builder_and_queen_keep_reciprocal_claims",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\RoleConflictGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 140.8
+    },
+    {
+      "name": "prime_ants_test:role_conflict_game_test_conflicting_persisted_forager_claim_releases_without_losing_builder_progress",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\RoleConflictGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 212.337
+    },
+    {
+      "name": "prime_ants_test:role_conflict_game_test_disabled_nursing_labels_cannot_reserve_care_with_four_other_mature_workers",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\RoleConflictGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 201.971
+    },
+    {
+      "name": "prime_ants_test:role_conflict_game_test_persisted_incompatible_builder_cargo_is_explicitly_quarantined",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\RoleConflictGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 114.55
+    },
+    {
+      "name": "prime_ants_test:natural_placement_game_test_genuine_generation_places_and_ticks_founding_queen",
+      "max_ticks": 500,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NaturalPlacementGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 500,
+      "reason": "Local actor/origin/placement/serialization guard, at most 500 declared ticks, without a developed colony",
+      "t13_seconds": 18.59
+    },
+    {
+      "name": "prime_ants_test:natural_placement_game_test_biome_substrate_and_player_replacement_reject_safely",
+      "max_ticks": 300,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NaturalPlacementGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 300,
+      "reason": "Local actor/origin/placement/serialization guard, at most 300 declared ticks, without a developed colony",
+      "t13_seconds": 35.665
+    },
+    {
+      "name": "prime_ants_test:natural_placement_game_test_fluid_occupied_and_unknown_footprints_reject_safely",
+      "max_ticks": 300,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NaturalPlacementGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 300,
+      "reason": "Local actor/origin/placement/serialization guard, at most 300 declared ticks, without a developed colony",
+      "t13_seconds": 47.166
+    },
+    {
+      "name": "prime_ants_test:natural_placement_game_test_insertion_refusal_retries_one_persisted_identity",
+      "max_ticks": 400,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NaturalPlacementGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 400,
+      "reason": "Local actor/origin/placement/serialization guard, at most 400 declared ticks, without a developed colony",
+      "t13_seconds": 16.671
+    },
+    {
+      "name": "prime_ants_test:natural_placement_game_test_loading_death_repeated_authority_and_missing_authority_never_mint",
+      "max_ticks": 350,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NaturalPlacementGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 350,
+      "reason": "Local actor/origin/placement/serialization guard, at most 350 declared ticks, without a developed colony",
+      "t13_seconds": 23.0
+    },
+    {
+      "name": "prime_ants_test:natural_placement_game_test_production_placement_defaults_enabled_with_explicit_opt_out",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NaturalPlacementGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "Local actor/origin/placement/serialization guard, at most 20 declared ticks, without a developed colony",
+      "t13_seconds": 0.0
+    },
+    {
+      "name": "prime_ants_test:placement_durability_game_test_swallowed_reservation_write_cannot_insert_and_recovers_original_identity",
+      "max_ticks": 300,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\PlacementDurabilityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 300,
+      "reason": "Local actor/origin/placement/serialization guard, at most 300 declared ticks, without a developed colony",
+      "t13_seconds": 7.52
+    },
+    {
+      "name": "prime_ants_test:placement_durability_game_test_completion_write_failure_reload_and_normal_death_cannot_replace",
+      "max_ticks": 300,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\PlacementDurabilityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 300,
+      "reason": "Local actor/origin/placement/serialization guard, at most 300 declared ticks, without a developed colony",
+      "t13_seconds": 22.923
+    },
+    {
+      "name": "prime_ants_test:placement_durability_game_test_persistent_final_refusal_terminates_across_disk_restore",
+      "max_ticks": 300,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\PlacementDurabilityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 300,
+      "reason": "Local actor/origin/placement/serialization guard, at most 300 declared ticks, without a developed colony",
+      "t13_seconds": 34.919
+    },
+    {
+      "name": "prime_ants_test:terrain_rules_game_test_generated_vegetation_clears_only_declared_excavation_with_conserved_soil",
+      "max_ticks": 2000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerrainRulesGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 2000,
+      "reason": "Local actor/origin/placement/serialization guard, at most 2000 declared ticks, without a developed colony",
+      "t13_seconds": 52.908
+    },
+    {
+      "name": "prime_ants_test:terrain_rules_game_test_same_state_plant_replacement_revokes_authority_before_queen_work",
+      "max_ticks": 1200,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerrainRulesGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 1200,
+      "reason": "Local actor/origin/placement/serialization guard, at most 1200 declared ticks, without a developed colony",
+      "t13_seconds": 48.092
+    },
+    {
+      "name": "prime_ants_test:terrain_rules_game_test_replacement_after_plant_clearing_cannot_be_implicitly_removed_with_soil",
+      "max_ticks": 1500,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerrainRulesGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 1500,
+      "reason": "Local actor/origin/placement/serialization guard, at most 1500 declared ticks, without a developed colony",
+      "t13_seconds": 18.577
+    },
+    {
+      "name": "prime_ants_test:terrain_rules_game_test_unknown_plants_trees_crops_and_historical_loading_never_grant_removal",
+      "max_ticks": 300,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerrainRulesGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 300,
+      "reason": "Local actor/origin/placement/serialization guard, at most 300 declared ticks, without a developed colony",
+      "t13_seconds": 19.356
+    },
+    {
+      "name": "prime_ants_test:terrain_rules_game_test_thin_native_soil_keeps_untouched_mineral_chamber_floor",
+      "max_ticks": 10000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerrainRulesGameTest.java",
+      "suite": "long",
+      "weight_ticks": 10000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 77.802
+    },
+    {
+      "name": "prime_ants_test:terrain_rules_game_test_one_block_surface_step_uses_reachable_exterior_stands_and_deposits",
+      "max_ticks": 3000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerrainRulesGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 3000,
+      "reason": "Local actor/origin/placement/serialization guard, at most 3000 declared ticks, without a developed colony",
+      "t13_seconds": 52.865
+    },
+    {
+      "name": "prime_ants_test:terrain_rules_game_test_unsafe_roof_fluid_mineral_targets_and_two_block_exterior_steps_fail_closed",
+      "max_ticks": 300,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerrainRulesGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 300,
+      "reason": "Local actor/origin/placement/serialization guard, at most 300 declared ticks, without a developed colony",
+      "t13_seconds": 19.627
+    },
+    {
+      "name": "prime_ants_test:terrain_rules_game_test_legacy_pending_search_restores_original_budget_and_terminal_cannot_reopen",
+      "max_ticks": 300,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerrainRulesGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 300,
+      "reason": "Local actor/origin/placement/serialization guard, at most 300 declared ticks, without a developed colony",
+      "t13_seconds": 21.723
+    },
+    {
+      "name": "prime_ants_test:terrain_rules_game_test_frozen_selection_recovery_uses_pure_import_without_biome_survey",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerrainRulesGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "Local actor/origin/placement/serialization guard, at most 20 declared ticks, without a developed colony",
+      "t13_seconds": 7.406
+    },
+    {
+      "name": "prime_ants_test:nestmate_game_test_nestmates_move_and_push_in_both_directions_with_foreign_and_unknown_controls",
+      "max_ticks": 200,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NestmateGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 200,
+      "reason": "Local actor/origin/placement/serialization guard, at most 200 declared ticks, without a developed colony",
+      "t13_seconds": 40.777
+    },
+    {
+      "name": "prime_ants_test:nestmate_game_test_nestmate_contacts_exclude_cramming_but_retain_terrain_gravity_damage_and_foreign_cramming",
+      "max_ticks": 200,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NestmateGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 200,
+      "reason": "Local actor/origin/placement/serialization guard, at most 200 declared ticks, without a developed colony",
+      "t13_seconds": 42.135
+    },
+    {
+      "name": "prime_ants_test:nestmate_game_test_occupied_nestmate_bodies_still_refuse_physical_mounds_and_plugs",
+      "max_ticks": 10000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NestmateGameTest.java",
+      "suite": "long",
+      "weight_ticks": 10000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 76.878
+    },
+    {
+      "name": "prime_ants_test:soil_continuity_game_test_sideways_attachment_refuses_real_queen_excavation_with_read_only_survival",
+      "max_ticks": 1500,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SoilContinuityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 1500,
+      "reason": "Local actor/origin/placement/serialization guard, at most 1500 declared ticks, without a developed colony",
+      "t13_seconds": 46.212
+    },
+    {
+      "name": "prime_ants_test:soil_continuity_game_test_lowered_bamboo_survives_queen_preparation_and_restoration",
+      "max_ticks": 1500,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SoilContinuityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 1500,
+      "reason": "Local actor/origin/placement/serialization guard, at most 1500 declared ticks, without a developed colony",
+      "t13_seconds": 49.231
+    },
+    {
+      "name": "prime_ants_test:soil_continuity_game_test_actual_natural_write_cannot_exempt_nested_ordinary_write",
+      "max_ticks": 1500,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SoilContinuityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 1500,
+      "reason": "Local actor/origin/placement/serialization guard, at most 1500 declared ticks, without a developed colony",
+      "t13_seconds": 30.289
+    },
+    {
+      "name": "prime_ants_test:soil_continuity_game_test_late_plant_refusal_retains_existing_cargo_through_restoration",
+      "max_ticks": 1500,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SoilContinuityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 1500,
+      "reason": "Local actor/origin/placement/serialization guard, at most 1500 declared ticks, without a developed colony",
+      "t13_seconds": 28.89
+    },
+    {
+      "name": "prime_ants_test:soil_continuity_game_test_actual_vanilla_spread_retains_pending_authority_and_queen_continues",
+      "max_ticks": 1500,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SoilContinuityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 1500,
+      "reason": "Local actor/origin/placement/serialization guard, at most 1500 declared ticks, without a developed colony",
+      "t13_seconds": 51.706
+    },
+    {
+      "name": "prime_ants_test:soil_continuity_game_test_actual_vanilla_decay_retains_authority_and_queen_continues",
+      "max_ticks": 1500,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SoilContinuityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 1500,
+      "reason": "Local actor/origin/placement/serialization guard, at most 1500 declared ticks, without a developed colony",
+      "t13_seconds": 43.158
+    },
+    {
+      "name": "prime_ants_test:soil_continuity_game_test_identical_ordinary_grass_write_revokes_and_failed_queen_stays_failed_on_restore",
+      "max_ticks": 1500,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SoilContinuityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 1500,
+      "reason": "Local actor/origin/placement/serialization guard, at most 1500 declared ticks, without a developed colony",
+      "t13_seconds": 13.63
+    },
+    {
+      "name": "prime_ants_test:soil_continuity_game_test_identical_ordinary_dirt_write_after_natural_decay_still_revokes",
+      "max_ticks": 1500,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SoilContinuityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 1500,
+      "reason": "Local actor/origin/placement/serialization guard, at most 1500 declared ticks, without a developed colony",
+      "t13_seconds": 11.227
+    },
+    {
+      "name": "prime_ants_test:soil_continuity_game_test_later_real_spread_cannot_revive_revoked_or_unknown_soil",
+      "max_ticks": 1500,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SoilContinuityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 1500,
+      "reason": "Local actor/origin/placement/serialization guard, at most 1500 declared ticks, without a developed colony",
+      "t13_seconds": 46.225
+    },
+    {
+      "name": "prime_ants_test:soil_continuity_game_test_late_plant_on_initially_bare_pending_soil_keeps_plant_and_support",
+      "max_ticks": 1500,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SoilContinuityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 1500,
+      "reason": "Local actor/origin/placement/serialization guard, at most 1500 declared ticks, without a developed colony",
+      "t13_seconds": 47.018
+    },
+    {
+      "name": "prime_ants_test:soil_continuity_game_test_lowered_plant_outside_excavation_survives_neighbor_soil_preparation",
+      "max_ticks": 1500,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SoilContinuityGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 1500,
+      "reason": "Local actor/origin/placement/serialization guard, at most 1500 declared ticks, without a developed colony",
+      "t13_seconds": 48.821
+    },
+    {
+      "name": "prime_ants_test:nectar_game_test_late_discovered_generated_flower_gets_normal_approach_and_full_action",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NectarGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 103.622
+    },
+    {
+      "name": "prime_ants_test:nectar_game_test_two_genuine_workers_compete_for_one_ready_flower_without_duplication",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NectarGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 90.018
+    },
+    {
+      "name": "prime_ants_test:nectar_game_test_full_storage_restoration_and_ordinary_death_conserve_harvested_cargo",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NectarGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 89.102
+    },
+    {
+      "name": "prime_ants_test:nectar_game_test_generated_flower_genuine_worker_harvests_returns_and_nurse_consumes",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NectarGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 88.382
+    },
+    {
+      "name": "prime_ants_test:nectar_game_test_cooldown_disk_restore_keeps_cargo_and_loaded_progress_allows_next_harvest",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NectarGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 99.322
+    },
+    {
+      "name": "prime_ants_test:nectar_game_test_removed_flower_during_real_action_yields_nothing",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NectarGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 90.655
+    },
+    {
+      "name": "prime_ants_test:nectar_game_test_changed_flower_during_real_action_yields_nothing",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NectarGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 90.615
+    },
+    {
+      "name": "prime_ants_test:nectar_game_test_unready_identically_replaced_flower_yields_nothing",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NectarGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 90.044
+    },
+    {
+      "name": "prime_ants_test:nectar_game_test_inaccessible_flower_yields_nothing",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NectarGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 89.776
+    },
+    {
+      "name": "prime_ants_test:nectar_game_test_interrupted_action_restores_without_portion_then_completes_normally",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NectarGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 88.963
+    },
+    {
+      "name": "prime_ants_test:nectar_game_test_out_of_reach_interrupted_action_cannot_complete_remotely",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NectarGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 84.491
+    },
+    {
+      "name": "prime_ants_test:lifecycle_game_test_environmental_chicken_loot_funds_new_worker_then_queen_death_ends_colony",
+      "max_ticks": 26000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\LifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 26000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 439.956
+    },
+    {
+      "name": "prime_ants_test:lifecycle_game_test_restored_protein_carrier_starves_releases_cargo_and_keeps_death_receipts",
+      "max_ticks": 22000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\LifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 22000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 341.155
+    },
+    {
+      "name": "prime_ants_test:lifecycle_game_test_carrier_release_accounting_ignores_foreign_fixture_drop",
+      "max_ticks": 22000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\LifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 22000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 173.411
+    },
+    {
+      "name": "prime_ants_test:lifecycle_game_test_queen_death_stops_laying_viable_cocoons_emerge_and_all_adults_die",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\LifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 166.558
+    },
+    {
+      "name": "prime_ants_test:lifecycle_game_test_birth_selected_capacity_keeps_unloaded_identities_and_death_releases_reservation",
+      "max_ticks": 24000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\LifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 24000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 256.842
+    },
+    {
+      "name": "prime_ants_test:lifecycle_game_test_legacy_worker_age_adopts_stable_defaults_once_without_renewal",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\LifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 148.12
+    },
+    {
+      "name": "prime_ants_test:lifecycle_game_test_daylight_zombie_loot_travels_through_cache_and_nursing",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\LifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 178.653
+    },
+    {
+      "name": "prime_ants_test:lifecycle_game_test_genuine_unfed_workers_starve_before_their_birth_selected_age_limit",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\LifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 96.995
+    },
+    {
+      "name": "prime_ants_test:lifecycle_game_test_physical_meals_sustain_workers_until_age_death_and_persist_through_restore",
+      "max_ticks": 22000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\LifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 22000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 340.577
+    },
+    {
+      "name": "prime_ants_test:terminal_brood_game_test_partial_failed_founder_starves_releases_real_soil_once",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerminalBroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 26.419
+    },
+    {
+      "name": "prime_ants_test:terminal_brood_game_test_queen_killed_with_genuine_eggs_reaches_dependent_extinction",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerminalBroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 149.323
+    },
+    {
+      "name": "prime_ants_test:terminal_brood_game_test_healthy_short_policy_founder_completes_exact_original_budget",
+      "max_ticks": 10000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerminalBroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 10000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 141.247
+    },
+    {
+      "name": "prime_ants_test:terminal_brood_game_test_invalid_habitat_advances_neglect_across_restoration",
+      "max_ticks": 10000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerminalBroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 10000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 189.428
+    },
+    {
+      "name": "prime_ants_test:terminal_brood_game_test_lost_care_advances_neglect_across_restoration",
+      "max_ticks": 10000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerminalBroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 10000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 188.994
+    },
+    {
+      "name": "prime_ants_test:terminal_brood_game_test_supported_larva_and_refused_cocoon_survive_brief_interruptions",
+      "max_ticks": 10000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerminalBroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 10000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 144.19
+    },
+    {
+      "name": "prime_ants_test:terminal_brood_game_test_prolonged_refused_cocoon_expires_at_persisted_bound",
+      "max_ticks": 10000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerminalBroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 10000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 161.259
+    },
+    {
+      "name": "prime_ants_test:terminal_brood_game_test_confirmed_missing_loaded_nursery_ends_queen_exemption",
+      "max_ticks": 10000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerminalBroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 10000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 155.973
+    },
+    {
+      "name": "prime_ants_test:terminal_brood_game_test_legacy_failed_queen_preserves_age_and_fasting_across_repeated_restore",
+      "max_ticks": 10000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerminalBroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 10000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 8.055
+    },
+    {
+      "name": "prime_ants_test:terminal_brood_game_test_queen_dies_with_underfed_larvae_and_adults_then_colony_expires",
+      "max_ticks": 20000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerminalBroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 20000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 394.216
+    },
+    {
+      "name": "prime_ants_test:terminal_brood_game_test_expired_stale_records_stay_terminal_and_freed_slots_require_funded_new_identity",
+      "max_ticks": 24000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerminalBroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 24000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 284.728
+    },
+    {
+      "name": "prime_ants_test:terminal_brood_game_test_invalid_cocoon_habitat_expires_at_separate_waiting_bound",
+      "max_ticks": 10000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerminalBroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 10000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 161.119
+    },
+    {
+      "name": "prime_ants_test:terminal_brood_game_test_absent_queen_lookup_keeps_identity_and_unloaded_queen_clocks",
+      "max_ticks": 10000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerminalBroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 10000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 147.821
+    },
+    {
+      "name": "prime_ants_test:terminal_brood_game_test_physically_nourished_larva_completes_after_queen_death",
+      "max_ticks": 22000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerminalBroodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 22000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 228.772
+    },
+    {
+      "name": "prime_ants_test:terminal_brood_game_test_replay_closure_uses_frozen_snapshot_after_chunk_io_closes",
+      "max_ticks": 100,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TerminalBroodGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 100,
+      "reason": "Local actor/origin/placement/serialization guard, at most 100 declared ticks, without a developed colony",
+      "t13_seconds": 3.924
+    },
+    {
+      "name": "prime_ants_test:native_food_game_test_diagnostic_radius_four_actually_entity_ticks_whole_enlarged_box",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NativeFoodGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 1000,
+      "reason": "Local actor/origin/placement/serialization guard, at most 1000 declared ticks, without a developed colony",
+      "t13_seconds": 3.667
+    },
+    {
+      "name": "prime_ants_test:native_food_game_test_genuine_cover_prey_and_far_nectar_transport_fund_both_recipients_and_new_brood",
+      "max_ticks": 24000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NativeFoodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 24000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 302.208
+    },
+    {
+      "name": "prime_ants_test:native_food_game_test_prey_cooldown_disk_restore_and_same_state_replacement_keep_tombstone",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NativeFoodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 221.113
+    },
+    {
+      "name": "prime_ants_test:native_food_game_test_changed_cover_during_action_cannot_yield_prey",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NativeFoodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 183.633
+    },
+    {
+      "name": "prime_ants_test:native_food_game_test_genuine_barrier_prevents_remote_cover_harvest_and_dropped_food_pickup",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NativeFoodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 188.202
+    },
+    {
+      "name": "prime_ants_test:native_food_game_test_prey_full_storage_restoration_and_death_conserve_canonical_cargo",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NativeFoodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 180.736
+    },
+    {
+      "name": "prime_ants_test:native_food_game_test_two_genuine_workers_compete_for_one_witnessed_cover_portion",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NativeFoodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 182.028
+    },
+    {
+      "name": "prime_ants_test:native_food_game_test_source_free_scan_inspects_entire_declared_box_within_search_bound",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NativeFoodGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 182.093
+    },
+    {
+      "name": "prime_ants_test:native_food_game_test_legacy_nutrition_stacks_history_and_active_cooldown_load_unchanged",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NativeFoodGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "Local actor/origin/placement/serialization guard, at most 20 declared ticks, without a developed colony",
+      "t13_seconds": 0.001
+    },
+    {
+      "name": "prime_ants_test:player_basics_game_test_survival_body_enters_existing_stairs_and_inventory_drop_reaches_owned_cache",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\PlayerBasicsGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 159.148
+    },
+    {
+      "name": "prime_ants_test:crop_policy_game_test_hungry_protein_nurse_receives_full_physical_crop_action_and_coherent_restore",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CropPolicyGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 156.428
+    },
+    {
+      "name": "prime_ants_test:crop_policy_game_test_short_social_interruption_keeps_builder_cargo_and_claim",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CropPolicyGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 232.073
+    },
+    {
+      "name": "prime_ants_test:crop_policy_game_test_changed_recipient_refuses_commit_without_lost_cargo_or_duplicated_sugar",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CropPolicyGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 156.884
+    },
+    {
+      "name": "prime_ants_test:crop_policy_game_test_maintenance_partial_payments_persist_and_legacy_spending_is_unchanged",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CropPolicyGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 141.949
+    },
+    {
+      "name": "prime_ants_test:crop_policy_game_test_flow_window_pauses_with_queen_stock_and_resumes_without_inventing_income",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CropPolicyGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "Local actor/origin/placement/serialization guard, at most 20 declared ticks, without a developed colony",
+      "t13_seconds": 0.0
+    },
+    {
+      "name": "prime_ants_test:crop_policy_game_test_warmed_receipts_cannot_fund_spent_food_and_current_stock_covers_commitments",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CropPolicyGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "Local actor/origin/placement/serialization guard, at most 20 declared ticks, without a developed colony",
+      "t13_seconds": 0.0
+    },
+    {
+      "name": "prime_ants_test:crop_policy_game_test_eight_unreachable_drops_cannot_hide_ninth_before_native_fallback",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CropPolicyGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 169.417
+    },
+    {
+      "name": "prime_ants_test:crop_policy_game_test_removed_drop_queue_continues_across_search_window_and_restore",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CropPolicyGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 179.317
+    },
+    {
+      "name": "prime_ants_test:crop_policy_game_test_bamboo_scopes_overlap_and_close_independently",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CropPolicyGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "Local actor/origin/placement/serialization guard, at most 20 declared ticks, without a developed colony",
+      "t13_seconds": 0.0
+    },
+    {
+      "name": "prime_ants_test:defense_game_test_accepted_survival_harm_bites_only_provoker_with_reach_cooldown_and_coherent_restore",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\DefenseGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 147.305
+    },
+    {
+      "name": "prime_ants_test:defense_game_test_owned_break_captures_before_revocation_alarms_only_owner_and_defends_unready_nest",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\DefenseGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 172.866
+    },
+    {
+      "name": "prime_ants_test:defense_game_test_canceled_unknown_and_ordinary_writes_food_drops_and_zero_damage_stay_benign",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\DefenseGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 147.512
+    },
+    {
+      "name": "prime_ants_test:defense_game_test_walls_range_creative_spectator_and_missing_targets_prevent_remote_bites",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\DefenseGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 149.418
+    },
+    {
+      "name": "prime_ants_test:defense_game_test_missing_provoker_restores_same_forager_exact_soil_cargo_claim_and_task",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\DefenseGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 142.741
+    },
+    {
+      "name": "prime_ants_test:defense_game_test_loaded_alarm_expiry_restores_same_forager_exact_soil_cargo_claim_and_task",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\DefenseGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 159.799
+    },
+    {
+      "name": "prime_ants_test:defense_game_test_live_owned_plug_break_retains_source_across_ordinary_write_revocation",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\DefenseGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 130.603
+    },
+    {
+      "name": "prime_ants_test:defense_game_test_successful_mound_cache_and_nursery_breaks_renew_only_actual_owner",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\DefenseGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 836.975
+    },
+    {
+      "name": "prime_ants_test:defense_game_test_provocation_cancels_uncommitted_feeding_and_preserves_physical_food",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\DefenseGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 158.283
+    },
+    {
+      "name": "prime_ants_test:defense_game_test_provocation_cancels_real_partial_crop_sharing_without_transfer_cargo_or_claim_loss",
+      "max_ticks": 22000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\DefenseGameTest.java",
+      "suite": "long",
+      "weight_ticks": 22000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 338.265
+    },
+    {
+      "name": "prime_ants_test:colony_stage_game_test_egg_founded_colony_lays_beyond_the_founding_cap_only_after_promotion_to_young",
+      "max_ticks": 24000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyStageGameTest.java",
+      "suite": "long",
+      "weight_ticks": 24000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 1220.212
+    },
+    {
+      "name": "prime_ants_test:colony_stage_game_test_real_worker_deaths_regress_to_founding_and_the_colony_regrows_to_young",
+      "max_ticks": 56000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyStageGameTest.java",
+      "suite": "long",
+      "weight_ticks": 56000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 6120.924
+    },
+    {
+      "name": "prime_ants_test:colony_stage_game_test_chamber_registry_and_stage_survive_reload_and_legacy_capacity_fields_load",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyStageGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 1355.757
+    },
+    {
+      "name": "prime_ants_test:colony_stage_game_test_unavailable_entrance_cell_leaves_both_functions_unknown_and_the_colony_young",
+      "max_ticks": 24000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyStageGameTest.java",
+      "suite": "long",
+      "weight_ticks": 24000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 1256.639
+    },
+    {
+      "name": "prime_ants_test:colony_stage_game_test_loaded_obstructed_entrance_cell_loses_both_functions_and_the_colony_drops_to_founding",
+      "max_ticks": 24000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyStageGameTest.java",
+      "suite": "long",
+      "weight_ticks": 24000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 1256.603
+    },
+    {
+      "name": "prime_ants_test:colony_stage_game_test_unavailable_entrance_never_hides_loaded_broken_wall_and_the_colony_regresses",
+      "max_ticks": 24000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyStageGameTest.java",
+      "suite": "long",
+      "weight_ticks": 24000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 1250.773
+    },
+    {
+      "name": "prime_ants_test:colony_stage_game_test_young_colony_meets_every_mature_requirement_but_adults_through_real_play",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyStageGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 5110.856
+    },
+    {
+      "name": "prime_ants_test:colony_stage_game_test_unavailable_entrance_never_hides_destroyed_loaded_cache_and_the_food_store_is_lost",
+      "max_ticks": 24000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyStageGameTest.java",
+      "suite": "long",
+      "weight_ticks": 24000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 1242.219
+    },
+    {
+      "name": "prime_ants_test:material_store_game_test_young_colony_digs_the_material_store_and_the_evaluator_confirms_it",
+      "max_ticks": 48000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MaterialStoreGameTest.java",
+      "suite": "long",
+      "weight_ticks": 48000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 2586.588
+    },
+    {
+      "name": "prime_ants_test:material_store_game_test_player_placed_block_in_planned_cell_is_never_removed_and_the_job_stops",
+      "max_ticks": 48000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MaterialStoreGameTest.java",
+      "suite": "long",
+      "weight_ticks": 48000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 1911.83
+    },
+    {
+      "name": "prime_ants_test:material_store_game_test_mid_dig_reload_continues_without_duplicate_removals_and_the_finished_store_reloads_as_one_chamber",
+      "max_ticks": 48000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MaterialStoreGameTest.java",
+      "suite": "long",
+      "weight_ticks": 48000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 2608.793
+    },
+    {
+      "name": "prime_ants_test:chamber_scan_game_test_partly_dug_store_beside_an_unavailable_completed_cell_loses_its_loaded_broken_shell_in_both_scans",
+      "max_ticks": 48000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ChamberScanGameTest.java",
+      "suite": "long",
+      "weight_ticks": 48000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 2143.911
+    },
+    {
+      "name": "prime_ants_test:chamber_scan_game_test_finished_store_beside_an_unavailable_cell_loses_its_loaded_broken_shell_in_both_scans",
+      "max_ticks": 48000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ChamberScanGameTest.java",
+      "suite": "long",
+      "weight_ticks": 48000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 2787.414
+    },
+    {
+      "name": "prime_ants_test:queens_hall_game_test_young_colony_digs_the_queens_hall_beside_her_chamber_while_eggs_develop_and_loses_it_when_its_shell_breaks",
+      "max_ticks": 48000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\QueensHallGameTest.java",
+      "suite": "long",
+      "weight_ticks": 48000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 3176.335
+    },
+    {
+      "name": "prime_ants_test:material_hauling_game_test_dropped_gravel_sand_raw_copper_and_raw_iron_are_food_first_one_unit_trips_and_settle_in_store",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MaterialHaulingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 3919.049
+    },
+    {
+      "name": "prime_ants_test:material_hauling_game_test_dropped_clay_cobblestone_and_coal_reach_the_confirmed_store_after_the_food_with_exact_accounting",
+      "max_ticks": 48000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MaterialHaulingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 48000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 3642.421
+    },
+    {
+      "name": "prime_ants_test:material_hauling_game_test_food_dropped_while_the_forager_walks_to_clay_is_collected_before_the_clay",
+      "max_ticks": 48000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MaterialHaulingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 48000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 3150.829
+    },
+    {
+      "name": "prime_ants_test:material_hauling_game_test_a_carrier_keeps_its_unit_while_its_store_is_gone_and_full_share_leaves_stone_on_the_ground",
+      "max_ticks": 48000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MaterialHaulingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 48000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 5578.238
+    },
+    {
+      "name": "prime_ants_test:material_hauling_game_test_a_carrier_killed_mid_trip_releases_its_unit_through_custody_exactly_once",
+      "max_ticks": 48000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MaterialHaulingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 48000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 3056.136
+    },
+    {
+      "name": "prime_ants_test:material_hauling_game_test_a_mid_haul_save_and_reload_keeps_every_unit_exactly_once",
+      "max_ticks": 48000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MaterialHaulingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 48000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 3235.173
+    },
+    {
+      "name": "prime_ants_test:mining_game_test_mature_worker_digs_connected_gallery_and_physically_stores_every_resource_with_settled_ledgers",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MiningGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 8807.015
+    },
+    {
+      "name": "prime_ants_test:mining_game_test_genuine_proto_conversion_observes_mining_origins_and_same_state_writes_and_reload_cannot_restore_them",
+      "max_ticks": 300,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MiningGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 300,
+      "reason": "Local actor/origin/placement/serialization guard, at most 300 declared ticks, without a developed colony",
+      "t13_seconds": 7.672
+    },
+    {
+      "name": "prime_ants_test:mining_game_test_unavailable_target_and_store_foreign_ownership_and_same_state_replacement_retain_exact_cargo",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MiningGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 8875.291
+    },
+    {
+      "name": "prime_ants_test:mining_game_test_full_store_prevents_removal_then_physical_stock_release_and_two_evaluations_resume_mining",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MiningGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 9564.476
+    },
+    {
+      "name": "prime_ants_test:mining_game_test_mid_haul_disk_reload_resumes_then_miner_death_releases_one_unit_exactly_once",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MiningGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 8921.805
+    },
+    {
+      "name": "prime_ants_test:mining_game_test_natural_falling_roof_is_refused_without_cargo_or_falling_resource_duplication",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MiningGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 8875.465
+    },
+    {
+      "name": "prime_ants_test:mining_game_test_unsafe_first_exposed_face_is_refused_by_production_before_worker_assignment",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MiningGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 7880.883
+    },
+    {
+      "name": "prime_ants_test:mining_game_test_real_population_regression_stops_new_mining_but_authorized_carried_unit_still_reaches_store",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MiningGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 8444.507
+    },
+    {
+      "name": "prime_ants_test:nursery_upgrade_game_test_young_colony_reaches_mature_by_real_play_then_rebuilds_its_nursery_in_packed_clay_and_its_brood_develops_faster",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NurseryUpgradeGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 7497.148
+    },
+    {
+      "name": "prime_ants_test:nursery_upgrade_game_test_upgrade_keeps_every_unit_through_reload_and_killed_builder_and_never_converts_player_changed_wall",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NurseryUpgradeGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 6423.188
+    },
+    {
+      "name": "prime_ants_test:mound_game_test_young_colony_lays_its_store_and_hall_soil_on_its_stage_mound_where_short_plants_cover_the_old_deposits",
+      "max_ticks": 48000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MoundGameTest.java",
+      "suite": "long",
+      "weight_ticks": 48000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 3201.143
+    },
+    {
+      "name": "prime_ants_test:mound_game_test_player_block_on_the_mound_is_never_covered_and_mid_deposit_reload_keeps_every_unit_once",
+      "max_ticks": 48000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MoundGameTest.java",
+      "suite": "long",
+      "weight_ticks": 48000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 2782.23
+    },
+    {
+      "name": "prime_ants_test:food_cache_game_test_cache_full_of_chickens_still_takes_apples_and_no_adult_starves",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\FoodCacheGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 3708.957
+    },
+    {
+      "name": "prime_ants_test:mature_colony_game_test_upgrade_counts_every_clay_unit_in_each_place_through_its_builder_death",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\MatureColonyGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 6682.679
+    },
+    {
+      "name": "prime_ants_test:stage_hysteresis_game_test_real_queen_death_alone_drops_young_with_five_surviving_workers_at_next_evaluation",
+      "max_ticks": 20000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\StageHysteresisGameTest.java",
+      "suite": "long",
+      "weight_ticks": 20000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 1327.611
+    },
+    {
+      "name": "prime_ants_test:stage_hysteresis_game_test_destroyed_cache_drops_young_colony_to_founding_at_once",
+      "max_ticks": 20000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\StageHysteresisGameTest.java",
+      "suite": "long",
+      "weight_ticks": 20000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 1225.62
+    },
+    {
+      "name": "prime_ants_test:plug_soil_game_test_full_founding_deposit_list_still_opens_the_nest_with_both_plug_units_on_the_stage_mound",
+      "max_ticks": 20000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\PlugSoilGameTest.java",
+      "suite": "long",
+      "weight_ticks": 20000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 654.479
+    },
+    {
+      "name": "prime_ants_test:legacy_cache_game_test_legacy_six_chicken_cache_with_no_protein_taker_lets_apples_in_and_every_unit_is_conserved",
+      "max_ticks": 20000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\LegacyCacheGameTest.java",
+      "suite": "long",
+      "weight_ticks": 20000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 910.268
+    },
+    {
+      "name": "prime_ants_test:forager_scaling_game_test_large_colony_foragers_carry_at_once_with_exact_accounting_and_claims_survive_reload",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ForagerScalingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 3474.654
+    },
+    {
+      "name": "prime_ants_test:forager_scaling_game_test_scaled_foragers_grow_colony_past_thirty_adults",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ForagerScalingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 6306.571
+    },
+    {
+      "name": "prime_ants_test:hall_availability_game_test_observed_queen_keeps_unknown_hall_through_unavailable_plug_then_loaded_obstruction_is_real_loss",
+      "max_ticks": 20000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\HallAvailabilityGameTest.java",
+      "suite": "long",
+      "weight_ticks": 20000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 3284.39
+    },
+    {
+      "name": "prime_ants_test:expanded_brood_game_test_deterministic_expanded_brood_displays_and_restores_every_record_slot_clock_and_fractional_step",
+      "max_ticks": 5000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ExpandedBroodGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "Five-record codec/display and first resumed fractional step; no colony development prerequisite",
+      "t13_seconds": 2.993
+    },
+    {
+      "name": "prime_ants_test:tier_two_game_test_natural_mature_colony_upgrades_every_function_and_shows_expanded_brood_and_unknown_entrance_stability",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TierTwoGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 9776.028
+    },
+    {
+      "name": "prime_ants_test:store_upgrade_safety_game_test_store_upgrade_restores_nonempty_work_and_custody_survives_builder_death_and_preserves_player_next_wall",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\StoreUpgradeSafetyGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Real founding, brood, nursing, foraging, extinction or chamber development path; original declared bound retained",
+      "t13_seconds": 5442.624
+    },
+    {
+      "name": "prime_ants_test:surface_game_test_controlled_mature_habitat_completes_every_paid_construction_prefix_and_walking_passage",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "Complete surface construction/reload/death path with original 600/200 windows",
+      "t13_seconds": 2176.927
+    },
+    {
+      "name": "prime_ants_test:surface_game_test_a_claimed_builder_walks_out_of_its_future_cell_and_pays_the_same_task_without_discarding_bodies_or_cargo",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 1000,
+      "reason": "Declared controlled habitat; first paid action plus 200 ticks; T13 completes at 594",
+      "t13_seconds": 86.227
+    },
+    {
+      "name": "prime_ants_test:surface_game_test_supplied_founding_to_mature_retains_its_small_mound_and_workers_build_larger_crests_and_an_open_arch",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Complete surface construction/reload/death path with original 600/200 windows",
+      "t13_seconds": 7620.947
+    },
+    {
+      "name": "prime_ants_test:surface_game_test_computed_great_habitat_builds_paid_gate_connected_ramparts_and_two_raised_watch_posts",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "Complete surface construction/reload/death path with original 600/200 windows",
+      "t13_seconds": 2178.058
+    },
+    {
+      "name": "prime_ants_test:surface_game_test_unavailable_target_preserves_sources_then_fresh_confirmations_hauling_disk_reload_and_worker_death_conserve_every_unit",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "Complete surface construction/reload/death path with original 600/200 windows",
+      "t13_seconds": 559.63
+    },
+    {
+      "name": "prime_ants_test:surface_game_test_same_state_player_write_and_disk_reload_leave_an_essential_component_honestly_incomplete",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 1000,
+      "reason": "Declared controlled habitat; original 600 negative plus 200 settled loaded ticks; T13 completes at 902",
+      "t13_seconds": 135.466
+    },
+    {
+      "name": "prime_ants_test:surface_oracle_game_test_off_footprint_player_and_unevidenced_mod_edits_are_rejected",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceOracleGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "Local actor/origin/placement/serialization guard, at most 20 declared ticks, without a developed colony",
+      "t13_seconds": null
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+// Compilation remains one Gradle graph. Only frozen standalone server JVMs run concurrently.
+def invocation = java.util.UUID.randomUUID().toString()
+def evidenceRoot = System.getenv('PRIME_ANTS_GAMETEST_EVIDENCE') ?: file('build/test-results/gametest/runs').absolutePath
+def runFolder = new File(evidenceRoot, invocation)
+def launchFile = new File(evidenceRoot, invocation + '-launch.json')
+def longNames = providers.gradleProperty('primeAntsLongNames')
+def shards = providers.gradleProperty('primeAntsGameTestShards').getOrElse('4')
+def concurrency = providers.gradleProperty('primeAntsGameTestConcurrency').getOrElse('4')
+def guards = ['test','verifyAntModel','testClientEvidenceValidator','verifyPublicPaths','testPublicPaths','verifyNestCacheAssets','verifyMaterialStoreAssets','testGameTestHarness','testServerWorldRetention']
+def fastStart = 0L
+
+tasks.register('testGameTestHarness', Exec) { commandLine 'python', file('scripts/test-gametest-harness.py').absolutePath }
+tasks.register('testServerWorldRetention', Exec) { commandLine 'python', file('scripts/test-server-world-retention.py').absolutePath }
+tasks.register('verifyGameTestInventory', Exec) { commandLine 'python', file('scripts/gametest-harness.py').absolutePath, 'inventory' }
+tasks.register('prepareGameTestServers') {
+    dependsOn tasks.named('gametestClasses'), tasks.named('testClasses'), tasks.named('configureLaunch'), tasks.named('verifyGameTestInventory')
+    doLast {
+        launchFile.parentFile.mkdirs()
+        def original = tasks.named('runGameTest').get()
+        original.useArgFile.set(false)
+        def launch = [java: original.javaLauncher.get().executablePath.asFile.absolutePath,
+                      jvm_args: original.allJvmArgs.findAll { !it.startsWith('@') },
+                      classpath: original.classpath.files.collect { it.absolutePath },
+                      main_class: original.mainClass.get(),
+                      args: original.args + original.argumentProviders.collectMany { it.asArguments() as List }]
+        launchFile.setText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(launch)), 'UTF-8')
+        def args = ['python', file('scripts/gametest-harness.py').absolutePath, 'prepare', '--folder', runFolder.absolutePath,
+                    '--launch', launchFile.absolutePath, '--shards', shards, '--concurrency', concurrency]
+        if (longNames.isPresent()) args += ['--names', longNames.get()]
+        def p = new ProcessBuilder(args).inheritIO().start()
+        if (p.waitFor()!=0) throw new GradleException('Permanent partition/input freeze failed')
+        logger.lifecycle('Frozen server acceptance artifacts: ' + runFolder)
+    }
+}
+tasks.register('markFastStart') { doLast { fastStart = System.currentTimeMillis() } }
+guards.each { name -> tasks.named(name) { mustRunAfter tasks.named('markFastStart') } }
+['fast','long','smoke'].each { suite ->
+    tasks.register('run' + suite.capitalize() + 'GameTests') {
+        dependsOn tasks.named('prepareGameTestServers')
+        if(suite=='fast') { dependsOn guards.collect { tasks.named(it) }; mustRunAfter guards.collect { tasks.named(it) } }
+        doLast {
+            def args=['python',file('scripts/gametest-harness.py').absolutePath,'run','--folder',runFolder.absolutePath,'--suite',suite]
+            // A complete invocation collects both suites even when a child is red, then rejects the union once.
+            if(gradle.taskGraph.hasTask(':check')) args += ['--defer-failures']
+            def p=new ProcessBuilder(args).inheritIO().start()
+            if(p.waitFor()!=0) throw new GradleException(suite + ' GameTest suite failed; frozen reports retained at ' + runFolder)
+        }
+    }
+}
+tasks.register('checkFast') {
+    group='verification'; description='Every unit/model case, guards, harness tests and explicit quick server cases'
+    dependsOn tasks.named('markFastStart'),tasks.named('runFastGameTests')
+    doLast {
+        def guardProcess=new ProcessBuilder('python',file('scripts/gametest-harness.py').absolutePath,'fast-guards','--folder',runFolder.absolutePath,'--since',(fastStart/1000.0).toString()).inheritIO().start()
+        if(guardProcess.waitFor()!=0) throw new GradleException('Fast unit/model freshness or exact discovery failed')
+        def duration=(System.currentTimeMillis()-fastStart)/1000.0
+        new File(runFolder,'fast-duration.json').setText(groovy.json.JsonOutput.toJson([elapsed_seconds:duration]),'UTF-8')
+        logger.lifecycle("Fast acceptance suite wall seconds: ${duration}")
+    }
+}
+tasks.register('checkLong') { group='verification'; description='Complete long cases, or explicitly labelled exact permanent names'; dependsOn tasks.named('runLongGameTests') }
+tasks.named('runLongGameTests') { mustRunAfter tasks.named('checkFast') }
+tasks.register('checkServerSmoke') { group='verification'; description='Two real isolated server processes; diagnostic smoke only'; dependsOn tasks.named('runSmokeGameTests') }
+tasks.register('verifyShardedGameTests') {
+    dependsOn tasks.named('checkFast'),tasks.named('checkLong')
+    doLast {
+        def p=new ProcessBuilder('python',file('scripts/gametest-harness.py').absolutePath,'merge','--folder',runFolder.absolutePath).inheritIO().start()
+        def mergedExit=p.waitFor()
+        project.verifyPermanentServerReport(file('build/test-results/gametest/server.xml'))
+        if(mergedExit!=0) throw new GradleException('Complete sharded acceptance is red; all child and merged evidence retained at ' + runFolder)
+    }
+}
+gradle.taskGraph.whenReady { graph ->
+    if(longNames.isPresent() && (graph.hasTask(':check') || graph.hasTask(':checkFast'))) throw new GradleException('Exact-name subset is diagnostic only; use checkLong')
+    if(graph.hasTask(':checkFast') && !tasks.named('test').get().filter.commandLineIncludePatterns.empty) throw new GradleException('Filtered units cannot be fast acceptance')
+    if((graph.hasTask(':checkFast')||graph.hasTask(':checkLong')||graph.hasTask(':checkServerSmoke')) && (providers.gradleProperty('primeAntsServerDiagnosticFilter').isPresent()||providers.gradleProperty('primeAntsServerDiagnosticGroup').isPresent())) throw new GradleException('Legacy labelled diagnostics require runGameTest; suite selection uses its frozen inventory')
+}
+tasks.named('test') { outputs.upToDateWhen { !gradle.taskGraph.hasTask(':checkFast') } }
+afterEvaluate {
+    def check=tasks.named('check').get()
+    check.setDependsOn(check.taskDependencies.getDependencies(check).findAll { it.name!='runGameTest' } + tasks.named('verifyShardedGameTests').get())
+}

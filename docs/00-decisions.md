@@ -626,3 +626,44 @@ acceptance and any unresolved red results are recorded independently in T10's re
   unverified. Unattended pre-Mature clay, arbitrary veins/all64 edits, survey walking/dig timelines and unattended
   development remain uncovered; tier three, established colonies, 120-adult performance, broad persistence and release
   acceptance need later turns.
+
+## Implementation notes - 2026-10-10 (stage-1 T14 enclosure and sharded acceptance)
+
+- **Owner-authorized enclosure.** The six surface bodies alone use a dedicated 64 x 16 x 64 template. Actual Minecraft
+  ceiling, horizontal barriers and air clearance are checked; local ground four, terrain, positions, supplies, forms,
+  reach, twenty-loaded-tick actions and deadlines are retained. `idle_ground` and production planning/codec are unchanged.
+- **Protection oracle.** The original snapshot remains fixed. A scoped observer records only an original ordinary
+  upgrade's exact registered chamber wall, legal pre-state, canonical clay consumption, built prefix and exact ledger.
+  Only that evidenced before/after transition is accepted while current colony ownership remains valid. A new physical
+  negative rejects off-footprint player glass and packed clay with fabricated mod ownership but no chamber payment.
+  Protected supports and other off-footprint cells remain checked. Great's abstract prefix coverage now starts with all
+  nineteen Mature cells and remaining physical spoil, testing seventeen inherited cells and both retaining conversions;
+  it remains separate from real navigation.
+- **Recovered and blocked milestones.** Controlled Mature completes nineteen actual placements, fourteen-paid hauling
+  disk/data and actor reload, real forager passage walking and two hundred settled loaded ticks at 4,521. Protection
+  completes at 5,450 with the original six hundred unavailable ticks, two restored confirmations, hauling reload,
+  resumed payment, exactly one named lethal/repeated-death release, another hauling worker, nineteen placements and
+  two hundred settled ticks; twenty recovered units equal nineteen placed plus one released, with eighty conserved.
+  Founder recovery passes the old snapshot conflict but remains four of nineteen at 60,000: two new placements and
+  two retained paid foundations. Three original selectors reject the already-paid buried Young cell `-4,3,0`: thirty
+  floor/clearance and two visibility/reach refusals each, no accepted stand. All six adjacent faces are solid; readiness,
+  Mature, thirty caregivers, no priority and no dig claim are observed. This is not repaired by changing reach, clearing
+  surrounding paid spoil or fabricating inheritance. Targeted Great advancement and the six-body surface cohort stop
+  at this Mature boundary. The complete build still executes every permanent identity and reports its result separately.
+- **Harness and limits.** An explicit 73-fast/179-long partition preserves all 252 permanent server cases, 108 unit and
+  26 model cases. One frozen compilation feeds separate fresh UUID server processes with original environments and
+  multipliers, weighted frozen assignments and configurable total concurrency one through four (default four). Exact
+  subsets remain diagnostic. Child and merged XML, exits, identities, timestamps and input hashes are validated without
+  hiding failures. Registration/pruning share a mutex and keep newest ten plus every older active lease/session. Real
+  multi-process smoke and adversarial harness/retention checks precede the one complete final invocation. An early new
+  graph exposed the legacy client-directory Delete task; both that action and its client EULA writer are now skipped
+  for sharded server graphs, with preserved client-directory hash evidence. A one-ULP NTFS timestamp race was reproduced
+  and corrected by reading a later post-write clock, retaining the strict freshness interval. Operational timings are
+  compared with T13's 11,227.441 seconds, not treated as a controlled speed benchmark or colony MSPT.
+- **Future cadence and carryover.** Fast acceptance every turn plus affected exact long names; complete long acceptance
+  at T15, T18, release and after broadly shared colony changes. Historical concurrent mining-death preparation timeouts,
+  regression/tier-two timing causes and eighteen-unit failure at 10,323 remain unresolved; the named-unit pickup/deposit,
+  6,000 nursery-loaded recovery inside 60,000 total and original 600/200 windows are unchanged. Paid-stall handoff,
+  retained-building regression, unattended pre-Mature clay/development, arbitrary veins/all sixty-four edits and survey
+  walking/dig timelines remain uncovered. Tier three, established colonies, 120-adult performance, broad persistence
+  and release acceptance remain outstanding.

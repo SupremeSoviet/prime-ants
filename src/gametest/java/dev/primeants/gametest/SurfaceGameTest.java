@@ -28,7 +28,7 @@ public final class SurfaceGameTest {
             }return walker!=null;
         }
     }
-    @GameTest(maxTicks=12000,structure="prime_ants_test:idle_ground")
+    @GameTest(maxTicks=12000,structure="prime_ants_test:surface_ground")
     public void controlledMatureHabitatCompletesEveryPaidConstructionPrefixAndWalkingPassage(GameTestHelper c){
         var fixture=new SurfaceFixture();var q=fixture.habitat(c,false);fixture.snapshot(c,q);var walking=new Walking();long[] settled={-1};boolean[] reloaded={false};
         c.onEachTick(()->{
@@ -55,7 +55,7 @@ public final class SurfaceGameTest {
             PrimeAnts.LOGGER.info("T13 CONTROLLED MATURE DONE queen={} tick={} uniqueCells=19 placements={} recovered={} released={} settled={} walker={}",q.getUUID(),c.getTick(),j.placed(),j.recovered(),j.released(),p.loadedTicks()-settled[0],walking.walker);c.succeed();
         });
     }
-    @GameTest(maxTicks=12000,structure="prime_ants_test:idle_ground")
+    @GameTest(maxTicks=12000,structure="prime_ants_test:surface_ground")
     public void aClaimedBuilderWalksOutOfItsFutureCellAndPaysTheSameTaskWithoutDiscardingBodiesOrCargo(GameTestHelper c){
         var fixture=new SurfaceFixture();var q=fixture.habitat(c,false,true);fixture.snapshot(c,q);var probe=SurfaceOccupancyProbe.watch(c,q.getUUID());UUID[] observed={null};long[] settled={-1};BlockPos[] target={null};
         c.onEachTick(()->{
@@ -76,7 +76,7 @@ public final class SurfaceGameTest {
             PrimeAnts.LOGGER.info("T13 SELF BODY DONE queen={} tick={} worker={} firstTarget={} placed={} recovered={} released=0 soil=80 settled={} ordinaryMovement=true",q.getUUID(),c.getTick(),observed[0],target[0],job.placed(),job.recovered(),pile.loadedTicks()-settled[0]);c.succeed();
         });
     }
-    @GameTest(maxTicks=60000,structure="prime_ants_test:idle_ground")
+    @GameTest(maxTicks=60000,structure="prime_ants_test:surface_ground")
     public void suppliedFoundingToMatureRetainsItsSmallMoundAndWorkersBuildLargerCrestsAndAnOpenArch(GameTestHelper c){
         var fixture=new SurfaceFixture();var player=new TierTwoFixture(40,true);var q=fixture.founder(c);
         long[] settled={-1},mature={-1};int[] youngPeak={-1};boolean[] snapshot={false};BlockPos[] protectedPlayer={null};var walking=new Walking();
@@ -101,7 +101,7 @@ public final class SurfaceGameTest {
             PrimeAnts.LOGGER.info("T12 MATURE DONE queen={} tick={} matureTick={} youngActualPeak={} actualCrestHeight=4 uniqueCells={} recovered={} relocated={} retainedPaid={} released={} settled={} walker={} excavationDepositsUnchanged=true supplies={}/{}/{}",q.getUUID(),c.getTick(),mature[0],youngPeak[0],j.plan.cost(),j.recovered(),j.placed(),j.plan.cost()-j.placed(),j.released(),p.loadedTicks()-settled[0],walking.walker,player.apples,player.chickens,player.clay);c.succeed();
         });
     }
-    @GameTest(maxTicks=12000,structure="prime_ants_test:idle_ground")
+    @GameTest(maxTicks=12000,structure="prime_ants_test:surface_ground")
     public void computedGreatHabitatBuildsPaidGateConnectedRampartsAndTwoRaisedWatchPosts(GameTestHelper c){
         var fixture=new SurfaceFixture();var q=fixture.habitat(c,true);fixture.snapshot(c,q);long[] settled={-1};boolean[] computed={false};var walking=new Walking();
         c.onEachTick(()->{
@@ -119,7 +119,7 @@ public final class SurfaceGameTest {
             PrimeAnts.LOGGER.info("T12 GREAT DONE queen={} tick={} uniqueCells=57 newWorkerPlacements=57 gateConversions=2 soil=80 stone=32 actualCrestHeight=4 actualPostHeight=5 posts=2 rampartCells=8 settled={} walker={} currentStage={} initialSetupNotConstruction=true",q.getUUID(),c.getTick(),p.loadedTicks()-settled[0],walking.walker,e.stage());c.succeed();
         });
     }
-    @GameTest(maxTicks=12000,structure="prime_ants_test:idle_ground")
+    @GameTest(maxTicks=12000,structure="prime_ants_test:surface_ground")
     public void unavailableTargetPreservesSourcesThenFreshConfirmationsHaulingDiskReloadAndWorkerDeathConserveEveryUnit(GameTestHelper c){
         var fixture=new SurfaceFixture();LasiusNigerEntity[] queen={fixture.habitat(c,false)};fixture.snapshot(c,queen[0]);
         int[] step={0},evals={0},reloadedRecovery={0};long[] since={-1},settled={-1};UnavailableCells[] hidden={null};ColonyDevelopment.Evaluation[] seen={null};UUID[] reloadWorker={null},deadWorker={null},transfer={null};boolean[] replacement={false};var walking=new Walking();
@@ -172,7 +172,7 @@ public final class SurfaceGameTest {
             PrimeAnts.LOGGER.info("T12 SURFACE PROTECTION DONE queen={} tick={} unavailableLoaded=600 restoredConfirmations={} actualDiskReload=true actualDeath=true transfer={} replacement=true uniqueCells=19 soil=80 recovered={} placed={} released={} settled={} walker={}",q.getUUID(),c.getTick(),evals[0],transfer[0],j.recovered(),j.placed(),j.released(),p.loadedTicks()-settled[0],walking.walker);c.succeed();
         });
     }
-    @GameTest(maxTicks=12000,structure="prime_ants_test:idle_ground")
+    @GameTest(maxTicks=12000,structure="prime_ants_test:surface_ground")
     public void sameStatePlayerWriteAndDiskReloadLeaveAnEssentialComponentHonestlyIncomplete(GameTestHelper c){
         var fixture=new SurfaceFixture();var q=fixture.habitat(c,false);fixture.snapshot(c,q);BlockPos[] target={null};long[] since={-1},settled={-1};boolean[] reload={false};int[] evals={0};ColonyDevelopment.Evaluation[] seen={null};
         c.onEachTick(()->{

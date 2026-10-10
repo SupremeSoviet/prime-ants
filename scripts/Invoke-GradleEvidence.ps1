@@ -8,6 +8,7 @@ $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
 $workspace = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $workspace
 New-Item -ItemType Directory -Path $EvidenceDirectory -Force | Out-Null
+$env:PRIME_ANTS_GAMETEST_EVIDENCE = Join-Path (Split-Path -Parent $EvidenceDirectory) 'raw/sharded-servers'
 $env:JAVA_HOME = 'C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot'
 $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
 $start = Get-Date

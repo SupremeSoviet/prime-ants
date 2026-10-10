@@ -31,9 +31,16 @@ final class SurfaceFixture {
     final NestPlanFixture fx=new NestPlanFixture();
     final Set<BlockPos> initialSoil=new LinkedHashSet<>();
     final Map<BlockPos,BlockState> protectedCells=new LinkedHashMap<>();
+    private SurfaceChamberPayments chamberPayments;
     private int lastReceipt=-1;
     static void terrain(GameTestHelper c){
         var l=c.getLevel();var records=NaturalSoil.CODEC.encodeStart(JsonOps.INSTANCE,NaturalSoil.get(l)).getOrThrow().getAsJsonObject();
+        c.assertTrue(l.getBlockState(c.absolutePos(new BlockPos(32,16,32))).is(Blocks.BARRIER),"Actual surface enclosure ceiling is local sixteen");
+        for(var at:List.of(new BlockPos(-1,7,32),new BlockPos(64,7,32),new BlockPos(32,7,-1),new BlockPos(32,7,64)))
+            c.assertTrue(l.getBlockState(c.absolutePos(at)).is(Blocks.BARRIER),"Existing horizontal enclosure is retained");
+        for(int x=13;x<=52;x++)for(int z=13;z<=52;z++)for(int y=5;y<=11;y++)
+            c.assertTrue(l.getBlockState(c.absolutePos(new BlockPos(x,y,z))).isAir(),"Actual cleared template gives crest/posts and two-high supported stands clearance");
+        PrimeAnts.LOGGER.info("T14 SURFACE ENCLOSURE origin={} ground=4 ceiling=16 horizontal=64 clearY=5..11 verifiedMinecraft=true",c.absolutePos(BlockPos.ZERO));
         for(int x=13;x<=52;x++)for(int z=13;z<=52;z++)for(int y=1;y<=4;y++){
             var at=c.absolutePos(new BlockPos(x,y,z));l.setBlock(at,Blocks.DIRT.defaultBlockState(),3);records.addProperty(Long.toString(at.asLong()),"minecraft:dirt");
         }l.getDataStorage().set(NaturalSoil.TYPE,NaturalSoil.CODEC.parse(JsonOps.INSTANCE,records).getOrThrow());
@@ -107,6 +114,7 @@ final class SurfaceFixture {
         return queen;
     }
     void snapshot(GameTestHelper c,LasiusNigerEntity q){
+        if(chamberPayments==null)chamberPayments=SurfaceChamberPayments.watch(c,q.getUUID());
         var l=c.getLevel();var home=q.founding().plan();var allowed=new HashSet<BlockPos>(MoundSoil.cells(l,home,q.getUUID()));
         for(var cell:SurfacePlan.bundled(ColonyStage.GREAT).cells())allowed.add(home.at(cell.forward(),cell.side(),1+cell.layer()));
         allowed.add(home.cache());allowed.add(home.nursery());var material=MaterialStore.owned(l,q.getUUID(),home);if(material!=null)allowed.add(material.getBlockPos());
@@ -114,9 +122,15 @@ final class SurfaceFixture {
             var at=home.at(f,side,dy);if(!allowed.contains(at))protectedCells.put(at,l.getBlockState(at));
         }
     }
+    BlockPos protectionProblem(GameTestHelper c,LasiusNigerEntity q){
+        for(var e:protectedCells.entrySet()){
+            var after=c.getLevel().getBlockState(e.getKey());
+            if(!after.equals(e.getValue())&&!chamberPayments.permits(c.getLevel(),q.getUUID(),e.getKey(),e.getValue(),after))return e.getKey();
+        }return null;
+    }
     void protectedTerrain(GameTestHelper c,LasiusNigerEntity q,boolean settled){
         int receipts=SurfaceWork.get(c.getLevel()).jobs(q.getUUID()).stream().mapToInt(SurfaceWork.Job::completed).sum();
-        if(receipts!=lastReceipt||settled){lastReceipt=receipts;for(var e:protectedCells.entrySet())c.assertTrue(c.getLevel().getBlockState(e.getKey()).equals(e.getValue()),"All ground, protected supports and cells outside the footprint unchanged: "+e.getKey());}
+        if(receipts!=lastReceipt||settled){lastReceipt=receipts;var problem=protectionProblem(c,q);c.assertTrue(problem==null,"All ground, protected supports and cells outside the footprint unchanged except exact evidenced chamber payments: "+problem);}
         var home=q.founding().plan();for(int f=-14;f<0;f++)c.assertTrue(NestPlan.walkable(c.getLevel(),home.at(f,0,1)),"Actual two-high connected surface approach "+f);
         c.assertTrue(NestPlan.walkable(c.getLevel(),home.outside())&&NestPlan.walkable(c.getLevel(),home.at(0,0,0))&&NestPlan.walkable(c.getLevel(),home.at(1,0,-1))&&NestPlan.walkable(c.getLevel(),home.at(2,0,-2)),"Exterior stand and every stair remain physically walkable");
     }

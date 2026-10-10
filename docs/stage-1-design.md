@@ -178,3 +178,43 @@ Plan order and the saved job codec remain unchanged. Actual T12 fifteen-paid-cel
 and named release, and a physical fourteen-paid-cell hauling disk/data and canonical actor reload retains its claim,
 source and one-unit cargo before resumed placement. Full build and all incomplete phases are recorded in the T13 report;
 the historical timing negatives and coverage limits above remain.
+
+### T14 acceptance harness and surface enclosure (2026-10-10)
+
+Only surface fixtures use `surface_ground` (64 x 16 x 64). Minecraft barriers and actual air clearance are asserted;
+ground remains local four, with the same terrain, actors, sources and bounds. The protection oracle retains its original
+snapshot and accepts only an exact registered chamber wall transition observed during ordinary physical upgrade,
+including original material authority, canonical clay consumption, built-cell prefix and exact payment ledger.
+Unrelated player writes and unevidenced mod-owned writes remain negative. Great prefix geometry separately starts with
+all nineteen Mature cells and remaining spoil; this abstract check does not establish real navigation.
+
+The explicit permanent partition is `config/gametest-suites.json`: 73 quick server bodies and 179 long bodies. Discovery
+rejects omitted, duplicate, unknown or unclassified names and changed declared bounds. Tick-path weights and T13 times
+are scheduling evidence, not additive wall time or colony MSPT. Standalone server JVMs share one frozen compilation;
+each has a fresh UUID world, report, log, execution manifest and lease. Long assignments are frozen before launch and
+balanced by declared duration weights. Concurrency defaults to four, configurable only in the range one through four.
+Registration and pruning share a mutex; newest ten worlds plus every older active lease/session are retained, with
+temporary exceptions recorded. Historic required-case guards apply to the complete merged report.
+
+Commands (Windows; the evidence helper sets the pinned JDK):
+
+```powershell
+.\gradlew.bat checkFast --console=plain --rerun-tasks
+.\gradlew.bat checkLong -PprimeAntsGameTestShards=4 -PprimeAntsGameTestConcurrency=4 --console=plain
+.\gradlew.bat checkLong -PprimeAntsLongNames=prime_ants_test:surface_game_test_controlled_mature_habitat_completes_every_paid_construction_prefix_and_walking_passage --console=plain
+.\gradlew.bat checkServerSmoke -PprimeAntsGameTestConcurrency=2 --console=plain
+.\gradlew.bat build --console=plain --rerun-tasks
+```
+
+`primeAntsLongNames` is a comma-separated list of exact permanent long names; it is explicitly diagnostic and forbidden
+in `check`/`build`/`checkFast`. Existing single-case `runGameTest -PprimeAntsServerDiagnosticFilter=<exact name>` and
+concurrent `runGameTest -PprimeAntsServerDiagnosticGroup=surface` remain labelled diagnostic interfaces. `checkFast`
+executes every unit case, all 26 model cases, both asset guards, public-path/client-validator guards, harness/retention
+tests and the quick server inventory. A complete build executes fast then complete long and verifies their exactly-once
+union; child failures remain in their original XML and the merged report. A red server union is rejected after both
+suites have been archived. Normal production jars remain build outputs.
+
+Owner cadence: fast suite every turn plus affected exact long names; complete long suite at T15, T18 and release, and
+after broadly shared colony changes. T14's one complete invocation validates the migration. Surface milestones and
+any remaining red components are recorded independently in the T14 report; no complete founder is inferred from a
+controlled habitat or prefix model.

@@ -9,30 +9,23 @@ def inputs():
  for name in ['gradlew','gradlew.bat']:
   f=pathlib.Path(__file__).resolve().parents[1]/name
   manifest[name]=hashlib.sha256(f.read_bytes()).hexdigest()
+ for f in (ROOT/'config').rglob('*'):
+  if f.is_file():manifest[str(f.relative_to(ROOT))]=sha(f)
  return manifest
 
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 TURNLOOP=pathlib.Path(os.environ.get('TURNLOOP_HOME') or pathlib.Path(__file__).resolve().parents[2]/'turnloop')
 SOURCE=TURNLOOP/'directions/prime-ants-slice1/turns/T11/t11-a4-world.zip'
 EXPECTED='d88c675faca2ca162c172445636c30b718e4b43ef5d0722719f729477993411f'
+FRESH_TASKS=['test','runFastGameTests','runLongGameTests','verifyAntModel','verifyNestCacheAssets','verifyMaterialStoreAssets','verifyPublicPaths','testPublicPaths','testClientEvidenceValidator','testGameTestHarness','testServerWorldRetention','verifyShardedGameTests']
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def write(p,v):p.write_text(json.dumps(v,indent=2),encoding='utf-8')
 def read(p):return json.loads(p.read_text(encoding='utf-8-sig'))
 def source_only(manifest):return {k:v for k,v in manifest.items() if not k.startswith('build/') and not k.startswith('build\\')}
 def required_cases():
- server=set()
- snake=lambda s:re.sub(r'([a-z0-9])([A-Z])',r'\1_\2',s).lower()
- for f in (ROOT/'src/gametest/java/dev/primeants/gametest').glob('*GameTest.java'):
-  for method in re.findall(r'public void (\w+)\(GameTestHelper c\)',f.read_text(encoding='utf-8')):
-   server.add(('prime_ants_test:'+snake(f.stem)+'_'+snake(method)))
- # Bootstrap uses a different helper variable; still a required physical case.
- server.add('prime_ants_test:bootstrap_game_test_food_item_lifecycle')
- unit={('dev.primeants.time.SimulationTimeScaleTest',n+'()') for n in ['zeroDurationNeedsNoElapsedTicks','fractionalTickDoesNotCompleteEarly','oneGameDayAtNormalSpeedTakes24000ElapsedTicks','twoGameDaysAtTwentyTimesSpeedTake2400ElapsedTicks']}
- unit.update(('dev.primeants.time.SimulationTimeScaleTest','rejects multiplier '+n) for n in ['0.0','-0.0','-1.0','NaN','Infinity','-Infinity'])
- unit.update(('dev.primeants.time.SimulationTimeScaleTest','rejects duration '+n) for n in ['-1.0','NaN','Infinity','-Infinity','1.7976931348623157E308'])
- names=set(re.findall(r'test\(form, "(\w+)"',(ROOT/'src/gametest/java/dev/primeants/gametest/AntModelGameTest.java').read_text()))-{'profilesOnly'}
- model={('AntModel.'+form,name) for form in ['WORKER','QUEEN'] for name in names}
- return unit,server,model
+ spec=importlib.util.spec_from_file_location('gametest_harness',ROOT/'scripts/gametest-harness.py')
+ harness=importlib.util.module_from_spec(spec);spec.loader.exec_module(harness)
+ return harness.unit_cases(),set(harness.discover()),harness.model_cases()
 
 def record_acceptance(evidence,name,phase):
  manifest=inputs();target=evidence/(name+'-inputs-'+phase+'.json')
@@ -48,6 +41,15 @@ def record_acceptance(evidence,name,phase):
    if not f.exists():continue
    dest=folder/f.name;dest.write_bytes(f.read_bytes())
    record['artifacts'][f.name]={'path':str(dest),'sha256':sha(dest),'executed_mtime':f.stat().st_mtime,'source':str(f)}
+  meta=read(evidence/(name+'.json'));start=datetime.datetime.fromisoformat(meta['start']).timestamp()
+  shard_root=pathlib.Path(os.environ.get('PRIME_ANTS_GAMETEST_EVIDENCE',ROOT/'build/test-results/gametest/runs'))
+  runs=[p.parent for p in shard_root.glob('*/frozen.json') if p.stat().st_mtime>=start]
+  if len(runs)!=1:raise ValueError('Exactly one frozen complete invocation required for archive')
+  record['sharded_run']=str(runs[0]);record['sharded_archive']=str(folder/'sharded'/runs[0].name)
+  for f in runs[0].rglob('*'):
+   if not f.is_file():continue
+   key='sharded/'+runs[0].name+'/'+f.relative_to(runs[0]).as_posix();dest=folder/key;dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(f.read_bytes())
+   record['artifacts'][key]={'path':str(dest),'sha256':sha(dest),'executed_mtime':f.stat().st_mtime,'source':str(f)}
  write(target,record)
 
 def acceptance_gate(evidence,name):
@@ -60,7 +62,7 @@ def acceptance_gate(evidence,name):
  if not after.get('source_unchanged') or source_only(before['inputs'])!=source_only(after['inputs']) or after['inputs']!=inputs():raise ValueError('Stale or changed source/build inputs')
  b=pathlib.Path(meta['log']).read_bytes();log=b.decode('utf-16' if b.startswith(b'\xff\xfe') else 'utf-8-sig')
  if 'BUILD SUCCESSFUL' not in log:raise ValueError('Build completion missing')
- for task in ['test','runGameTest','verifyAntModel']:
+ for task in FRESH_TASKS:
   if not re.search(r'^> Task :'+task+r'\s*$',log,re.M):raise ValueError('Fresh executed task required: '+task)
  artifacts=after['artifacts'];counts={}
  for kind,required,files in [('unit',required_cases()[0],[a for n,a in artifacts.items() if n.startswith('TEST-')]),('server',required_cases()[1],[artifacts.get('server.xml')]),('model',required_cases()[2],[artifacts.get('headless.xml')])]:
@@ -78,6 +80,25 @@ def acceptance_gate(evidence,name):
    else:seen.extend((c.get('classname'),c.get('name')) for c in cases)
   if len(seen)!=len(required) or set(seen)!=required:raise ValueError('Incomplete/duplicate required '+kind+' discovery')
   counts[kind]=len(seen)
+ if not after.get('sharded_archive'):raise ValueError('Individual child archives required; singleton report is insufficient')
+ if after.get('sharded_archive'):
+  run=pathlib.Path(after['sharded_archive']);verification=read(run/'verification.json');frozen=read(run/'frozen.json')
+  if not verification.get('passed') or verification.get('permanent_count')!=counts['server']:raise ValueError('Nonpassing/incomplete sharded verification')
+  seen=[]
+  for suite in ['fast','long']:
+   summary=read(run/(suite+'.json'))
+   if not summary['passed'] or (suite=='long' and summary['scope']!='complete long suite'):raise ValueError('Targeted/failed suite cannot settle acceptance')
+   for child in summary['shards']:
+    if child['exit_code']!=0 or not child['inputs_unchanged'] or not child['lease_released_after_exit']:raise ValueError('Invalid child process/lease/input evidence')
+    child_folder=run/(suite+'-'+str(child['index']));process=read(child_folder/'process.json');execution=read(child_folder/'execution.json')
+    if process!=child or execution['names']!=child['assigned'] or set(execution['permanent_names'])!=required_cases()[1] or execution['frozen_sha256']!=sha(run/'frozen.json'):raise ValueError('Child execution/process manifest differs from freeze')
+    spec=importlib.util.spec_from_file_location('archive_harness',ROOT/'scripts/gametest-harness.py');harness=importlib.util.module_from_spec(spec);spec.loader.exec_module(harness)
+    _,issues=harness.validate_report(child_folder/'server.xml',child['assigned'],child['start_epoch'],child['end_epoch'],child['exit_code'])
+    if issues:raise ValueError('Archived child report invalid: '+str(issues))
+    seen.extend(child['assigned'])
+  if len(seen)!=counts['server'] or set(seen)!=required_cases()[1]:raise ValueError('Child assigned union differs')
+  for key,a in artifacts.items():
+   if key.startswith('sharded/') and sha(pathlib.Path(a['path']))!=a['sha256']:raise ValueError('Changed archived shard evidence')
  for n,a in artifacts.items():
   if n.endswith('.jar') and sha(pathlib.Path(a['path']))!=a['sha256']:raise ValueError('Archived production inputs changed')
  if len([n for n in artifacts if n.endswith('.jar')])!=2:raise ValueError('Production archives missing')
@@ -93,9 +114,21 @@ def test_gate(destination):
    f=e/file;ET.ElementTree(root).write(f);art[file]={'path':str(f),'sha256':sha(f),'executed_mtime':now}
   for n in ['production.jar','production-sources.jar']:
    f=e/n;f.write_bytes(b'offline gate fixture');art[n]={'path':str(f),'sha256':sha(f)}
-  log=e/'log';log.write_text('> Task :test\n> Task :runGameTest\n> Task :verifyAntModel\nBUILD SUCCESSFUL\n')
+  passing_log=''.join('> Task :'+task+'\n' for task in FRESH_TASKS)+'BUILD SUCCESSFUL\n'
+  log=e/'log';log.write_text(passing_log,encoding='utf-8')
   meta={'command':'.\\gradlew.bat build --console=plain --rerun-tasks','working_directory':str(ROOT),'start':datetime.datetime.fromtimestamp(now-5,datetime.timezone.utc).isoformat(),'end':datetime.datetime.fromtimestamp(now+5,datetime.timezone.utc).isoformat(),'elapsed_seconds':10,'exit_code':0,'log':str(log)}
   manifest=inputs();before={'inputs':manifest};after={'inputs':manifest,'source_unchanged':True,'artifacts':art}
+  archive=e/'sharded';archive.mkdir();rows=read(ROOT/'config/gametest-suites.json')['cases'];write(archive/'frozen.json',{'inventory':rows});after['sharded_archive']=str(archive)
+  write(archive/'verification.json',{'passed':True,'permanent_count':len(required_cases()[1])})
+  for suite in ['fast','long']:
+   assigned=[r['name'] for r in rows if r['suite']==suite];folder=archive/(suite+'-0');folder.mkdir()
+   record={'index':0,'assigned':assigned,'exit_code':0,'inputs_unchanged':True,'lease_released_after_exit':True,'start_epoch':now-4,'end_epoch':now+4}
+   write(folder/'process.json',record);write(folder/'execution.json',{'names':assigned,'permanent_names':sorted(required_cases()[1]),'frozen_sha256':sha(archive/'frozen.json')})
+   root=ET.Element('testsuite',tests=str(len(assigned)),failures='0',errors='0',skipped='0')
+   for n in assigned:ET.SubElement(root,'testcase',name=n,classname='offline synthetic only')
+   ET.ElementTree(root).write(folder/'server.xml');write(archive/(suite+'.json'),{'passed':True,'scope':'complete long suite' if suite=='long' else 'complete fast server suite','shards':[record]})
+  for f in archive.rglob('*'):
+   if f.is_file():art['sharded/'+f.relative_to(archive).as_posix()]={'path':str(f),'sha256':sha(f),'executed_mtime':f.stat().st_mtime}
   def run(label,mutate,reject=True):
    m=copy.deepcopy(meta);a=copy.deepcopy(after);mutate(m,a);write(e/(name+'.json'),m);write(e/(name+'-inputs-before.json'),before);write(e/(name+'-inputs-after.json'),a)
    try:answer=acceptance_gate(e,name)
@@ -109,14 +142,15 @@ def test_gate(destination):
   run('filtered-acceptance',lambda m,a:m.update(command=m['command']+' -PprimeAntsServerDiagnosticFilter=x'))
   run('incomplete-execution',lambda m,a:m.pop('end'))
   run('failed-build-exit',lambda m,a:m.update(exit_code=1))
+  run('singleton-report-under-complete-command',lambda m,a:a.pop('sharded_archive'))
   run('missing-report',lambda m,a:a['artifacts'].pop('server.xml'))
   run('stale-inputs',lambda m,a:a['inputs'].update({'build/classes/stale':'old'}))
   run('stale-report',lambda m,a:a['artifacts']['server.xml'].update(executed_mtime=0))
   log.write_text('> Task :compileJava\nBUILD SUCCESSFUL\n')
   run('compilation-only-log-under-build-command',lambda m,a:None)
-  log.write_text('> Task :test UP-TO-DATE\n> Task :runGameTest\n> Task :verifyAntModel\nBUILD SUCCESSFUL\n')
+  log.write_text(passing_log.replace('> Task :test\n','> Task :test UP-TO-DATE\n'),encoding='utf-8')
   run('unexecuted-unit-task',lambda m,a:None)
-  log.write_text('> Task :test\n> Task :runGameTest\n> Task :verifyAntModel\nBUILD SUCCESSFUL\n')
+  log.write_text(passing_log,encoding='utf-8')
   for label,tag in [('failed-report','failure'),('error-report','error'),('skipped-report','skipped')]:
    f=e/'server.xml';original=f.read_bytes();r=ET.parse(f);ET.SubElement(next(r.iter('testcase')),tag);r.write(f)
    run(label,lambda m,a:a['artifacts']['server.xml'].update(sha256=sha(f)));f.write_bytes(original)

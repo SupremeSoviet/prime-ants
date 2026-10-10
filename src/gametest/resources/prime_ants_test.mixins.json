@@ -27,6 +27,8 @@
     "CanonicalCargoObservationMixin",
     "InitialHabitatTerrainMixin",
     "SurfaceOccupancyProbeMixin",
+    "SurfaceChamberPaymentMixin",
+    "ServerShardSelectionMixin",
     "InitialHabitatConnectionMixin"
   ],
   "injectors": {
