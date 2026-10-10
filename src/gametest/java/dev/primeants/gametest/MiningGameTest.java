@@ -195,6 +195,30 @@ public final class MiningGameTest {
         var w=player.fx.f.workers(c,q).stream().filter(a->a.getUUID().equals(j.claim)).findFirst().orElse(null);
         PrimeAnts.LOGGER.info("T09 {} CURVE queen={} tick={} removed={} delivered={} released={} reason={} worker={} stage={}",label,q.getUUID(),c.getTick(),j.removed(),j.deliveries(),j.transfers(),j.reason,w==null?null:w.getUUID()+" "+w.position()+" "+w.workerTasks().phase()+" "+w.workerTasks().reason()+" "+w.getMainHandItem(),NestPlanFixture.pile(c,q).stageEvaluation());
     }
+    static void preparation(GameTestHelper c,TierTwoFixture player,LasiusNigerEntity q,String[] previous){
+        var l=c.getLevel();var j=Mining.get(l).job(q.getUUID());var p=NestPlanFixture.pile(c,q);
+        var w=j==null?null:player.fx.f.workers(c,q).stream().filter(a->a.getUUID().equals(j.claim)).findFirst().orElse(null);
+        String state="mining="+(j==null?null:j.removed()+":"+j.deliveries()+":"+j.claim+":"+j.reason)
+            +" upgrades="+ChamberUpgrade.get(l).jobs(q.getUUID()).stream().map(a->a.chamber+":"+a.built().size()+"/"+a.cells.size()+":"+a.claim+":"+a.reason).toList();
+        if(!state.equals(previous[0])){
+            previous[0]=state;PrimeAnts.LOGGER.info("T11 GRAVITY PREPARATION queen={} tick={} loaded={} {} worker={} habitat={} stage={}",q.getUUID(),c.getTick(),p==null?-1:p.loadedTicks(),state,
+                w==null?null:w.getUUID()+":"+w.workerTasks().reason()+":"+w.getMainHandItem(),q.founding().plan().nurseryFindings(l,q.getUUID(),true).verdict(),p==null?null:p.stageEvaluation());
+        }
+    }
+    static boolean upgradesFinished(GameTestHelper c,LasiusNigerEntity q){
+        var jobs=ChamberUpgrade.get(c.getLevel()).jobs(q.getUUID());var p=NestPlanFixture.pile(c,q);var e=p==null?null:p.stageEvaluation();
+        return jobs.size()==3&&jobs.stream().allMatch(j->j.complete()&&j.claim==null&&j.carried()==0)
+            &&e!=null&&Arrays.stream(ChamberFunction.values()).allMatch(f->e.inputs().tier(f).known()==2);
+    }
+    static void miningPreparationOnly(GameTestHelper c,LasiusNigerEntity q){
+        var l=c.getLevel();var plan=q.founding().plan();var at=plan.at(15,0,-2);
+        c.assertTrue(UnavailableCells.hidden(l,at)&&!NestPlan.loaded(l,at)&&l.getBlockState(at).is(Blocks.IRON_ORE)
+            &&NaturalMaterials.CODEC.encodeStart(JsonOps.INSTANCE,NaturalMaterials.get(l)).getOrThrow().getAsJsonObject().has(Long.toString(at.asLong())),
+            "Remote unopened cell's state and positive origin survive scoped unavailability");
+        c.assertTrue(Mining.get(l).job(q.getUUID())==null,"Remote unavailability blocks only mining plan preparation, manufacturing no completed work");
+        if(q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN)c.assertTrue(plan.nurseryFindings(l,q.getUUID(),true).verdict()==Findings.Verdict.CLEAR,
+            "Remote unopened mining cell neither damages nor makes existing connected habitat unknown");
+    }
 
     @GameTest(maxTicks=60000,structure="prime_ants_test:idle_ground")
     public void fullStorePreventsRemovalThenPhysicalStockReleaseAndTwoEvaluationsResumeMining(GameTestHelper c){
@@ -202,6 +226,7 @@ public final class MiningGameTest {
         UnavailableCells[] hidden={null};ColonyDevelopment.Evaluation[] seen={null};
         int[] observedCargo={0};
         String[] preparation={""};
+        net.minecraft.world.entity.item.ItemEntity[] contribution={null};boolean[] contributionAvailable={false};
         c.onEachTick(()->{
             var l=c.getLevel();var plan=q.founding().plan();if(plan!=null&&!seeded[0]){geology(c,q);seeded[0]=true;hidden[0]=UnavailableCells.hide(c,plan.at(15,0,-2));}
             feedMining(c,player,q);player.ledgers(c,q);traceMining(c,player,q,"FULL STORE");var p=NestPlanFixture.pile(c,q);if(p==null)return;var e=p.stageEvaluation();var s=NestPlanFixture.store(c,q);var j=Mining.get(l).job(q.getUUID());
@@ -209,8 +234,18 @@ public final class MiningGameTest {
                 // Player contribution on the existing approach lane, nearer than the remaining clay. The original
                 // farther drop waited until all clay trips ended, leaving too little time for the frozen windows.
                 var at=plan.at(-1,0,1);c.assertTrue(NestPlan.walkable(l,at),"Stone contribution rests on the supported clear approach lane");
-                supplied[0]=true;var source=player.fx.drop(c,at,new ItemStack(Items.COBBLESTONE,32));
+                // Preserve the same physical offer, but keep its pickup unavailable until the real store upgrade.
+                // Tier one's sixteen-unit share otherwise traps cobble carriers while that upgrade still needs clay.
+                supplied[0]=true;var source=player.fx.drop(c,at,new ItemStack(Items.COBBLESTONE,32));contribution[0]=source;source.setPickUpDelay(32767);
                 PrimeAnts.LOGGER.info("T10 FULL STORE CONTRIBUTION queen={} tick={} source={} at={} units=32 supported=true",q.getUUID(),c.getTick(),source.getUUID(),at);
+            }
+            if(supplied[0]&&!contributionAvailable[0]){
+                c.assertTrue(contribution[0].isAlive()&&contribution[0].getItem().is(Items.COBBLESTONE)&&contribution[0].getItem().getCount()==32
+                    &&contribution[0].hasPickUpDelay(),"All thirty-two offered units stay physical and unavailable only during store-upgrade preparation");
+                if(s!=null&&s.capacity()==64&&MaterialStore.confirmed(l,q.getUUID(),plan)==s&&e!=null&&e.inputs().tier(ChamberFunction.MATERIAL_STORE).known()==2){
+                    contribution[0].setPickUpDelay(0);contributionAvailable[0]=true;
+                    PrimeAnts.LOGGER.info("T11 FULL STORE CONTRIBUTION AVAILABLE queen={} tick={} source={} capacity={} units={} upgrades={}",q.getUUID(),c.getTick(),contribution[0].getUUID(),s.capacity(),contribution[0].getItem().getCount(),ChamberUpgrade.get(l).jobs(q.getUUID()).stream().map(a->a.chamber+":"+a.built().size()+"/"+a.cells.size()).toList());
+                }
             }
             long made=j==null?0:j.produced("minecraft:cobblestone");c.assertTrue(player.fx.ledger(c,q,Items.COBBLESTONE).total()==(supplied[0]?32:0)+made,"Full-store contribution and mined stone are independently conserved");
             if(step[0]==0){
@@ -266,10 +301,27 @@ public final class MiningGameTest {
     @GameTest(maxTicks=60000,structure="prime_ants_test:idle_ground")
     public void midHaulDiskReloadResumesThenMinerDeathReleasesOneUnitExactlyOnce(GameTestHelper c){
         var player=new TierTwoFixture(40,true);LasiusNigerEntity[] queen={player.fx.start(c)};boolean[] seeded={false},resumed={false};int[] step={0},baseline={0},evals={0};long[] since={-1},settled={-1};UUID[] worker={null},transfer={null};UnavailableCells[] hidden={null};ColonyDevelopment.Evaluation[] seen={null};
+        String[] custodyTransition={""};var previousSources=new HashMap<UUID,UUID>();UUID[] recoveryCarrier={null};
         c.onEachTick(()->{
             var q=queen[0];var l=c.getLevel();var plan=q.founding().plan();if(plan!=null&&!seeded[0]){geology(c,q);seeded[0]=true;}
             feedMining(c,player,q);player.ledgers(c,q);miningLedger(c,player,q);traceMining(c,player,q,"RELOAD DEATH");var p=NestPlanFixture.pile(c,q);var j=Mining.get(l).job(q.getUUID());if(p==null||j==null)return;
             var w=player.fx.f.workers(c,q).stream().filter(a->a.getUUID().equals(j.claim)).findFirst().orElse(null);var e=p.stageEvaluation();if(e!=null&&seen[0]!=e){seen[0]=e;if(step[0]==3&&e.inputs().tier(ChamberFunction.MATERIAL_STORE).known()>=1)evals[0]++;}
+            if(transfer[0]!=null){
+                var entity=l.getEntity(transfer[0]);var workers=player.fx.f.workers(c,q);
+                for(var a:workers){
+                    if(transfer[0].equals(previousSources.get(a.getUUID()))&&a.workerTasks().sourceId()==null&&a.getMainHandItem().is(Items.COBBLESTONE)&&entity==null){
+                        recoveryCarrier[0]=a.getUUID();PrimeAnts.LOGGER.info("T11 NAMED RELEASE PICKUP queen={} tick={} transfer={} worker={} cargo={} ledger={}",q.getUUID(),c.getTick(),transfer[0],a.getUUID(),a.getMainHandItem(),player.fx.ledger(c,q,Items.COBBLESTONE));
+                    }
+                    previousSources.put(a.getUUID(),a.workerTasks().sourceId());
+                }
+                var carrier=workers.stream().filter(a->a.getUUID().equals(recoveryCarrier[0])).findFirst().orElse(null);
+                var ledger=player.fx.ledger(c,q,Items.COBBLESTONE);
+                String transition="pending="+TransferCustody.get(l).contents().stream().filter(t->t.id().equals(transfer[0])).count()+" ground="+(entity instanceof net.minecraft.world.entity.item.ItemEntity item?item.getItem()+":"+item.isAlive():entity)
+                    +" recoveredCarrier="+(carrier==null?null:carrier.getUUID()+":"+carrier.getMainHandItem()+":"+carrier.workerTasks().phase()+":"+carrier.workerTasks().reason())
+                    +" stock="+ledger+" mining="+j.removed()+":"+j.deposited+":"+j.claim
+                    +" approach="+workers.stream().filter(a->transfer[0].equals(a.workerTasks().sourceId())).map(a->a.getUUID()+":"+a.workerTasks().phase()+":"+a.workerTasks().reason()).toList();
+                if(!transition.equals(custodyTransition[0])){custodyTransition[0]=transition;PrimeAnts.LOGGER.info("T11 DEATH CUSTODY TRANSITION queen={} tick={} transfer={} step={} {}",q.getUUID(),c.getTick(),transfer[0],step[0],transition);}
+            }
             if(step[0]==0){
                 if(j.removed()!=3||j.deposited!=2||w==null||!w.getMainHandItem().is(Items.COBBLESTONE))return;
                 worker[0]=w.getUUID();baseline[0]=j.removed();var cargo=w.getMainHandItem().copy();var encoded=Mining.CODEC.encodeStart(JsonOps.INSTANCE,Mining.get(l)).getOrThrow();
@@ -315,21 +367,98 @@ public final class MiningGameTest {
     @GameTest(maxTicks=60000,structure="prime_ants_test:idle_ground")
     public void naturalFallingRoofIsRefusedWithoutCargoOrFallingResourceDuplication(GameTestHelper c){
         var player=new TierTwoFixture(40,true);var q=player.fx.start(c);boolean[] seeded={false};long[] since={-1},settled={-1};
+        var consideration=MiningConsiderations.watch(c,q.getUUID());String[] preparation={""};
+        UnavailableCells[] hidden={null};UUID[] assigned={null};
         c.onEachTick(()->{
-            var l=c.getLevel();var plan=q.founding().plan();if(plan!=null&&!seeded[0]){geology(c,q,true);seeded[0]=true;}
-            feedMining(c,player,q);player.ledgers(c,q);miningLedger(c,player,q);traceMining(c,player,q,"GRAVITY");var p=NestPlanFixture.pile(c,q);var j=Mining.get(l).job(q.getUUID());if(p==null||j==null||j.claim==null)return;
-            if(j.removed()!=2||j.deposited!=2||!j.reason.equals("mining_falling_roof_unsafe"))return;
+            var l=c.getLevel();var plan=q.founding().plan();if(plan!=null&&!seeded[0]){geology(c,q,true);seeded[0]=true;hidden[0]=UnavailableCells.hide(c,plan.at(15,0,-2));}
+            if(hidden[0]!=null){
+                miningPreparationOnly(c,q);
+                if(upgradesFinished(c,q)){
+                    hidden[0].close();hidden[0]=null;
+                    c.assertTrue(NaturalMaterials.get(l).eligible(l,plan.at(15,0,-2)),"Restoring availability preserves positive origin without a write");
+                    PrimeAnts.LOGGER.info("T11 GRAVITY PREPARATION RESTORED queen={} tick={} upgrades=3 functionsTierTwo=4 habitat={} mining=null",q.getUUID(),c.getTick(),plan.nurseryFindings(l,q.getUUID(),true).verdict());
+                }
+            }
+            feedMining(c,player,q);player.ledgers(c,q);miningLedger(c,player,q);traceMining(c,player,q,"GRAVITY");if(plan!=null)preparation(c,player,q,preparation);var p=NestPlanFixture.pile(c,q);var j=Mining.get(l).job(q.getUUID());
+            if(since[0]>=0)c.assertTrue(p!=null&&j!=null&&j.claim!=null,"Assigned-miner observations continue on every loaded tick without losing the real claim");
+            if(p==null||j==null||j.claim==null)return;
+            if(since[0]<0&&(j.removed()!=2||j.deposited!=2||!j.reason.equals("mining_falling_roof_unsafe")))return;
+            var w=player.fx.f.workers(c,q).stream().filter(a->a.getUUID().equals(j.claim)).findFirst().orElseThrow();
+            c.assertTrue(j.removed()==2&&j.deposited==2&&j.released==0&&j.deliveries().equals(Map.of("minecraft:dirt",2))
+                &&j.reason.equals("mining_falling_roof_unsafe")&&w.isAlive()&&w.workerTasks().construction()&&TierTwoFixture.caregivers(c,q)>=2,
+                "A real assigned miner retains two actual connector soil deliveries, zero unsafe edits/releases and two authorized caregivers throughout");
+            if(assigned[0]==null){
+                c.assertTrue(consideration.last!=null&&consideration.last.problem()==null&&consideration.last.eligible().contains(w.getUUID()),
+                    "Actual ordinary production admission observed this eligible worker before its safe connector assignment");assigned[0]=w.getUUID();
+            }
+            c.assertTrue(assigned[0].equals(j.claim),"The ordinary assigned miner is retained throughout refusal and settlement");
             var at=plan.at(9,0,-2);c.assertTrue(Mining.unlocked(l,plan)&&q.founding().ready()&&NestPlan.walkable(l,plan.at(8,0,-2))&&NaturalMaterials.get(l).eligible(l,at)&&NaturalMaterials.get(l).eligible(l,at.above()),"Actual assigned Mature miner at the connected supported access retains positive stone/sand origins but refuses unsafe gravity");
             c.assertTrue(l.getBlockState(at).is(Blocks.STONE)&&l.getBlockState(at.above()).is(Blocks.SAND)&&j.produced("minecraft:cobblestone")==0&&j.produced("minecraft:sand")==0,"Unsafe natural sand support remains intact, no cargo produced");
             c.assertTrue(l.getEntitiesOfClass(net.minecraft.world.entity.item.FallingBlockEntity.class,c.getBounds().inflate(8)).isEmpty(),"Ordinary falling blocks stay enabled, with no falling resource from a mining edit");
-            if(since[0]<0)since[0]=p.loadedTicks();if(p.loadedTicks()-since[0]<600)return;
-            if(settled[0]<0)settled[0]=p.loadedTicks();if(p.loadedTicks()-settled[0]<200)return;
-            PrimeAnts.LOGGER.info("T09 GRAVITY DONE queen={} tick={} negativeLoaded={} settled={} removed={} cargo=0 falling=0",q.getUUID(),c.getTick(),p.loadedTicks()-since[0],p.loadedTicks()-settled[0],j.removed());c.succeed();
+            if(since[0]<0){since[0]=p.loadedTicks();PrimeAnts.LOGGER.info("T11 GRAVITY NEGATIVE START queen={} tick={} loaded={} worker={} caregivers={} deliveries={} cobble={} sand={}",q.getUUID(),c.getTick(),since[0],w.getUUID(),TierTwoFixture.caregivers(c,q),j.deliveries(),player.fx.ledger(c,q,Items.COBBLESTONE),player.fx.ledger(c,q,Items.SAND));}
+            if(p.loadedTicks()-since[0]<600)return;
+            if(settled[0]<0){settled[0]=p.loadedTicks();PrimeAnts.LOGGER.info("T11 GRAVITY NEGATIVE END queen={} tick={} loaded={} negativeLoaded={}",q.getUUID(),c.getTick(),settled[0],p.loadedTicks()-since[0]);}
+            if(p.loadedTicks()-settled[0]<200)return;
+            PrimeAnts.LOGGER.info("T11 GRAVITY DONE queen={} tick={} negativeLoaded={} settled={} worker={} removed={} unsafeCargo=0 falling=0",q.getUUID(),c.getTick(),settled[0]-since[0],p.loadedTicks()-settled[0],w.getUUID(),j.removed());c.succeed();
+        });
+    }
+    /** Declared first unsafe face, installed once before any mining plan; zero mining units expected. */
+    static void firstUnsafeFace(GameTestHelper c,LasiusNigerEntity q){
+        var l=c.getLevel();var plan=q.founding().plan();var at=plan.at(8,0,-2);
+        c.assertTrue(Mining.get(l).job(q.getUUID())==null&&upgradesFinished(c,q)
+            &&ChamberExcavation.get(l).jobs(q.getUUID()).stream().noneMatch(j->j.completed().contains(at)||j.completed().contains(at.above()))
+            &&ChamberUpgrade.get(l).jobs(q.getUUID()).stream().noneMatch(j->j.cells.contains(at)||j.cells.contains(at.above())),
+            "Controlled closed first face changes neither actual completed work nor an upgraded wall");
+        var soil=NaturalSoil.CODEC.encodeStart(JsonOps.INSTANCE,NaturalSoil.get(l)).getOrThrow().getAsJsonObject();
+        var mineral=NaturalMaterials.CODEC.encodeStart(JsonOps.INSTANCE,NaturalMaterials.get(l)).getOrThrow().getAsJsonObject();
+        for(var cell:List.of(at,at.above())){
+            var state=(cell.equals(at)?Blocks.STONE:Blocks.SAND).defaultBlockState();l.setBlock(cell,state,3);
+            var key=Long.toString(cell.asLong());soil.remove(key);mineral.addProperty(key,NaturalMaterials.type(state));
+        }
+        l.getDataStorage().set(NaturalSoil.TYPE,NaturalSoil.CODEC.parse(JsonOps.INSTANCE,soil).getOrThrow());
+        l.getDataStorage().set(NaturalMaterials.TYPE,NaturalMaterials.CODEC.parse(JsonOps.INSTANCE,mineral).getOrThrow());
+        c.assertTrue(plan.nurseryFindings(l,q.getUUID(),true).verdict()==Findings.Verdict.CLEAR,"Controlled solid/dry unopened first face preserves the existing habitat");
+        PrimeAnts.LOGGER.info("T11 FIRST UNSAFE GEOLOGY queen={} tick={} stone={} sand={} expectedMiningUnits=0 fixtureOnly=true",q.getUUID(),c.getTick(),at,at.above());
+    }
+    @GameTest(maxTicks=60000,structure="prime_ants_test:idle_ground")
+    public void unsafeFirstExposedFaceIsRefusedByProductionBeforeWorkerAssignment(GameTestHelper c){
+        var player=new TierTwoFixture(40,true);var q=player.fx.start(c);var consideration=MiningConsiderations.watch(c,q.getUUID());
+        boolean[] seeded={false};UnavailableCells[] hidden={null};long[] since={-1},settled={-1};int[] refused={0};
+        c.onEachTick(()->{
+            var l=c.getLevel();var plan=q.founding().plan();if(plan!=null&&!seeded[0]){geology(c,q);seeded[0]=true;hidden[0]=UnavailableCells.hide(c,plan.at(15,0,-2));}
+            if(hidden[0]!=null){
+                miningPreparationOnly(c,q);
+                if(upgradesFinished(c,q)){firstUnsafeFace(c,q);hidden[0].close();hidden[0]=null;}
+            }
+            feedMining(c,player,q);player.ledgers(c,q);miningLedger(c,player,q);traceMining(c,player,q,"PREASSIGNMENT");
+            var p=NestPlanFixture.pile(c,q);var j=Mining.get(l).job(q.getUUID());var event=consideration.last;
+            if(since[0]<0&&(p==null||j==null||event==null||!"mining_falling_roof_unsafe".equals(event.problem())||event.eligible().isEmpty()))return;
+            var at=plan.at(8,0,-2);var store=MaterialStore.confirmed(l,q.getUUID(),plan);
+            c.assertTrue(q.founding().ready()&&Mining.unlocked(l,plan)&&NestPlanFixture.storeConfirmed(p.stageEvaluation())&&store!=null&&store.room(new ItemStack(Items.COBBLESTONE))
+                &&NestPlan.walkable(l,plan.at(7,0,-2))&&TierTwoFixture.caregivers(c,q)>=2
+                &&player.fx.f.workers(c,q).stream().anyMatch(w->w.isAlive()&&l.getEntity(w.getUUID())==w&&w.workerTasks().canConstruct(plan)&&NestExpansion.remainingCaregivers(l,q.getUUID(),plan,w)>=2),
+                "Every loaded refusal tick has actual Mature readiness, confirmed store room, supported access and an eligible living worker leaving two authorized caregivers");
+            c.assertTrue(j.claim==null&&j.removed()==0&&j.deposited==0&&j.released==0&&j.tasks.getFirst().equals(at)
+                &&event.claim()==null&&event.removed()==0&&event.deposited()==0&&"mining_falling_roof_unsafe".equals(event.problem()),
+                "Observed actual production consideration rejects the first unsafe target before assigning or editing");
+            c.assertTrue(l.getBlockState(at).is(Blocks.STONE)&&l.getBlockState(at.above()).is(Blocks.SAND)&&NaturalMaterials.get(l).eligible(l,at)&&NaturalMaterials.get(l).eligible(l,at.above())
+                &&player.fx.ledger(c,q,Items.COBBLESTONE).total()==0&&player.fx.ledger(c,q,Items.SAND).total()==0
+                &&l.getEntitiesOfClass(net.minecraft.world.entity.item.FallingBlockEntity.class,c.getBounds().inflate(8)).isEmpty(),
+                "Untouched natural stone/sand, positive origins, zero unsafe cargo/resources/custody and no falling duplicate");
+            if(since[0]<0){since[0]=p.loadedTicks();refused[0]=consideration.refused;PrimeAnts.LOGGER.info("T11 PREASSIGNMENT NEGATIVE START queen={} tick={} loaded={} event={} foodSupplied={}/{} claySupplied={}",q.getUUID(),c.getTick(),since[0],event,player.apples,player.chickens,player.clay);}
+            if(p.loadedTicks()-since[0]<600)return;
+            if(settled[0]<0){
+                c.assertTrue(consideration.refused-refused[0]>=6,"Repeated actual production refusals span the full negative window");
+                settled[0]=p.loadedTicks();PrimeAnts.LOGGER.info("T11 PREASSIGNMENT NEGATIVE END queen={} tick={} loaded={} negativeLoaded={} productionRefusals={}",q.getUUID(),c.getTick(),settled[0],settled[0]-since[0],consideration.refused-refused[0]);
+            }
+            if(p.loadedTicks()-settled[0]<200)return;
+            PrimeAnts.LOGGER.info("T11 PREASSIGNMENT DONE queen={} tick={} negativeLoaded={} settled={} edits=0 deliveries=0 releases=0 cobble={} sand={}",q.getUUID(),c.getTick(),settled[0]-since[0],p.loadedTicks()-settled[0],player.fx.ledger(c,q,Items.COBBLESTONE),player.fx.ledger(c,q,Items.SAND));c.succeed();
         });
     }
     @GameTest(maxTicks=60000,structure="prime_ants_test:idle_ground")
     public void realPopulationRegressionStopsNewMiningButAuthorizedCarriedUnitStillReachesStore(GameTestHelper c){
         var player=new TierTwoFixture(40,true);var q=player.fx.start(c);boolean[] seeded={false},killed={false},delivered={false};long[] since={-1},restoredSince={-1},settled={-1};int[] evals={0};UUID[] miner={null};UnavailableCells[] hidden={null};ColonyDevelopment.Evaluation[] seen={null};
+        String[] deliveryTransition={""};int[] previousDeposited={-1};
         c.onEachTick(()->{
             var l=c.getLevel();var plan=q.founding().plan();if(plan!=null&&!seeded[0]){geology(c,q);seeded[0]=true;}
             feedMining(c,player,q);
@@ -349,6 +478,11 @@ public final class MiningGameTest {
                 killed[0]=true;since[0]=p.loadedTicks();PrimeAnts.LOGGER.info("T09 POPULATION LOSS queen={} tick={} kept={} cargo={}",q.getUUID(),c.getTick(),keep,w.getMainHandItem());return;
             }
             var carrier=player.fx.f.workers(c,q).stream().filter(w->w.getUUID().equals(miner[0])).findFirst().orElseThrow();
+            String transition="deposited="+j.deposited+" cargo="+carrier.getMainHandItem()+" phase="+carrier.workerTasks().phase()+" reason="+carrier.workerTasks().reason()+" stage="+(e==null?null:e.stage());
+            if(!transition.equals(deliveryTransition[0])){
+                PrimeAnts.LOGGER.info("T11 REGRESSION CARGO TRANSITION queen={} tick={} worker={} before={} after={} deliveryChanged={} ledger={} nutrition={}/{}",q.getUUID(),c.getTick(),carrier.getUUID(),deliveryTransition[0],transition,j.deposited!=previousDeposited[0],player.fx.ledger(c,q,Items.COBBLESTONE),carrier.nutrition().sugar(),carrier.nutrition().protein());
+                deliveryTransition[0]=transition;previousDeposited[0]=j.deposited;
+            }
             c.assertTrue(j.removed()==3,"A production stage regression never permits another mining removal");
             if(hidden[0]!=null){
                 c.assertTrue(carrier.getMainHandItem().is(Items.COBBLESTONE)&&carrier.getMainHandItem().getCount()==1,"The carried unit remains while ordinary store authorization is unavailable");

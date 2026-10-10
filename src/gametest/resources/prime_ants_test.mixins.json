@@ -21,7 +21,8 @@
     "GameTestHelperAccessor",
     "T27PileLoadMixin",
     "UnavailableCellMixin",
-    "StageEvaluationMixin"
+    "StageEvaluationMixin",
+    "MiningConsiderationMixin"
   ],
   "injectors": {
     "defaultRequire": 1

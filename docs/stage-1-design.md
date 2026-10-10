@@ -114,3 +114,25 @@ bound; the historical cause remains unknown. Additional mining diagnostics expos
 and late gravity preparation. Fresh dependency and final-build results are in `<turnloop>/directions/prime-ants-stage1/turns/T10/report.md`.
 Surface construction remains deferred. Unattended pre-Mature clay, arbitrary veins, all sixty-four edits, placement-survey
 walking routes/dig timelines and unattended development remain outside the demonstrated coverage.
+
+T11 separates unsafe mining refusal from assignment. A test-only observer forwards the real production admission
+guard's identical result and records eligibility; production is unchanged. Assigned gravity preparation keeps only a
+remote unopened gallery cell unavailable until three real upgrades confirm all four tier-two functions. Existing habitat
+stays clear, origins survive and no mining work is manufactured. Ordinary admission then assigns the miner for both real
+connector removals/deliveries. A separate permanent first-face case installs its declared closed stone/sand geology once
+after upgrades and before any mining plan, requiring actual production refusal before assignment. Both bodies and two
+identical copies each complete their original 600-negative/200-settled loaded windows within 60,000 total ticks.
+
+The full-store fixture still offers 32 cobble at its nursery-tier trigger on the supported forward-minus-one lane, but
+holds only that contribution's pickup until the confirmed store actually has tier-two capacity. This prevents tier-one
+share backpressure from trapping foragers during clay-dependent preparation. All units remain on the ground while held,
+then undergo real hauling. Food/clay waves, the 24,000 hall trigger, priorities, ledgers and acceptance windows are unchanged.
+Smallest recovery completes at 57,018; fresh permanent mining revalidation completes this body at 54,908.
+
+Regression and tier-two original/copy campaigns pass, with historical causes still unresolved. Death's three identical
+bodies fail their immediate gallery-completion recovery assertion: seven cobble stored plus the named unit on the ground
+conserve eight; later ordinary pickup/deposit reaches eight stored. Independent recovery can finish after mining. That
+assertion conflict remains explicit and unchanged, despite a later permanent-body pass. Diagnostics retain custody,
+cargo identities, accepted supplies, ingestion and valid food-gate pauses. Full acceptance is recorded separately in
+`<turnloop>/directions/prime-ants-stage1/turns/T11/report.md`; a green execution cannot erase these negatives. The historical
+eighteen-unit failure remains unexplained. Surface construction remains deferred and its T12 checkpoint is at risk.

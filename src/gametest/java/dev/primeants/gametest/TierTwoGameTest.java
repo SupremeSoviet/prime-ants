@@ -21,9 +21,20 @@ public final class TierTwoGameTest {
         long[] lastEgg={0},reloadedAt={-1},eggProgress={-1},hiddenAt={-1};UUID[] egg={null};
         boolean[] naturalDisplay={false},reloadStep={false},foodEffect={false},materialEffect={false},hallEffect={false};
         int[] mostBrood={0},restored={0};UnavailableCells[] entrance={null},plug={null};
+        String[] diagnostic={""};long[] supplyTotals={0,0,0},receipts={-1,-1};
         c.onEachTick(()->{
             var l=c.getLevel();player.feed(c,q);player.ledgers(c,q);player.trace(c,q,"U1/B1");
             var p=NestPlanFixture.pile(c,q);if(p==null)return;var e=p.stageEvaluation();var plan=q.founding().plan();
+            var supply=p.supply(l);
+            if(player.apples!=supplyTotals[0]||player.chickens!=supplyTotals[1]||player.clay!=supplyTotals[2]){
+                PrimeAnts.LOGGER.info("T11 TIER TWO ACCEPTED SUPPLY queen={} tick={} delta={}/{}/{} totals={}/{}/{} feeding={} hallSugarWaves={} lastApple={} lastChicken={} lastWorkMeal={} lastWorkProtein={} materialEnd={} triggerSupply={}",q.getUUID(),c.getTick(),player.apples-supplyTotals[0],player.chickens-supplyTotals[1],player.clay-supplyTotals[2],player.apples,player.chickens,player.clay,player.feeding,player.hallSugarWaves,player.lastApple,player.lastChicken,player.lastWorkMeal,player.lastWorkProtein,player.materialEnd,supply);
+                supplyTotals[0]=player.apples;supplyTotals[1]=player.chickens;supplyTotals[2]=player.clay;
+            }
+            String prerequisites="tiers="+tiers.keySet()+" food="+foodEffect[0]+" material="+materialEffect[0]+" hall="+hallEffect[0]+" naturalDisplay="+naturalDisplay[0]+" reload="+reloadStep[0]+" unknownStarted="+(hiddenAt[0]>=0)+" restored="+restored[0]+" gate="+p.growth().reason();
+            if(!prerequisites.equals(diagnostic[0])||c.getTick()%200==0&&(supply.foodSugar()!=receipts[0]||supply.foodProtein()!=receipts[1])||c.getTick()%1000==0){
+                diagnostic[0]=prerequisites;receipts[0]=supply.foodSugar();receipts[1]=supply.foodProtein();
+                PrimeAnts.LOGGER.info("T11 TIER TWO PHASE DIAGNOSIS queen={} tick={} loaded={} {} brood={} credit={} recentIncome={}/{} observedIncomeTicks={} intakeReceipts={}/{} supply={} groundApple={} groundChicken={} lastApple={} eligibleHallWave={}",q.getUUID(),c.getTick(),p.loadedTicks(),prerequisites,p.records().size(),saved(c,p).getIntOr("DevelopmentCredit",-1),p.growth().recentSugar(),p.growth().recentProtein(),p.growth().observedTicks(),supply.foodSugar(),supply.foodProtein(),supply,NurseryUpgradeGameTest.ground(c,net.minecraft.world.item.Items.APPLE),NurseryUpgradeGameTest.ground(c,net.minecraft.world.item.Items.CHICKEN),player.lastApple,player.feeding&&e!=null&&e.inputs().tier(ChamberFunction.QUEENS_HALL).known()==2&&NurseryUpgradeGameTest.ground(c,net.minecraft.world.item.Items.APPLE)==0&&supply.storedSugar()<24000&&c.getTick()-player.lastApple>=2000);
+            }
             c.assertTrue(q.isAlive()&&l.getEntity(q.getUUID())==q,"The living queen remains observed throughout");
             c.assertTrue(scope.loss==null,"Mature at EVERY production evaluation after promotion: "+scope.loss);
             c.assertTrue(scope.falseHallClock==null,"Unknown hall terrain never starts its loss clock: "+scope.falseHallClock);

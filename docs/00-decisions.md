@@ -563,3 +563,25 @@ reload, faster hall laying and the later unknown/restoration window remain unobs
 41 adults, no brood, eight food units and 36 stored clay; the recent-income gate is closed. Its accepted recipe,
 24,000 hall trigger, growth/care predicates and bound are preserved. Store-upgrade safety passes fresh. Final unfiltered
 acceptance and any unresolved red results are recorded independently in T10's report. No further expectation is relaxed.
+
+## Implementation notes - 2026-10-10 (stage-1 T11 mining recovery)
+
+- **Safety and assignment.** Actual production consideration refuses natural stone beneath sand before worker selection.
+  An empty yielded claim need not be reacquired for that refusal. A scoped test observer returns the original guard result
+  unchanged. Assigned-miner gravity coverage now prepares real chamber upgrades first, using only remote unopened-cell
+  unavailability; habitat, origins, supplies and completed work remain physical. A separate declared first unsafe face
+  proves refusal with an eligible living worker and two authorized caregivers, without an assignment. Both original/copy
+  sets retain 60,000 total ticks and complete 600 negative plus 200 settled nursery-loaded ticks with intact blocks/ledgers.
+- **Full-store preparation.** The same 32 cobble are offered at the same nursery-tier trigger/location. Only their pickup
+  waits for the live store's actual tier-two capacity; each unit remains on the ground and is then normally hauled. The
+  diagnosed tier-one share had trapped two cobble carriers while upgrades waited for clay. Smallest recovery and permanent
+  mining revalidation pass every unchanged backpressure, release, restored-evaluation, cargo/delivery and settlement check.
+  Food/clay waves, the 24,000 hall trigger, production priorities and all substantive assertions remain unchanged.
+- **Evidence limits.** Regression and tier-two original/two-copy campaigns pass; their historical causes remain unresolved.
+  Three death bodies fail immediate recovery after gallery completion with seven stored/one named ground cobble, zero
+  pending and eight conserved. Later real foragers restore eight stored. No deficit is demonstrated; the fixture couples
+  independent completion times. The frozen assertion is retained, not replaced by a wait. A later original pass is separate
+  evidence. The eighteen-unit historical failure is still unexplained. No production/growth/nursing/terrain-policy change,
+  unsafe assignment or deadline increase is included. Final build outcome and exact fresh discovery belong to T11's report.
+  Pre-Mature clay, arbitrary veins/all64 edits, survey walking/dig timelines and unattended development remain uncovered;
+  surface construction stays deferred and T12 is at risk.
