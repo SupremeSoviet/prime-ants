@@ -497,7 +497,7 @@ tasks.named('runGameTest') {
         if(miningNames.size()!=8)throw new GradleException('T11 mining discovery incomplete')
         miningNames.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:mining_game_test_${name}"})throw new GradleException('Missing T09 mining test '+name)}
         def surfaceNames=(file('src/gametest/java/dev/primeants/gametest/SurfaceGameTest.java').text =~ /public void (\w+)\(GameTestHelper c\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
-        if(surfaceNames.size()!=4)throw new GradleException('T12 surface discovery incomplete')
+        if(surfaceNames.size()!=6)throw new GradleException('T13 surface discovery incomplete')
         surfaceNames.each {name->if(!cases.any{it.@name.text()=="prime_ants_test:surface_game_test_${name}"})throw new GradleException('Missing physical surface test '+name)}
         if(cases.size()!=surfaceNames.size()+173+foodNames.size()+policyNames.size()+defenseNames.size()+stageNames.size()+storeNames.size()+t04+t05+t06+t07+t08+miningNames.size())throw new GradleException('Expected complete baseline plus current additions')
         // Additive exact annotation discovery: all registered permanent names, with no duplicate source/report rows.

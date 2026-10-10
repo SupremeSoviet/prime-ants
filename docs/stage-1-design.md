@@ -158,3 +158,23 @@ remain separate from two preparation/mining timeouts. See the T12 report for fre
 coverage gaps in the preceding notes remain.
 
 A bounded surface route stall releases the shared builder and preserves any paid cargo through named custody.
+
+### T13 surface access boundary (2026-10-10)
+
+A surface builder may briefly intersect its future cell on the way to an owned source or while centering on its saved
+stand. It now keeps the claim and uses ordinary collision-checked movement toward that already validated stand; physical
+work waits until all existing guards pass again. The permanent diagonal-source regression measures the original target
+guard before movement and requires the same living worker's actual paid block and 200 settled loaded ticks. Independent
+soil, current mandible cargo and custody remain conserved. Other occupancy keeps the existing refusal.
+
+Each construction prefix has a supported, connected, visible next-task stand on open declared ground. The present closed
+eight-high GameTest enclosure rejects the fifteen-cell prefix because raised stands need the barrier ceiling's cell for
+two-high clearance; the four-high crest reaches that ceiling and five-high posts exceed it. Neither safe navigation nor
+queue reordering grants permission to remove that barrier. Complete physical surface acceptance remains blocked within
+the frozen enclosure. Planning bounds, 19/57 paid cells, 38 additional placements, two retaining conversions, 214/798
+spoil capacities, supplies and deadlines stay fixed.
+
+Plan order and the saved job codec remain unchanged. Actual T12 fifteen-paid-cell golden records preserve every receipt
+and named release, and a physical fourteen-paid-cell hauling disk/data and canonical actor reload retains its claim,
+source and one-unit cargo before resumed placement. Full build and all incomplete phases are recorded in the T13 report;
+the historical timing negatives and coverage limits above remain.

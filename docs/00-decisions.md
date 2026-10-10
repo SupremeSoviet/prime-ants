@@ -594,3 +594,35 @@ acceptance and any unresolved red results are recorded independently in T10's re
 - **Measured partial delivery.** Controlled starting habitats declare real registered adults, actual tier-two chambers/stores, eighty owned soil units and finite existing food. Production computes their stage; scoped initial opening ownership grants no excavation, upgrade or surface work receipt. A first nursery initialization failed before actions; its original identities now refer to three actual declared initial adults. The first placement exposed a receipt-index crash; the one-index correction precedes focused recovery. The cached-stand repair prevents treating a normal airborne path query as a missing work stand. Fifteen actual Mature placements then conserve all eighty units, but the next raised mound step has no reachable stand in the declared habitat. Complete Mature/Great forms are cut at this measured component; the arch lintel, finished crest, gate conversions, ramparts and watch posts are unobserved. The supplied founder reaches real Mature, but its first physical attempt builds zero surface units. No footprint, cost, reach, supply or deadline is widened and no completed form is claimed.
 - **Protection and reload boundary.** Same-state target revocation survives actual disk reload through 600 loaded ready ticks and 200 settled ticks, with zero recovery/placement and the empty builder released. The separate protection body observes 600 target-unavailable ticks, two fresh restored confirmations, actual hauling disk/data and canonical actor reload, resumed placement, lethal worker death, one named soil release and a replacement hauling worker. Construction/settlement is incomplete at 12,000. Final unfiltered execution and dependency checks are recorded separately in `<turnloop>/directions/prime-ants-stage1/turns/T12/report.md`.
 - **Limits retained.** Historical regression/tier-two timing causes and the eighteen-unit failure at 10,323 remain unresolved. Mature mining still cannot supply unattended pre-Mature clay. The fixed sixteen-cell gallery proves neither arbitrary veins nor all sixty-four edits; placement-survey walking/dig timelines and unattended development remain uncovered. Tier three, established colonies, 120-adult performance, broad persistence and release acceptance require later turns. The T12 surface checkpoint is partially delivered.
+
+## Implementation notes - 2026-10-10 (stage-1 T13 surface access diagnosis)
+
+- **A builder's own body.** The supplied founder's first surface target can intersect its claimed empty-handed worker
+  while that worker walks to the owned source. The old controller released the claim on that genuine collision, then
+  repeatedly reassigned the same task. Six bounded original-guard observations identified the same worker, its exact
+  body bounds and zero cargo; other occupants were absent. The repair lets that claimed worker follow its already
+  validated supported goal through ordinary navigation until its body clears. Recovery and placement still recheck
+  occupancy, ownership, loaded support, visible physical reach and twenty loaded work ticks. No action occurs in the
+  occupied branch. The scoped permanent regression observes the original guard once before movement and requires the
+  same living identity's actual first paid block, independent eighty-unit conservation and 200 nursery-loaded settled
+  ticks. Its separate initial habitat declares a diagonal source approach; setup creates no labor receipts.
+- **The raised prefix.** Three actual selectors reject all 32 candidates at the fifteen-paid-cell Mature prefix:
+  28 floor/two-high-clearance refusals and four candidates whose in-reach rays all clip, with no unloaded candidate, body refusal
+  or navigation query. Raised supported stands put their head cell in the closed GameTest's barrier ceiling. The
+  unchanged 64x8x64 template has local ground four; the four-high crest's last cell coincides with that ceiling and the
+  five-high posts exceed it. Prefix coverage proves supported, connected, visible next-task stands on open declared
+  ground and separately reproduces the ceiling refusal. This does not prove physical complete construction. The actual
+  T12 compiled next cell is `-4,3,2`; its `-5,3,2` narrative label was incorrect. The frozen form and test enclosure are
+  preserved; complete Mature and Great acceptance remain blocked by this boundary.
+- **Existing payments.** Queue, cell membership, plan description and job codec are unchanged. Golden coverage uses two
+  actual T12 disk prefixes with fifteen paid receipts and one named historical release, retains all keys, identities
+  and balances on decoding, and rejects reassignment to another cell. A real fourteen-paid-cell hauling disk/data and
+  canonical actor reload retains its claim, source, receipts and one dirt cargo, then resumes the fifteenth physical
+  placement. Historical excavation receipts remain separate. Full verification, protection/reload results, discovery,
+  counts and the one unfiltered build belong to `<turnloop>/directions/prime-ants-stage1/turns/T13/report.md`.
+- **Limits.** The T12 death-order correction and its 6,000-loaded recovery within 60,000 total, with 600/200 windows,
+  remain unchanged. Its two concurrent preparation/mining timeouts, historical regression/tier-two timing causes and
+  unexplained eighteen-unit failure at 10,323 remain negative. Paid-stall handoff and retained-building regression are
+  unverified. Unattended pre-Mature clay, arbitrary veins/all64 edits, survey walking/dig timelines and unattended
+  development remain uncovered; tier three, established colonies, 120-adult performance, broad persistence and release
+  acceptance need later turns.

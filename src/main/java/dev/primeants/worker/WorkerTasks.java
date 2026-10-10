@@ -168,6 +168,16 @@ public final class WorkerTasks {
         var problem=SurfaceWork.targetProblem(l,worker.queenId(),j);
         if(problem!=null){
             harvestingTicks=0;
+            // A claimed builder may clip the future cell while walking to its source or while
+            // centering on its saved stand. Let ordinary movement clear its body; no work can
+            // occur until targetProblem and the action's collision guard both pass again.
+            if(problem.equals("occupied_target")&&worker.getBoundingBox().intersects(new AABB(j.next()))){
+                boolean fetch=phase==Phase.SURFACE_FETCH;var destination=fetch?j.source:j.next();
+                if(destination!=null&&destination.equals(surfaceTarget)
+                    &&SurfaceWork.validStand(l,worker,destination,!fetch&&j.carried()==1,surfaceStand)){
+                    reason="surface_builder_vacates_future_cell";arriveSupported(l,Vec3.atBottomCenterOf(surfaceStand));return;
+                }
+            }
             if(j.carried()==0){work.relinquish(l,worker,j,"waiting_"+problem);next(Phase.NURSE_CACHE,"surface_empty_worker_released");}
             else if(problem.contains("revoked")||problem.equals("obstructed_target")||problem.equals("unsupported_target")){
                 work.abandonCargo(l,worker,j,problem);next(Phase.NURSE_CACHE,"surface_blocked_unit_in_named_custody");

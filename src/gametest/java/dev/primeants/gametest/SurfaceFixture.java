@@ -53,7 +53,9 @@ final class SurfaceFixture {
     static void identity(CompoundTag tag,NestPlan home,String key,UUID queen){
         tag.putString(key,queen.toString());tag.put("Entrance",BlockPos.CODEC.encodeStart(NbtOps.INSTANCE,home.entrance()).getOrThrow());tag.putString("Direction",home.direction().getName());
     }
-    LasiusNigerEntity habitat(GameTestHelper c,boolean great){
+    LasiusNigerEntity habitat(GameTestHelper c,boolean great){return habitat(c,great,false);}
+    /** Separate declared diagonal source approach for the self-occupancy regression, before any worker work. */
+    LasiusNigerEntity habitat(GameTestHelper c,boolean great,boolean diagonalSource){
         terrain(c);var l=c.getLevel();var home=NestPlan.geometry(c.absolutePos(new BlockPos(32,4,32)),Direction.EAST);
         int count=great?49:29;var broodIds=new ArrayList<UUID>();for(int n=0;n<count;n++)broodIds.add(UUID.randomUUID());
         var queen=AntEntities.QUEEN.create(l,EntitySpawnReason.COMMAND);c.assertTrue(queen!=null,"Real initial habitat queen");queen.setPos(Vec3.atBottomCenterOf(home.chamber()));
@@ -87,7 +89,9 @@ final class SurfaceFixture {
         }
         // Initial surface supplies are eighty existing owned mound units, never placed at a structural target.
         var structural=SurfacePlan.bundled(ColonyStage.GREAT).cells().stream().map(SurfacePlan.Cell::column).collect(java.util.stream.Collectors.toSet());
-        for(var cell:NestMound.plan(ColonyStage.YOUNG)){
+        var initialPlan=diagonalSource?new ArrayList<>(NestMound.plan(ColonyStage.MATURE)):new ArrayList<>(NestMound.plan(ColonyStage.YOUNG));
+        if(diagonalSource)initialPlan.removeIf(cell->cell.layer()!=0||cell.forward()>=-5);
+        for(var cell:initialPlan){
             if(structural.contains(cell.forward()+","+cell.side()))continue;var at=home.at(cell.forward(),cell.side(),1+cell.layer());
             if(!l.getBlockState(at.below()).isSolidRender())continue;l.setBlock(at,NurseryBlocks.NEST_SOIL.defaultBlockState(),3);ColonyTerrain.get(l).deposited(at,queen.getUUID());initialSoil.add(at);if(initialSoil.size()==80)break;
         }c.assertTrue(initialSoil.size()==80,"Eighty finite declared owned mound units");

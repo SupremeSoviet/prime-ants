@@ -26,6 +26,7 @@
     "NamedRecoveryMixin",
     "CanonicalCargoObservationMixin",
     "InitialHabitatTerrainMixin",
+    "SurfaceOccupancyProbeMixin",
     "InitialHabitatConnectionMixin"
   ],
   "injectors": {

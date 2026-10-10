@@ -28,6 +28,54 @@ public final class SurfaceGameTest {
             }return walker!=null;
         }
     }
+    @GameTest(maxTicks=12000,structure="prime_ants_test:idle_ground")
+    public void controlledMatureHabitatCompletesEveryPaidConstructionPrefixAndWalkingPassage(GameTestHelper c){
+        var fixture=new SurfaceFixture();var q=fixture.habitat(c,false);fixture.snapshot(c,q);var walking=new Walking();long[] settled={-1};boolean[] reloaded={false};
+        c.onEachTick(()->{
+            var l=c.getLevel();fixture.soil(c,q);fixture.protectedTerrain(c,q,settled[0]>=0);var p=NestPlanFixture.pile(c,q);if(p==null)return;
+            var j=SurfaceWork.get(l).job(q.getUUID(),ColonyStage.MATURE);if(j==null)return;
+            if(!reloaded[0]&&j.completed()==14&&j.carried()==1&&j.claim!=null){
+                var worker=(LasiusNigerEntity)l.getEntity(j.claim);c.assertTrue(worker!=null&&worker.workerTasks().surfaceWorking(),"Actual hauling worker at the fourteen-cell T12 paid prefix");
+                var receipts=j.receipts();var claim=j.claim;var source=j.source;var cargo=worker.getMainHandItem().copy();
+                var encoded=SurfaceWork.CODEC.encodeStart(JsonOps.INSTANCE,SurfaceWork.get(l)).getOrThrow();
+                l.getDataStorage().saveAndJoin();
+                try(var disk=new SavedDataStorage(net.minecraft.world.level.dimension.DimensionType.getStorageFolder(l.dimension(),l.getServer().getWorldPath(LevelResource.ROOT)).resolve("data"),net.minecraft.util.datafix.DataFixers.getDataFixer(),l.registryAccess())){
+                    l.getDataStorage().set(SurfaceWork.TYPE,Objects.requireNonNull(disk.get(SurfaceWork.TYPE)));l.getDataStorage().set(ColonyTerrain.TYPE,Objects.requireNonNull(disk.get(ColonyTerrain.TYPE)));
+                }
+                var loaded=fixture.fx.f.restore(c,worker);var after=SurfaceWork.get(l).job(q.getUUID(),ColonyStage.MATURE);
+                c.assertTrue(encoded.equals(SurfaceWork.CODEC.encodeStart(JsonOps.INSTANCE,SurfaceWork.get(l)).getOrThrow())&&after.receipts().equals(receipts)&&after.claim.equals(claim)&&Objects.equals(after.source,source)
+                    &&ItemStack.matches(cargo,loaded.getMainHandItem())&&after.carried()==1,"Disk data and canonical actor reload retain every paid key, receipt identity, claim, source and exact unit without reassignment");
+                reloaded[0]=true;fixture.soil(c,q);PrimeAnts.LOGGER.info("T13 PAID PREFIX DISK RELOAD queen={} tick={} prefix={} worker={} source={} cargo={} recovered={} placed={} released={} planOrderUnchanged=true",q.getUUID(),c.getTick(),receipts,claim,source,cargo,after.recovered(),after.placed(),after.released());return;
+            }
+            if(!j.complete()||j.claim!=null)return;SurfaceFixture.completed(c,q,ColonyStage.MATURE);
+            c.assertTrue(reloaded[0],"Paid-prefix hauling disk/data and canonical actor reload was physically exercised");
+            c.assertTrue(p.stageEvaluation()!=null&&p.stageEvaluation().stage()==ColonyStage.MATURE,"Computed Mature from real registered adults and physical tier-two functions");
+            if(!walking.observe(c,q))return;if(settled[0]<0)settled[0]=p.loadedTicks();if(p.loadedTicks()-settled[0]<200)return;
+            c.assertTrue(j.placed()==19&&j.recovered()==19&&j.released()==0,"Nineteen actual new paid placements conserve the finite source");
+            PrimeAnts.LOGGER.info("T13 CONTROLLED MATURE DONE queen={} tick={} uniqueCells=19 placements={} recovered={} released={} settled={} walker={}",q.getUUID(),c.getTick(),j.placed(),j.recovered(),j.released(),p.loadedTicks()-settled[0],walking.walker);c.succeed();
+        });
+    }
+    @GameTest(maxTicks=12000,structure="prime_ants_test:idle_ground")
+    public void aClaimedBuilderWalksOutOfItsFutureCellAndPaysTheSameTaskWithoutDiscardingBodiesOrCargo(GameTestHelper c){
+        var fixture=new SurfaceFixture();var q=fixture.habitat(c,false,true);fixture.snapshot(c,q);var probe=SurfaceOccupancyProbe.watch(c,q.getUUID());UUID[] observed={null};long[] settled={-1};BlockPos[] target={null};
+        c.onEachTick(()->{
+            var l=c.getLevel();fixture.soil(c,q);fixture.protectedTerrain(c,q,settled[0]>=0);var pile=NestPlanFixture.pile(c,q);if(pile==null)return;
+            var job=SurfaceWork.get(l).job(q.getUUID(),ColonyStage.MATURE);if(job==null)return;
+            if(observed[0]==null&&probe.first()!=null){
+                var body=probe.first();observed[0]=body.worker();target[0]=body.target();
+                c.assertTrue(body.cargo()==0&&body.recovered()==0&&body.placed()==0,"Future-cell intersection precedes source recovery and payment");
+                c.assertTrue(body.source().equals(q.founding().plan().at(-6,-5,1)),"The declared first diagonal owned source actually supplies the reproduced approach");
+                PrimeAnts.LOGGER.info("T13 SELF BODY START queen={} tick={} worker={} target={} position={} bounds={} source={} existingClaim=true paid=0",q.getUUID(),c.getTick(),observed[0],target[0],body.position(),body.bounds(),body.source());
+            }
+            if(job.completed()==0)return;
+            c.assertTrue(observed[0]!=null,"The actual claimed ordinary worker crossed its future structural cell before placement");
+            var actor=l.getEntity(observed[0]);c.assertTrue(actor instanceof LasiusNigerEntity worker&&worker.isAlive(),"The obstructing worker stays alive with its original identity");
+            c.assertTrue(job.receipts().getFirst().equals("relocated:"+observed[0]+":-1,-1,0")&&job.placed()>=1&&job.recovered()>=1&&job.released()==0
+                &&ColonyTerrain.get(l).surface(l,target[0],q.getUUID())&&l.getBlockState(target[0]).is(NurseryBlocks.NEST_SOIL),"The same claimed body physically clears and pays the same first task, without a fabricated receipt or released unit");
+            if(settled[0]<0)settled[0]=pile.loadedTicks();if(pile.loadedTicks()-settled[0]<200)return;
+            PrimeAnts.LOGGER.info("T13 SELF BODY DONE queen={} tick={} worker={} firstTarget={} placed={} recovered={} released=0 soil=80 settled={} ordinaryMovement=true",q.getUUID(),c.getTick(),observed[0],target[0],job.placed(),job.recovered(),pile.loadedTicks()-settled[0]);c.succeed();
+        });
+    }
     @GameTest(maxTicks=60000,structure="prime_ants_test:idle_ground")
     public void suppliedFoundingToMatureRetainsItsSmallMoundAndWorkersBuildLargerCrestsAndAnOpenArch(GameTestHelper c){
         var fixture=new SurfaceFixture();var player=new TierTwoFixture(40,true);var q=fixture.founder(c);
