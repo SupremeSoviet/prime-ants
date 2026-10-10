@@ -1,11 +1,14 @@
 """Offline rejection fixtures. Real multi-process execution is the separate checkServerSmoke task."""
 import importlib.util
+import contextlib
+import io
 import json
 import os
 from pathlib import Path
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 import xml.etree.ElementTree as ET
 
 spec=importlib.util.spec_from_file_location('harness',Path(__file__).with_name('gametest-harness.py'))
@@ -30,6 +33,75 @@ class HarnessTests(unittest.TestCase):
             for names in [('a',),('a','b','c'),('a','a')]:
                 p=self.report(folder,names);self.assertTrue(h.validate_report(p,['a','b'],now-10,now+10,0)[1])
             p=self.report(folder);self.assertIn('duplicate assignment',h.validate_report(p,['a','a'],now-10,now+10,0)[1])
+            root=ET.parse(p);next(root.iter('testcase')).attrib.pop('name');root.write(p)
+            self.assertIn('missing executed name',h.validate_report(p,['a','b'],now-10,now+10,0)[1])
+
+    def wrappers(self):
+        return [('wrong-tests',dict(tests='3')),('errors',dict(errors='1')),('skipped',dict(skipped='1')),
+                ('failures',dict(failures='1')),('consistent-zero',dict(tests='2',errors='0',skipped='0',failures='0')),
+                ('empty-zero',dict(tests='0',errors='0',skipped='0',failures='0')),('failing-child',dict(tests='2',failures='1'))]
+
+    def wrapper(self,path,label,attrs,names=('a','b')):
+        root=ET.Element('testsuites',**attrs)
+        suite=ET.SubElement(root,'testsuite',tests=str(len(names)),failures='0',errors='0',skipped='0')
+        for name in names:ET.SubElement(suite,'testcase',name=name,classname='offline fixture')
+        if label=='failing-child':ET.SubElement(next(suite.iter('testcase')),'failure',message='preserved negative')
+        ET.ElementTree(root).write(path,encoding='utf-8')
+
+    def test_wrappers_rejected_before_case_extraction(self):
+        with tempfile.TemporaryDirectory() as folder:
+            for label,attrs in self.wrappers():
+                with self.subTest(label=label):
+                    p=Path(folder)/(label+'.xml');self.wrapper(p,label,attrs,() if label=='empty-zero' else ('a','b'))
+                    original=p.read_bytes();cases,issues=h.validate_report(p,['a','b'],time.time()-10,time.time()+10,0)
+                    self.assertEqual([],cases);self.assertTrue(any('expected testsuite' in i for i in issues))
+                    self.assertEqual(original,p.read_bytes())
+
+    def test_unit_and_model_guards_reject_every_wrapper(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);unit=root/'build/test-results/test/TEST-offline.xml';unit.parent.mkdir(parents=True)
+            model=root/'build/test-results/client-model/headless.xml';model.parent.mkdir(parents=True)
+            h.write(root/'frozen.json',dict(unit_cases=[['offline fixture','a'],['offline fixture','b']],model_cases=[['offline fixture','a'],['offline fixture','b']]))
+            for kind,path in [('unit',unit),('model',model)]:
+                for label,attrs in self.wrappers():
+                    with self.subTest(kind=kind,label=label):
+                        for good in [unit,model]:
+                            fixture=self.report(folder);good.write_bytes(fixture.read_bytes())
+                        self.wrapper(path,label,attrs,() if label=='empty-zero' else ('a','b'))
+                        # Settle the known NTFS epoch rounding before testing root policy.
+                        h.written_report_end(path)
+                        with patch.object(h,'ROOT',root):result=h.fast_guards(root,time.time()-10)
+                        self.assertFalse(result['passed']);self.assertEqual(0,result[kind+'_count'])
+                        self.assertTrue(any('expected testsuite' in i for i in result['issues']))
+            for good in [unit,model]:
+                good.write_bytes(self.report(folder).read_bytes());h.written_report_end(good)
+            with patch.object(h,'ROOT',root):self.assertTrue(h.fast_guards(root,time.time()-10)['passed'])
+
+    def test_wrapper_rejection_survives_suite_and_successful_case_only_complete_merge(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);freeze=dict(assignments={'fast':[dict(index=0,names=['a','b'])]},concurrency=1,
+                long_scope='complete long suite',prepared_epoch=time.time()-10,inventory=[dict(name='a'),dict(name='b')],launch={},inputs={})
+            h.write(root/'frozen.json',freeze)
+            def rejected_child(path,suite,assignment,frozen):
+                path.mkdir();p=path/'server.xml';self.wrapper(p,'errors',dict(errors='1'))
+                cases,issues=h.validate_report(p,assignment['names'],time.time()-10,time.time()+10,0)
+                return dict(index=0,assigned=assignment['names'],start_epoch=time.time()-10,end_epoch=time.time()+10,
+                    exit_code=0,passed=not issues,issues=issues,executed=len(cases),report_sha256=h.sha(p))
+            with patch.object(h,'child',side_effect=rejected_child):summary=h.run_suite(root,'fast')
+            self.assertFalse(summary['passed']);self.assertTrue(summary['union_issues'])
+            original=(root/'fast-0/server.xml').read_bytes()
+            # Even an independently successful case-only replacement cannot erase the child's rejection.
+            good=self.report(folder);cases=list(ET.parse(good).getroot().iter('testcase'));h.merged(root/'fast.xml',cases)
+            midpoint=(summary['start_epoch']+summary['end_epoch'])/2
+            os.utime(root/'fast.xml',(midpoint,midpoint))
+            h.merged(root/'long.xml',[])
+            h.write(root/'long.json',dict(passed=True,shards=[],assigned=[],start_epoch=time.time()-10,end_epoch=time.time()+10))
+            with patch.object(h,'inputs',return_value={}),patch.object(h,'ROOT',root):result=h.merge_complete(root)
+            self.assertEqual([],h.validate_report(root/'server.xml',['a','b'],time.time()-10,time.time()+10,0)[1])
+            self.assertFalse(result['passed']);self.assertTrue(any('expected testsuite' in i for i in result['issues']))
+            self.assertFalse(any('stale' in i for i in result['issues']))
+            self.assertEqual(original,(root/'fast-0/server.xml').read_bytes())
+            self.assertEqual(summary,h.read(root/'fast.json'))
 
     def test_stale_missing_malformed_and_incomplete_reports(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -76,5 +148,14 @@ class HarnessTests(unittest.TestCase):
                 self.assertEqual([],h.validate_report(path,['a'],start-0.001,h.written_report_end(path),0)[1])
             os.utime(path,(1,1))
             self.assertIn('stale report',h.validate_report(path,['a'],start,h.written_report_end(path),0)[1])
+
+    def test_archived_complete_gate_rejects_wrappers_for_server_unit_and_model(self):
+        spec=importlib.util.spec_from_file_location('performance',Path(__file__).with_name('sample-performance.py'))
+        performance=importlib.util.module_from_spec(spec);spec.loader.exec_module(performance)
+        required=(h.unit_cases(),set(h.discover()),h.model_cases())
+        with tempfile.TemporaryDirectory() as folder,patch.object(performance,'inputs',return_value={'offline':'fixture'}),patch.object(performance,'required_cases',return_value=required),contextlib.redirect_stdout(io.StringIO()):
+            out=Path(folder)/'gate';performance.test_gate(out);results=h.read(out/'results.json')
+        wrappers=[r for r in results if r['fixture'].startswith('wrapper-')]
+        self.assertEqual(21,len(wrappers));self.assertTrue(all(r['result']=='rejected' and 'expected testsuite' in r['reason'] for r in wrappers))
 
 if __name__=='__main__':unittest.main(verbosity=2)

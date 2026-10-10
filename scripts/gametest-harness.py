@@ -109,17 +109,24 @@ def prepare(folder, launch_path, shards, concurrency, names=None):
     write(folder/'frozen.json',freeze)
     print(f"Frozen permanent partition: {len(rows)} cases; fast={sum(r['suite']=='fast' for r in rows)} long={sum(r['suite']=='long' for r in rows)}; concurrency={concurrency}",flush=True)
 
+def supported_report_root(path):
+    # Only the actual server/JUnit/model <testsuite> format is supported.
+    # Reject wrappers before extracting rows: merging must not erase their totals.
+    root=ET.parse(path).getroot()
+    if root.tag!='testsuite': raise ValueError('unsupported report root: '+root.tag+'; expected testsuite')
+    return root
+
 def validate_report(path, assigned, start, end, exit_code):
     issues=[]; cases=[]; path=Path(path)
     if len(assigned)!=len(set(assigned)): issues.append('duplicate assignment')
     if exit_code!=0: issues.append('failed child exit: '+str(exit_code))
     try:
         if not start<=path.stat().st_mtime<=end: issues.append('stale report')
-        root=ET.parse(path).getroot()
-        if root.tag not in ('testsuite','testsuites'): issues.append('malformed report root')
+        root=supported_report_root(path)
         cases=list(root.iter('testcase')); actual=[c.get('name') for c in cases]
+        if any(not name for name in actual): issues.append('missing executed name')
         if len(actual)!=len(set(actual)): issues.append('duplicate executed names')
-        if set(actual)!=set(assigned) or len(actual)!=len(assigned): issues.append('missing/unexpected executed names: '+str(sorted(set(actual)^set(assigned))))
+        if set(actual)!=set(assigned) or len(actual)!=len(assigned): issues.append('missing/unexpected executed names: '+str(sorted(set(actual)^set(assigned),key=str)))
         for suite in root.iter('testsuite'):
             if 'tests' in suite.attrib and int(suite.get('tests'))!=len(list(suite.iter('testcase'))): issues.append('incomplete XML totals')
             for key in ('failures','errors','skipped'):
@@ -205,8 +212,9 @@ def run_suite(folder, suite):
     cases=[]
     for r in records:
         path=folder/(suite+'-'+str(r['index']))/'server.xml'
-        try: cases.extend(ET.parse(path).getroot().iter('testcase'))
-        except (OSError,ET.ParseError): pass
+        # Reuse the acceptance parser, including root rejection, at the merge boundary.
+        rows,_=validate_report(path,r['assigned'],r['start_epoch'],r['end_epoch'],r['exit_code'])
+        cases.extend(rows)
     report=folder/(suite+'.xml');merged(report,cases)
     assigned=[n for a in assignments for n in a['names']]
     _,union=validate_report(report,assigned,start,written_report_end(report),0)
@@ -223,8 +231,12 @@ def merge_complete(folder):
     if freeze['long_scope']!='complete long suite': issues.append('Targeted names cannot be complete acceptance')
     for suite in ('fast','long'):
         summaries[suite]=read(folder/(suite+'.json'))
-        if not summaries[suite]['passed']: issues.append(suite+' suite failed')
-        cases.extend(ET.parse(folder/(suite+'.xml')).getroot().iter('testcase'))
+        if not summaries[suite]['passed']:
+            issues.append(suite+' suite failed')
+            issues.extend(suite+' child '+str(r['index'])+': '+issue for r in summaries[suite]['shards'] for issue in r['issues'])
+        rows,report_issues=validate_report(folder/(suite+'.xml'),summaries[suite]['assigned'],
+            summaries[suite]['start_epoch'],summaries[suite]['end_epoch'],0)
+        cases.extend(rows);issues.extend(suite+' merged: '+issue for issue in report_issues)
     report=folder/'server.xml';merged(report,cases)
     _,union=validate_report(report,[r['name'] for r in freeze['inventory']],freeze['prepared_epoch'],written_report_end(report),0);issues+=union
     if inputs(freeze['launch'])!=freeze['inputs']: issues.append('Frozen inputs changed')
@@ -241,7 +253,7 @@ def fast_guards(folder, since):
         for path in paths:
             try:
                 if not since<=path.stat().st_mtime<=time.time():raise ValueError('Stale '+kind+' report')
-                root=ET.parse(path).getroot()
+                root=supported_report_root(path)
                 if any(e.tag in ('failure','error','skipped') for e in root.iter()):raise ValueError('Nonpassing '+kind+' report')
                 for suite in root.iter('testsuite'):
                     if any(int(suite.get(k,'0')) for k in ('failures','errors','skipped')):raise ValueError('Nonzero '+kind+' totals')

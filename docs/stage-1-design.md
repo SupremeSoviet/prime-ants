@@ -215,6 +215,17 @@ union; child failures remain in their original XML and the merged report. A red 
 suites have been archived. Normal production jars remain build outputs.
 
 Owner cadence: fast suite every turn plus affected exact long names; complete long suite at T15, T18 and release, and
-after broadly shared colony changes. T14's one complete invocation validates the migration. Surface milestones and
+after broadly shared colony changes. T14's actual supported-root reports verify its execution counts and red union;
+review found that its wrapper rejection coverage was incomplete, so that run does not fully validate the harness.
+T15 intentionally supports only a `testsuite` root: wrappers are rejected before case extraction in server, unit/model
+and archived complete acceptance. Permanent offline fixtures preserve rejected originals/issues, including when a
+case-only merged report passes independently. Freshness and exact discovery checks remain unchanged.
+Surface milestones and
 any remaining red components are recorded independently in the T14 report; no complete founder is inferred from a
 controlled habitat or prefix model.
+
+T15 prepares the unimplemented [finite founder-access proposal](founder-access-proposal.md): two exact owned-spoil
+relocations `(-4,2,1) -> (-9,8,0)` then `(-4,2,0) -> (-10,7,0)` before retaining buried target `(-4,3,0)`.
+Its one read-only diagnostic witnesses the first recoverable source and both destinations; after-state geometry and
+saved access accounting remain proposed. No new terrain authority, structural-column exception or gameplay change
+is granted. The decision packet and complete checkpoint are in `<turnloop>/directions/prime-ants-stage1/turns/T15/`.

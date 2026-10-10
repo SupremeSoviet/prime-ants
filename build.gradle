@@ -354,6 +354,7 @@ tasks.named('runGameTest') {
 // The substantive historic guards apply to the complete merged report as well as legacy diagnostics.
 ext.verifyPermanentServerReport = { File reportFile ->
         def report = new groovy.xml.XmlSlurper().parse(reportFile)
+        if (report.name() != 'testsuite') throw new GradleException('Unsupported server XML root; expected testsuite')
         def cases = report.depthFirst().findAll { it.name() == 'testcase' }
         if (serverDiagnosticGroup.isPresent()) {
             def groupClass = serverDiagnosticGroups[serverDiagnosticGroup.get()]

@@ -72,6 +72,7 @@ def acceptance_gate(evidence,name):
    f=pathlib.Path(a['path'])
    if not f.exists() or sha(f)!=a['sha256'] or not start<=a['executed_mtime']<=end:raise ValueError('Missing, changed or stale '+kind+' report')
    root=ET.parse(f).getroot()
+   if root.tag!='testsuite':raise ValueError('Unsupported '+kind+' report root; expected testsuite')
    if any(e.tag in ['failure','error','skipped'] for e in root.iter()):raise ValueError('Failed/error/skipped '+kind+' report')
    for suite in root.iter('testsuite'):
     if any(int(suite.get(k,'0')) for k in ['failures','errors','skipped']):raise ValueError('Nonpassing suite totals')
@@ -151,6 +152,16 @@ def test_gate(destination):
   log.write_text(passing_log.replace('> Task :test\n','> Task :test UP-TO-DATE\n'),encoding='utf-8')
   run('unexecuted-unit-task',lambda m,a:None)
   log.write_text(passing_log,encoding='utf-8')
+  # The archived complete gate uses the same intentionally narrow root format.
+  for file in ['TEST-unit.xml','server.xml','headless.xml']:
+   f=e/file;original=f.read_bytes()
+   for label,attrs in [('wrong-tests',{'tests':'3'}),('errors',{'errors':'1'}),('skipped',{'skipped':'1'}),('failures',{'failures':'1'}),('consistent-zero',{'tests':ET.fromstring(original).get('tests'),'failures':'0','errors':'0','skipped':'0'}),('empty-zero',{'tests':'0','failures':'0','errors':'0','skipped':'0'}),('failing-child',{'failures':'1'})]:
+    wrapper=ET.Element('testsuites',**attrs);child=ET.fromstring(original)
+    if label=='empty-zero':child=ET.Element('testsuite',tests='0',failures='0',errors='0',skipped='0')
+    if label=='failing-child':ET.SubElement(next(child.iter('testcase')),'failure',message='preserved wrapper negative')
+    wrapper.append(child);ET.ElementTree(wrapper).write(f)
+    run('wrapper-'+file+'-'+label,lambda m,a:a['artifacts'][file].update(sha256=sha(f)))
+    f.write_bytes(original)
   for label,tag in [('failed-report','failure'),('error-report','error'),('skipped-report','skipped')]:
    f=e/'server.xml';original=f.read_bytes();r=ET.parse(f);ET.SubElement(next(r.iter('testcase')),tag);r.write(f)
    run(label,lambda m,a:a['artifacts']['server.xml'].update(sha256=sha(f)));f.write_bytes(original)
