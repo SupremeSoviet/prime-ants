@@ -864,6 +864,11 @@ public final class WorkerTasks {
             source=item.getUUID();next(Phase.APPROACH,"supported_dropped_food_found");return;
         }
         if(droppedCursor<droppedQueue.size())return; // Drops receive their full bounded turn before native fallback.
+        // Tier-three trip admission can close both native food kinds while bulk materials still fit.
+        // Every native position would fail the same admission check in this state. Keep dropped food
+        // first, then use the ordinary material search; pickup still rechecks newly collectable food.
+        if(l.getBlockEntity(plan.cache()) instanceof NestCache cache&&cache.capacity()==FoodShares.MAX_CAPACITY
+            &&!harvestRoom(l,false)&&!harvestRoom(l,true)){materials(l);return;}
         // Discovery only reads loaded cells. At most 1536 inspections and 8 path trials per pulse;
         // 12 pulses cover the full 16807-cell box when no eligible reachable source is found.
         int end=Math.min(FLOWER_INSPECTION_BUDGET,flowerInspections+FLOWER_INSPECTIONS_PER_PULSE);
