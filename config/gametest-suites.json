@@ -2389,6 +2389,78 @@
       "suite": "long",
       "weight_ticks": 12000,
       "reason": "T17 isolated real death/target-authority safety, original bounds and physical ledger"
+    },
+    {
+      "name": "prime_ants_test:colony_clock_game_test_consecutive_ordinary_ticks_have_no_missed_interval",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyClockGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 real egg founding, production nursery save/reconstruction/ticker clock contract; timestamp/detached absence fixture, not actual chunk unload"
+    },
+    {
+      "name": "prime_ants_test:colony_clock_game_test_short_detached_absence_keeps_brood_while_live_control_advances",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyClockGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 real egg founding, production nursery save/reconstruction/ticker clock contract; timestamp/detached absence fixture, not actual chunk unload"
+    },
+    {
+      "name": "prime_ants_test:colony_clock_game_test_long_timestamp_absence_resumes_only_one_ordinary_step",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyClockGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 real egg founding, production nursery save/reconstruction/ticker clock contract; timestamp/detached absence fixture, not actual chunk unload"
+    },
+    {
+      "name": "prime_ants_test:colony_clock_game_test_disk_serialization_preserves_exact_interval_before_resumed_tick",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyClockGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 real egg founding, production nursery save/reconstruction/ticker clock contract; timestamp/detached absence fixture, not actual chunk unload"
+    },
+    {
+      "name": "prime_ants_test:colony_clock_game_test_legacy_baseline_starts_at_level_access_before_operational_and_before_step",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyClockGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 real egg founding, production nursery save/reconstruction/ticker clock contract; timestamp/detached absence fixture, not actual chunk unload"
+    },
+    {
+      "name": "prime_ants_test:colony_clock_game_test_repeated_inspection_and_same_time_reload_never_fabricate_time",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyClockGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 real egg founding, production nursery save/reconstruction/ticker clock contract; timestamp/detached absence fixture, not actual chunk unload"
+    },
+    {
+      "name": "prime_ants_test:colony_clock_game_test_daylight_backward_and_arithmetic_boundaries_do_not_invent_absence",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyClockGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 real egg founding, production nursery save/reconstruction/ticker clock contract; timestamp/detached absence fixture, not actual chunk unload"
+    },
+    {
+      "name": "prime_ants_test:colony_clock_game_test_partial_loading_observation_preserves_unknown_and_all_lifecycle_state",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyClockGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 real egg founding, production nursery save/reconstruction/ticker clock contract; timestamp/detached absence fixture, not actual chunk unload"
+    },
+    {
+      "name": "prime_ants_test:colony_clock_game_test_unowned_ordinary_ticker_does_not_stamp_or_establish_clock",
+      "max_ticks": 20,
+      "source": "src/gametest/java/dev/primeants/gametest/ColonyClockGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "T01 local production ownership guard: an unowned nursery ticker does not complete or stamp a simulation step"
     }
   ]
 }

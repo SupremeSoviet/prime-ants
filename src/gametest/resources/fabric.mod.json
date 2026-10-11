@@ -62,7 +62,8 @@
       "dev.primeants.gametest.SurfaceGameTest",
       "dev.primeants.gametest.SurfaceOracleGameTest",
       "dev.primeants.gametest.SurfaceAccessGameTest",
-      "dev.primeants.gametest.SurfaceAccessSafetyGameTest"
+      "dev.primeants.gametest.SurfaceAccessSafetyGameTest",
+      "dev.primeants.gametest.ColonyClockGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

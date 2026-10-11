@@ -45,7 +45,7 @@ public final class BroodGameTest {
         c.assertTrue(restored != null && restored.getUUID().equals(id) && c.getLevel().tryAddFreshEntityWithPassengers(restored), "Restore one identity through vanilla UUID insertion");
         return restored;
     }
-    private BroodPile restorePile(GameTestHelper c, BroodPile p, CompoundTag tag) {
+    static BroodPile restorePile(GameTestHelper c, BroodPile p, CompoundTag tag) {
         var pos = p.getBlockPos(); var block = p.getBlockState(); c.getLevel().removeBlockEntity(pos);
         var restored = (BroodPile)BlockEntity.loadStatic(pos, block, tag, c.getLevel().registryAccess());
         c.assertTrue(restored != null, "Normal block entity deserialization"); c.getLevel().setBlockEntity(restored); return restored;

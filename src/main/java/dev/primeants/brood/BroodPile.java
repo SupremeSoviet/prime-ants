@@ -45,6 +45,19 @@ public final class BroodPile extends BlockEntity {
     private final dev.primeants.worker.FoodLimitedGrowth growth=new dev.primeants.worker.FoodLimitedGrowth();
     public dev.primeants.worker.FoodLimitedGrowth growth(){return growth;}
     private UUID queenId;
+    private final dev.primeants.time.ColonyClock clock = new dev.primeants.time.ColonyClock();
+    public java.util.OptionalLong lastSimulationGameTime() { return clock.lastGameTime(); }
+    /** Observe before the resumed ordinary tick. This never applies absence to biology or stock. */
+    public dev.primeants.time.ColonyClock.Interval missedIntervalBefore(ServerLevel server) {
+        return clock.before(server.getGameTime());
+    }
+    private void initializeClock() {
+        if (queenId != null && level instanceof ServerLevel server && clock.initialize(server.getGameTime())) setChanged();
+    }
+    @Override public void setLevel(net.minecraft.world.level.Level level) {
+        super.setLevel(level);
+        initializeClock();
+    }
     private NestPlan plan;
     private final List<BroodRecord> records = new ArrayList<>();
     // Bounded consumed identities prevent replacement after death and reconcile saved-cocoon/live-adult overlap.
@@ -130,6 +143,7 @@ public final class BroodPile extends BlockEntity {
         if (!queen.founding().sealed() || queen.position().distanceToSqr(Vec3.atBottomCenterOf(getBlockPos())) > CARE_REACH_SQUARED
                 || !queen.spendReserve(CAPACITY * EGG_COST)) { queenId = null; plan = null; return false; }
         for (int slot = 0; slot < CAPACITY; slot++) {var r=new BroodRecord(UUID.randomUUID(), queenId, slot,neglectGrace,waitingBound);records.add(r);original.add(r.id());}
+        initializeClock();
         condition = "eggs_laid"; changed();
         PrimeAnts.LOGGER.info("Nursery established queen={} pile={} brood={} reserve={} multiplier={} stageTicks={}", queenId, getBlockPos(), records.stream().map(BroodRecord::id).toList(), queen.bodyReserve(), multiplier(), stageTicks());
         return true;
@@ -277,6 +291,7 @@ public final class BroodPile extends BlockEntity {
         }
         if(lay(server,queen,care))visual=true;
         if (visual) changed(); else setChanged();
+        clock.completed(server.getGameTime());
     }
     private boolean emerge(ServerLevel server, BroodRecord r) {
         var member=ColonyMembers.get(server).member(r.workerId());
@@ -315,6 +330,7 @@ public final class BroodPile extends BlockEntity {
         growth.save(out.child("GrowthFlow"));
         super.saveAdditional(out);
         if (queenId == null || plan == null) return;
+        clock.save(out);
         out.putString("Queen", queenId.toString()); out.store("Entrance", BlockPos.CODEC, plan.entrance()); out.putString("Direction", plan.direction().getName());
         out.putLong("LoadedTicks", loadedTicks); out.putString("Condition", condition);
         out.putLong("StageDuration", stageDuration); out.putInt("DevelopmentCredit", developmentCredit);
@@ -329,6 +345,7 @@ public final class BroodPile extends BlockEntity {
     @Override protected void loadAdditional(ValueInput in) {
         growth.load(in.childOrEmpty("GrowthFlow"));
         super.loadAdditional(in); records.clear(); consumed.clear();original.clear();expired.clear(); queenId = null; plan = null; stageEvaluation = null;
+        clock.load(in);
         adultLifespan=in.getLongOr("AdultLifespan",dev.primeants.entity.AdultLife.DEFAULT_LIFESPAN);fastingGrace=in.getLongOr("AdultFastingGrace",dev.primeants.entity.AdultLife.DEFAULT_FASTING);
         // A 0.1.0 pile has only the fixed AdultCapacity (4..30); it migrates once to an upper bound (AdultBound.fromLegacy).
         var bound=in.getInt("AdultCapacityBound");int legacy=in.getIntOr("AdultCapacity",AdultBound.LEGACY_MAX);
@@ -357,6 +374,7 @@ public final class BroodPile extends BlockEntity {
         operational=in.getBooleanOr("Operational",false);lastLayingTick=in.getLongOr("LastLayingTick",0);archivedApples=in.getLongOr("ConsumedApples",0);archivedBerries=in.getLongOr("ConsumedBerries",0);archivedChickens=in.getLongOr("ConsumedChickens",0);archivedNectar=in.getLongOr("ConsumedNectar",0);archivedNectarV2=in.getLongOr("ConsumedNectarV2",0);archivedPrey=in.getLongOr("ConsumedPrey",0);archivedFlesh=in.getLongOr("ConsumedFlesh",0);
         if(lastLayingTick<0||lastLayingTick>in.getLongOr("LoadedTicks",0)||archivedApples<0||archivedBerries<0||archivedChickens<0||archivedNectar<0||archivedNectarV2<0||archivedNectarV2>archivedNectar||archivedPrey<0||archivedFlesh<0)throw new IllegalArgumentException("Invalid nutrition history");
         queenId = id; plan = p; loadedTicks = Math.max(0, in.getLongOr("LoadedTicks", 0)); condition = in.getStringOr("Condition", "restored");
+        initializeClock();
     }
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries) { return saveWithoutMetadata(registries); }
     @Override public ClientboundBlockEntityDataPacket getUpdatePacket() { return ClientboundBlockEntityDataPacket.create(this); }
