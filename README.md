@@ -16,7 +16,6 @@
   <br>
   <a href="https://github.com/SupremeSoviet/prime-ants/releases/latest"><img src="https://img.shields.io/github/v/release/SupremeSoviet/prime-ants?style=flat-square&color=8B5A2B&label=release" alt="Latest release"></a>
   <img src="https://img.shields.io/badge/status-early_release-orange?style=flat-square" alt="Early release">
-  <img src="https://img.shields.io/badge/tests-242_passing-brightgreen?style=flat-square" alt="242 tests passing">
   <img src="https://img.shields.io/badge/species-Lasius_niger-3B2A20?style=flat-square" alt="Lasius niger">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT license"></a>
 </p>
@@ -29,6 +28,12 @@
 </p>
 
 ---
+
+> **2026-10-11 — current status:** the published/tagged **0.1.0** release and gallery below remain historical release
+> material. `master` contains **unreleased partial Stage-1 work**: live colony stages, four chamber functions, physical
+> tier-two upgrades, supplied mining/material contributions and controlled Mature mound/arch completion. Great's
+> fortifications remain incomplete, with an unresolved deadline failure; complete Stage 1 and **0.2.0 are not accepted**.
+> See the [verified partial-delivery report](docs/stage-1-report.md).
 
 ## 🐜 What is this?
 
@@ -99,6 +104,10 @@ This is an **early release (0.1.0)**:
 
 The full, honest list is in the [detailed release notes](docs/release-0.1.0-details.md) and the [technical report](docs/slice-1-report.md).
 
+Development on `master` also lacks tier-three construction/effects, established Young/Mature world generation,
+120-adult/multiple-colony performance, broad persistence and fresh Stage-1 clean-client/Survival screenshot acceptance.
+The configured 120-adult cap is not a demonstrated colony or performance result.
+
 ## 🗺️ Roadmap
 
 - 🪽 nuptial flights, with young queens founding new colonies nearby
@@ -116,10 +125,21 @@ The full, honest list is in the [detailed release notes](docs/release-0.1.0-deta
 
 You need JDK 25. The jar ends up in `build/libs/`, and the build also runs the unit, model and in-game server tests.
 
+Complete build acceptance on current `master` is **red because of Great's unchanged 12,000-tick timeout**. The separate
+every-turn fast suite and packaging can be run with:
+
+```bash
+./gradlew checkFast assemble --console=plain --rerun-tasks
+```
+
+This checks the fast suite, not complete Stage-1 or release acceptance. Current branch jars still carry version
+**0.1.0** and are **unreleased master artifacts**, distinct from the previously accepted release jar linked above.
+
 ## 📚 More
 
 - [Player guide](docs/player-guide.md)
 - [Technical report for 0.1.0](docs/slice-1-report.md)
+- [Partial Stage-1 report](docs/stage-1-report.md)
 - [Design decisions](docs/00-decisions.md) (in Russian)
 
 ## 📄 License

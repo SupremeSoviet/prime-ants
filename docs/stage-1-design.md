@@ -1,3 +1,35 @@
+# Stage 1 current status (2026-10-11, T20)
+
+**Verified partial handoff; Great remains infrastructure-valid/gameplay-red, cause unresolved; 0.2.0 is not accepted.**
+The twenty-turn direction closes as partial. See the [public report](stage-1-report.md) and
+[evidence/limits appendix](stage-1-report-appendix.md). The sections below retain earlier implementation notes as history;
+their proposed next-turn work and historical inventory counts are not current acceptance claims.
+
+T18 remains the complete valid-red checkpoint: 267 server identities = 73/73 fast + 193/194 long, plus 115 unit and
+26 model cases; Great alone times out at 12,000 ticks. T19's separate bounded diagnosis has receipt prefix 43/57 and
+physical form 47/57, six post-step/four upper watch-post cells absent, 79 soil blocks + one canonical cargo = 80 and
+stone 32. Complete form, walking passage and 200 settled loaded ticks remain unmet. T19 fast passes 73/115/26 and
+26 Python harness tests. T20's sole fresh fast acceptance/packaging run passes 73 fast, 115 unit, 26 model and 26 Python
+harness tests in 120.243 wall seconds; all required guards execute, both client tasks actually guard-SKIP, 373 protected
+files match and both jars match T19. Its settling
+external evidence is `<turnloop>/directions/prime-ants-stage1/turns/T20/raw/stage-1-handoff.json`.
+
+**T20 clock correction:** first certain Great is **helper tick 100, nursery-loaded tick 101**, not a shared 100 clock.
+Mature completion is helper 4,256; Great admission is helper 4,301. The endpoint is the native failure-listener
+observation at 12,002 after the unchanged 12,000 timeout. Automatic observations at 12,000/12,001 are excluded from
+the bounded controller total 9,250; no later material/receipt transition or executor continuation occurs. Movement
+requests, supported stands and path metadata establish no navigation cause. T19's archived appendix is unchanged.
+
+Only documentation changes in T20: all production, client, tests, fixtures, observers, scripts, configuration and
+assets remain unchanged, so no long body is affected and no Great/complete-long/client campaign is repeated. Current
+jars retain version 0.1.0 as unreleased master artifacts; packaging is not release acceptance. Tier three, established
+Young/Mature generation, 120-adult/multiple-colony performance, broad persistence and fresh Stage-1 client/screenshots
+remain unmet. Preserve earlier founder/mining negatives and the exact two-relocation/nursing/recovery limits recorded
+in the appendix. Recommend bounded Stage-1 completion before forging, armor or diplomacy, starting with Great's
+unresolved deadline failure; no particular repair or new turn in this exhausted direction is promised.
+
+---
+
 # Stage 1 design (T01–T09)
 
 Stages describe live bodies, owned chambers and physical stock. `ChamberRegistry` persists claims, stage and unmet-since
