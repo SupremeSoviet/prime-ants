@@ -13,5 +13,6 @@ public abstract class StageEvaluationMixin {
     @Inject(method="evaluate",at=@At("RETURN"))
     private static void primeAntsObserveEvaluation(ServerLevel level,UUID queen,NestPlan plan,boolean operational,int bound,long loaded,CallbackInfoReturnable<ColonyDevelopment.Evaluation> result){
         StageEvaluations.observed(level,queen,loaded,result.getReturnValue());
+        dev.primeants.gametest.GreatSurfaceProbe.evaluated(level,queen,loaded,result.getReturnValue());
     }
 }

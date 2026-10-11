@@ -104,7 +104,9 @@ public final class SurfaceGameTest {
     @GameTest(maxTicks=12000,structure="prime_ants_test:surface_ground")
     public void computedGreatHabitatBuildsPaidGateConnectedRampartsAndTwoRaisedWatchPosts(GameTestHelper c){
         var fixture=new SurfaceFixture();var q=fixture.habitat(c,true);fixture.snapshot(c,q);long[] settled={-1};boolean[] computed={false};var walking=new Walking();
+        var diagnostic=GreatSurfaceProbe.watch(c,q,fixture.initialSoil);
         c.onEachTick(()->{
+            diagnostic.sample();
             var l=c.getLevel();fixture.soil(c,q);fixture.protectedTerrain(c,q,settled[0]>=0);
             c.assertTrue(fixture.fx.food.total(c,q)==59,"Declared finite controlled food: fifty ingested apples, one ingested chicken, four cached apples/four chickens remain exactly accounted");
             var material=MaterialStore.owned(l,q.getUUID(),q.founding().plan());c.assertTrue(material!=null&&material.units(MaterialUnits.Material.STONE)==32,"Surface work consumes none of the physical tier-two stone supply");

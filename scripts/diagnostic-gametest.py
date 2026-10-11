@@ -93,9 +93,16 @@ def collect(folder, report, start, end, exit_code, log=None):
     infrastructure = [i for i in issues if i not in ('nonzero failures','report failure','failed child exit: 1')]
     if exit_code != 0 and not (exit_code == 1 and failures): infrastructure.append('unexplained native/launcher exit')
     if errors or skips: infrastructure.append('native error/skip')
-    protection = {};native_exit=exit_code
-    if log:
-        text = Path(log).read_text(encoding='utf-8-sig')
+    protection = {};native_exit=None
+    text = None
+    if log is None:
+        infrastructure.append('missing log evidence: --log omitted')
+    else:
+        try:
+            text = Path(log).read_text(encoding='utf-8-sig')
+        except (OSError, UnicodeError) as error:
+            infrastructure.append('missing log evidence: unreadable '+str(log)+': '+str(error))
+    if text is not None:
         for task in ('deleteGameTestRunDir','acceptGameTestEula'):
             protection[task] = bool(re.search(r'> Task :'+task+r' SKIPPED', text))
             if not protection[task]: infrastructure.append('client guard not SKIPPED: '+task)

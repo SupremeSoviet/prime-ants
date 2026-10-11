@@ -345,3 +345,41 @@ persistence gaps, mixed chunk-boundary issues, unattended pre-Mature clay/develo
 survey walking/dig limits remain. **Tier three, established colonies, 120-adult performance, broad persistence and release
 0.2.0 acceptance remain unmet.** Two turns remain. Use T19 for bounded Great diagnosis from the preserved terminal
 evidence and T20 for a verified partial Stage-1 handoff or honest closure, preserving bounds and the two-move terrain limit.
+
+### T19 bounded Great disposition and required log evidence (2026-10-11)
+
+Diagnostic collection now rejects omitted, missing or unreadable log evidence with a recorded infrastructure failure,
+unknown native exit and nonzero CLI exit, preserving the independent XML gameplay verdict. Four added permanent
+actual-collector/CLI child-process regressions bring the Python harness to 26 tests. Fresh before/after packets are
+offline verifier fixtures, not gameplay evidence. T18 remains the independently validated complete red checkpoint;
+all 520 preserved T18 evidence files retain their bytes. No unchanged complete workload was rerun.
+
+The sole prospectively frozen, read-only Great diagnostic retains the 12,000-tick timeout and all original predicates.
+First certain Great is observed at 100; Mature completes at 4,256; Great is admitted at 4,301. At the deadline its
+receipt prefix remains 43/57, with 28 new Great placements, two paid gate conversions and thirteen inherited receipts.
+Physical form is 47/57: six post-step cells and four upper watch-post cells remain absent. The next component is
+post_step (-2,-4,2). Current physical soil is 79 blocks plus one canonical carried dirt, total 80; store stone remains 32.
+Complete form, actual passage and 200 settled loaded ticks are not achieved. Historical saved 43/57 stays separate.
+
+Bounded controller observations total 9,250: 7,225 movement-request observations, 960 fetching actions, 980 building
+actions and 85 observed guard refusals. These overlap the coarse 4,256 preparation / 45 admission-wait / 7,699 Great-work
+intervals and cannot be added to them. Four empty claims release after original source refusals; no bounded route-stall
+release, false authorization, true priority or null selected stand is observed. Transient occupied-target rejection is
+demonstrated; a navigation root cause remains unresolved. The native failure listener arrives at 12,002; its two automatic
+lifecycle controller samples at 12,000/12,001 are excluded from bounded totals. No material transition occurs there and
+no executor continuation is run. The endpoint accounting is explicitly labelled at the listener, with no 12,000 summary.
+
+Final single `checkFast assemble` passes 73 fast, 115 unit, 26 model and 26 harness tests, with public-path, assets,
+retention and client-validator guards. Both client tasks actually guard-SKIP and all 373 protected files match. Both jars
+exclude helpers/tests/copies and are byte-identical to T18 production jars; packaging is not release acceptance.
+Other long bodies retain production behavior, fixtures/assertions and suite membership; observation activates only for
+this Great queen/world/lifetime. No new registered bodies, copies, terrain operation or gameplay repair was made.
+Disposition and primary evidence: `<turnloop>/directions/prime-ants-stage1/turns/T19/raw/great-disposition.json`.
+
+T18 founder 19/19 at 44,978, T17 selected 44,720 and simultaneous 45,290/cohort 5/6, and T16 priority-cancelled 4/19
+with 71 owned blocks plus its named unit remain separate. Earlier mining timing/conservation uncertainty, eighteen-unit
+10,323 failure, paid-stall/persistence gaps, mixed chunk-boundary issues and unattended-development/coverage limits remain.
+Retained nurses during UNKNOWN, loaded-damage miner cargo waits, named recovery 6,000 nursery-loaded ticks within
+60,000 total and 600/200 windows are unchanged. **Tier three, established colonies, 120-adult performance, broad
+persistence and release 0.2.0 acceptance remain unmet.** T20 has one turn for a verified partial handoff or honest closure,
+using T18's complete checkpoint plus T19's bounded unresolved Great diagnosis, without claiming complete Stage 1.

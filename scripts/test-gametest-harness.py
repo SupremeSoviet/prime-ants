@@ -17,7 +17,7 @@ spec=importlib.util.spec_from_file_location('harness',Path(__file__).with_name('
 h=importlib.util.module_from_spec(spec);spec.loader.exec_module(h)
 
 class HarnessTests(unittest.TestCase):
-    def diagnostic_cli_fixture(self,label,log_text,launcher_exit=0,failed=False):
+    def diagnostic_cli_fixture(self,label,log_text,launcher_exit=0,failed=False,log_mode='supplied'):
         """Fresh offline XML/logs through the real collector and CLI in a child Python.
 
         Only executable-input/correspondence dependencies are isolated. Optional
@@ -50,7 +50,11 @@ with patch.object(d,'correspondence',return_value={}),patch.object(d.h,'inputs',
     d.main()
 """
             command=[sys.executable,'-c',bootstrap,str(Path(__file__).with_name('diagnostic-gametest.py')),
-                'collect','--folder',str(root),'--report',str(native),'--invocation',str(invocation),'--log',str(log)]
+                'collect','--folder',str(root),'--report',str(native),'--invocation',str(invocation)]
+            if log_mode!='omitted':
+                evidence=log if log_mode=='supplied' else root/('absent.log' if log_mode=='missing' else 'unreadable.log')
+                if log_mode=='unreadable':evidence.mkdir()
+                command += ['--log',str(evidence)]
             started=time.time();process=subprocess.run(command,capture_output=True,text=True,encoding='utf-8')
             (root/'cli.stdout.txt').write_text(process.stdout,encoding='utf-8')
             (root/'cli.stderr.txt').write_text(process.stderr,encoding='utf-8')
@@ -67,6 +71,37 @@ with patch.object(d,'correspondence',return_value={}),patch.object(d.h,'inputs',
 
     def diagnostic_log(self):
         return '> Task :deleteGameTestRunDir SKIPPED\n> Task :acceptGameTestEula SKIPPED\n2 GAME TESTS COMPLETE\nGame test server shutting down\n'
+
+    def test_diagnostic_cli_rejects_omitted_log_for_pass_and_archived_negative_categories(self):
+        good=self.diagnostic_log()
+        negatives=[('green',good),('truncated',good.split('2 GAME TESTS COMPLETE')[0]),
+            ('wrapped-native-three',good+"Process 'command 'C:\\offline\\java.exe'' finished with non-zero exit\r\n  value 3\n"),
+            ('missing-guards',good.replace('> Task :deleteGameTestRunDir SKIPPED\n','').replace('> Task :acceptGameTestEula SKIPPED\n',''))]
+        for label,text in negatives:
+            with self.subTest(label=label):
+                result,code=self.diagnostic_cli_fixture('omitted-'+label,text,log_mode='omitted')
+                self.assertFalse(result['infrastructure_valid']);self.assertTrue(result['gameplay_passed']);self.assertEqual(1,code)
+                self.assertIn('missing log evidence: --log omitted',result['infrastructure_issues'])
+                self.assertIsNone(result['native_exit_code'])
+
+    def test_diagnostic_cli_omitted_log_preserves_xml_gameplay_red(self):
+        result,code=self.diagnostic_cli_fixture('omitted-gameplay-red',self.diagnostic_log(),1,failed=True,log_mode='omitted')
+        self.assertFalse(result['infrastructure_valid']);self.assertFalse(result['gameplay_passed']);self.assertEqual(1,code)
+        self.assertEqual(1,len(result['failures']));self.assertIsNone(result['native_exit_code'])
+        self.assertIn('missing log evidence: --log omitted',result['infrastructure_issues'])
+
+    def test_diagnostic_cli_records_explicit_missing_log(self):
+        result,code=self.diagnostic_cli_fixture('explicit-missing',self.diagnostic_log(),log_mode='missing')
+        self.assertFalse(result['infrastructure_valid']);self.assertTrue(result['gameplay_passed']);self.assertEqual(1,code)
+        self.assertTrue(any(i.startswith('missing log evidence: unreadable') for i in result['infrastructure_issues']))
+        self.assertIsNone(result['native_exit_code'])
+
+    def test_diagnostic_cli_records_explicit_unreadable_log(self):
+        # A directory is an OS-level unreadable text file on every supported platform.
+        result,code=self.diagnostic_cli_fixture('explicit-unreadable',self.diagnostic_log(),log_mode='unreadable')
+        self.assertFalse(result['infrastructure_valid']);self.assertTrue(result['gameplay_passed']);self.assertEqual(1,code)
+        self.assertTrue(any(i.startswith('missing log evidence: unreadable') for i in result['infrastructure_issues']))
+        self.assertIsNone(result['native_exit_code'])
 
     def test_diagnostic_cli_accepts_only_valid_passing_packet(self):
         result,code=self.diagnostic_cli_fixture('valid-green',self.diagnostic_log())
@@ -137,7 +172,8 @@ with patch.object(d,'correspondence',return_value={}),patch.object(d.h,'inputs',
             root=Path(folder);h.write(root/'frozen.json',dict(captured_epoch=time.time()-20,expected_names=['a','b'],correspondence={},launch={},inputs={}))
             report=self.report(root,tag='failure');xml=ET.parse(report);xml.getroot().set('failures','1');xml.write(report)
             with patch.object(d,'correspondence',return_value={}),patch.object(d.h,'inputs',return_value={}):
-                result=d.collect(root,report,time.time()-10,time.time()+10,1)
+                log=root/'native.log';log.write_text(self.diagnostic_log()+"Process 'command 'C:\\offline\\java.exe'' finished with non-zero exit value 1\n",encoding='utf-8')
+                result=d.collect(root,report,time.time()-10,time.time()+10,1,log)
             self.assertTrue(result['infrastructure_valid']);self.assertFalse(result['gameplay_passed']);self.assertEqual(1,len(result['failures']))
 
     def test_copy_freeze_requires_three_identical_modes_bodies_and_annotation_bounds(self):
