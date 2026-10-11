@@ -204,7 +204,9 @@ public final class WorkerTasks {
         worker.getNavigation().stop();var point=SurfaceWork.point(l,worker,target,empty);worker.getLookControl().setLookAt(point.x,point.y,point.z);
         if(!surfaceAuthorized(l)||!NestPlan.walkable(l,stand)||!NestPlan.loaded(l,target)||SurfaceWork.point(l,worker,target,empty)==null){harvestingTicks=0;return;}
         if(++harvestingTicks<SurfaceWork.ACTION_TICKS)return;harvestingTicks=0;
-        if(fetch){if(work.recover(l,worker,j)){next(Phase.SURFACE_BUILD,"owned_soil_unit_in_mandibles");surfaceTarget=j.next();surfaceStand=surfaceBuildStand;}}
+        // The source trip/removal changed the worker's position and terrain. Select the build
+        // stand there, then retain it across ordinary jumps with the existing per-tick guards.
+        if(fetch){if(work.recover(l,worker,j)){next(Phase.SURFACE_BUILD,"owned_soil_unit_in_mandibles");surfaceTarget=j.next();surfaceStand=null;}}
         else if(work.place(l,worker,j)){work.relinquish(l,worker,j,"worker_paid_one_surface_cell");next(Phase.NURSE_CACHE,"surface_cell_paid_return_to_care");}
     }
     private void surfaceAccess(ServerLevel l,SurfaceWork work,SurfaceWork.Job j){

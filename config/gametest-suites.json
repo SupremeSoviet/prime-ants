@@ -2389,6 +2389,22 @@
       "suite": "long",
       "weight_ticks": 12000,
       "reason": "T17 isolated real death/target-authority safety, original bounds and physical ledger"
+    },
+    {
+      "name": "prime_ants_test:surface_game_test_successful_surface_payment_reconsiders_free_builder_without_retry_delay",
+      "max_ticks": 1200,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1200,
+      "reason": "T01 real successful-payment claim lifecycle, two actual source/build trips and physical conservation"
+    },
+    {
+      "name": "prime_ants_test:surface_game_test_unclaimed_paid_builder_walks_out_of_its_next_cell_and_pays_the_actual_task",
+      "max_ticks": 2000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 2000,
+      "reason": "T01 original sole-body admission witness, ordinary same-worker passage and actual conserved source/build payment"
     }
   ]
 }

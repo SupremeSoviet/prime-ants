@@ -1,3 +1,49 @@
+## Follow-up - 2026-10-11 (stage-1b T01 Great completion)
+
+The original Great identity now completes within its unchanged **12,000-tick** bound: the final complete-suite
+execution records **11,248**, independently inspected **57/57 physical cells**, Mature **19** and Great **38**
+placements, two retaining gate conversions, soil **80**, stone **32**, finite food **59** accounted, an actual
+ordinary walker and **200 settled nursery-loaded ticks**. The preceding exact-name candidate also passed at 11,277.
+The historical Stage-1 report and appendix retain their original valid-red handoff and coverage limits.
+
+Two small real-tick regressions establish concrete progress losses. A paid cell released its eligible builder but
+left the 100-tick failed-attempt gate active; successful payment now invalidates that transient gate. Choosing the
+build stand again after actual source recovery exposed a second refusal: the released worker could hold the next
+queued cell while idle nursing had no accepting recipient. The original admission guard rejected before checking
+that worker. Ordinary admission now permits only that sole eligible blocking body, with a supported source/build
+goal that clears the target. Original work guards still forbid any recovery or placement while the target is occupied.
+Other occupants and active finite access retain their original admission guards. No terrain, supplies, form, reach,
+action duration, builder cap, priority, nursing rule, queue, receipt or save schema changes.
+
+The three candidates are retained separately: first Great timeout at **50/57 receipts / 52/57 physical**, then
+Mature **5/19** with no Great admission, then green. The cached-goal observation supported a reselection hypothesis;
+it is not independently claimed as a general navigation root-cause proof. The sole-body regression first fails after
+600 loaded ticks, then the same actual worker pays the pending cell after 180. Original plus two identical concurrent
+copies of both new regressions pass **6/6**; temporary wrappers and classes are removed. The observer classifies an
+intentional cleared stand at committed recovery as fetching work and preserves its original events.
+
+Final `checkFast` passes **73 server / 115 unit / 26 model** in 135.609 seconds, with all guards. Complete unfiltered
+`checkLong` passes **196/196** in 4,144.435 seconds; all three native/launcher exits are zero. Fresh exact union XML
+validates **269/269 permanent server identities**, with identical final fast/long executable inputs. These durations
+are command wall time, not colony MSPT. All **21 required surface long identities** are derived before launch; the unfiltered
+suite also checks autonomous surface admission in development/mining scenarios. Only the ordinary surface successful
+recovery branch of `WorkerTasks` changes; common movement, scheduling, nursing, custody, development and finite-access
+helpers remain unchanged. Both final workloads explicitly request three shards and concurrency three (one native fast
+server, three concurrent long servers). Fresh native,
+launcher, XML, input, client and newest-ten/active-lease evidence is retained without world copies.
+
+External settling evidence: `<turnloop>/directions/prime-ants-stage1b/turns/T01/raw/great-acceptance.json`,
+with the report and compact appendix in the same turn. Consecutive no-green turns: **zero**. The pre-Java diagnostic-copy
+launch failure is preserved; its parent-freeze path correction passes the fresh six-body diagnostic. A completed-workload
+outer capture was stopped after its native/wrapper exit evidence was preserved, and direct-child exit probes validate
+the final launchers. Earlier native timeout callbacks at 12,002 grant no construction
+time. Preserve the unexplained eighteen-unit food failure at **10,323**, concurrent mining-death campaign timeouts and
+historical regression/tier-two timing causes. Tier three, established colonies, 120-adult/multiple-colony performance,
+broad persistence and release **0.2.0** remain open. Only the original two founder relocations and unchanged nursing/
+mining recovery protections are authorized.
+
+---
+
 # Stage 1 current status (2026-10-11, T20)
 
 **Verified partial handoff; Great remains infrastructure-valid/gameplay-red, cause unresolved; 0.2.0 is not accepted.**

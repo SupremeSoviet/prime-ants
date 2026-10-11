@@ -120,7 +120,7 @@ public final class GreatSurfaceProbe implements AutoCloseable {
         String kind;
         if(Boolean.FALSE.equals(f.values.get("surfaceAuthorized"))||Boolean.TRUE.equals(f.values.get("priority"))
             ||f.values.containsKey("targetProblem")&&!"ok".equals(f.values.get("targetProblem"))
-            ||Boolean.FALSE.equals(f.values.get("recoverable"))||f.body&&stand==null)kind="blocked_observed";
+            ||Boolean.FALSE.equals(f.values.get("recoverable"))||f.body&&stand==null&&!Boolean.TRUE.equals(f.values.get("recover")))kind="blocked_observed";
         else if(f.arrive)kind=f.phase==WorkerTasks.Phase.SURFACE_FETCH?"travelling_fetch":"travelling_build";
         else if(f.body&&(action>0||f.actionBefore>0||f.commit))kind=f.phase==WorkerTasks.Phase.SURFACE_FETCH?"fetching_action":"building_action";
         else kind=cooldown>0?"cooldown":"unknown_or_interrupted";

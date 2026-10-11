@@ -18,6 +18,56 @@ import net.minecraft.world.level.storage.LevelResource;
 
 /** T12 frozen physical acceptance: ordinary workers, finite declared sources, fixed total bounds. */
 public final class SurfaceGameTest {
+    @GameTest(maxTicks=2000,structure="prime_ants_test:surface_ground")
+    public void unclaimedPaidBuilderWalksOutOfItsNextCellAndPaysTheActualTask(GameTestHelper c){unclaimedCadence(c);}
+    private void unclaimedCadence(GameTestHelper c){
+        var fixture=new SurfaceFixture();var q=fixture.habitat(c,true);fixture.snapshot(c,q);
+        var observer=SurfaceOccupancyProbe.watch(c,q.getUUID());long[] since={-1};boolean[] sameClaim={false};
+        c.onEachTick(()->{
+            var l=c.getLevel();fixture.soil(c,q);fixture.protectedTerrain(c,q,false);
+            c.assertTrue(fixture.fx.food.total(c,q)==59,"Finite Great habitat food remains exactly accounted during admission and actual trips");
+            var p=NestPlanFixture.pile(c,q);var j=SurfaceWork.get(l).job(q.getUUID(),ColonyStage.MATURE);var body=observer.unclaimed();if(p==null||j==null||body==null)return;
+            var w=(LasiusNigerEntity)l.getEntity(body.worker());c.assertTrue(w!=null&&w.isAlive(),"The original sole occupant remains a real living worker");
+            if(since[0]<0){since[0]=p.loadedTicks();PrimeAnts.LOGGER.info("T01 UNCLAIMED BODY queen={} tick={} loaded={} index={} worker={} target={} position={} bounds={} placed={} originalOccupiedGuard=true soleEligibleBody=true",q.getUUID(),c.getTick(),p.loadedTicks(),body.index(),body.worker(),body.target(),body.position(),body.bounds(),body.placed());}
+            if(j.completed()==body.index()&&j.claim!=null){c.assertTrue(j.claim.equals(body.worker()),"Only the actual blocking eligible body may receive this movement admission");sameClaim[0]=true;}
+            if(j.completed()>body.index()){
+                c.assertTrue(sameClaim[0]&&j.claim==null&&j.placed()==body.placed()+1&&j.released()==0&&j.carried()==0,"Same real worker walks free, pays one exact pending cell and releases the one builder without custody loss");
+                c.assertTrue(ColonyTerrain.get(l).surface(l,body.target(),q.getUUID())&&l.getBlockState(body.target()).is(NurseryBlocks.NEST_SOIL)&&j.receipts().get(body.index()).contains(":"+body.worker()+":"),"Receipt is backed by the exact worker's actual owned physical target");
+                PrimeAnts.LOGGER.info("T01 UNCLAIMED DONE queen={} tick={} loaded={} elapsed={} worker={} index={} placed={} soil=80 food=59 actualBodyRetained=true",q.getUUID(),c.getTick(),p.loadedTicks(),p.loadedTicks()-since[0],body.worker(),body.index(),j.placed());c.succeed();return;
+            }
+            c.assertTrue(p.loadedTicks()-since[0]<600,"Sole eligible released worker must leave its future cell and pay the actual task within600 loaded ticks");
+        });
+    }
+    @GameTest(maxTicks=1200,structure="prime_ants_test:surface_ground")
+    public void successfulSurfacePaymentReconsidersFreeBuilderWithoutRetryDelay(GameTestHelper c){paidCadence(c);}
+    private void paidCadence(GameTestHelper c){
+        var fixture=new SurfaceFixture();var q=fixture.habitat(c,false);fixture.snapshot(c,q);
+        long[] paid={-1};UUID[] builder={null};boolean[] readmitted={false};
+        c.onEachTick(()->{
+            var l=c.getLevel();fixture.soil(c,q);fixture.protectedTerrain(c,q,false);
+            c.assertTrue(fixture.fx.food.total(c,q)==39,"Finite controlled food remains conserved during successive actual surface trips");
+            var work=SurfaceWork.get(l);var j=work.job(q.getUUID(),ColonyStage.MATURE);if(j==null)return;
+            if(j.completed()==0&&j.claim!=null)builder[0]=j.claim;
+            if(j.completed()==1&&paid[0]<0){
+                paid[0]=c.getTick();var w=(LasiusNigerEntity)l.getEntity(builder[0]);
+                c.assertTrue(j.claim==null&&w!=null&&w.workerTasks().canConstruct(j.home)&&NestExpansion.remainingCaregivers(l,q.getUUID(),j.home,w)>=2,
+                    "Actual paid cell releases an eligible empty-handed builder and keeps two caregivers");
+                c.assertTrue(!work.priority(l,q.getUUID(),j.home)&&SurfaceWork.targetProblem(l,q.getUUID(),j)==null,
+                    "Next ordinary surface cell has no priority or physical refusal at successful payment");
+                PrimeAnts.LOGGER.info("T01 SURFACE CADENCE PAID queen={} tick={} worker={} receipts={} placed={} recovered={} claim={} eligible=true nextTargetClear=true",q.getUUID(),c.getTick(),builder[0],j.completed(),j.placed(),j.recovered(),j.claim);
+            }
+            if(paid[0]>=0&&!readmitted[0]&&c.getTick()>paid[0]){
+                var w=(LasiusNigerEntity)l.getEntity(builder[0]);
+                PrimeAnts.LOGGER.info("T01 SURFACE CADENCE NEXT queen={} tick={} gap={} claim={} formerBuilderEligible={} nextTargetProblem={} priority={}",q.getUUID(),c.getTick(),c.getTick()-paid[0],j.claim,w!=null&&w.workerTasks().canConstruct(j.home),SurfaceWork.targetProblem(l,q.getUUID(),j),work.priority(l,q.getUUID(),j.home));
+                c.assertTrue(j.claim!=null,"Successful physical payment must reconsider the free builder on the next loaded tick instead of retaining a failed-attempt retry delay");readmitted[0]=true;
+            }
+            if(readmitted[0]&&j.completed()>=2){
+                c.assertTrue(j.placed()==2&&j.recovered()==2&&j.released()==0&&j.carried()==0&&j.claim==null,"Two actual one-unit source/build trips finish and release the single builder");
+                for(int i=0;i<2;i++)c.assertTrue(ColonyTerrain.get(l).surface(l,j.at(i),q.getUUID())&&l.getBlockState(j.at(i)).is(NurseryBlocks.NEST_SOIL),"Both receipts correspond to actual owned physical cells");
+                PrimeAnts.LOGGER.info("T01 SURFACE CADENCE DONE queen={} tick={} firstPaid={} physicalCells=2 soil=80 food=39",q.getUUID(),c.getTick(),paid[0]);c.succeed();
+            }
+        });
+    }
     /** Read real forager motion through all three columns after construction, without moving an actor. */
     private static final class Walking {
         final Map<UUID,Set<Integer>> visited=new HashMap<>();UUID walker;
