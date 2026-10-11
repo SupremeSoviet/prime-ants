@@ -16,7 +16,8 @@
       "dev.primeants.gametest.RestartHarness",
       "dev.primeants.gametest.PlacementSettings",
       "dev.primeants.gametest.PlacementDiagnosticHarness",
-      "dev.primeants.gametest.T27ReleaseHarness"
+      "dev.primeants.gametest.T27ReleaseHarness",
+      "dev.primeants.gametest.ReconciliationChunkGameTest"
     ],
     "fabric-gametest": [
       "dev.primeants.gametest.BootstrapGameTest",
@@ -63,7 +64,9 @@
       "dev.primeants.gametest.SurfaceOracleGameTest",
       "dev.primeants.gametest.SurfaceAccessGameTest",
       "dev.primeants.gametest.SurfaceAccessSafetyGameTest",
-      "dev.primeants.gametest.ColonyClockGameTest"
+      "dev.primeants.gametest.ColonyClockGameTest",
+      "dev.primeants.gametest.ReconciliationGameTest",
+      "dev.primeants.gametest.ReconciliationChunkGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

@@ -23,12 +23,12 @@ public final class ColonyClock {
 
     /** Constant cost, with no mutation, replay or lifecycle inference. Negative/reversed clocks owe nothing. */
     public Interval before(long gameTime) {
-        long ticks = 0;
-        if (last.isPresent() && last.getAsLong() >= 0 && gameTime > last.getAsLong()) {
-            // Ordered nonnegative endpoints make subtraction safe, even at Long.MAX_VALUE.
-            ticks = gameTime - last.getAsLong() - 1;
-        }
-        return new Interval(last, gameTime, ticks);
+        return new Interval(last, gameTime, last.isPresent() ? missedTicks(last.getAsLong(), gameTime) : 0);
+    }
+
+    public static long missedTicks(long after, long before) {
+        // Ordered nonnegative endpoints make subtraction safe, even at Long.MAX_VALUE.
+        return after >= 0 && before > after ? before - after - 1 : 0;
     }
 
     /** Called only after a completed ordinary nursery step. A reversed timeline rebases here, never on inspection. */

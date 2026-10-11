@@ -21,6 +21,12 @@ public final class AdultHistory extends SavedData {
         if(records.containsKey(ant.getUUID().toString()))return;
         var row=new com.google.gson.JsonObject();row.addProperty("queen",ant.colonyIdentity()==null?"":ant.colonyIdentity().toString());row.addProperty("age",ant.elapsedAgeTicks());row.addProperty("lifespan",ant.adultLife().lifespan());row.addProperty("fasting",ant.adultLife().fasting());row.addProperty("maintenance",ant.adultLife().maintenanceTicks());row.addProperty("cause",ant.adultLife().death().isEmpty()?"external_damage":ant.adultLife().death());
         row.add("nutrition",com.google.gson.JsonParser.parseString("{}"));var n=row.getAsJsonObject("nutrition");n.addProperty("sugar",ant.nutrition().sugar());n.addProperty("protein",ant.nutrition().protein());n.addProperty("apples",ant.nutrition().apples());n.addProperty("berries",ant.nutrition().berries());n.addProperty("chickens",ant.nutrition().chickens());n.addProperty("nectar",ant.nutrition().nectar());n.addProperty("nectarV2",ant.nutrition().nectarV2());n.addProperty("prey",ant.nutrition().prey());n.addProperty("gainedSugar",ant.nutrition().gainedSugar());n.addProperty("gainedProtein",ant.nutrition().gainedProtein());n.addProperty("flesh",ant.nutrition().flesh());n.addProperty("sugarReceived",ant.nutrition().receivedSugar());n.addProperty("sugarGiven",ant.nutrition().givenSugar());n.addProperty("spentSugar",ant.nutrition().spentSugar());n.addProperty("spentProtein",ant.nutrition().spentProtein());
+        var simulation=ant.simulationEvidence();
+        row.addProperty("lastSimulationGameTime",simulation.latest());
+        row.addProperty("simulationBoundary",simulation.boundary());
+        row.addProperty("simulationKnownAfter",simulation.knownAfter());
+        row.addProperty("simulationOrigin",simulation.origin().name());
+        row.add("simulationRuns",new com.google.gson.Gson().toJsonTree(simulation.runs()));
         records.put(ant.getUUID().toString(),row.toString());setDirty();
         dev.primeants.PrimeAnts.LOGGER.info("Adult death uuid={} receipt={}",ant.getUUID(),row);
     }

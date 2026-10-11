@@ -35,6 +35,10 @@ import net.minecraft.world.level.storage.ValueOutput;
 public final class LasiusNigerEntity extends PathfinderMob {
     private final AntForm form;
     private final AdultLife adultLife=new AdultLife();
+    private final dev.primeants.time.AdultSimulation simulation = new dev.primeants.time.AdultSimulation();
+    private boolean biologicalStepInProgress;
+    public dev.primeants.time.AdultSimulation.Snapshot simulationEvidence() { return simulation.snapshot(); }
+    public dev.primeants.time.AdultSimulation.Boundary lastSimulationBoundary() { return simulation.lastBoundary(); }
     private long broodNeglectGrace=dev.primeants.brood.BroodRecord.selectedDuration("prime_ants.broodNeglectTicks",dev.primeants.brood.BroodRecord.DEFAULT_NEGLECT);
     private long cocoonWaitingBound=dev.primeants.brood.BroodRecord.selectedDuration("prime_ants.cocoonWaitingTicks",dev.primeants.brood.BroodRecord.DEFAULT_COCOON_WAIT);
     public long broodNeglectGrace(){return broodNeglectGrace;} public long cocoonWaitingBound(){return cocoonWaitingBound;}
@@ -125,6 +129,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
     public LasiusNigerEntity(EntityType<? extends LasiusNigerEntity> type, Level level, AntForm form) {
         super(type, level);
         this.form = form;
+        simulation.initialize(level.getGameTime(), dev.primeants.time.AdultSimulation.Origin.BIRTH);
         if(!dev.primeants.colony.AdultBound.valid(colonyAdultCapacity))throw new IllegalArgumentException("Colony adult capacity must be 4..120");
         if (form == AntForm.WORKER) bodyReserve = 0;
         setPersistenceRequired();
@@ -175,14 +180,24 @@ public final class LasiusNigerEntity extends PathfinderMob {
         super.tick();
         // The only biological clock owner. No daylight-time subtraction or renderer mutation.
         if (!level().isClientSide() && isAlive() && elapsedAgeTicks < Long.MAX_VALUE) {
-            elapsedAgeTicks++;
-            adultLife.tick((ServerLevel)level(),this);
-            if(!isAlive())return;
-            if(form!=AntForm.QUEEN||!workerTasks.sharing().tick((ServerLevel)level()))founding.tick((ServerLevel)level());
-            if (broodId != null) {
-                if (callowAgeTicks < callowDuration) callowAgeTicks++;
-                entityData.set(CALLOW, (int)Math.min(1000, callowAgeTicks * 1000 / Math.max(1, callowDuration)));
-                workerTasks.tick((ServerLevel)level());
+            long now = level().getGameTime();
+            simulation.beforeStep(now);
+            biologicalStepInProgress = true;
+            boolean completed = false;
+            try {
+                elapsedAgeTicks++;
+                adultLife.tick((ServerLevel)level(),this);
+                if(!isAlive()){completed = true; return;}
+                if(form!=AntForm.QUEEN||!workerTasks.sharing().tick((ServerLevel)level()))founding.tick((ServerLevel)level());
+                if (broodId != null) {
+                    if (callowAgeTicks < callowDuration) callowAgeTicks++;
+                    entityData.set(CALLOW, (int)Math.min(1000, callowAgeTicks * 1000 / Math.max(1, callowDuration)));
+                    workerTasks.tick((ServerLevel)level());
+                }
+                completed = true;
+            } finally {
+                if (completed) simulation.completed(now);
+                biologicalStepInProgress = false;
             }
         }
     }
@@ -193,6 +208,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
         output.putString("AntForm", form.serializedName());
         output.putLong("AntElapsedAgeTicks", elapsedAgeTicks);
         adultLife.save(output.child("AdultLife"));
+        simulation.save(output.child(dev.primeants.time.AdultSimulation.FIELD));
         output.putInt("ColonyAdultCapacityBound",colonyAdultCapacity);
         output.putLong("BroodNeglectGrace",broodNeglectGrace);output.putLong("CocoonWaitingBound",cocoonWaitingBound);
         founding.save(output.child("Founding"));
@@ -238,6 +254,7 @@ public final class LasiusNigerEntity extends PathfinderMob {
             entityData.set(CALLOW, (int)(callowAgeTicks * 1000 / callowDuration)); entityData.set(LINEAGE, queenId.toString());
         }
         setPersistenceRequired();
+        if (level() instanceof ServerLevel server) simulation.load(input.childOrEmpty(dev.primeants.time.AdultSimulation.FIELD), server.getGameTime());
     }
 
     @Override public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, EntitySpawnReason reason, SpawnGroupData data) {
@@ -256,6 +273,9 @@ public final class LasiusNigerEntity extends PathfinderMob {
     }
     @Override public void die(DamageSource source) {
         if (level() instanceof ServerLevel server) {
+            // AdultLife can kill during this biological step, before the early return/finally.
+            // Its terminal receipt must include that completed terminal step; finally is idempotent.
+            if (biologicalStepInProgress) simulation.completed(server.getGameTime());
             dev.primeants.worker.AdultHistory.get(server).died(this);
             if (form == AntForm.QUEEN) founding.die(server); else workerTasks.die(server);
         }

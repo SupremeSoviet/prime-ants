@@ -46,6 +46,10 @@ public final class BroodPile extends BlockEntity {
     public dev.primeants.worker.FoodLimitedGrowth growth(){return growth;}
     private UUID queenId;
     private final dev.primeants.time.ColonyClock clock = new dev.primeants.time.ColonyClock();
+    private dev.primeants.time.ReloadObservation reloadObservation;
+    private boolean reloadBoundaryPending = true;
+    /** Latest immutable pre-step capture for this instance; not an applied ledger or dormant queue. */
+    public dev.primeants.time.ReloadObservation reloadObservation() { return reloadObservation; }
     public java.util.OptionalLong lastSimulationGameTime() { return clock.lastGameTime(); }
     /** Observe before the resumed ordinary tick. This never applies absence to biology or stock. */
     public dev.primeants.time.ColonyClock.Interval missedIntervalBefore(ServerLevel server) {
@@ -233,6 +237,12 @@ public final class BroodPile extends BlockEntity {
     }
     void serverTick(ServerLevel server) {
         if (queenId == null || plan == null || !ownedBy(queenId, plan)) return;
+        var interval = clock.before(server.getGameTime());
+        if (reloadBoundaryPending || interval.ticks() > 0 || interval.afterGameTime().orElse(server.getGameTime()) > server.getGameTime()) {
+            reloadObservation = dev.primeants.time.ReloadObservation.capture(server, queenId, getBlockPos(), plan.chamber(), interval);
+            reloadBoundaryPending = false;
+            // T03 consumer belongs HERE, before loadedTicks, biology, stocks or the final stamp can change.
+        }
         loadedTicks++;
         growth.observe(loadedTicks,supply(server));
         var owner = server.getEntity(queenId);
@@ -346,6 +356,7 @@ public final class BroodPile extends BlockEntity {
         growth.load(in.childOrEmpty("GrowthFlow"));
         super.loadAdditional(in); records.clear(); consumed.clear();original.clear();expired.clear(); queenId = null; plan = null; stageEvaluation = null;
         clock.load(in);
+        reloadObservation = null; reloadBoundaryPending = true;
         adultLifespan=in.getLongOr("AdultLifespan",dev.primeants.entity.AdultLife.DEFAULT_LIFESPAN);fastingGrace=in.getLongOr("AdultFastingGrace",dev.primeants.entity.AdultLife.DEFAULT_FASTING);
         // A 0.1.0 pile has only the fixed AdultCapacity (4..30); it migrates once to an upper bound (AdultBound.fromLegacy).
         var bound=in.getInt("AdultCapacityBound");int legacy=in.getIntOr("AdultCapacity",AdultBound.LEGACY_MAX);

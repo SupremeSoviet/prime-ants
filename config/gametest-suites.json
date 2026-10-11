@@ -2461,6 +2461,78 @@
       "suite": "fast",
       "weight_ticks": 20,
       "reason": "T01 local production ownership guard: an unowned nursery ticker does not complete or stamp a simulation step"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_game_test_nursery_snapshot_excludes_independently_ticking_queen_and_workers",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_game_test_distinct_adult_absence_and_both_current_tick_orderings_stay_exact",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_game_test_intermittent_production_steps_retain_holes_and_overflow_is_unresolved",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_game_test_unavailable_worker_keeps_reservation_and_later_return_keeps_identity",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_game_test_entity_reconstruction_legacy_migration_birth_and_duplicate_boundaries_preserve_biology",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_game_test_partial_terrain_capture_preserves_unknown_nursing_and_loaded_damage_precedence",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_game_test_completed_death_step_and_early_returns_are_observed_but_saving_is_not",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_game_test_duplicate_and_reversed_production_observation_never_fabricates_ticks",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_chunk_game_test_genuine_remote_chunk_disappears_and_reloads_original_colony_while_live_control_ticks",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationChunkGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
     }
   ]
 }
