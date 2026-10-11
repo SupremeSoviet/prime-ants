@@ -301,3 +301,47 @@ access branches; T18 remains the next complete-long checkpoint. Packaging exclud
 acceptance. Historical mining preparation timeouts, regression/tier-two timing causes, the eighteen-unit failure at
 10,323, other paid-stall/persistence and unattended-development gaps remain. Tier three, established colonies,
 120-adult performance, broad persistence and release 0.2.0 acceptance remain unmet; three turns remain after T17.
+
+### T18 diagnostic exit contract and complete checkpoint (2026-10-11)
+
+Diagnostic collection now returns CLI zero only when **both `infrastructure_valid` and `gameplay_passed` are true**.
+The latter describes nonempty extracted XML gameplay rows and their failure/error/skip declarations; it cannot settle
+acceptance without valid infrastructure. Native/launcher exit disagreement remains an infrastructure failure even when
+the XML rows pass. Identity, freshness, executable-input, body/bounds, copy-equivalence and supported-root checks remain.
+Five new permanent tests execute the actual collector and `main` in child Python processes, with real exit statuses.
+Their twelve fresh, explicitly offline packets cover valid green, truncated/missing completion or shutdown, native exit
+3 with PowerShell wrapping and launcher exit 3, each absent/unskipped client guard, and explained gameplay red/exit 1.
+Only input/correspondence dependencies are isolated. Original fixture bytes and the CLI results are retained; none is
+gameplay evidence. All 22 harness tests pass. Pre-repair false-success packets and the corrected packets are archived in
+`<turnloop>/directions/prime-ants-stage1/turns/T18/raw/collector-cli-regressions.json`.
+
+The scheduled single unfiltered `build --console=plain --rerun-tasks` is a **complete, validated red checkpoint**:
+267 permanent server identities = 73 fast + 194 long, all exactly once, plus 115 unit and 26 model cases. Fast is green;
+long is 193/194, with zero errors/skips and only the carried Great identity failing: "Didn't succeed or fail within
+12000 ticks". The last primary curve is 42/57 at tick 11,500; it is partial construction, with no Great completion.
+The native/launcher shard exits 0/1/0/0 agree with their XML and the build exit 1. Original child/merged XML, failure,
+logs, process records and timestamps remain unchanged; supported `testsuite` roots, exact discovery, prospective frozen
+assignments and all 985 executable-input hashes validate. Both client tasks are actually guard-SKIPPED, all 373 protected
+client files and directory inventories match, peak long concurrency is four, and active leases/newest-ten retention hold.
+
+Measured wall seconds: fast **126.114**, long **3714.922**, shards **2716.453 / 3298.953 / 3714.594 / 2513.421**,
+total **3844.543**. T15's 3798.704 total/3668.031 long are historical planning observations, not promised timings or a
+controlled benchmark. Packaging completed in the same build; both production jars exclude test/helper/copy entries.
+No separate complete `checkLong`, restart of the red workload, new cohort/copy campaign or gameplay repair occurred.
+The settling artifact is `<turnloop>/directions/prime-ants-stage1/turns/T18/raw/checkpoint-acceptance.json`; preparatory
+fixture newline and external audit root-total mistakes are disclosed in its linked appendix, with original evidence.
+
+T18's sharded founder body completes 19/19 at **44,978**, with passage walking and 200 settled ticks. It does not replace
+T17's selected **19/19 at 44,720**, simultaneous **19/19 at 45,290**, or the simultaneous cohort's **5/6**, Great red.
+T16 remains **4/19 after Queen's Hall priority cancellation**, 71 owned blocks plus its original named unit, operation
+two never started. T17's real matching exits, markers and guards remain accepted within their stated scope; the collector
+exit defect does not retrospectively invalidate them. Great's bound stays **12,000**; historical saved **43/57 is not
+completion**. No priority, terrain authority, supplies, forms, assertions or stability windows change.
+
+Retained nurses during UNKNOWN, loaded-damage miner cargo waits, and named mining recovery **6,000 nursery-loaded ticks
+inside 60,000 total**, with **600/200** windows, remain unchanged. Historical mining-death preparation timeouts,
+regression/tier-two timing causes, the unexplained eighteen-unit failure at 10,323, paid-stall/retained-building and
+persistence gaps, mixed chunk-boundary issues, unattended pre-Mature clay/development, arbitrary-vein/all64 limits and
+survey walking/dig limits remain. **Tier three, established colonies, 120-adult performance, broad persistence and release
+0.2.0 acceptance remain unmet.** Two turns remain. Use T19 for bounded Great diagnosis from the preserved terminal
+evidence and T20 for a verified partial Stage-1 handoff or honest closure, preserving bounds and the two-move terrain limit.

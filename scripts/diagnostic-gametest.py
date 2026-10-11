@@ -105,12 +105,17 @@ def collect(folder, report, start, end, exit_code, log=None):
         if native_exit!=(1 if failures else 0):infrastructure.append('native exit disagrees with report')
     archived = folder/'server.xml'
     if Path(report).resolve()!=archived.resolve(): shutil.copyfile(report, archived)
+    # Gameplay describes the extracted XML rows. Exit, identity, freshness, input
+    # and log/guard rejection belong to infrastructure and cannot make CLI success.
+    gameplay_issues = [i for i in issues if i in ('nonzero failures','report failure',
+        'nonzero errors','report error','nonzero skipped','report skipped')]
     result = dict(expected=frozen['expected_names'], executed=[c.get('name') for c in cases],
                   count=len(cases), start_epoch=start,end_epoch=end,seconds=end-start,exit_code=exit_code,
                   native_exit_code=native_exit,
                   original_mtime=Path(report).stat().st_mtime, xml_sha256=h.sha(archived),
                   issues=issues,infrastructure_issues=infrastructure,infrastructure_valid=not infrastructure,
-                  gameplay_passed=not issues,failures=failures,errors=errors,skips=skips,protection=protection)
+                  gameplay_issues=gameplay_issues,gameplay_passed=bool(cases) and not gameplay_issues,
+                  failures=failures,errors=errors,skips=skips,protection=protection)
     h.write(folder/'validation.json',result);return result
 
 def main():
@@ -122,5 +127,5 @@ def main():
     else:
         inv=h.read(a.invocation);result=collect(a.folder,a.report,inv['start_epoch'],inv['end_epoch'],inv['exit_code'],a.log)
         print(json.dumps({k:result[k] for k in ['count','exit_code','infrastructure_valid','gameplay_passed','infrastructure_issues','failures']},indent=2))
-        raise SystemExit(0 if result['gameplay_passed'] else 1)
+        raise SystemExit(0 if result['infrastructure_valid'] and result['gameplay_passed'] else 1)
 if __name__=='__main__':main()

@@ -5,6 +5,8 @@ import io
 import json
 import os
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -15,6 +17,97 @@ spec=importlib.util.spec_from_file_location('harness',Path(__file__).with_name('
 h=importlib.util.module_from_spec(spec);spec.loader.exec_module(h)
 
 class HarnessTests(unittest.TestCase):
+    def diagnostic_cli_fixture(self,label,log_text,launcher_exit=0,failed=False):
+        """Fresh offline XML/logs through the real collector and CLI in a child Python.
+
+        Only executable-input/correspondence dependencies are isolated. Optional
+        archival is additive; these synthetic packets are never gameplay evidence.
+        """
+        archive=os.environ.get('PRIME_ANTS_DIAGNOSTIC_CLI_EVIDENCE')
+        with tempfile.TemporaryDirectory(prefix='offline-diagnostic-cli-') as temporary:
+            root=Path(archive)/label if archive else Path(temporary)/label
+            root.mkdir(parents=True,exist_ok=False)
+            now=time.time()
+            h.write(root/'frozen.json',dict(label='fresh offline collector/CLI fixture; not gameplay evidence',
+                captured_epoch=now-20,expected_names=['offline_cli_pass','offline_cli_row'],correspondence={},launch={},inputs={}))
+            report=self.report(root,names=('offline_cli_pass','offline_cli_row'),tag='failure' if failed else None)
+            original=report.read_bytes();native=root/'native.xml';report.rename(native)
+            if failed:
+                xml=ET.parse(native);xml.getroot().set('failures','1');xml.write(native,encoding='utf-8')
+                original=native.read_bytes()
+            log=root/'native.log';log_bytes=log_text.encode('utf-8');log.write_bytes(log_bytes)
+            invocation=root/'invocation.json'
+            h.write(invocation,dict(label='offline fixture; no server launched',start_epoch=now-10,
+                end_epoch=time.time()+10,exit_code=launcher_exit))
+            bootstrap="""import importlib.util, sys
+from pathlib import Path
+from unittest.mock import patch
+script=Path(sys.argv[1]); args=sys.argv[2:]
+spec=importlib.util.spec_from_file_location('actual_diagnostic_cli',script)
+d=importlib.util.module_from_spec(spec);spec.loader.exec_module(d)
+sys.argv=[str(script),*args]
+with patch.object(d,'correspondence',return_value={}),patch.object(d.h,'inputs',return_value={}):
+    d.main()
+"""
+            command=[sys.executable,'-c',bootstrap,str(Path(__file__).with_name('diagnostic-gametest.py')),
+                'collect','--folder',str(root),'--report',str(native),'--invocation',str(invocation),'--log',str(log)]
+            started=time.time();process=subprocess.run(command,capture_output=True,text=True,encoding='utf-8')
+            (root/'cli.stdout.txt').write_text(process.stdout,encoding='utf-8')
+            (root/'cli.stderr.txt').write_text(process.stderr,encoding='utf-8')
+            result=h.read(root/'validation.json')
+            h.write(root/'cli-process.json',dict(label='offline real collector and main entry point; not gameplay evidence',
+                command=command,start_epoch=started,end_epoch=time.time(),exit_code=process.returncode,
+                collector_sha256=h.sha(Path(__file__).with_name('diagnostic-gametest.py')),
+                harness_tests_sha256=h.sha(__file__),native_xml_unchanged=native.read_bytes()==original,
+                archived_xml_identical=(root/'server.xml').read_bytes()==original,
+                native_log_unchanged=log.read_bytes()==log_bytes))
+            self.assertEqual(original,native.read_bytes());self.assertEqual(original,(root/'server.xml').read_bytes())
+            self.assertEqual(log_bytes,log.read_bytes());self.assertEqual('',process.stderr)
+            return result,process.returncode
+
+    def diagnostic_log(self):
+        return '> Task :deleteGameTestRunDir SKIPPED\n> Task :acceptGameTestEula SKIPPED\n2 GAME TESTS COMPLETE\nGame test server shutting down\n'
+
+    def test_diagnostic_cli_accepts_only_valid_passing_packet(self):
+        result,code=self.diagnostic_cli_fixture('valid-green',self.diagnostic_log())
+        self.assertTrue(result['infrastructure_valid']);self.assertTrue(result['gameplay_passed']);self.assertEqual(0,code)
+        self.assertTrue(all(result['protection'].values()));self.assertEqual(0,result['native_exit_code'])
+
+    def test_diagnostic_cli_rejects_truncated_or_missing_completion_markers(self):
+        good=self.diagnostic_log()
+        for label,text in [('truncated',good.split('2 GAME TESTS COMPLETE')[0]),
+                           ('missing-completion',good.replace('2 GAME TESTS COMPLETE\n','')),
+                           ('missing-shutdown',good.replace('Game test server shutting down\n',''))]:
+            with self.subTest(label=label):
+                result,code=self.diagnostic_cli_fixture(label,text)
+                self.assertFalse(result['infrastructure_valid']);self.assertTrue(result['gameplay_passed']);self.assertEqual(1,code)
+                self.assertIn('native completion/shutdown missing',result['infrastructure_issues'])
+
+    def test_diagnostic_cli_rejects_native_three_including_powershell_wrapping(self):
+        for label,gap,launcher in [('native-three',' ',0),('native-three-wrapped','\r\n  ',0),
+                                   ('native-three-launcher-three','\r\n  ',3)]:
+            with self.subTest(label=label):
+                text=self.diagnostic_log()+"Process 'command 'C:\\offline\\java.exe'' finished with non-zero exit"+gap+'value 3\n'
+                result,code=self.diagnostic_cli_fixture(label,text,launcher)
+                self.assertFalse(result['infrastructure_valid']);self.assertTrue(result['gameplay_passed']);self.assertEqual(1,code)
+                self.assertEqual(3,result['native_exit_code']);self.assertIn('native exit disagrees with report',result['infrastructure_issues'])
+
+    def test_diagnostic_cli_rejects_each_absent_or_unskipped_client_guard(self):
+        for task in ('deleteGameTestRunDir','acceptGameTestEula'):
+            for state in ('absent','UP-TO-DATE'):
+                with self.subTest(task=task,state=state):
+                    line='> Task :'+task+' SKIPPED\n'
+                    text=self.diagnostic_log().replace(line,'' if state=='absent' else line.replace('SKIPPED',state))
+                    result,code=self.diagnostic_cli_fixture(task+'-'+state,text)
+                    self.assertFalse(result['infrastructure_valid']);self.assertTrue(result['gameplay_passed']);self.assertEqual(1,code)
+                    self.assertFalse(result['protection'][task]);self.assertIn('client guard not SKIPPED: '+task,result['infrastructure_issues'])
+
+    def test_diagnostic_cli_preserves_explained_gameplay_red_and_exit_one(self):
+        text=self.diagnostic_log()+"Process 'command 'C:\\offline\\java.exe'' finished with non-zero exit\r\n  value 1\n"
+        result,code=self.diagnostic_cli_fixture('valid-gameplay-red',text,1,failed=True)
+        self.assertTrue(result['infrastructure_valid']);self.assertFalse(result['gameplay_passed']);self.assertEqual(1,code)
+        self.assertEqual(1,result['native_exit_code']);self.assertEqual(1,len(result['failures']))
+
     def test_pinned_fabric_names_preserve_digit_boundaries_and_ordinary_camel_case(self):
         for source, expected in [('copy1ActualCarrierDeath','copy1actual_carrier_death'),
                                  ('copy2ExactPair','copy2exact_pair'),('ordinaryCamelCase','ordinary_camel_case'),
