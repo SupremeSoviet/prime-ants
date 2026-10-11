@@ -27,6 +27,7 @@ public final class SurfaceWork extends SavedData {
         private final List<String> receipts=new ArrayList<>();
         private final Map<String,Integer> transfers=new LinkedHashMap<>();
         public UUID claim; public BlockPos source; public String reason="planned";
+        public SurfaceAccess access;
         private int recovered,placed,released; public long ticks;
         Job(NestPlan home,SurfacePlan.Plan plan,Map<String,Integer> ground){this.home=home.routeGeometry();this.plan=plan;this.ground=Map.copyOf(ground);validate();}
         public int completed(){return receipts.size();}public int recovered(){return recovered;}public int placed(){return placed;}public int released(){return released;}
@@ -73,7 +74,7 @@ public final class SurfaceWork extends SavedData {
             var g=new JsonObject();ground.forEach(g::addProperty);o.add("ground",g);var r=new JsonArray();receipts.forEach(r::add);o.add("receipts",r);
             o.addProperty("claim",claim==null?"":claim.toString());if(source!=null)o.addProperty("source",source.asLong());o.addProperty("reason",reason);
             o.addProperty("recovered",recovered);o.addProperty("placed",placed);o.addProperty("released",released);o.addProperty("ticks",ticks);
-            var t=new JsonObject();transfers.forEach(t::addProperty);o.add("transfers",t);return o.toString();
+            var t=new JsonObject();transfers.forEach(t::addProperty);o.add("transfers",t);if(access!=null)o.add("access",access.encode());return o.toString();
         }
         private static Job decode(String text){
             var o=JsonParser.parseString(text).getAsJsonObject();var d=Direction.byName(o.get("direction").getAsString());if(d==null||d.getAxis().isVertical())throw new IllegalArgumentException("Surface direction");
@@ -81,7 +82,7 @@ public final class SurfaceWork extends SavedData {
             var j=new Job(NestPlan.geometry(BlockPos.of(o.get("entrance").getAsLong()),d),SurfacePlan.compile(o.get("plan").toString()),g);
             o.getAsJsonArray("receipts").forEach(e->j.receipts.add(e.getAsString()));String claim=o.get("claim").getAsString();j.claim=claim.isEmpty()?null:UUID.fromString(claim);
             j.source=o.has("source")?BlockPos.of(o.get("source").getAsLong()):null;j.reason=o.get("reason").getAsString();j.recovered=o.get("recovered").getAsInt();j.placed=o.get("placed").getAsInt();j.released=o.get("released").getAsInt();j.ticks=o.get("ticks").getAsLong();
-            o.getAsJsonObject("transfers").entrySet().forEach(e->j.transfers.put(e.getKey(),e.getValue().getAsInt()));j.validate();return j;
+            o.getAsJsonObject("transfers").entrySet().forEach(e->j.transfers.put(e.getKey(),e.getValue().getAsInt()));j.validate();if(o.has("access"))j.access=SurfaceAccess.decode(o.getAsJsonObject("access"),j);return j;
         }
     }
     public static final Codec<SurfaceWork> CODEC=Codec.unboundedMap(Codec.STRING,Job.CODEC).xmap(SurfaceWork::new,d->Map.copyOf(d.jobs));
@@ -93,6 +94,8 @@ public final class SurfaceWork extends SavedData {
         for(var e:jobs.entrySet()){
             var parts=e.getKey().split(":");if(parts.length!=2)throw new IllegalArgumentException("Surface owner key");var owner=UUID.fromString(parts[0]);
             if(!parts[1].equals(e.getValue().plan.stage().serializedName()))throw new IllegalArgumentException("Surface stage key");
+            if(e.getValue().access!=null&&!e.getValue().access.matches(e.getValue(),owner))throw new IllegalArgumentException("Access saved owner binding");
+            if(e.getValue().access!=null&&(e.getValue().access.carried()==1||e.getValue().access.action>0)&&e.getValue().claim==null)throw new IllegalArgumentException("Access canonical cargo/action lacks its saved actor claim");
             byOwner.computeIfAbsent(owner,k->new ArrayList<>()).add(e.getValue());
             if(e.getValue().claim!=null&&!claims.add(e.getValue().claim))throw new IllegalArgumentException("Duplicate surface builder identity");
         }
@@ -169,11 +172,39 @@ public final class SurfaceWork extends SavedData {
             if(!trial.complete()){j=trial;break;}
         }
         if(j==null)return;String problem=targetProblem(l,owner,j);if(problem!=null){j.reason="waiting_"+problem;setDirty();return;}
+        if(j.access!=null&&!j.access.complete()){
+            if(j.access.stopped)return;
+            var accessProblem=j.access.problem(l,j);if(accessProblem!=null){
+                j.access.action=0;j.access.reason=accessProblem;if(!accessProblem.startsWith("unknown")){j.access.stopped=true;j.reason="stopped_access_"+accessProblem;}setDirty();return;
+            }
+            if(j.access.current().phase==SurfaceAccess.Phase.CUSTODY){
+                var item=j.access.named(l);if(item==null)return;
+                for(var w:workers.stream().sorted(Comparator.comparing(w->w.getUUID().toString())).toList()){
+                    var pickupStand=j.access.pickupStand(l,w);
+                    if(pickupStand!=null&&w.workerTasks().assignSurface(j.home,true,item.blockPosition(),pickupStand,j.access.current().depositStand)){
+                        j.claim=w.getUUID();j.reason="access_named_pickup_worker_assigned";setDirty();
+                        PrimeAnts.LOGGER.info("T16 NAMED CLAIM queen={} worker={} unit={} entity={} stand={} itemPosition={}",owner,j.claim,j.access.current().unit,item.getUUID(),pickupStand,item.position());return;
+                    }
+                }return;
+            }
+            return; // An absent actor/claim cannot mint a new source action.
+        }
         final Job selected=j;
         var candidates=workers.stream().filter(w->w.workerTasks().canConstruct(home)&&NestExpansion.remainingCaregivers(l,owner,home,w)>=2).sorted(Comparator.comparing(w->w.getUUID().toString())).toList();
         for(var w:candidates){
             boolean paid=ColonyTerrain.get(l).mound(l,j.next(),owner)||ColonyTerrain.get(l).surface(l,j.next(),owner);
-            var buildStand=stand(l,w,j.next(),!paid);if(buildStand==null)continue;
+            var buildStand=stand(l,w,j.next(),!paid);if(buildStand==null){
+                if(j.access==null&&SurfaceAccess.prefix(j)){
+                    var access=SurfaceAccess.admit(l,j,owner,w);if(access==null)continue;j.access=access;
+                    var op=access.current();
+                    if(!w.workerTasks().assignSurface(j.home,false,op.source,op.removalStand,op.depositStand)){
+                        access.stopped=true;access.reason="admission_actor_changed";j.reason="stopped_access_admission_actor_changed";setDirty();return;
+                    }
+                    j.claim=w.getUUID();j.reason="finite_access_worker_assigned";setDirty();
+                    PrimeAnts.LOGGER.info("T16 ACCESS ADMITTED queen={} worker={} binding={} stock=72 prefix={} operations=2 actionTicks=20",owner,j.claim,access.binding,j.receipts());return;
+                }
+                continue;
+            }
             BlockPos source=null,sourceStand=null;
             if(!paid)for(var p:MoundSoil.cells(l,home,owner))if(recoverable(l,home,owner,p)){
                 var found=stand(l,w,p,false);if(found!=null){source=p;sourceStand=found;break;}
@@ -182,13 +213,19 @@ public final class SurfaceWork extends SavedData {
             if(w.workerTasks().assignSurface(home,paid,paid?j.next():source,paid?buildStand:sourceStand,buildStand)){j.source=source;j.claim=w.getUUID();j.reason="ordinary_surface_worker_assigned";setDirty();
                 PrimeAnts.LOGGER.info("T12 SURFACE CLAIM queen={} worker={} stage={} index={} target={} source={} paid={}",owner,j.claim,j.plan.stage(),j.completed(),j.next(),source,paid);return;}
         }
+        if(j.access!=null&&j.access.complete()&&!candidates.isEmpty()&&Arrays.stream(Direction.values()).allMatch(d->NestPlan.loaded(l,selected.next().relative(d))&&l.getBlockState(selected.next().relative(d)).isSolidRender())){
+            j.reason="stopped_further_buried_target_"+j.plan.cells().get(j.completed()).key();setDirty();
+            PrimeAnts.LOGGER.info("T16 FURTHER BURIED TARGET queen={} prefix={} target={} key={} accessRemoved={} accessRedeposited={} noFurtherAuthority=true",owner,j.completed(),j.next(),j.plan.cells().get(j.completed()).key(),j.access.removed(),j.access.redeposited());
+        }
     }
     public void reconcile(ServerLevel l,LasiusNigerEntity queen){
         for(var j:jobs(queen.getUUID()))if(j.claim!=null&&l.getEntity(j.claim) instanceof LasiusNigerEntity w){
             if(!ColonyMembers.get(l).belongs(w,queen.getUUID(),j.home.chamber())||!w.workerTasks().surfaceWorking()
                 ||w.workerTasks().plan()==null||!w.workerTasks().plan().entrance().equals(j.home.entrance())||w.workerTasks().plan().direction()!=j.home.direction()
-                ||j.carried()!= (w.getMainHandItem().is(Items.DIRT)?w.getMainHandItem().getCount():0)){
-                j.reason="quarantined_incompatible_surface_claim_cargo_retained";if(j.carried()==0)j.claim=null;setDirty();
+                ||(j.access!=null&&!j.access.complete()?j.access.carried()==1?!j.access.cargo(w):!w.getMainHandItem().isEmpty():j.carried()!= (w.getMainHandItem().is(Items.DIRT)?w.getMainHandItem().getCount():0))){
+                j.reason="quarantined_incompatible_surface_claim_cargo_retained";
+                if(j.access!=null&&!j.access.complete()){j.access.stopped=true;j.access.action=0;j.access.reason="incompatible_actor_cargo_quarantined";}
+                else if(j.carried()==0)j.claim=null;setDirty();
             }
         }
     }
@@ -240,10 +277,29 @@ public final class SurfaceWork extends SavedData {
         if(j.carried()!=0)throw new IllegalStateException("Surface cargo must first enter physical custody");j.claim=null;j.source=null;j.reason=reason;setDirty();
     }
     public void released(ServerLevel l,LasiusNigerEntity w,UUID transfer){
-        var j=claimedBy(w);if(j==null)return;if(j.carried()==1){j.released++;j.transfers.put(transfer.toString(),1);}j.claim=null;j.source=null;j.reason="surface_unit_released_exactly_once";setDirty();
+        var j=claimedBy(w);if(j==null)return;
+        if(j.access!=null&&!j.access.complete()&&j.access.carried()==1){
+            var expected=SurfaceAccess.unitStack(j.access.current().unit);var pending=TransferCustody.get(l).contents().stream().filter(p->p.id().equals(transfer)).findFirst();
+            boolean canonical=pending.isPresent()?ItemStack.matches(pending.get().stack(),expected):l.getEntity(transfer) instanceof net.minecraft.world.entity.item.ItemEntity item&&ItemStack.matches(item.getItem(),expected);
+            j.access.released(l,j,w,transfer,true);
+            if(!canonical){j.access.stopped=true;j.access.current().phase=SurfaceAccess.Phase.TERMINAL;j.access.reason="incompatible_death_custody_quarantined";setDirty();}return;
+        }
+        if(j.carried()==1){j.released++;j.transfers.put(transfer.toString(),1);}j.claim=null;j.source=null;j.reason="surface_unit_released_exactly_once";setDirty();
     }
     public void abandonCargo(ServerLevel l,LasiusNigerEntity w,Job j,String reason){
+        if(j.access!=null&&!j.access.complete()){stopAccess(l,w,j,reason);return;}
         var transfer=UUID.nameUUIDFromBytes(("surface-cargo:"+w.queenId()+":"+j.plan.stage()+":"+j.recovered+":"+w.getUUID()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
         TransferCustody.get(l).take(transfer,"surface:"+w.getUUID(),w.position(),w.getMainHandItem());w.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);released(l,w,transfer);TransferCustody.get(l).retry(l);j.reason="stopped_"+reason;setDirty();
+    }
+    public void stopAccess(ServerLevel l,LasiusNigerEntity w,Job j,String reason){
+        var a=j.access;a.action=0;a.stopped=true;a.reason=reason;j.reason="stopped_access_"+reason;
+        if(!w.getMainHandItem().isEmpty()&&!a.cargo(w)){j.reason="quarantined_access_cargo_retained";setDirty();return;}
+        if(a.carried()==1){
+            if(!a.cargo(w)){j.reason="quarantined_access_cargo_retained";setDirty();return;}
+            var transfer=UUID.nameUUIDFromBytes(("access-stop:"+a.current().unit+":"+a.released()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            TransferCustody.get(l).take(transfer,"surface-access:"+a.current().unit,w.position(),w.getMainHandItem());w.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);
+            a.released(l,j,w,transfer,false);a.reason=reason;TransferCustody.get(l).retry(l);
+        }else j.claim=null;
+        PrimeAnts.LOGGER.info("T16 ACCESS STOP queen={} binding={} operation={} reason={} removed={} redeposited={} pickups={} released={} cargo={}",w.queenId(),a.binding,a.index+1,reason,a.removed(),a.redeposited(),a.pickups(),a.released(),w.getMainHandItem());setDirty();
     }
 }

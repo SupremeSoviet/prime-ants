@@ -2269,6 +2269,78 @@
       "weight_ticks": 20,
       "reason": "Local actor/origin/placement/serialization guard, at most 20 declared ticks, without a developed colony",
       "t13_seconds": null
+    },
+    {
+      "name": "prime_ants_test:surface_access_game_test_exact_pair_three_reload_phases_unknown_and_interrupted_action_expose_ordinary_paid_target",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceAccessGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "T16 finite physical access, reload, custody or refusal; fixed 12000 total and 600/200 loaded windows"
+    },
+    {
+      "name": "prime_ants_test:surface_access_game_test_actual_carrier_death_requires_exact_named_pickup_and_actual_redeposition",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceAccessGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "T16 finite physical access, reload, custody or refusal; fixed 12000 total and 600/200 loaded windows"
+    },
+    {
+      "name": "prime_ants_test:surface_access_game_test_second_actual_death_terminates_the_same_operation_in_named_custody",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceAccessGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "T16 finite physical access, reload, custody or refusal; fixed 12000 total and 600/200 loaded windows"
+    },
+    {
+      "name": "prime_ants_test:surface_access_game_test_same_state_source_write_survives_disk_reload_without_removal_or_reminted_admission",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceAccessGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "T16 finite physical access, reload, custody or refusal; fixed 12000 total and 600/200 loaded windows"
+    },
+    {
+      "name": "prime_ants_test:surface_access_game_test_same_state_reserved_air_write_while_carrying_preserves_named_cargo_after_reload",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceAccessGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "T16 finite physical access, reload, custody or refusal; fixed 12000 total and 600/200 loaded windows"
+    },
+    {
+      "name": "prime_ants_test:surface_access_game_test_foreign_blocked_destination_never_grants_access_from_appearance_or_reload",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceAccessGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "T16 finite physical access, reload, custody or refusal; fixed 12000 total and 600/200 loaded windows"
+    },
+    {
+      "name": "prime_ants_test:surface_access_game_test_actual_population_regression_stops_the_pair_and_preserves_the_carried_unit",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceAccessGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "T16 finite physical access, reload, custody or refusal; fixed 12000 total and 600/200 loaded windows"
+    },
+    {
+      "name": "prime_ants_test:surface_access_game_test_blocked_witnessed_route_stand_stops_without_selecting_another_cell",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceAccessGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "T16 finite physical access, reload, custody or refusal; fixed 12000 total and 600/200 loaded windows"
+    },
+    {
+      "name": "prime_ants_test:surface_access_game_test_incompatible_canonical_actor_cargo_is_quarantined_without_reminting_the_unit",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceAccessGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "T16 finite physical access, reload, custody or refusal; fixed 12000 total and 600/200 loaded windows"
     }
   ]
 }

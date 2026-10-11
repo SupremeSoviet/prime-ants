@@ -15,6 +15,12 @@ spec=importlib.util.spec_from_file_location('harness',Path(__file__).with_name('
 h=importlib.util.module_from_spec(spec);spec.loader.exec_module(h)
 
 class HarnessTests(unittest.TestCase):
+    def test_both_client_tasks_exclude_legacy_and_sharded_server_graphs(self):
+        source=(h.ROOT/'build.gradle').read_text(encoding='utf-8')
+        guard="onlyIf { !gradle.taskGraph.hasTask(':runGameTest') && !gradle.taskGraph.hasTask(':prepareGameTestServers') }"
+        for task in ('deleteGameTestRunDir','acceptGameTestEula'):
+            self.assertIn("tasks.named('"+task+"') { "+guard+" }",source)
+
     def report(self,folder,names=('a','b'),tag=None):
         root=ET.Element('testsuite',tests=str(len(names)),failures='0',errors='0',skipped='0')
         for name in names: ET.SubElement(root,'testcase',name=name,classname='offline fixture')

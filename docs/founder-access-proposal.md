@@ -1,12 +1,23 @@
-# Founder access: finite T15 proposal, awaiting owner decision
+# Founder access: finite T16 implementation and T15 proposal evidence
 
-**Propose exactly two relocations of currently owned, unreceipted spoil to expose the existing paid cell
-`(-4,3,0)`. This is unimplemented.** The first source is physically reachable under the current production selector.
+**The owner authorized implementation on 2026-10-11. SurfaceWork now implements exactly these two relocations of
+currently owned, unreceipted spoil to expose the existing paid cell `(-4,3,0)`.** Current safe-access, founder complete-form,
+Great and infrastructure outcomes are separate in `<turnloop>/directions/prime-ants-stage1/turns/T16/raw/access-acceptance.json`.
+The sections below preserve the T15 proposal's observations and then-unimplemented design; they are historical evidence,
+not a renewed permission request. The first source is physically reachable under the production selector.
 The second is currently covered by that first source. Both destinations already take soil within the existing Mature
 spoil envelope. No exception to `SurfaceWork.recoverable`, including its structural-column exclusion, is requested.
-The missing authority is an access relocation owner with separate saved accounting, rather than a structural payment.
+The granted authority is the finite SurfaceWork access subjob with separate saved accounting and no structural payment.
 
-The settling packet is `<turnloop>/directions/prime-ants-stage1/turns/T15/raw/founder-access-decision.json`.
+T16's selected original founder earns the exact pair and ordinary target retention, then completes all nineteen paid cells,
+passage walking and 200 settled loaded ticks at 53,657. The simultaneous six-body cohort exposes a separate negative:
+one clay delivery activates the existing Queen's Hall upgrade priority during operation one's carry. Access yields into
+exact named terminal custody, never starts operation two, and preserves prefix 4/19 at 60,000. Final saved physical
+evidence is 71 positively owned soil blocks plus the exact one-dirt ground entity, total 72. Controlled access safety passes;
+overall founder complete-form acceptance and Great acceptance remain false. No priority change, reminted attempt or
+wider clearing follows. The cohort is archived red with four passes and two failures.
+
+The historical decision packet is `<turnloop>/directions/prime-ants-stage1/turns/T15/raw/founder-access-decision.json`.
 Its machine-readable proposal, original live snapshot, diagnostic XML/log, conservation model, rejection fixtures and
 final checkpoint acceptance are linked there. A geometric proposal proves neither worker execution nor a successful
 access save/reload, complete founder construction or fit within the existing deadline.

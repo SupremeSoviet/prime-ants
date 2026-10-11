@@ -30,7 +30,18 @@ public final class ColonyTerrain extends SavedData {
     private void record(BlockPos p,UUID owner,String kind){records.put(key(p),owner+":"+kind);setDirty();}
     private boolean matches(ServerLevel l,BlockPos p,UUID owner,String kind,BlockState expected){return NestPlan.loaded(l,p)&&l.getBlockState(p).equals(expected)&&(owner+":"+kind).equals(records.get(key(p)));}
     public boolean prepared(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"prepared:nest_soil",NurseryBlocks.NEST_SOIL.defaultBlockState());}
-    public boolean mound(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"mound:nest_soil",NurseryBlocks.NEST_SOIL.defaultBlockState());}
+    public boolean mound(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"mound:nest_soil",NurseryBlocks.NEST_SOIL.defaultBlockState())
+        ||NestPlan.loaded(l,p)&&l.getBlockState(p).equals(NurseryBlocks.NEST_SOIL.defaultBlockState())&&records.getOrDefault(key(p),"").startsWith(owner+":access_mound:");}
+    boolean reserveAccess(ServerLevel l,BlockPos p,UUID owner,UUID unit){
+        if(!canReserveAccess(l,p))return false;
+        record(p,owner,"access_destination:"+unit);return true;
+    }
+    boolean canReserveAccess(ServerLevel l,BlockPos p){return NestPlan.loaded(l,p)&&!records.containsKey(key(p))&&l.getBlockState(p).equals(Blocks.AIR.defaultBlockState())&&l.getFluidState(p).isEmpty();}
+    public boolean accessReservation(ServerLevel l,BlockPos p,UUID owner,UUID unit){return matches(l,p,owner,"access_destination:"+unit,Blocks.AIR.defaultBlockState());}
+    void accessOpened(BlockPos p,UUID owner,UUID unit){record(p,owner,"access_open:"+unit);}
+    public boolean accessOpen(ServerLevel l,BlockPos p,UUID owner,UUID unit){return matches(l,p,owner,"access_open:"+unit,Blocks.AIR.defaultBlockState());}
+    void accessDeposited(BlockPos p,UUID owner,UUID unit){record(p,owner,"access_mound:"+unit);}
+    public boolean accessMound(ServerLevel l,BlockPos p,UUID owner,UUID unit){return matches(l,p,owner,"access_mound:"+unit,NurseryBlocks.NEST_SOIL.defaultBlockState());}
     /** Surface locations own one paid soil unit, including an in-place gate conversion. */
     public boolean surface(ServerLevel l,BlockPos p,UUID owner){
         if(!NestPlan.loaded(l,p))return false;var block=l.getBlockState(p).getBlock();return (block==NurseryBlocks.NEST_SOIL||block==NurseryBlocks.MOUND_GATE)&&matches(l,p,owner,"surface:"+id(block),block.defaultBlockState());

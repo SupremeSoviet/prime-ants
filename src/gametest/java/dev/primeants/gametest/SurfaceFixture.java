@@ -63,6 +63,11 @@ final class SurfaceFixture {
     LasiusNigerEntity habitat(GameTestHelper c,boolean great){return habitat(c,great,false);}
     /** Separate declared diagonal source approach for the self-occupancy regression, before any worker work. */
     LasiusNigerEntity habitat(GameTestHelper c,boolean great,boolean diagonalSource){
+        return habitat(c,great,diagonalSource,false);
+    }
+    LasiusNigerEntity accessHabitat(GameTestHelper c){return habitat(c,false,false,true);}
+    /** Declared 72-unit habitat with the witnessed positive-side spoil, two existing foundations, and no labor receipts. */
+    private LasiusNigerEntity habitat(GameTestHelper c,boolean great,boolean diagonalSource,boolean access){
         terrain(c);var l=c.getLevel();var home=NestPlan.geometry(c.absolutePos(new BlockPos(32,4,32)),Direction.EAST);
         int count=great?49:29;var broodIds=new ArrayList<UUID>();for(int n=0;n<count;n++)broodIds.add(UUID.randomUUID());
         var queen=AntEntities.QUEEN.create(l,EntitySpawnReason.COMMAND);c.assertTrue(queen!=null,"Real initial habitat queen");queen.setPos(Vec3.atBottomCenterOf(home.chamber()));
@@ -98,10 +103,17 @@ final class SurfaceFixture {
         var structural=SurfacePlan.bundled(ColonyStage.GREAT).cells().stream().map(SurfacePlan.Cell::column).collect(java.util.stream.Collectors.toSet());
         var initialPlan=diagonalSource?new ArrayList<>(NestMound.plan(ColonyStage.MATURE)):new ArrayList<>(NestMound.plan(ColonyStage.YOUNG));
         if(diagonalSource)initialPlan.removeIf(cell->cell.layer()!=0||cell.forward()>=-5);
-        for(var cell:initialPlan){
+        if(access){
+            int[][] witnessed={{-7,3,1},{-6,2,1},{-6,3,1},{-6,4,1},{-6,5,1},{-5,1,1},{-5,3,1},{-5,3,2},{-5,4,1},{-5,4,2},{-5,5,1},
+                {-4,1,1},{-4,2,1},{-4,2,2},{-4,3,1},{-4,3,2},{-4,4,1},{-4,4,2},{-4,5,1},{-4,5,2},{-4,6,1},{-3,1,1},{-3,2,1},{-3,3,1},{-3,3,2},{-3,4,1},{-3,4,2},{-3,5,1},{-2,2,1},{-2,3,1},{-2,4,1},{-2,5,1},{-1,3,1},{-1,4,1},{-2,-1,1},{-2,1,1}};
+            for(var cell:witnessed){var at=home.at(cell[0],cell[1],cell[2]);l.setBlock(at,NurseryBlocks.NEST_SOIL.defaultBlockState(),3);ColonyTerrain.get(l).deposited(at,queen.getUUID());initialSoil.add(at);}
+            // Remaining declared stock is physically on the opposite lobe. Production must earn the first four receipts.
+            for(var cell:initialPlan){if(cell.side()>=0||cell.layer()!=0||structural.contains(cell.forward()+","+cell.side()))continue;
+                var at=home.at(cell.forward(),cell.side(),1);l.setBlock(at,NurseryBlocks.NEST_SOIL.defaultBlockState(),3);ColonyTerrain.get(l).deposited(at,queen.getUUID());initialSoil.add(at);if(initialSoil.size()==72)break;}
+        }else for(var cell:initialPlan){
             if(structural.contains(cell.forward()+","+cell.side()))continue;var at=home.at(cell.forward(),cell.side(),1+cell.layer());
             if(!l.getBlockState(at.below()).isSolidRender())continue;l.setBlock(at,NurseryBlocks.NEST_SOIL.defaultBlockState(),3);ColonyTerrain.get(l).deposited(at,queen.getUUID());initialSoil.add(at);if(initialSoil.size()==80)break;
-        }c.assertTrue(initialSoil.size()==80,"Eighty finite declared owned mound units");
+        }c.assertTrue(initialSoil.size()==(access?72:80),"Finite declared owned mound units");
         InitialSurfaceHabitat.declare(c,queen.getUUID(),opened);c.assertTrue(l.addFreshEntity(queen),"Insert the real initial queen");
         for(int n=0;n<count;n++){
             UUID brood=broodIds.get(n);var w=AntEntities.WORKER.create(l,EntitySpawnReason.COMMAND);c.assertTrue(w!=null,"Real controlled worker");w.setUUID(ColonyMembers.workerId(brood));w.initializeCallow(brood,queen.getUUID(),home.chamber());
@@ -110,7 +122,7 @@ final class SurfaceFixture {
         }
         c.assertTrue(queen.nutrition().ingest(new ItemStack(Items.APPLE),Nutrition.QUEEN_SUGAR_CAPACITY,Nutrition.QUEEN_PROTEIN_CAPACITY)&&queen.nutrition().ingest(new ItemStack(Items.CHICKEN),Nutrition.QUEEN_SUGAR_CAPACITY,Nutrition.QUEEN_PROTEIN_CAPACITY),"Declared queen's existing ingested apple/chicken");
         c.assertTrue(ChamberExcavation.get(l).jobs(queen.getUUID()).isEmpty()&&ChamberUpgrade.get(l).jobs(queen.getUUID()).isEmpty()&&queen.founding().removed()==0,"Initial habitat manufactures no excavation or upgrade work receipts");
-        PrimeAnts.LOGGER.info("T12 INITIAL HABITAT queen={} workers={} soil=80 stone={} cacheApple=4 cacheChicken=4 existingIngestedApples={} existingIngestedChickens=1 excavationReceipts=0 surfacePlacements=0 stageNotSet=true",queen.getUUID(),count,great?32:0,count+1);
+        PrimeAnts.LOGGER.info("T12 INITIAL HABITAT queen={} workers={} soil={} stone={} cacheApple=4 cacheChicken=4 existingIngestedApples={} existingIngestedChickens=1 excavationReceipts=0 surfacePlacements=0 stageNotSet=true",queen.getUUID(),count,initialSoil.size(),great?32:0,count+1);
         return queen;
     }
     void snapshot(GameTestHelper c,LasiusNigerEntity q){
@@ -135,22 +147,32 @@ final class SurfaceFixture {
         c.assertTrue(NestPlan.walkable(c.getLevel(),home.outside())&&NestPlan.walkable(c.getLevel(),home.at(0,0,0))&&NestPlan.walkable(c.getLevel(),home.at(1,0,-1))&&NestPlan.walkable(c.getLevel(),home.at(2,0,-2)),"Exterior stand and every stair remain physically walkable");
     }
     void soil(GameTestHelper c,LasiusNigerEntity q){
+        soil(c,q,true);
+    }
+    /** A revocation observation may have an existing ineligible claim awaiting its controller; it grants no work. */
+    void soil(GameTestHelper c,LasiusNigerEntity q,boolean requireActiveCare){
+        soil(c,q,requireActiveCare,null);
+    }
+    void soil(GameTestHelper c,LasiusNigerEntity q,boolean requireActiveCare,LasiusNigerEntity unavailableActor){
         var l=c.getLevel();var all=new HashSet<BlockPos>(initialSoil);for(var j:SurfaceWork.get(l).jobs(q.getUUID()))all.addAll(j.cells());
+        for(var j:SurfaceWork.get(l).jobs(q.getUUID()))if(j.access!=null)for(var op:j.access.operations){all.add(op.source);all.add(op.destination);}
         long blocks=all.stream().filter(p->l.getBlockState(p).is(NurseryBlocks.NEST_SOIL)||l.getBlockState(p).is(NurseryBlocks.MOUND_GATE)).count();
         long cargo=fx.f.workers(c,q).stream().filter(w->w.getMainHandItem().is(Items.DIRT)).mapToInt(w->w.getMainHandItem().getCount()).sum();
         long ground=l.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,c.getBounds().inflate(8),i->i.isAlive()&&i.getItem().is(Items.DIRT)).stream().mapToInt(i->i.getItem().getCount()).sum();
         long pending=TransferCustody.get(l).contents().stream().filter(t->t.stack().is(Items.DIRT)&&c.getBounds().inflate(8).contains(t.position())).mapToInt(t->t.stack().getCount()).sum();
-        c.assertTrue(blocks+cargo+ground+pending==80,"Eighty declared soil units stay in current blocks/cargo/ground/custody, including gates: "+blocks+"/"+cargo+"/"+ground+"/"+pending);
+        int unavailable=0;if(unavailableActor!=null){c.assertTrue(l.getEntity(unavailableActor.getUUID())==null&&unavailableActor.getMainHandItem().is(Items.DIRT)&&unavailableActor.getMainHandItem().getCount()==1,"Unavailable lookup retains one unit in that actor's canonical equipment, not a job stack");unavailable=1;}
+        c.assertTrue(blocks+cargo+ground+pending+unavailable==initialSoil.size(),"Declared soil units stay in current blocks/cargo/ground/custody/unavailable canonical actor, including gates: "+blocks+"/"+cargo+"/"+ground+"/"+pending+"/"+unavailable);
         for(var j:SurfaceWork.get(l).jobs(q.getUUID())){
             var w=j.claim==null?null:fx.f.workers(c,q).stream().filter(a->a.getUUID().equals(j.claim)).findFirst().orElse(null);int held=w!=null&&w.getMainHandItem().is(Items.DIRT)?w.getMainHandItem().getCount():0;
-            c.assertTrue(j.recovered()==j.placed()+j.released()+held&&j.carried()==held,"Surface relocation history is separate from historical excavation deposits and exact current cargo");
+            int structuralHeld=j.access!=null&&!j.access.complete()?0:held;
+            c.assertTrue(j.recovered()==j.placed()+j.released()+structuralHeld&&j.carried()==structuralHeld,"Surface relocation history is separate from historical excavation deposits and exact current cargo");
         }
         var widening=NestExpansion.get(l).job(q.getUUID());var mining=Mining.get(l).job(q.getUUID());
         long builders=SurfaceWork.get(l).jobs(q.getUUID()).stream().filter(j->j.claim!=null).count()
             +(widening!=null&&widening.claim!=null?1:0)+(mining!=null&&mining.claim!=null?1:0)
             +ChamberExcavation.get(l).jobs(q.getUUID()).stream().filter(j->j.claim!=null).count()+ChamberUpgrade.get(l).jobs(q.getUUID()).stream().filter(j->j.claim!=null).count();
         c.assertTrue(builders<=1,"One current shared builder across every work owner per colony");
-        if(builders>0)c.assertTrue(TierTwoFixture.caregivers(c,q)>=2,"Two ordinary authorized caregivers retained during surface construction");
+        if(builders>0&&requireActiveCare)c.assertTrue(TierTwoFixture.caregivers(c,q)>=2,"Two ordinary authorized caregivers retained during surface construction");
     }
     static void completed(GameTestHelper c,LasiusNigerEntity q,ColonyStage stage){
         var l=c.getLevel();var j=SurfaceWork.get(l).job(q.getUUID(),stage);c.assertTrue(j!=null&&j.complete()&&j.claim==null,"Complete surface work with no retained builder");

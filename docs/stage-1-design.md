@@ -229,3 +229,35 @@ relocations `(-4,2,1) -> (-9,8,0)` then `(-4,2,0) -> (-10,7,0)` before retaining
 Its one read-only diagnostic witnesses the first recoverable source and both destinations; after-state geometry and
 saved access accounting remain proposed. No new terrain authority, structural-column exception or gameplay change
 is granted. The decision packet and complete checkpoint are in `<turnloop>/directions/prime-ants-stage1/turns/T15/`.
+
+### T16 finite founder access (2026-10-11)
+
+The owner's answer authorizes the exact upper-then-lower two-move subjob. SurfaceAccess is saved inside SurfaceWork;
+it shares the existing builder and preserves every earlier priority. Admission requires the actual owner/home, immutable
+Mature plan, two placements plus two retained receipts, next paid target `(-4,3,0)`, seventy other owned soil units and
+both positively owned sources. Only `(-9,8,0)` and `(-10,7,0)` receive saved owner/unit air reservations after live Mature
+envelope/capacity/support checks. Every write, including air-to-air, revokes them; reload cannot recreate them.
+
+Each material action earns twenty consecutive loaded game ticks at a reached, collision-checked supported stand with
+visible mouth reach. Operation two reuses unchanged recoverable after operation one redeposits. Source blocks become
+canonical one-dirt equipment carrying a stable unit identity, then actual owned mound blocks. Named custody uses the
+existing TransferCustody owner, with one pickup after a real first carrier death and terminal custody after a second.
+Pending custody forbids a same-identity ground shortcut. The named stand must see the actual low item point as well as
+pass ordinary stand/path checks; a cube-centre ray alone is insufficient.
+
+Access history `removed + named_pickups = redeposited + carried + released` is separate from structural/excavation
+credit. Claims, fixed endpoints/stands, binding, clock, unit identities, actual transitions and terminal release references
+survive coherent normal saves without a job cargo stack. Unknowns pause; known revocation, regression and route failure
+end this attempt while preserving cargo. The ordinary selector must independently reach and retain the exposed paid
+target afterwards. No third move or broader Great repair is authorized. Outcomes and measured bounds are in
+`<turnloop>/directions/prime-ants-stage1/turns/T16/raw/access-acceptance.json`; this is not abrupt-crash, tier-three,
+established-colony, 120-adult performance, broad persistence or release 0.2.0 acceptance.
+
+T16 outcomes: selected original founder completes nineteen paid cells, ordinary passage walking and 200 settled loaded
+ticks at 53,657. All nine access bodies and their two identical concurrent copies pass, and final fast acceptance is green.
+The required simultaneous six-body cohort remains red (four pass, two fail): founder reaches prefix 4/19, removes the
+first source, then yields permanently when newly delivered clay enables existing Queen's Hall upgrade priority; Great
+still misses its 12,000-tick deadline. Final founder custody is exactly the saved original one-dirt entity, with 71 positively
+owned physical soil blocks alongside it. Access history is `1+0=0+0+1`; no continuation or fresh admission is minted.
+This safe stop is a new founder negative and prevents overall complete-form acceptance despite the selected-run positive.
+Priorities are unchanged, no broader repair is attempted, and the next complete-long checkpoint remains T18.

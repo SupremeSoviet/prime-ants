@@ -667,3 +667,21 @@ acceptance and any unresolved red results are recorded independently in T10's re
   retained-building regression, unattended pre-Mature clay/development, arbitrary veins/all sixty-four edits and survey
   walking/dig timelines remain uncovered. Tier three, established colonies, 120-adult performance, broad persistence
   and release acceptance remain outstanding.
+
+## Implementation notes - 2026-10-11 (stage-1 T16 owner-authorized founder access)
+
+The supplied T16 contract records the owner's 2026-10-11 answer: **"authorizes implementation now. Do not ask again."**
+The exact granted sequence is `(-4,2,1) -> (-9,8,0)`, then `(-4,2,0) -> (-10,7,0)` in the entrance material-cell frame.
+It is one SurfaceWork subjob under the existing exclusive builder, bound to the actual owner/home, immutable Mature
+plan and the four-receipt prefix whose next existing paid cell is `(-4,3,0)`. Two removals and two redepositions each
+require twenty consecutive loaded action ticks. The lower source must pass unchanged `recoverable` after the first
+redeposition; no structural-column exception or third relocation is authorized.
+
+Access destinations have two exact saved owner/unit reservations; every write, including air-to-air, revokes them.
+Canonical actor equipment, existing TransferCustody pending, or its verified named ground entity owns the only unit.
+At most one actual named pickup per operation may continue after a real carrier death; a second actual carrier death
+ends continuation in named custody. Saved cancellation/completion cannot re-admit the same attempt. Access has separate
+`removed + named_pickups = redeposited + carried + released` history and grants no excavation/structural credit.
+Only the later ordinary selector and retained-foundation action may append its usual receipt. Normal coherent reload
+evidence is distinct from abrupt-crash durability. Current physical acceptance and any next obstruction are recorded in
+`<turnloop>/directions/prime-ants-stage1/turns/T16/raw/access-acceptance.json`; no broader clearing or Great repair follows.

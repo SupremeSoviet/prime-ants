@@ -16,6 +16,7 @@ import dev.primeants.founding.ColonyTerrain;
 import dev.primeants.founding.MoundSoil;
 import dev.primeants.founding.Mining;
 import dev.primeants.founding.SurfaceWork;
+import dev.primeants.founding.SurfaceAccess;
 import java.util.UUID;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -159,6 +160,7 @@ public final class WorkerTasks {
     private void surface(ServerLevel l){
         var work=SurfaceWork.get(l);var j=work.claimedBy(worker);if(j==null){hold("surface_claim_missing_cargo_retained");return;}
         j.ticks++;work.setDirty();
+        if(j.access!=null&&!j.access.complete()){surfaceAccess(l,work,j);return;}
         if(j.stopped()||!j.unlocked(l,worker.queenId())||j.carried()==0&&work.priority(l,worker.queenId(),plan)){
             if(j.carried()==1)work.abandonCargo(l,worker,j,"surface_stage_or_priority_changed");
             else work.relinquish(l,worker,j,"surface_yielded_existing_priorities");
@@ -205,6 +207,40 @@ public final class WorkerTasks {
         if(fetch){if(work.recover(l,worker,j)){next(Phase.SURFACE_BUILD,"owned_soil_unit_in_mandibles");surfaceTarget=j.next();surfaceStand=surfaceBuildStand;}}
         else if(work.place(l,worker,j)){work.relinquish(l,worker,j,"worker_paid_one_surface_cell");next(Phase.NURSE_CACHE,"surface_cell_paid_return_to_care");}
     }
+    private void surfaceAccess(ServerLevel l,SurfaceWork work,SurfaceWork.Job j){
+        var a=j.access;
+        if(a.stopped||work.priority(l,worker.queenId(),plan)||!j.unlocked(l,worker.queenId())){
+            work.stopAccess(l,worker,j,a.stopped?a.reason:"stage_or_priority_changed");harvestingTicks=0;
+            if(worker.getMainHandItem().isEmpty())next(Phase.NURSE_CACHE,"finite_access_stopped");else hold("access_quarantined_cargo_retained");return;
+        }
+        var problem=a.actionProblem(l,j,worker);
+        if(problem!=null){a.action=0;harvestingTicks=0;
+            if(problem.startsWith("unknown")||problem.equals("occupied_destination")||problem.equals("source_not_recoverable")){
+                hold("access_"+problem);return;
+            }
+            work.stopAccess(l,worker,j,problem);if(worker.getMainHandItem().isEmpty())next(Phase.NURSE_CACHE,"finite_access_revoked");return;
+        }
+        var target=a.target(l);boolean empty=a.current().phase!=SurfaceAccess.Phase.SOURCE;
+        var goal=a.stand();
+        if(goal==null){
+            if(!target.equals(surfaceTarget)||!a.pickupStandValid(l,worker,surfaceStand)){surfaceTarget=target;surfaceStand=a.pickupStand(l,worker);}
+            goal=surfaceStand;
+        }
+        if(goal!=null&&(!NestPlan.loaded(l,goal)||!NestPlan.loaded(l,goal.above())||!NestPlan.loaded(l,goal.below()))){a.action=0;harvestingTicks=0;hold("access_unknown_work_stand");return;}
+        if(goal==null||!SurfaceWork.validStand(l,worker,target,empty,goal)){
+            a.action=0;harvestingTicks=0;work.stopAccess(l,worker,j,"work_stand_or_body_obstructed");if(worker.getMainHandItem().isEmpty())next(Phase.NURSE_CACHE,"finite_access_stand_refused");return;
+        }
+        if(!worker.blockPosition().equals(goal)||!worker.onGround()||a.point(l,worker)==null){a.action=0;harvestingTicks=0;arriveSupported(l,Vec3.atBottomCenterOf(goal));return;}
+        worker.getNavigation().stop();var point=a.point(l,worker);worker.getLookControl().setLookAt(point.x,point.y,point.z);
+        if(!a.earn(l))return;harvestingTicks=a.action;if(a.action<SurfaceWork.ACTION_TICKS)return;
+        var previous=a.current().phase;boolean committed=a.commit(l,j,worker);a.action=0;harvestingTicks=0;
+        if(!committed)return;
+        if(a.complete()){
+            work.relinquish(l,worker,j,"finite_access_pair_redeposited");next(Phase.NURSE_CACHE,"ordinary_surface_selector_must_confirm_access");return;
+        }
+        surfaceTarget=a.target(l);surfaceStand=a.stand();surfaceBuildStand=a.current().depositStand;
+        next(a.current().phase==SurfaceAccess.Phase.SOURCE?Phase.SURFACE_FETCH:Phase.SURFACE_BUILD,"access_"+previous+"_committed");
+    }
     public boolean assignNurse(NestPlan p){
         if(sharing.busy()||phase!=Phase.NURSERY||!(worker.level() instanceof ServerLevel l)||!eligible(l,p)||!worker.getMainHandItem().isEmpty()||constructionClaim(l)||surfaceClaim(l)||foragerClaim(l))return false;
         plan=p.routeGeometry();next(Phase.NURSE_CACHE,"mature_member_nursing");
@@ -240,11 +276,23 @@ public final class WorkerTasks {
     }
     public void tick(ServerLevel l) {
         if(phase==Phase.DEAD || !worker.isAlive())return;
-        if(defense(l))return;
-        if(sharing.tick(l))return;
-        if(adultMeal(l))return;
+        if(defense(l)){resetAccessAction(l);return;}
+        if(sharing.tick(l)){resetAccessAction(l);return;}
+        if(adultMeal(l)){resetAccessAction(l);return;}
+        // Loaded access revocation cancels this finite permission even when lost queen/habitat eligibility
+        // would pause the ordinary controller. This is only custody cleanup, never a material action.
+        if(surfaceWorking()){
+            var work=SurfaceWork.get(l);var j=work.claimedBy(worker);
+            if(j!=null&&j.access!=null&&!j.access.complete()&&!j.access.stopped){
+                var problem=j.access.problem(l,j);
+                if(problem!=null&&!problem.startsWith("unknown")){
+                    work.stopAccess(l,worker,j,problem);harvestingTicks=0;
+                    if(worker.getMainHandItem().isEmpty())next(Phase.NURSE_CACHE,"finite_access_permission_revoked");else hold("access_quarantined_cargo_retained");return;
+                }
+            }
+        }
         if(worker.isCallow() || phase==Phase.NURSERY) {hold(worker.isCallow()?"callow_shelter":"nursery_shelter");return;}
-        if(!(surfaceWorking()?surfaceAuthorized(l):construction()?constructionAuthorized(l):upgrading()?upgradeAuthorized(l):nursing()?nursingAuthorized(l):!constructionClaim(l)&&authorized(l))) {hold("home_unavailable_or_invalid_cargo_retained");feedingTicks=0;harvestingTicks=0;return;}
+        if(!(surfaceWorking()?surfaceAuthorized(l):construction()?constructionAuthorized(l):upgrading()?upgradeAuthorized(l):nursing()?nursingAuthorized(l):!constructionClaim(l)&&authorized(l))) {hold("home_unavailable_or_invalid_cargo_retained");feedingTicks=0;harvestingTicks=0;resetAccessAction(l);return;}
         // The existing 240-tick SEARCH window ends when a source is found. Approach/action
         // keep the normal 1200-tick controller bound; late discovery cannot shorten harvesting.
         if(phase==Phase.SEARCH) {
@@ -262,7 +310,8 @@ public final class WorkerTasks {
                 var work=SurfaceWork.get(l);var job=work.claimedBy(worker);
                 // Surface work must free the shared builder on a bounded impossible route. Its paid unit
                 // enters named physical custody, never another excavation receipt or a remote placement.
-                if(job!=null){if(job.carried()==1)work.abandonCargo(l,worker,job,"bounded_surface_route_stalled");
+                if(job!=null){if(job.access!=null&&!job.access.complete())work.stopAccess(l,worker,job,"bounded_surface_route_stalled");
+                    else if(job.carried()==1)work.abandonCargo(l,worker,job,"bounded_surface_route_stalled");
                     else work.relinquish(l,worker,job,"waiting_bounded_surface_route_stalled");}
                 harvestingTicks=0;next(Phase.NURSE_CACHE,"surface_stalled_worker_released");cooldown=40;
             }
@@ -296,6 +345,10 @@ public final class WorkerTasks {
             case SURFACE_FETCH, SURFACE_BUILD -> surface(l);
             default -> { }
         }
+    }
+    private void resetAccessAction(ServerLevel l){
+        if(!surfaceWorking())return;var j=SurfaceWork.get(l).claimedBy(worker);
+        if(j!=null&&j.access!=null&&!j.access.complete()){j.access.action=0;harvestingTicks=0;SurfaceWork.get(l).setDirty();}
     }
     private boolean defense(ServerLevel l){
         // Persist this clock/cooldown so re-entry or coherent restore in the same
