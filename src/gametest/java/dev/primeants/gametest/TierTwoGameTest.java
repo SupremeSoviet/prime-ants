@@ -94,7 +94,7 @@ public final class TierTwoGameTest {
             if(tiers.size()!=3||!foodEffect[0]||!materialEffect[0]||!hallEffect[0]||!reloadStep[0])return;
             c.assertTrue(ChamberUpgrade.get(l).jobs(q.getUUID()).size()==3&&ChamberUpgrade.get(l).jobs(q.getUUID()).stream().allMatch(j->j.complete()&&j.claim==null&&j.carried()==0&&j.released()==0),"Three physical jobs serve four functions, with no duplicate founding job");
             if(e!=null&&e.inputs().tier(ChamberFunction.NURSERY).known()==2)c.assertTrue(p.nursery().equals(new BroodCapacity.Nursery(10,3)),"Nursery has ten slots and x1.5 while confirmed");
-            c.assertTrue(NurseryBlocks.NEST_CACHE.getStateDefinition().getPossibleStates().size()==832&&NurseryBlocks.MATERIAL_STORE.getStateDefinition().getPossibleStates().size()==2448,"Actual bounded display state counts: food 832, material 2448");
+            c.assertTrue(NurseryBlocks.NEST_CACHE.getStateDefinition().getPossibleStates().size()==1216&&NurseryBlocks.MATERIAL_STORE.getStateDefinition().getPossibleStates().size()==5200,"Actual bounded display state counts: food 1216, material 5200");
             if(hiddenAt[0]<0){
                 entrance[0]=UnavailableCells.hide(c,plan.entrance());plug[0]=UnavailableCells.hide(c,plan.plugs().getFirst());hiddenAt[0]=p.loadedTicks();
                 PrimeAnts.LOGGER.info("T08 U1 ENTRANCE UNKNOWN START queen={} tick={} pileTicks={} promotion={} tiers={}",q.getUUID(),c.getTick(),hiddenAt[0],scope.promotion,tiers);return;

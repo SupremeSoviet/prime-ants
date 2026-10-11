@@ -155,7 +155,7 @@ public final class SurfaceWork extends SavedData {
     public boolean priority(ServerLevel l,UUID owner,NestPlan home){
         var widening=NestExpansion.get(l).job(owner);if(widening!=null&&!widening.complete())return true;
         if(ChamberExcavation.get(l).jobs(owner).stream().anyMatch(j->!j.complete()&&!j.stopped()))return true;
-        if(ChamberUpgrade.get(l).jobs(owner).stream().anyMatch(j->!j.complete()&&!j.stopped())||ChamberUpgrade.get(l).hasPriority(l,owner,home))return true;
+        if(ChamberUpgrade.get(l).jobs(owner).stream().anyMatch(j->!j.complete()&&!j.stopped()&&(j.tier==2||j.claim!=null))||ChamberUpgrade.get(l).hasPriority(l,owner,home))return true;
         var mining=Mining.get(l).job(owner);return mining!=null&&!mining.complete()&&!mining.stopped();
     }
     public void consider(ServerLevel l,LasiusNigerEntity queen,List<LasiusNigerEntity> workers){

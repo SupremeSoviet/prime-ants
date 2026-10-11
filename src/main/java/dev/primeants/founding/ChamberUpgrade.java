@@ -24,10 +24,11 @@ import net.minecraft.world.level.saveddata.*;
  * block by block. One real builder at a time takes clay from the colony's confirmed store, carries it in its mandibles
  * to the next wall cell (NestWalls) and rams it into that cell's own earth: packed clay, NestWalls.CLAY_PER_CELL unit a
  * cell, no soil leaves the nest. Mature unlocks tier 2: the shared nursery/food chamber first, then the material
- * store and queen's hall. Tier 3 work remains deferred until after mining. A cell that is no longer natural or colony earth (a player placed or changed it) is never converted: it
- * stops the job, and the builder puts its unit back into the store.
+ * store and queen's hall. Great unlocks intact-stone facing over the paid clay core, which remains in place. Intact
+ * minecraft:stone is facing input; cobblestone remains bulk stock. A revoked or foreign wall stops the job and its
+ * unspent recipe unit returns to the confirmed store.
  * <p>Exact accounting at every point: taken = carried + built + released, where taken counts units out of the store net
- * of units put back, built the clay rammed into converted cells, and released the units dead builders handed to transfer
+ * of units put back, built the recipe units in converted cells, and released the units dead builders handed to transfer
  * custody, counted once and for good. The job also keeps each such transfer's identity, so the units still in custody
  * now (custody), before custody sets them down in the world, are a separate figure that never enters the equation. */
 public final class ChamberUpgrade extends SavedData {
@@ -48,11 +49,14 @@ public final class ChamberUpgrade extends SavedData {
             Codec.STRING.fieldOf("claim").forGetter(j -> j.claim == null ? "" : j.claim.toString()),
             Codec.LONG.fieldOf("ticks").forGetter(j -> j.ticks),
             Codec.STRING.fieldOf("reason").forGetter(j -> j.reason),
-            Codec.unboundedMap(Codec.STRING, Codec.INT).optionalFieldOf("released_transfers", Map.of()).forGetter(j -> Map.copyOf(j.transfers))
+            Codec.unboundedMap(Codec.STRING, Codec.INT).optionalFieldOf("released_transfers", Map.of()).forGetter(j -> Map.copyOf(j.transfers)),
+            Codec.STRING.optionalFieldOf("material", "minecraft:clay_ball").forGetter(j -> j.material)
         ).apply(i, Job::new));
         public final NestPlan home;
         public final String chamber;
         public final int tier;
+        /** Exact physical recipe item, including in saved carried/released phases. Legacy jobs are clay jobs. */
+        public final String material;
         /** The wall cells this job converts, in order; built is always a prefix of them. */
         public final List<BlockPos> cells;
         private final List<BlockPos> built;
@@ -62,10 +66,11 @@ public final class ChamberUpgrade extends SavedData {
         public UUID claim;
         public long ticks;
         public String reason;
-        private Job(BlockPos entrance, String direction, String chamber, int tier, List<BlockPos> cells, List<BlockPos> built, int taken, int released, String claim, long ticks, String reason, Map<String, Integer> transfers) {
+        private Job(BlockPos entrance, String direction, String chamber, int tier, List<BlockPos> cells, List<BlockPos> built, int taken, int released, String claim, long ticks, String reason, Map<String, Integer> transfers, String material) {
             Direction d = Direction.byName(direction);
             if (d == null || d.getAxis().isVertical()) throw new IllegalArgumentException("Invalid chamber upgrade home");
-            this.home = NestPlan.geometry(entrance, d); this.chamber = chamber; this.tier = tier;
+            this.home = NestPlan.geometry(entrance, d); this.chamber = chamber; this.tier = tier; this.material = material;
+            if (!material.equals(tier == 2 ? "minecraft:clay_ball" : "minecraft:stone")) throw new IllegalArgumentException("Invalid upgrade recipe");
             this.cells = List.copyOf(cells); this.built = new ArrayList<>(built); this.taken = taken; this.released = released;
             this.claim = claim.isEmpty() ? null : UUID.fromString(claim); this.ticks = ticks; this.reason = reason;
             this.transfers = new HashMap<>(transfers); transfers.keySet().forEach(UUID::fromString);
@@ -89,15 +94,20 @@ public final class ChamberUpgrade extends SavedData {
         public NestWalls.Ledger ledger() { return new NestWalls.Ledger(taken, carried(), built.size() * NestWalls.CLAY_PER_CELL, released); }
         /** Released units still in transfer custody now, not yet set down in the world: at most released. */
         public int custody(ServerLevel l) {
-            return TransferCustody.get(l).contents().stream().filter(p -> transfers.containsKey(p.id().toString()) && p.stack().is(Items.CLAY_BALL)).mapToInt(p -> p.stack().getCount()).sum();
+            return TransferCustody.get(l).contents().stream().filter(p -> transfers.containsKey(p.id().toString()) && accepts(p.stack())).mapToInt(p -> p.stack().getCount()).sum();
         }
+        public net.minecraft.world.item.Item item() { return tier == 2 ? Items.CLAY_BALL : Items.STONE; }
+        public boolean accepts(net.minecraft.world.item.ItemStack stack) { return stack.is(item()) && stack.getCount() == 1; }
+        public net.minecraft.world.level.block.Block block() { return tier == 2 ? dev.primeants.brood.NurseryBlocks.PACKED_CLAY : dev.primeants.brood.NurseryBlocks.NEST_CUT_STONE; }
         public boolean complete() { return built.size() == cells.size(); }
         public boolean stopped() { return reason.startsWith("stopped_"); }
         /** The next wall cell to convert. */
         public BlockPos next() { return cells.get(built.size()); }
-        /** Still this colony's natural or colony earth, solid and dry: the only cell an upgrade converts. */
+        /** Tier two requires authorized earth; tier three requires this colony's intact paid clay core. */
         public boolean convertible(ServerLevel l, BlockPos p, UUID owner) {
-            return NestPlan.loaded(l, p) && ColonyTerrain.get(l).eligible(l, p, owner) && l.getBlockState(p).isSolidRender() && l.getFluidState(p).isEmpty();
+            return cells.contains(p) && NestPlan.loaded(l, p) && (tier == 2 ? ColonyTerrain.get(l).eligible(l, p, owner)
+                : ColonyTerrain.get(l).built(l, p, owner, dev.primeants.brood.NurseryBlocks.PACKED_CLAY))
+                && l.getBlockState(p).isSolidRender() && l.getFluidState(p).isEmpty();
         }
         /** The claimed builder took one cell's units out of the store (MaterialStore). */
         public void took(ServerLevel l) { taken += NestWalls.CLAY_PER_CELL; get(l).setDirty(); }
@@ -152,15 +162,19 @@ public final class ChamberUpgrade extends SavedData {
     }
     public boolean anyClaim(UUID owner) { return jobs(owner).stream().anyMatch(j -> j.claim != null); }
     /** Clay units the colony built into a chamber's walls, by its own jobs' records: what an unknown chamber may hold. */
-    public int builtClay(UUID owner, String chamber) { return jobs(owner).stream().filter(j -> j.chamber.equals(chamber)).mapToInt(j -> j.built.size() * NestWalls.CLAY_PER_CELL).sum(); }
+    public int builtClay(UUID owner, String chamber) { return jobs(owner).stream().filter(j -> j.chamber.equals(chamber) && j.tier == 2).mapToInt(j -> j.built.size() * NestWalls.CLAY_PER_CELL).sum(); }
     /** Clay on its way from the store into the walls: known while the claimed builder is seen carrying it, possible
      * while the builder is unavailable. */
     public StageRules.Bound carried(ServerLevel l, UUID owner) {
+        return carried(l, owner, MaterialUnits.Material.CLAY);
+    }
+    public StageRules.Bound carried(ServerLevel l, UUID owner, MaterialUnits.Material material) {
         int known = 0, possible = 0;
         for (var j : jobs(owner)) {
+            if ((j.tier == 2 ? MaterialUnits.Material.CLAY : MaterialUnits.Material.STONE) != material) continue;
             int units = j.carried(); if (units == 0) continue;
             if (j.claim != null && l.getEntity(j.claim) instanceof LasiusNigerEntity w && w.isAlive() && !w.isRemoved()
-                    && w.getMainHandItem().is(Items.CLAY_BALL) && w.getMainHandItem().getCount() >= units) known += units;
+                    && j.accepts(w.getMainHandItem()) && w.getMainHandItem().getCount() == units) known += units;
             else possible += units;
         }
         return new StageRules.Bound(known, known + possible);
@@ -189,47 +203,43 @@ public final class ChamberUpgrade extends SavedData {
      * claimed, stopped or completed job needs no builder; a job waiting for clay resumes under the same conditions. */
     /** Available upgrade work, including the gap before its next saved job is created. Empty miners yield;
      * already carried units finish their physical destination first. No stage/food/care rule changes. */
-    public boolean hasPriority(ServerLevel l,UUID owner,NestPlan p){
-        if(!NestPlan.loaded(l,p.nursery())||!(l.getBlockEntity(p.nursery()) instanceof BroodPile pile)||pile.stageEvaluation()==null)return false;
-        var e=pile.stageEvaluation();if(NestWalls.unlocked(e.stage())<2)return false;
-        var store=MaterialStore.confirmed(l,owner,p);if(store==null||store.units(MaterialUnits.Material.CLAY)<NestWalls.CLAY_PER_CELL)return false;
-        for(var id:ORDER){
-            var state=e.chambers().stream().filter(s->s.id().equals(id)).findFirst().orElse(null);
-            var function=id.equals(ChamberRegistry.FOUNDING)?ChamberFunction.NURSERY:id.equals(ChamberExcavation.STORE)?ChamberFunction.MATERIAL_STORE:ChamberFunction.QUEENS_HALL;
-            if(state==null||state.functions().get(function)!=ColonyDevelopment.Presence.CONFIRMED)return false;
-            var existing=job(owner,id,2);if(existing!=null&&existing.stopped())return false;
-            if(state.tier()<2)return true; // includes completed work waiting for its next production confirmation
+    private record Selection(ColonyDevelopment.ChamberState state, Job job, int tier) { }
+    private Selection selection(ServerLevel l, UUID owner, NestPlan home) {
+        if (!NestPlan.loaded(l, home.nursery()) || !(l.getBlockEntity(home.nursery()) instanceof BroodPile pile) || pile.stageEvaluation() == null) return null;
+        var e = pile.stageEvaluation();
+        for (int tier = 2; tier <= NestWalls.unlocked(e.stage()); tier++) for (var id : ORDER) {
+            var state = e.chambers().stream().filter(c -> c.id().equals(id)).findFirst().orElse(null);
+            var function = id.equals(ChamberRegistry.FOUNDING) ? ChamberFunction.NURSERY : id.equals(ChamberExcavation.STORE) ? ChamberFunction.MATERIAL_STORE : ChamberFunction.QUEENS_HALL;
+            if (state == null || state.functions().get(function) != ColonyDevelopment.Presence.CONFIRMED) return null;
+            var existing = job(owner, id, tier);
+            if (existing != null && existing.stopped()) return null;
+            if (state.tier() >= tier) continue;
+            if (existing != null && existing.complete()) return null;
+            return new Selection(state, existing, tier);
         }
-        return false;
+        return null;
+    }
+    /** An exact recipe unit in a confirmed physical store is required even between claims. */
+    public boolean hasPriority(ServerLevel l, UUID owner, NestPlan home) {
+        var selected = selection(l, owner, home); var store = MaterialStore.confirmed(l, owner, home);
+        return selected != null && store != null && store.recipeUnits(selected.tier == 2 ? Items.CLAY_BALL : Items.STONE) > 0;
     }
     public void consider(ServerLevel l, LasiusNigerEntity q, List<LasiusNigerEntity> workers) {
-        var p = q.founding().plan(); var owner = q.getUUID(); int tier = 2;
+        var p = q.founding().plan(); var owner = q.getUUID();
         if (p == null || q.founding().lifecycle() != QueenFounding.Lifecycle.OPEN || !q.founding().ready()) return;
         long now = l.getGameTime();
         if (now < nextAttempt.getOrDefault(owner, Long.MIN_VALUE)) return;
         nextAttempt.put(owner, now + ASSIGN_RETRY);
-        if (DigJob.anyClaim(l, owner)) return; // one real builder at a time; absent lookups never free a claim
+        if (DigJob.anyClaim(l, owner)) return;
         var widening = NestExpansion.get(l).job(owner);
         if (widening != null && !widening.complete() && !widening.reason.startsWith("quarantined_")) return;
         for (var dig : ChamberExcavation.get(l).jobs(owner)) if (!dig.complete() && !dig.stopped() && !dig.reason.startsWith("quarantined_")) return;
-        if (!(l.getBlockEntity(p.nursery()) instanceof BroodPile pile) || pile.stageEvaluation() == null) return;
-        var e = pile.stageEvaluation();
-        if (NestWalls.unlocked(e.stage()) < tier) return;
-        ColonyDevelopment.ChamberState state = null; Job job = null;
-        for (var id : ORDER) {
-            var next = e.chambers().stream().filter(s -> s.id().equals(id)).findFirst().orElse(null);
-            var function = id.equals(ChamberRegistry.FOUNDING) ? ChamberFunction.NURSERY : id.equals(ChamberExcavation.STORE) ? ChamberFunction.MATERIAL_STORE : ChamberFunction.QUEENS_HALL;
-            if (next == null || next.functions().get(function) != ColonyDevelopment.Presence.CONFIRMED) return;
-            var existing = job(owner,id,tier);
-            if (existing != null && (existing.claim != null || existing.stopped())) return;
-            if (next.tier() >= tier) continue;
-            if (existing != null && existing.complete()) return; // Wait for the next production confirmation before the next room.
-            state = next; job = existing; break;
-        }
-        if (state == null) return;
+        var selected = selection(l, owner, p);
+        if (selected == null || selected.job != null && selected.job.claim != null) return;
+        int tier = selected.tier; var state = selected.state; var job = selected.job;
         var chamber = ChamberRegistry.get(l).colony(owner).chamber(state.id());
         var store = MaterialStore.confirmed(l, owner, p);
-        if (store == null || store.units(MaterialUnits.Material.CLAY) < NestWalls.CLAY_PER_CELL) return;
+        if (store == null || store.recipeUnits(tier == 2 ? Items.CLAY_BALL : Items.STONE) == 0) return;
         var eligible = workers.stream().filter(w -> w.workerTasks().canConstruct(p) && NestExpansion.remainingCaregivers(l, owner, p, w) >= 2)
             .sorted(Comparator.comparing(w -> w.getUUID().toString())).toList();
         if (eligible.isEmpty()) return;
@@ -240,10 +250,11 @@ public final class ChamberUpgrade extends SavedData {
                 if (terrain.wallTier(l, c, owner) < tier) cells.add(c);
             }
             if (cells.isEmpty()) return;
-            job = new Job(p.entrance(), p.direction().getName(), chamber.id(), tier, cells, List.of(), 0, 0, "", 0, "planned_mature_colony_" + chamber.id() + "_below_tier_" + tier, Map.of());
+            job = new Job(p.entrance(), p.direction().getName(), chamber.id(), tier, cells, List.of(), 0, 0, "", 0,
+                "planned_colony_" + chamber.id() + "_below_tier_" + tier, Map.of(), tier == 2 ? "minecraft:clay_ball" : "minecraft:stone");
             jobs.put(key(owner, chamber.id(), tier), job); index(); setDirty();
-            dev.primeants.PrimeAnts.LOGGER.info("Chamber upgrade planned queen={} chamber={} tier={} cells={} storeClay={} stage={} chamberTier={}",
-                owner, chamber.id(), tier, cells.size(), store.units(MaterialUnits.Material.CLAY), e.stage().serializedName(), state.tier());
+            dev.primeants.PrimeAnts.LOGGER.info("Chamber upgrade planned queen={} chamber={} tier={} cells={} recipe={} stock={} stage={} chamberTier={}",
+                owner, chamber.id(), tier, cells.size(), job.material, store.recipeUnits(job.item()), pileStage(l,p), state.tier());
         }
         var w = eligible.getFirst();
         if (w.workerTasks().assignUpgrade(p)) {
@@ -251,4 +262,5 @@ public final class ChamberUpgrade extends SavedData {
             dev.primeants.PrimeAnts.LOGGER.info("Chamber upgrade assigned queen={} worker={} chamber={} tier={} built={}/{} ledger={}", owner, w.getUUID(), job.chamber, tier, job.built.size(), job.cells.size(), job.ledger());
         }
     }
+    private static Object pileStage(ServerLevel l,NestPlan p) { return ((BroodPile)l.getBlockEntity(p.nursery())).stageEvaluation().stage(); }
 }

@@ -127,7 +127,7 @@ public final class Mining extends SavedData {
         var widening=NestExpansion.get(l).job(owner);if(widening!=null&&!widening.complete())return;
         for(var dig:ChamberExcavation.get(l).jobs(owner))if(!dig.complete()&&!dig.stopped())return;
         // Unfinished ordinary upgrades keep priority even between their claims.
-        for(var upgrade:ChamberUpgrade.get(l).jobs(owner))if(!upgrade.complete()&&!upgrade.stopped())return;
+        for(var upgrade:ChamberUpgrade.get(l).jobs(owner))if(!upgrade.complete()&&!upgrade.stopped()&&(upgrade.tier==2||upgrade.claim!=null))return;
         if(ChamberUpgrade.get(l).hasPriority(l,owner,p))return;
         var store=MaterialStore.confirmed(l,owner,p);if(store==null)return;
         if(j==null){

@@ -46,6 +46,7 @@ public final class MaterialStore extends BlockEntity {
     public static boolean material(ItemStack s) { return kind(s) != null; }
     public List<ItemStack> contents() { return contents.stream().map(ItemStack::copy).toList(); }
     public int size() { return contents.size(); }
+    public int recipeUnits(net.minecraft.world.item.Item item) { return (int)contents.stream().filter(s -> s.is(item)).count(); }
     private List<MaterialUnits.Material> held() { return contents.stream().map(MaterialStore::kind).toList(); }
     /** Held units of one material. */
     public int units(MaterialUnits.Material m) { return (int)MaterialUnits.count(held(), m); }
@@ -93,17 +94,17 @@ public final class MaterialStore extends BlockEntity {
                 || ColonyDevelopment.presence(l, colony, p, ChamberExcavation.STORE, ChamberFunction.MATERIAL_STORE) != ColonyDevelopment.Presence.CONFIRMED) return false;
         contents.add(cargo.copy()); w.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY); changed(); return true;
     }
-    /** The colony's claimed upgrade builder (ChamberUpgrade), empty-handed and in reach, takes one wall cell's clay out of
+    /** The colony's claimed upgrade builder (ChamberUpgrade), empty-handed and in reach, takes the exact recipe item out of
      * the store while the store's chamber is confirmed now. The unit goes into its mandibles and the job counts it taken. */
     public boolean takeForUpgrade(LasiusNigerEntity w, NestPlan p, ChamberUpgrade.Job job) {
-        if (!(level instanceof ServerLevel l) || !upgradeReach(l, w, p, job) || !w.getMainHandItem().isEmpty() || units(MaterialUnits.Material.CLAY) < NestWalls.CLAY_PER_CELL) return false;
-        int index = 0; while (kind(contents.get(index)) != MaterialUnits.Material.CLAY) index++;
+        if (!(level instanceof ServerLevel l) || !upgradeReach(l, w, p, job) || !w.getMainHandItem().isEmpty() || recipeUnits(job.item()) < 1) return false;
+        int index = 0; while (!job.accepts(contents.get(index))) index++;
         w.setItemSlot(EquipmentSlot.MAINHAND, contents.remove(index)); job.took(l); changed(); return true;
     }
-    /** The claimed builder of a job that stopped while it carried clay puts the unit back; the job no longer counts it. */
+    /** A stopped job returns its exact unspent recipe unit; the net taken ledger no longer counts it. */
     public boolean putBack(LasiusNigerEntity w, NestPlan p, ChamberUpgrade.Job job) {
         var cargo = w.getMainHandItem();
-        if (!(level instanceof ServerLevel l) || !upgradeReach(l, w, p, job) || !cargo.is(net.minecraft.world.item.Items.CLAY_BALL) || cargo.getCount() != NestWalls.CLAY_PER_CELL
+        if (!(level instanceof ServerLevel l) || !upgradeReach(l, w, p, job) || !job.accepts(cargo)
                 || job.carried() < NestWalls.CLAY_PER_CELL || !room(cargo)) return false;
         contents.add(cargo.copy()); w.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY); job.putBack(l); changed(); return true;
     }
@@ -147,7 +148,7 @@ public final class MaterialStore extends BlockEntity {
         super.preRemoveSideEffects(pos, state);
     }
     @Override protected void saveAdditional(ValueOutput out) {
-        super.saveAdditional(out); out.putInt("InventoryFormat",2); out.putString("ReleaseId", releaseId.toString());
+        super.saveAdditional(out); out.putInt("InventoryFormat",3); out.putString("ReleaseId", releaseId.toString());
         if (colony == null || plan == null) return;
         out.putString("Colony", colony.toString()); out.store("Entrance", BlockPos.CODEC, plan.entrance()); out.putString("Direction", plan.direction().getName());
         out.putString("Placement", placement); out.store("Contents", ItemStack.CODEC.listOf(), contents);
@@ -160,11 +161,11 @@ public final class MaterialStore extends BlockEntity {
         if (d == null || d.getAxis().isVertical()) throw new IllegalArgumentException("Invalid material store direction");
         plan = NestPlan.geometry(in.read("Entrance", BlockPos.CODEC).orElseThrow(), d); placement = in.getStringOr("Placement", "");
         int format=in.getIntOr("InventoryFormat",1);
-        if(format!=1&&format!=2)throw new IllegalArgumentException("Unsupported material inventory format");
+        if(format!=1&&format!=2&&format!=3)throw new IllegalArgumentException("Unsupported material inventory format");
         var stacks = in.read("Contents", ItemStack.CODEC.listOf()).orElse(List.of());
         var held = new ArrayList<MaterialUnits.Material>();
         for (var s : stacks) {
-            if (s.getCount() != 1 || !MaterialUnits.room(held, kind(s), format==1?CAPACITY:MaterialUnits.MAX_CAPACITY)) throw new IllegalArgumentException("Invalid physical material store");
+            if (s.getCount() != 1 || !MaterialUnits.room(held, kind(s), format==1?CAPACITY:format==2?MaterialUnits.TIER_TWO_CAPACITY:MaterialUnits.MAX_CAPACITY)) throw new IllegalArgumentException("Invalid physical material store");
             held.add(kind(s));
         }
         if (!getBlockPos().equals(marker(plan, placement))) throw new IllegalArgumentException("Invalid physical material store");

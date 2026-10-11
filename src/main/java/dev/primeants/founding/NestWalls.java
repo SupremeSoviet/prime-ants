@@ -17,7 +17,7 @@ import java.util.*;
 public final class NestWalls {
     /** Built wall blocks by registry id and the tier each gives when the colony itself built it. */
     public static final Map<String, Integer> TIERS = Map.of("prime_ants:packed_clay", 2, "prime_ants:resin_masonry", 2, "prime_ants:nest_cut_stone", 3);
-    /** The tier-2 wall Lasius niger builds. Resin masonry is for resin-collecting species; nest-cut stone waits for T06. */
+    /** The tier-2 core Lasius niger builds; Great workers face it in intact stone. Resin is for other species. */
     public static final String PACKED_CLAY = "prime_ants:packed_clay";
     /** Clay units one packed-clay cell takes: the cell's own earth stays in place, rammed with one clay ball, so no soil
      * leaves the nest and nothing goes to the mound. */

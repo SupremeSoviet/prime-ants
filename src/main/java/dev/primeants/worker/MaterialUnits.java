@@ -16,8 +16,8 @@ public final class MaterialUnits {
         "minecraft:coal", Material.ORE, "minecraft:raw_copper", Material.ORE, "minecraft:raw_iron", Material.ORE);
     /** Tier-1 store capacity in units, and the part of it kept for clay: Mature's 16 clay always fit beside up to 16
      * units of other stock, so no other material can crowd the store's clay out. */
-    public static final int CAPACITY = 32, CLAY_SHARE = 16, MAX_CAPACITY = 64;
-    public static int capacity(int tier) { return tier >= 2 ? MAX_CAPACITY : CAPACITY; }
+    public static final int CAPACITY = 32, CLAY_SHARE = 16, TIER_TWO_CAPACITY = 64, MAX_CAPACITY = 96;
+    public static int capacity(int tier) { return tier >= 3 ? MAX_CAPACITY : tier == 2 ? TIER_TWO_CAPACITY : CAPACITY; }
     public static int clayShare(int capacity) { return capacity / 2; }
     private MaterialUnits() { }
     /** The material one item of this id is, or null. */
@@ -28,7 +28,7 @@ public final class MaterialUnits {
         return room(held, m, CAPACITY);
     }
     public static boolean room(Collection<Material> held, Material m, int capacity) {
-        if (capacity != CAPACITY && capacity != MAX_CAPACITY) throw new IllegalArgumentException("Unsupported store capacity");
+        if (capacity != CAPACITY && capacity != TIER_TWO_CAPACITY && capacity != MAX_CAPACITY) throw new IllegalArgumentException("Unsupported store capacity");
         if (m == null || held.size() >= capacity) return false;
         return m == Material.CLAY || held.size() - count(held, Material.CLAY) < capacity - clayShare(capacity);
     }

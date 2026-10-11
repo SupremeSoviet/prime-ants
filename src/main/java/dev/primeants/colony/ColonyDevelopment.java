@@ -51,7 +51,7 @@ public final class ColonyDevelopment {
         }
         var states = new ArrayList<ChamberState>();
         var tiers = new EnumMap<ChamberFunction, int[]>(ChamberFunction.class);
-        int food = 0, foodUnknown = 0, storesUnknown = 0, wallClay = 0, wallClayUnknown = 0;
+        int food = 0, foodUnknown = 0, storesUnknown = 0, wallClay = 0, wallClayUnknown = 0, wallStone = 0, wallStoneUnknown = 0;
         var upgrades = ChamberUpgrade.get(l); var countedWalls = new HashSet<BlockPos>();
         var stores = new ArrayList<List<MaterialUnits.Material>>();
         // One connected nest: the founding chamber's habitat covers the stairs, the widening and every dug chamber.
@@ -65,8 +65,14 @@ public final class ColonyDevelopment {
                 else if (presence == Presence.UNKNOWN) t[1] = Math.max(t[1], chamber.tier());
             });
             // Clay the colony built into a confirmed chamber's walls still counts; an unknown chamber may hold what it built.
-            if (state.tier() > 0) for (var wall : ChamberUpgrade.walls(plan, chamber))
-                if (ColonyTerrain.get(l).built(l, wall, queen, NurseryBlocks.PACKED_CLAY) && countedWalls.add(wall)) wallClay += NestWalls.CLAY_PER_CELL;
+            for (var wall : ChamberUpgrade.walls(plan, chamber)) if (countedWalls.add(wall)) {
+                if (state.tier() > 0) {
+                    if (ColonyTerrain.get(l).retainedClay(l, wall, queen)) wallClay++;
+                    if (ColonyTerrain.get(l).built(l, wall, queen, NurseryBlocks.NEST_CUT_STONE)) wallStone++;
+                } else if (state.functions().containsValue(Presence.UNKNOWN)) {
+                    if (upgrades.jobs(queen).stream().anyMatch(j -> j.tier == 3 && j.built().contains(wall))) wallStoneUnknown++;
+                }
+            }
             if (state.tier() == 0 && state.functions().containsValue(Presence.UNKNOWN)) wallClayUnknown += upgrades.builtClay(queen, chamber.id());
             var store = state.functions().get(ChamberFunction.FOOD_STORE);
             if (store == Presence.CONFIRMED && l.getBlockEntity(chamber.markers().get(ChamberFunction.FOOD_STORE)) instanceof NestCache cache) food += cache.size();
@@ -83,8 +89,11 @@ public final class ColonyDevelopment {
         // while it is seen carrying them, possible while it is unavailable (ChamberUpgrade.carried).
         var stored = MaterialUnits.stock(stores, storesUnknown, MaterialUnits.Material.CLAY, MaterialUnits.MAX_CAPACITY); var carried = upgrades.carried(l, queen);
         var clay = new StageRules.Bound(stored.known() + wallClay + carried.known(), stored.possible() + wallClay + wallClayUnknown + carried.possible());
+        var stone = MaterialUnits.stock(stores, storesUnknown, MaterialUnits.Material.STONE, MaterialUnits.MAX_CAPACITY);
+        var stoneCargo = upgrades.carried(l, queen, MaterialUnits.Material.STONE);
+        var stoneBound = new StageRules.Bound(stone.known()+wallStone+stoneCargo.known(),stone.possible()+wallStone+wallStoneUnknown+stoneCargo.possible());
         var inputs = new StageRules.Inputs(new StageRules.Bound(known, known + unknown), bounds, new StageRules.Bound(food, food + foodUnknown),
-            clay, MaterialUnits.stock(stores, storesUnknown, MaterialUnits.Material.STONE, MaterialUnits.MAX_CAPACITY), queenDead);
+            clay, stoneBound, queenDead);
         var result = StageRules.evaluate(colony.stage(), inputs, colony.unmetSince(), now);
         int cap = AdultBound.effectiveCap(result.stage(), bound);
         if (result.stage() != colony.stage() || !result.unmetSince().equals(colony.unmetSince())) registry.stage(queen, result.stage(), result.unmetSince());
@@ -164,7 +173,7 @@ public final class ColonyDevelopment {
         for (var p : ChamberUpgrade.walls(plan, chamber)) {
             if (!NestPlan.loaded(l, p)) { tiers.add(1); continue; }
             tiers.add(terrain.wallTier(l, p, queen));
-            if (terrain.built(l, p, queen, NurseryBlocks.PACKED_CLAY)) clay += NestWalls.CLAY_PER_CELL;
+            if (terrain.retainedClay(l, p, queen)) clay += NestWalls.CLAY_PER_CELL;
         }
         return new int[]{NestWalls.chamberTier(tiers), clay};
     }

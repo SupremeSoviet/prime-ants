@@ -10,6 +10,14 @@ import static org.junit.jupiter.api.Assertions.*;
 /** Material accounting: one accepted item is one unit, the tier-1 store fits Mature's clay beside other stock, and an
  * unknown store only widens what the stage may possibly count. */
 class MaterialUnitsTest {
+    @Test
+    void tierThreeAdmitsNinetySixUnitsWhileProtectingFortyEightClaySlots() {
+        assertEquals(96,MaterialUnits.capacity(3));var held=new ArrayList<Material>();
+        for(int n=0;n<48;n++){assertTrue(MaterialUnits.room(held,Material.STONE,96));held.add(Material.STONE);}
+        assertFalse(MaterialUnits.room(held,Material.STONE,96));
+        for(int n=0;n<48;n++){assertTrue(MaterialUnits.room(held,Material.CLAY,96));held.add(Material.CLAY);}
+        assertFalse(MaterialUnits.room(held,Material.CLAY,96));assertFalse(MaterialUnits.room(held,Material.CLAY,64));assertEquals(96,held.size());
+    }
     private static List<Material> units(Material m, int n) { return Collections.nCopies(n, m); }
     private static List<Material> join(List<Material> a, List<Material> b) { var out = new ArrayList<>(a); out.addAll(b); return out; }
 

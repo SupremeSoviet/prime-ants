@@ -7,6 +7,15 @@ import static org.junit.jupiter.api.Assertions.*;
 /** The food cache's admission rule (stage-1 T06): a cache full of one kind never keeps the other kind out. */
 class FoodSharesTest {
     private static final int C = FoodShares.CAPACITY;
+    @Test
+    void tierThreeReservesSixSlotsForEitherKindAcrossEveryAdmittedSplit() {
+        assertEquals(18,FoodShares.capacity(3));assertEquals(6,FoodShares.reserved(18));
+        for(int sugar=0;sugar<=12;sugar++)for(int protein=0;protein<=12&&sugar+protein<=18;protein++){
+            if(sugar+protein<18){assertEquals(sugar<12,FoodShares.admits(18,sugar,protein,false));assertEquals(protein<12,FoodShares.admits(18,sugar,protein,true));}
+            else assertFalse(FoodShares.admits(18,sugar,protein,false)||FoodShares.admits(18,sugar,protein,true));
+        }
+        assertTrue(FoodShares.admits(18,12,0,true));assertTrue(FoodShares.admits(18,0,12,false));
+    }
 
     @Test
     void eachKindFillsAtMostItsShareAndTheOtherKindStillGetsIn() {

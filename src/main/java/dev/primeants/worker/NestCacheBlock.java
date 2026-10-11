@@ -8,7 +8,7 @@ import net.minecraft.world.level.block.state.*;
 import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.item.*;
 import net.minecraft.world.phys.shapes.*;
-/** Bounded projection of the canonical inventory: exact total 0..12 and six food-kind samples. 13 x 64 = 832 states. */
+/** Canonical inventory projection: exact total 0..18 and six food-kind samples. 19 x 64 = 1,216 states. */
 public final class NestCacheBlock extends Block implements EntityBlock {
     public static final List<String> KIND_NAMES=List.of("apple","chicken","berries","nectar","flesh","prey");
     public static final List<BooleanProperty> KINDS=KIND_NAMES.stream().map(BooleanProperty::create).toList();

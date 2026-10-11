@@ -57,10 +57,12 @@ public final class ColonyTerrain extends SavedData {
     public boolean opened(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"worker_open:air",Blocks.AIR.defaultBlockState());}
     private static String id(net.minecraft.world.level.block.Block b){return net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(b).toString();}
     /** A wall cell the colony itself rebuilt in place with this wall block (NestWalls), still exactly as it left it. */
-    public boolean built(ServerLevel l,BlockPos p,UUID owner,net.minecraft.world.level.block.Block block){return NestWalls.TIERS.containsKey(id(block))&&matches(l,p,owner,"built:"+id(block),block.defaultBlockState());}
+    public boolean built(ServerLevel l,BlockPos p,UUID owner,net.minecraft.world.level.block.Block block){return NestWalls.TIERS.containsKey(id(block))&&matches(l,p,owner,"built:"+id(block),block.defaultBlockState()) || block==NurseryBlocks.NEST_CUT_STONE && matches(l,p,owner,"faced:packed_clay:"+id(block),block.defaultBlockState());}
     /** A loaded wall cell's tier (NestWalls.tier): the colony's own built wall block gives its tier; any other solid wall
      * is 1, whether natural or colony earth, natural stone, or a block a player placed. */
     public int wallTier(ServerLevel l,BlockPos p,UUID owner){var block=l.getBlockState(p).getBlock();return NestWalls.tier(id(block),built(l,p,owner,block));}
+    public boolean retainedClay(ServerLevel l,BlockPos p,UUID owner){return built(l,p,owner,NurseryBlocks.PACKED_CLAY)||matches(l,p,owner,"faced:packed_clay:"+id(NurseryBlocks.NEST_CUT_STONE),NurseryBlocks.NEST_CUT_STONE.defaultBlockState());}
+    public void faced(BlockPos p,UUID owner){record(p,owner,"faced:packed_clay:"+id(NurseryBlocks.NEST_CUT_STONE));}
     public boolean eligible(ServerLevel l,BlockPos p,UUID owner){return NaturalSoil.get(l).eligible(l,p)||prepared(l,p,owner);}
     public boolean compatible(ServerLevel l,BlockPos p,UUID owner,BlockState expected){return NaturalSoil.get(l).compatible(l,p,expected)||prepared(l,p,owner)&&l.getBlockState(p).equals(expected);}
     public String preparationProblem(ServerLevel l,BlockPos p){

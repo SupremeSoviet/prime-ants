@@ -199,15 +199,15 @@ tasks.register('verifyNestCacheAssets') {
         def aliases=atlas.sources.collectEntries{[(it.sprite):it.resource]}
         if(atlas.sources.size()!=6 || !atlas.sources.every{it.type=='minecraft:single' && it.sprite.startsWith('prime_ants:block/cache_')}) throw new GradleException('Cache block atlas aliases incomplete')
         def parts=new groovy.json.JsonSlurper().parse(new File(root,'prime_ants/blockstates/nest_cache.json')).multipart
-        def properties=['units':(0..12).collect{it.toString()}]+['apple','chicken','berries','nectar','flesh','prey'].collectEntries{[(it):['true','false']]}
+        def properties=['units':(0..18).collect{it.toString()}]+['apple','chicken','berries','nectar','flesh','prey'].collectEntries{[(it):['true','false']]}
         def conditions=[] as Set
         parts.each{part->
             if(part.when==null||part.when.size()!=1)throw new GradleException('Cache part needs one bounded count/kind condition')
             part.when.each{k,v->if(!properties.containsKey(k)||!(v in properties[k]))throw new GradleException('Unknown cache projection '+part.when)}
             if(!conditions.add(part.when.collect{k,v->"${k}=${v}"}.join(',')))throw new GradleException('Duplicate cache part '+part.when)
         }
-        def expected=(1..12).collect{"units=${it}".toString()}+['apple','chicken','berries','nectar','flesh','prey'].collect{"${it}=true".toString()}
-        if(parts.size()!=18||conditions!=(expected as Set))throw new GradleException('Cache needs all twelve count heaps and all six kind samples')
+        def expected=(1..18).collect{"units=${it}".toString()}+['apple','chicken','berries','nectar','flesh','prey'].collect{"${it}=true".toString()}
+        if(parts.size()!=24||conditions!=(expected as Set))throw new GradleException('Cache needs all eighteen count heaps and all six kind samples')
         def clientJar=fileTree('.gradle/loom-cache/minecraftMaven/net/minecraft').matching{include 'minecraft-clientOnly-*/26.3/*-26.3.jar'}.singleFile
         new java.util.zip.ZipFile(clientJar).withCloseable{jar->
             parts.each{part->
@@ -234,7 +234,7 @@ tasks.register('verifyNestCacheAssets') {
                 def img=javax.imageio.ImageIO.read(jar.getInputStream(entry));if(img.width!=16 || img.height!=16)throw new GradleException('Cache sprite must be 16x16')
             }
         }
-        logger.lifecycle('Verified 18 cache projections, 832 blockstates, six block-atlas aliases and 16x16 sprites')
+        logger.lifecycle('Verified 24 cache projections, 1216 blockstates, six block-atlas aliases and 16x16 sprites')
     }
 }
 tasks.named('check') {dependsOn tasks.named('verifyNestCacheAssets')}
@@ -244,16 +244,16 @@ tasks.register('verifyMaterialStoreAssets') {
     doLast {
         def root=file('src/main/resources/assets')
         def json=new groovy.json.JsonSlurper()
-        // T08: clay 0..16 and other stock 0..8 levels, and a lump per other material present (MaterialUnits.display).
+        // Tier three: clay 0..24, other stock 0..12 and a lump per material present (MaterialUnits.display).
         def kinds=['stone','gravel','sand','ore']
-        def properties=['clay':(0..16).collect{it.toString()},'stock':(0..8).collect{it.toString()}]+kinds.collectEntries{[(it):['true','false']]}
+        def properties=['clay':(0..24).collect{it.toString()},'stock':(0..12).collect{it.toString()}]+kinds.collectEntries{[(it):['true','false']]}
         def parts=json.parse(new File(root,'prime_ants/blockstates/material_store.json')).multipart
         def shown=[] as Set
         parts.each{part->
             (part.when?:[:]).each{k,v->if(!properties.containsKey(k)||!(v in properties[k]))throw new GradleException("Material store part tests an unknown state ${k}=${v}")}
             if(part.when!=null&&!shown.add(part.when.collect{k,v->"${k}=${v}"}.sort().join(',')))throw new GradleException('Duplicate material store part '+part.when)
         }
-        def expected=(1..16).collect{"clay=${it}".toString()}+(1..8).collect{"stock=${it}".toString()}+kinds.collect{"${it}=true".toString()}
+        def expected=(1..24).collect{"clay=${it}".toString()}+(1..12).collect{"stock=${it}".toString()}+kinds.collect{"${it}=true".toString()}
         if(parts.size()!=1+expected.size()||shown!=(expected as Set)||parts.count{it.when==null}!=1)throw new GradleException('The pad, every clay level, every stock level and every material lump need exactly one part each')
         def clientJar=fileTree('.gradle/loom-cache/minecraftMaven/net/minecraft').matching{include 'minecraft-clientOnly-*/26.3/*-26.3.jar'}.singleFile
         int textures=0

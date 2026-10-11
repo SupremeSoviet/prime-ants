@@ -57,7 +57,7 @@ class MaterialStoreDisplayTest {
     void theStateCountStaysSmall() {
         // clay 0..8, stock 0..4, four presence lumps: the block's whole state space.
         assertEquals(720,(MaterialUnits.CAPACITY/MaterialUnits.LEVEL+1)*((MaterialUnits.CAPACITY-MaterialUnits.CLAY_SHARE)/MaterialUnits.LEVEL+1)*16,"Tier-one range stays intact");
-        assertEquals(2448, (MaterialUnits.CLAY_LEVELS + 1) * (MaterialUnits.STOCK_LEVELS + 1) * 16,"Expanded projection is bounded");
+        assertEquals(5200, (MaterialUnits.CLAY_LEVELS + 1) * (MaterialUnits.STOCK_LEVELS + 1) * 16,"Expanded projection is bounded");
         var shown = new HashSet<Display>(); reachable().forEach(h -> shown.add(MaterialUnits.display(h)));
         assertTrue(shown.size() <= 720, "reachable displays fit the state space: " + shown.size());
     }
@@ -78,6 +78,23 @@ class MaterialStoreDisplayTest {
         assertTrue(checked>20000);assertTrue(spans.size()<=2448);
         assertNotEquals(MaterialUnits.display(held(32)),MaterialUnits.display(held(64)));
         assertEquals(new Display(16,0,false,false,false,false),MaterialUnits.display(held(64)));
+    }
+
+    @Test
+    void tierThreeProjectionSeparatesLargeInventoriesWithoutCollapsingTheirKinds() {
+        var spans=new HashMap<Display,int[]>();var sets=new HashMap<Display,Set<Material>>();
+        for(int clay=0;clay<=96;clay++)for(int other=0;other<=48&&clay+other<=96;other++)for(int mask=0;mask<16;mask++){
+            int kinds=Integer.bitCount(mask);if((other==0)!=(mask==0)||kinds>other)continue;
+            int[] counts=new int[4];int first=-1;for(int k=0;k<4;k++)if((mask&(1<<k))!=0){counts[k]=1;if(first<0)first=k;}
+            if(first>=0)counts[first]+=other-kinds;
+            var h=held(clay,counts);var d=MaterialUnits.display(h);
+            spans.merge(d,new int[]{h.size(),h.size()},(a,b)->new int[]{Math.min(a[0],b[0]),Math.max(a[1],b[1])});
+            var previous=sets.putIfAbsent(d,kinds(h));assertTrue(previous==null||previous.equals(kinds(h)));
+            assertTrue(d.clay()<=24&&d.stock()<=12);
+        }
+        spans.forEach((d,span)->assertTrue(span[1]-span[0]<=7,"Larger totals remain distinguishable: "+d));
+        assertNotEquals(MaterialUnits.display(held(64)),MaterialUnits.display(held(96)));
+        assertNotEquals(MaterialUnits.display(held(32,32,0,0,0)),MaterialUnits.display(held(48,48,0,0,0)));
     }
 
 }

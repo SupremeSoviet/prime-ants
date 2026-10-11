@@ -37,6 +37,27 @@ public final class NestCache extends BlockEntity {
     /** The unit's kind is below its share: a forager may pick it up and carry it here; it waits with it while the cache is
      * full, as 0.1.0 foragers wait at a full cache. */
     public boolean shareRoom(ItemStack unit) { return WorkerTasks.food(unit) && FoodShares.shareRoom(capacity(), count(false), count(true), protein(unit)); }
+    /** Tier-three dropped-food trips fit beside food already physically returning to this cache. These are admission
+     * reservations, never stock or receipts. Earlier tiers keep their original share-only selection. Existing cargo
+     * stays with its carrier; this check never consumes or redirects it to free another trip. */
+    public boolean tripRoom(ItemStack unit) {
+        if(!WorkerTasks.food(unit))return false;
+        int capacity=capacity(),sugar=count(false),protein=count(true);
+        if(capacity<FoodShares.MAX_CAPACITY)return FoodShares.shareRoom(capacity,sugar,protein,protein(unit));
+        if(!(level instanceof ServerLevel l)||!(l.getEntity(colony) instanceof LasiusNigerEntity queen))return false;
+        for(var member:ColonyMembers.get(l).members(colony)){
+            if(member.dead())continue;
+            var actor=l.getEntity(member.worker());
+            if(!(actor instanceof LasiusNigerEntity a)||!a.isAlive()||a.isRemoved()){
+                if(queen.founding().foragers().contains(member.worker()))return false;
+                continue;
+            }
+            if(!queen.founding().claimedBy(a)&&a.workerTasks().phase()!=WorkerTasks.Phase.NURSE_RETURN)continue;
+            var cargo=a.getMainHandItem();if(!WorkerTasks.food(cargo))continue;
+            if(protein(cargo))protein+=cargo.getCount();else sugar+=cargo.getCount();
+        }
+        return FoodShares.admits(capacity,sugar,protein,protein(unit));
+    }
     private final List<ItemStack> contents = new ArrayList<>();
     private UUID colony;
     private NestPlan plan;
@@ -122,7 +143,7 @@ public final class NestCache extends BlockEntity {
         super.preRemoveSideEffects(pos,state);
     }
     @Override protected void saveAdditional(ValueOutput out) {
-        super.saveAdditional(out);out.putInt("InventoryFormat",2);out.putString("ReleaseId",releaseId.toString()); if(shedUnits>0)out.putInt("SharesShed",shedUnits); if(colony==null || plan==null)return;
+        super.saveAdditional(out);out.putInt("InventoryFormat",3);out.putString("ReleaseId",releaseId.toString()); if(shedUnits>0)out.putInt("SharesShed",shedUnits); if(colony==null || plan==null)return;
         out.putString("Colony",colony.toString()); out.store("Entrance",BlockPos.CODEC,plan.entrance());out.putString("Direction",plan.direction().getName());
         out.store("Contents",ItemStack.CODEC.listOf(),contents);
     }
@@ -135,9 +156,9 @@ public final class NestCache extends BlockEntity {
         if(d==null || d.getAxis().isVertical())throw new IllegalArgumentException("Invalid cache direction");
         plan=NestPlan.geometry(in.read("Entrance",BlockPos.CODEC).orElseThrow(),d);
         int format=in.getIntOr("InventoryFormat",1);
-        if(format!=1&&format!=2)throw new IllegalArgumentException("Unsupported food inventory format");
+        if(format!=1&&format!=2&&format!=3)throw new IllegalArgumentException("Unsupported food inventory format");
         var stacks=in.read("Contents",ItemStack.CODEC.listOf()).orElse(List.of());
-        if(!plan.cache().equals(getBlockPos()) || stacks.size()>(format==1?CAPACITY:MAX_CAPACITY) || stacks.stream().anyMatch(s->!WorkerTasks.food(s)||s.getCount()!=1))throw new IllegalArgumentException("Invalid physical cache");
+        if(!plan.cache().equals(getBlockPos()) || stacks.size()>(format==1?CAPACITY:format==2?FoodShares.TIER_TWO_CAPACITY:FoodShares.MAX_CAPACITY) || stacks.stream().anyMatch(s->!WorkerTasks.food(s)||s.getCount()!=1))throw new IllegalArgumentException("Invalid physical cache");
         stacks.forEach(s->contents.add(s.copy()));
     }
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider r) { return saveWithoutMetadata(r); }
