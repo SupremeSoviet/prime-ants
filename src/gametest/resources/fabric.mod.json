@@ -64,6 +64,7 @@
       "dev.primeants.gametest.SurfaceOracleGameTest",
       "dev.primeants.gametest.SurfaceAccessGameTest",
       "dev.primeants.gametest.SurfaceAccessSafetyGameTest",
+      "dev.primeants.gametest.TierThreeGameTest",
       "dev.primeants.gametest.ColonyClockGameTest",
       "dev.primeants.gametest.ReconciliationGameTest",
       "dev.primeants.gametest.ReconciliationChunkGameTest",

@@ -69,6 +69,8 @@ class BroodCapacityTest {
         var scale=new dev.primeants.time.SimulationTimeScale(100);
         assertEquals(12,scale.ticksForGameDays(BroodCapacity.layingTicks(1)/24000.0));
         assertEquals(6,scale.ticksForGameDays(BroodCapacity.layingTicks(2)/24000.0));
+        assertEquals(300,BroodCapacity.layingTicks(3));
+        assertEquals(3,scale.ticksForGameDays(BroodCapacity.layingTicks(3)/24000.0));
         var n=BroodCapacity.nursery(true,2);
         assertEquals(60,BroodCapacity.sustainedWorkers(n,2));
         assertEquals(120,BroodCapacity.sustainedWorkers(n,144000,1,BroodCapacity.layingTicks(1)));

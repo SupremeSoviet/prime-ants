@@ -155,7 +155,7 @@ public final class SurfaceWork extends SavedData {
     public boolean priority(ServerLevel l,UUID owner,NestPlan home){
         var widening=NestExpansion.get(l).job(owner);if(widening!=null&&!widening.complete())return true;
         if(ChamberExcavation.get(l).jobs(owner).stream().anyMatch(j->!j.complete()&&!j.stopped()))return true;
-        if(ChamberUpgrade.get(l).jobs(owner).stream().anyMatch(j->!j.complete()&&!j.stopped())||ChamberUpgrade.get(l).hasPriority(l,owner,home))return true;
+        if(ChamberUpgrade.get(l).jobs(owner).stream().anyMatch(j->!j.complete()&&!j.stopped()&&(j.tier==2||j.claim!=null))||ChamberUpgrade.get(l).hasPriority(l,owner,home))return true;
         var mining=Mining.get(l).job(owner);return mining!=null&&!mining.complete()&&!mining.stopped();
     }
     public void consider(ServerLevel l,LasiusNigerEntity queen,List<LasiusNigerEntity> workers){
@@ -171,7 +171,12 @@ public final class SurfaceWork extends SavedData {
             while(!trial.complete()&&ColonyTerrain.get(l).surface(l,trial.next(),owner)&&l.getBlockState(trial.next()).is(trial.block()))trial.receipt(l,"inherited",null);
             if(!trial.complete()){j=trial;break;}
         }
-        if(j==null)return;String problem=targetProblem(l,owner,j);if(problem!=null){j.reason="waiting_"+problem;setDirty();return;}
+        if(j==null)return;String problem=targetProblem(l,owner,j);if(problem!=null){
+            j.reason="waiting_"+problem;setDirty();
+            // A released idle builder can be standing in the next air cell. Only that sole
+            // eligible body may be reclaimed to walk clear; active finite access keeps its guard.
+            if(!problem.equals("occupied_target")||j.access!=null&&!j.access.complete())return;
+        }
         if(j.access!=null&&!j.access.complete()){
             if(j.access.stopped)return;
             var accessProblem=j.access.problem(l,j);if(accessProblem!=null){
@@ -192,6 +197,8 @@ public final class SurfaceWork extends SavedData {
         final Job selected=j;
         var candidates=workers.stream().filter(w->w.workerTasks().canConstruct(home)&&NestExpansion.remainingCaregivers(l,owner,home,w)>=2).sorted(Comparator.comparing(w->w.getUUID().toString())).toList();
         for(var w:candidates){
+            boolean vacating=problem!=null;
+            if(vacating&&(!w.getBoundingBox().intersects(new AABB(j.next()))||l.getEntities(null,new AABB(j.next())).stream().anyMatch(e->e!=w)))continue;
             boolean paid=ColonyTerrain.get(l).mound(l,j.next(),owner)||ColonyTerrain.get(l).surface(l,j.next(),owner);
             var buildStand=stand(l,w,j.next(),!paid);if(buildStand==null){
                 if(j.access==null&&SurfaceAccess.prefix(j)){
@@ -207,7 +214,8 @@ public final class SurfaceWork extends SavedData {
             }
             BlockPos source=null,sourceStand=null;
             if(!paid)for(var p:MoundSoil.cells(l,home,owner))if(recoverable(l,home,owner,p)){
-                var found=stand(l,w,p,false);if(found!=null){source=p;sourceStand=found;break;}
+                var found=stand(l,w,p,false);
+                if(found!=null&&(!vacating||!w.getBoundingBox().move(Vec3.atBottomCenterOf(found).subtract(w.position())).intersects(new AABB(j.next())))){source=p;sourceStand=found;break;}
             }
             if(!paid&&source==null){j.reason="waiting_no_safe_owned_source";setDirty();return;}
             if(w.workerTasks().assignSurface(home,paid,paid?j.next():source,paid?buildStand:sourceStand,buildStand)){j.source=source;j.claim=w.getUUID();j.reason="ordinary_surface_worker_assigned";setDirty();
@@ -286,6 +294,9 @@ public final class SurfaceWork extends SavedData {
     }
     public void relinquish(ServerLevel l,LasiusNigerEntity w,Job j,String reason){
         if(j.carried()!=0)throw new IllegalStateException("Surface cargo must first enter physical custody");j.claim=null;j.source=null;j.reason=reason;setDirty();
+        // A paid cell changed the work frontier. Reconsider the released worker on the next tick;
+        // the retry cadence still bounds failed admissions and every original guard runs again.
+        if(reason.equals("worker_paid_one_surface_cell"))nextAttempt.remove(w.queenId());
     }
     public void released(ServerLevel l,LasiusNigerEntity w,UUID transfer){
         var j=claimedBy(w);if(j==null)return;

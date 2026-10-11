@@ -31,8 +31,9 @@ public final class BroodCapacity {
     /** Default timing (decision 21): adult lifespan, one brood stage, and the queen's laying cadence, in loaded ticks. */
     public static final long LIFESPAN = dev.primeants.entity.AdultLife.DEFAULT_LIFESPAN, STAGE_TICKS = 12_000, LAYING_TICKS = BroodPile.BASE_LAYING_TICKS, STAGES = 3;
     public static final long TIER_TWO_LAYING_TICKS = 600;
-    public static long layingTicks(int confirmedHallTier) { return confirmedHallTier >= 2 ? TIER_TWO_LAYING_TICKS : LAYING_TICKS; }
-    public static int buildableHallTier(ColonyStage s) { return s==ColonyStage.FOUNDING?0:s==ColonyStage.YOUNG?1:2; }
+    public static final long TIER_THREE_LAYING_TICKS = 300;
+    public static long layingTicks(int confirmedHallTier) { return confirmedHallTier >= 3 ? TIER_THREE_LAYING_TICKS : confirmedHallTier == 2 ? TIER_TWO_LAYING_TICKS : LAYING_TICKS; }
+    public static int buildableHallTier(ColonyStage s) { return s==ColonyStage.FOUNDING?0:s==ColonyStage.YOUNG?1:s==ColonyStage.MATURE?2:3; }
     public record Nursery(int slots, int speed) {
         public Nursery { if (slots < FOUNDING_SLOTS || slots > MAX_SLOTS || speed < SPEED_DIVISOR) throw new IllegalArgumentException("Invalid nursery " + slots + " x" + speed); }
         /** Development steps per loaded tick, on average. */

@@ -1,3 +1,104 @@
+## Follow-up - 2026-10-12 (stage-1c T01 tier-three physical construction; partial effects)
+
+**Worker-built tier-three construction and focused safety are accepted; item 2 is not fully accepted.** Ordinary
+workers withdrew exact `minecraft:stone` from a confirmed physical store and faced all **44** owned packed-clay wall
+cells: founding **8** (nursery/food together), material store **22**, hall **14**. The old one-unit paid clay core stays
+in each wall; no clay is recovered, destroyed or paid again. Three physical jobs serve four live-confirmed functions,
+with supported stands, one-unit cargo, twenty loaded facing ticks, one shared builder and two caregivers. Foreign and
+same-state player writes revoke eligibility; general earth authorization is not extended to arbitrary packed clay.
+
+The frozen effects are existing nursery **15 slots / x2** with a confirmed hall, food **18** (six reserved per kind),
+materials **96** (48 reserved for clay), and hall **300** base loaded ticks. Tier-one/two recipes and effects remain
+unchanged. Exact facing input is intact stone; cobblestone remains admitted bulk material. Thus original Great's
+**32 cobblestone** is never facing input under ordinary rules. Actual stone walls and carried stone preserve the Great
+stock lineage; retained clay cores preserve Mature clay. Jobs save exact material identity with a compatible clay
+default for old tier-two jobs. Inventory format 3 keeps larger contents across a lower live capacity; format 1/2 bounds
+retain their meaning. Projection ranges expand to food **1,216** and material **5,200** states, with in-cell geometry.
+
+The new full-cache causal body first times out at its frozen **6,000** bound: full food **18**, four food-laden foragers,
+zero stored clay and six clay on the ground. Tier-three dropped-food admission now reserves space for actual returning
+food; it never spends, redirects or credits cargo. The same body passes at **3,686**, with food 18, six actual stored
+clay and 200 settled loaded ticks. Earlier cache tiers retain share-only selection. Real carried-stone disk/data and
+actor reload, lethal/repeated death with one named custody identity, a **600-loaded-tick** UNKNOWN pause, safe returns
+at player/foreign walls, and missing-supply resume/full completion pass in permanent acceptance. No broader or
+abrupt-crash persistence claim follows.
+
+The all-effects body remains valid red at its unchanged **20,000-tick** deadline. Its final complete-suite construction
+finishes at **7,523**, with 44 payments, 44 retained cores and empty claims/cargo. It observes **15** natural brood,
+**944** consecutive doubled development steps and food beyond twelve. The last periodic sample at **19,500** has
+**51** material units and **2** of the frozen **3** exact three-tick laying pairs. Exact timeout inventory is unknown;
+no failure-listener stock snapshot was declared. Greater material admission and the larger-inventory reload/capacity-
+loss endpoint are **not settled**. Neither constants nor this component progress closes item 2.
+
+New-fixture initializer/observer/supply-budget failures, the earlier 32/44 food-blocked physical negative, a disclosed
+prospective hungry-history and supply-phase correction, and all later red attempts remain in external evidence. No
+existing gameplay assertion, bound, surface geometry, source supply, reach, action, builder count or founder relocation
+is loosened. The asset coverage set initially retained old 16/8 ranges; that pre-server final-fast failure is preserved,
+and a smallest asset-only recovery passes before the fresh final fast. No unchanged complete workload is restarted.
+
+Final fast: **73 server / 118 unit / 26 model**, exit 0, **153.277s**. Complete unfiltered long: **201/202**, exit 1,
+**5,099.920s**, native/launcher **0/1/0**; only the new all-effects body fails. All **196** prior long identities pass,
+including unchanged original Great at **11,224**: **57/57 physical cells**, Mature **19**, Great **38**, two retaining
+gate conversions, soil **80**, stone **32**, finite food **59**, actual passage and **200** settled nursery-loaded ticks.
+These are command wall durations, not colony MSPT. Exactly-once union covers **275** server identities; **1,037** final
+input hashes agree. Three-server concurrency, actual client-guard skips, protected files and newest-ten/active-lease
+retention validate. Original fixture/access sources and historical reports remain unchanged.
+
+Settling packet: `<turnloop>/directions/prime-ants-stage1c/turns/T01/raw/tier-three-acceptance.json`, with its report and
+compact appendix. Consecutive no-new-green turns: **zero** (five new permanent physical/safety positives). Preserve the
+unexplained eighteen-unit food failure at **10,323**, concurrent mining-death timeouts and historical regression/tier-
+two timing causes. Remaining tier-three effect/reload proof, established generation, 120-adult/multiple-colony
+performance, broad persistence and release **0.2.0** stay open. Only the existing two founder moves and unchanged
+mining recovery **6,000 loaded within 60,000 total**, with **600/200** windows, remain authorized.
+
+---
+
+## Follow-up - 2026-10-11 (stage-1b T01 Great completion)
+
+The original Great identity now completes within its unchanged **12,000-tick** bound: the final complete-suite
+execution records **11,248**, independently inspected **57/57 physical cells**, Mature **19** and Great **38**
+placements, two retaining gate conversions, soil **80**, stone **32**, finite food **59** accounted, an actual
+ordinary walker and **200 settled nursery-loaded ticks**. The preceding exact-name candidate also passed at 11,277.
+The historical Stage-1 report and appendix retain their original valid-red handoff and coverage limits.
+
+Two small real-tick regressions establish concrete progress losses. A paid cell released its eligible builder but
+left the 100-tick failed-attempt gate active; successful payment now invalidates that transient gate. Choosing the
+build stand again after actual source recovery exposed a second refusal: the released worker could hold the next
+queued cell while idle nursing had no accepting recipient. The original admission guard rejected before checking
+that worker. Ordinary admission now permits only that sole eligible blocking body, with a supported source/build
+goal that clears the target. Original work guards still forbid any recovery or placement while the target is occupied.
+Other occupants and active finite access retain their original admission guards. No terrain, supplies, form, reach,
+action duration, builder cap, priority, nursing rule, queue, receipt or save schema changes.
+
+The three candidates are retained separately: first Great timeout at **50/57 receipts / 52/57 physical**, then
+Mature **5/19** with no Great admission, then green. The cached-goal observation supported a reselection hypothesis;
+it is not independently claimed as a general navigation root-cause proof. The sole-body regression first fails after
+600 loaded ticks, then the same actual worker pays the pending cell after 180. Original plus two identical concurrent
+copies of both new regressions pass **6/6**; temporary wrappers and classes are removed. The observer classifies an
+intentional cleared stand at committed recovery as fetching work and preserves its original events.
+
+Final `checkFast` passes **73 server / 115 unit / 26 model** in 135.609 seconds, with all guards. Complete unfiltered
+`checkLong` passes **196/196** in 4,144.435 seconds; all three native/launcher exits are zero. Fresh exact union XML
+validates **269/269 permanent server identities**, with identical final fast/long executable inputs. These durations
+are command wall time, not colony MSPT. All **21 required surface long identities** are derived before launch; the unfiltered
+suite also checks autonomous surface admission in development/mining scenarios. Only the ordinary surface successful
+recovery branch of `WorkerTasks` changes; common movement, scheduling, nursing, custody, development and finite-access
+helpers remain unchanged. Both final workloads explicitly request three shards and concurrency three (one native fast
+server, three concurrent long servers). Fresh native,
+launcher, XML, input, client and newest-ten/active-lease evidence is retained without world copies.
+
+External settling evidence: `<turnloop>/directions/prime-ants-stage1b/turns/T01/raw/great-acceptance.json`,
+with the report and compact appendix in the same turn. Consecutive no-green turns: **zero**. The pre-Java diagnostic-copy
+launch failure is preserved; its parent-freeze path correction passes the fresh six-body diagnostic. A completed-workload
+outer capture was stopped after its native/wrapper exit evidence was preserved, and direct-child exit probes validate
+the final launchers. Earlier native timeout callbacks at 12,002 grant no construction
+time. Preserve the unexplained eighteen-unit food failure at **10,323**, concurrent mining-death campaign timeouts and
+historical regression/tier-two timing causes. Tier three, established colonies, 120-adult/multiple-colony performance,
+broad persistence and release **0.2.0** remain open. Only the original two founder relocations and unchanged nursing/
+mining recovery protections are authorized.
+
+---
+
 # Stage 1 current status (2026-10-11, T20)
 
 **Verified partial handoff; Great remains infrastructure-valid/gameplay-red, cause unresolved; 0.2.0 is not accepted.**

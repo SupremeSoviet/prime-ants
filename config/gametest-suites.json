@@ -2391,6 +2391,70 @@
       "reason": "T17 isolated real death/target-authority safety, original bounds and physical ledger"
     },
     {
+      "name": "prime_ants_test:surface_game_test_successful_surface_payment_reconsiders_free_builder_without_retry_delay",
+      "max_ticks": 1200,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1200,
+      "reason": "T01 real successful-payment claim lifecycle, two actual source/build trips and physical conservation"
+    },
+    {
+      "name": "prime_ants_test:surface_game_test_unclaimed_paid_builder_walks_out_of_its_next_cell_and_pays_the_actual_task",
+      "max_ticks": 2000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 2000,
+      "reason": "T01 original sole-body admission witness, ordinary same-worker passage and actual conserved source/build payment"
+    },
+    {
+      "name": "prime_ants_test:tier_three_game_test_worker_built_stone_chambers_confirm_all_functions_and_deliver_every_tier_three_effect",
+      "max_ticks": 20000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TierThreeGameTest.java",
+      "suite": "long",
+      "weight_ticks": 20000,
+      "reason": "Frozen T01 tier-three physical construction, effects and carried interruption acceptance"
+    },
+    {
+      "name": "prime_ants_test:tier_three_game_test_stone_cargo_reload_death_and_unknown_pause_preserve_exact_material_lineage",
+      "max_ticks": 16000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TierThreeGameTest.java",
+      "suite": "long",
+      "weight_ticks": 16000,
+      "reason": "Frozen T01 tier-three physical construction, effects and carried interruption acceptance"
+    },
+    {
+      "name": "prime_ants_test:tier_three_game_test_missing_facing_supply_releases_builder_and_resumes_the_same_paid_prefix",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TierThreeGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "Frozen T01 tier-three physical construction, effects and carried interruption acceptance"
+    },
+    {
+      "name": "prime_ants_test:tier_three_game_test_same_state_player_wall_write_returns_facing_without_conversion",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TierThreeGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "Frozen T01 tier-three physical construction, effects and carried interruption acceptance"
+    },
+    {
+      "name": "prime_ants_test:tier_three_game_test_foreign_packed_clay_wall_returns_facing_without_conversion",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TierThreeGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "Frozen T01 tier-three physical construction, effects and carried interruption acceptance"
+    },
+    {
+      "name": "prime_ants_test:tier_three_game_test_worker_built_tier_three_food_store_does_not_overbook_full_food_trips_and_still_receives_physical_materials",
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TierThreeGameTest.java",
+      "suite": "long",
+      "weight_ticks": 6000,
+      "reason": "Prospective T01 causal full-cache dropped-food admission and ordinary material courier regression",
+      "max_ticks": 6000
+    },
+    {
       "name": "prime_ants_test:colony_clock_game_test_consecutive_ordinary_ticks_have_no_missed_interval",
       "max_ticks": 8000,
       "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyClockGameTest.java",

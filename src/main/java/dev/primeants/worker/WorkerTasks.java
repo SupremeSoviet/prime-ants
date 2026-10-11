@@ -204,7 +204,9 @@ public final class WorkerTasks {
         worker.getNavigation().stop();var point=SurfaceWork.point(l,worker,target,empty);worker.getLookControl().setLookAt(point.x,point.y,point.z);
         if(!surfaceAuthorized(l)||!NestPlan.walkable(l,stand)||!NestPlan.loaded(l,target)||SurfaceWork.point(l,worker,target,empty)==null){harvestingTicks=0;return;}
         if(++harvestingTicks<SurfaceWork.ACTION_TICKS)return;harvestingTicks=0;
-        if(fetch){if(work.recover(l,worker,j)){next(Phase.SURFACE_BUILD,"owned_soil_unit_in_mandibles");surfaceTarget=j.next();surfaceStand=surfaceBuildStand;}}
+        // The source trip/removal changed the worker's position and terrain. Select the build
+        // stand there, then retain it across ordinary jumps with the existing per-tick guards.
+        if(fetch){if(work.recover(l,worker,j)){next(Phase.SURFACE_BUILD,"owned_soil_unit_in_mandibles");surfaceTarget=j.next();surfaceStand=null;}}
         else if(work.place(l,worker,j)){work.relinquish(l,worker,j,"worker_paid_one_surface_cell");next(Phase.NURSE_CACHE,"surface_cell_paid_return_to_care");}
     }
     private void surfaceAccess(ServerLevel l,SurfaceWork work,SurfaceWork.Job j){
@@ -289,6 +291,12 @@ public final class WorkerTasks {
                     work.stopAccess(l,worker,j,problem);harvestingTicks=0;
                     if(worker.getMainHandItem().isEmpty())next(Phase.NURSE_CACHE,"finite_access_permission_revoked");else hold("access_quarantined_cargo_retained");return;
                 }
+            }
+        }
+        if(upgrading()&&!upgradeAuthorized(l)){
+            var j=ChamberUpgrade.get(l).claimedBy(worker);
+            if(j!=null&&j.tier==3&&j.carried()==0&&worker.getMainHandItem().isEmpty()){
+                j.release(l,worker.queenId(),"waiting_unavailable_habitat");next(Phase.NURSE_CACHE,"empty_upgrade_yields_unavailable_habitat");harvestingTicks=0;return;
             }
         }
         if(worker.isCallow() || phase==Phase.NURSERY) {hold(worker.isCallow()?"callow_shelter":"nursery_shelter");return;}
@@ -585,7 +593,7 @@ public final class WorkerTasks {
      * with nothing left to build, or stopped, ends here once a carried unit is back in the store. A store short of clay
      * releases the builder: it returns to the colony and the job resumes when clay arrives (ChamberUpgrade.consider). */
     private void upgradeFetch(ServerLevel l){
-        var j=ChamberUpgrade.get(l).claimedBy(worker);var cargo=worker.getMainHandItem();boolean clay=cargo.is(Items.CLAY_BALL);
+        var j=ChamberUpgrade.get(l).claimedBy(worker);var cargo=worker.getMainHandItem();boolean clay=j.accepts(cargo);
         if(!cargo.isEmpty()&&!clay){hold("foreign_cargo_retained_no_upgrade");return;}
         if(clay&&!j.complete()&&!j.stopped()){next(Phase.UPGRADE_BUILD,"clay_in_mandibles_to_the_wall");return;}
         if(!clay&&(j.complete()||j.stopped())){
@@ -593,7 +601,7 @@ public final class WorkerTasks {
             next(Phase.NURSE_CACHE,"upgrade_"+(stopped?"stopped":"complete")+"_return_to_colony");return;
         }
         var store=MaterialStore.confirmed(l,worker.queenId(),plan);
-        if(!clay&&store!=null&&store.units(MaterialUnits.Material.CLAY)<NestWalls.CLAY_PER_CELL){j.release(l,worker.queenId(),"waiting_for_store_clay");next(Phase.NURSE_CACHE,"upgrade_waits_for_store_clay");return;}
+        if(!clay&&store!=null&&store.recipeUnits(j.item())<1){j.release(l,worker.queenId(),"waiting_for_store_"+j.material);next(Phase.NURSE_CACHE,"upgrade_waits_for_store_clay");return;}
         if(store==null){hold(clay?"upgrade_store_unconfirmed_unit_retained":"upgrade_store_unconfirmed");cooldown=40;return;}
         // Mining can yield its empty builder immediately after a real surface soil delivery.
         // A deep store is reached through the existing stair, rather than a surface path above its roof.
@@ -613,7 +621,7 @@ public final class WorkerTasks {
             return;
         }
         if(store.takeForUpgrade(worker,plan,j)){
-            PrimeAnts.LOGGER.info("Chamber upgrade clay taken queen={} worker={} store={} next={} ledger={}",worker.queenId(),worker.getUUID(),store.getBlockPos(),j.next(),j.ledger());
+            PrimeAnts.LOGGER.info("Chamber upgrade material taken queen={} worker={} store={} next={} ledger={}",worker.queenId(),worker.getUUID(),store.getBlockPos(),j.next(),j.ledger());
             next(Phase.UPGRADE_BUILD,"clay_taken_from_store");cooldown=20;
         } else {hold("upgrade_store_withdrawal_refused");cooldown=40;}
     }
@@ -622,28 +630,30 @@ public final class WorkerTasks {
      * earth, solid and dry (a player placed or changed it) is never converted: it stops the job. */
     private void upgradeBuild(ServerLevel l){
         var j=ChamberUpgrade.get(l).claimedBy(worker);
-        if(!worker.getMainHandItem().is(Items.CLAY_BALL)||worker.getMainHandItem().getCount()<NestWalls.CLAY_PER_CELL||j.complete()||j.stopped()){next(Phase.UPGRADE_FETCH,"upgrade_unit_or_job_changed");return;}
+        if(!j.accepts(worker.getMainHandItem())||j.carried()!=1||j.complete()||j.stopped()){harvestingTicks=0;next(Phase.UPGRADE_FETCH,"upgrade_unit_or_job_changed");return;}
         var target=j.next();
-        if(!NestPlan.loaded(l,target)){hold("upgrade_wall_cell_unavailable");return;}
-        if(!j.convertible(l,target,worker.queenId())){j.stop(l,"wall_cell_not_colony_earth_at_"+target.toShortString());next(Phase.UPGRADE_FETCH,"upgrade_stopped_unit_back_to_store");return;}
-        var stand=wallStand(l,target);if(stand==null){hold("no_supported_stand_beside_wall");return;}
-        if(!worker.blockPosition().equals(stand)||!worker.onGround()||worker.position().distanceToSqr(Vec3.atCenterOf(target))>5.0){arriveSupported(l,Vec3.atBottomCenterOf(stand));return;}
-        var point=wallWorkPoint(l,target,stand);if(point==null)return;
+        if(!NestPlan.loaded(l,target)){harvestingTicks=0;hold("upgrade_wall_cell_unavailable");return;}
+        if(!j.convertible(l,target,worker.queenId())){harvestingTicks=0;j.stop(l,"wall_cell_not_colony_earth_at_"+target.toShortString());next(Phase.UPGRADE_FETCH,"upgrade_stopped_unit_back_to_store");return;}
+        var stand=wallStand(l,target);if(stand==null){harvestingTicks=0;hold("no_supported_stand_beside_wall");return;}
+        if(!worker.blockPosition().equals(stand)||!worker.onGround()||worker.position().distanceToSqr(Vec3.atCenterOf(target))>5.0){harvestingTicks=0;arriveSupported(l,Vec3.atBottomCenterOf(stand));return;}
+        var point=wallWorkPoint(l,target,stand);if(point==null){harvestingTicks=0;return;}
         var face=new BlockPos(stand.getX(),target.getY(),stand.getZ());
         if(target.distManhattan(face)!=1){
             var mouth=worker.position().add(0,0.25,0);
             var hit=l.clip(new ClipContext(mouth,point,ClipContext.Block.COLLIDER,ClipContext.Fluid.ANY,worker));
-            if(mouth.distanceToSqr(point)>5.0||hit.getType()!=HitResult.Type.BLOCK||!hit.getBlockPos().equals(target)){arriveSupported(l,Vec3.atBottomCenterOf(stand));return;}
+            if(mouth.distanceToSqr(point)>5.0||hit.getType()!=HitResult.Type.BLOCK||!hit.getBlockPos().equals(target)){harvestingTicks=0;arriveSupported(l,Vec3.atBottomCenterOf(stand));return;}
         }
         worker.getNavigation().stop();worker.getLookControl().setLookAt(point.x,point.y,point.z);
-        if(!upgradeAuthorized(l)||!NestPlan.walkable(l,stand)||!wallFaceOpen(l,target,stand)||!j.convertible(l,target,worker.queenId()))return;
-        var wall=NurseryBlocks.PACKED_CLAY.defaultBlockState();
-        if(dev.primeants.founding.SupportSurvival.problem(l,target,wall) instanceof String problem){hold(problem);return;}
-        if(!l.setBlock(target,wall,3)){hold("upgrade_conversion_rejected");return;}
-        ColonyTerrain.get(l).built(target,worker.queenId(),NurseryBlocks.PACKED_CLAY);
-        int left=worker.getMainHandItem().getCount()-NestWalls.CLAY_PER_CELL;worker.setItemSlot(EquipmentSlot.MAINHAND,left==0?ItemStack.EMPTY:new ItemStack(Items.CLAY_BALL,left));
+        if(!upgradeAuthorized(l)||!NestPlan.walkable(l,stand)||!wallFaceOpen(l,target,stand)||!j.convertible(l,target,worker.queenId())){harvestingTicks=0;return;}
+        var wall=j.block().defaultBlockState();
+        if(dev.primeants.founding.SupportSurvival.problem(l,target,wall) instanceof String problem){harvestingTicks=0;hold(problem);return;}
+        if(j.tier==3 && ++harvestingTicks<20){reason="physical_stone_facing_action";return;}
+        if(!j.accepts(worker.getMainHandItem())||j.carried()!=1||!j.convertible(l,target,worker.queenId())||!l.mayInteract(worker,target)){harvestingTicks=0;return;}
+        if(!l.setBlock(target,wall,3)){harvestingTicks=0;hold("upgrade_conversion_rejected");return;}
+        if(j.tier==3)ColonyTerrain.get(l).faced(target,worker.queenId());else ColonyTerrain.get(l).built(target,worker.queenId(),j.block());
+        harvestingTicks=0;worker.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);
         j.built(l,target);cooldown=QueenFounding.cadence();phaseTicks=0;
-        PrimeAnts.LOGGER.info("Chamber wall rebuilt queen={} worker={} chamber={} cell={} block=packed_clay built={}/{} ledger={}",worker.queenId(),worker.getUUID(),j.chamber,target,j.built().size(),j.cells.size(),j.ledger());
+        PrimeAnts.LOGGER.info("Chamber wall rebuilt queen={} worker={} chamber={} cell={} tier={} built={}/{} ledger={}",worker.queenId(),worker.getUUID(),j.chamber,target,j.tier,j.built().size(),j.cells.size(),j.ledger());
         next(Phase.UPGRADE_FETCH,"wall_cell_rebuilt");
     }
     /** A walkable floor cell beside the wall cell's column, from which the cell's face is open at its own height. */
@@ -962,7 +972,7 @@ public final class WorkerTasks {
     /** Food of a kind the colony's own cache has room for (NestCache.shareRoom): a cache full of one kind never keeps the
      * other kind out, also in the forager's mandibles. Before the first delivery sets up the cache, any food. */
     private boolean storable(ServerLevel l,ItemStack s){
-        return !(l.getBlockEntity(plan.cache()) instanceof NestCache cache)||!cache.ownedBy(worker.queenId(),plan)||cache.shareRoom(s);
+        return !(l.getBlockEntity(plan.cache()) instanceof NestCache cache)||!cache.ownedBy(worker.queenId(),plan)||cache.tripRoom(s);
     }
     /** Dropped food this trip could collect now, by the search's own rules: in the search area, of a kind the cache has
      * room for, supported and reachable; nearest first, at most 8 path trials. */
@@ -1022,7 +1032,8 @@ public final class WorkerTasks {
     public void die(ServerLevel l) {
         if(phase==Phase.DEAD)return;worker.getNavigation().stop();
         int constructionSoil=constructionClaim(l)&&worker.getMainHandItem().is(Items.DIRT)?worker.getMainHandItem().getCount():0;
-        int upgradeClay=upgradeClaim(l)&&worker.getMainHandItem().is(Items.CLAY_BALL)?worker.getMainHandItem().getCount():0;
+        var upgradeJob=ChamberUpgrade.get(l).claimedBy(worker);
+        int upgradeClay=upgradeJob!=null&&upgradeJob.accepts(worker.getMainHandItem())?worker.getMainHandItem().getCount():0;
         var miningCargo=worker.getMainHandItem().copy();
         var transfer=UUID.nameUUIDFromBytes(("worker-cargo:"+worker.getUUID()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
         if(!worker.getMainHandItem().isEmpty()) {
