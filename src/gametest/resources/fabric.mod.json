@@ -68,7 +68,8 @@
       "dev.primeants.gametest.ColonyClockGameTest",
       "dev.primeants.gametest.ReconciliationGameTest",
       "dev.primeants.gametest.ReconciliationChunkGameTest",
-      "dev.primeants.gametest.AdultAdvanceGameTest"
+      "dev.primeants.gametest.AdultAdvanceGameTest",
+      "dev.primeants.gametest.AdultReferenceGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

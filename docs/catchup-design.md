@@ -1,4 +1,4 @@
-# Saved clocks, reload reconciliation and bounded adult calculation (T01–T03)
+# Saved clocks, reload reconciliation and bounded adult calculation (T01–T04)
 
 T01 delivers a saved observation boundary. Gameplay catch-up remains inactive: detecting absence does not apply it.
 The colony's one `BroodPile` owns optional NBT long `LastSimulationGameTime`, beside its existing `Queen` UUID and nest
@@ -196,3 +196,65 @@ bounded comparison with the pre-extraction live rules after merging current mast
 fixed no-incoming-meal accuracy does not establish whole-colony behavior or resolve that negative.
 Automatic catch-up, terminal application, aggregate feeding/stocks, laying/brood and stages remain undelivered.
 Digging, building and mining remain excluded.
+
+## T04 independent live-rule gate: application blocked
+
+T04 merges local master `8c191e1d3da5c2df2007c8488c29e1a8d567ccf3` into catchup at
+`1496b08` (the settling packet records the full merge ID). Registration conflicts retain master's cases and
+append catchup cases. Production arithmetic and the supplied surface fixture are fixed for this comparison;
+subsequent master movement belongs to the next turn.
+
+`LegacyAdultReference`, `LegacyAdultShadow` and their mixin are in the test source set only. The independent
+reference transcribes `AdultLife.tick` and `Nutrition.spend` from `debb542616df0908054d579186102ed87b5e8888`.
+The external packet retains those exact source blobs and SHA-256 hashes, together with the inherited entity
+owner. It calls neither `AdultLife.evolve`, `advanceAdult`, the extracted nutrition spending calculation nor
+their arithmetic helpers. A read-only shadow refreshes the input at each actual ordinary maintenance invocation,
+before controllers, and checks completion separately. It stores one pending input and final summary per UUID,
+with a finite test-only identity bound. The fixed finite plan covers coverage and sugar exhaustion, meals
+between steps, actual founding exemption/activation, pending damage, terminal age/starvation precedence,
+zero-completed activation and arithmetic limits. The original supplied founding-to-Mature case retains its
+supplies, template, predicates and 60,000-tick bound with read-only participating-adult comparison.
+
+The gate exposes an actual inherited/live discrepancy in an owner-valid saved worker state: age 10,
+`ActiveTicks=Long.MAX_VALUE`, maintenance 7, coverage 0, covered 28 and sugar 2. The inherited ordinary `++`
+wraps active ticks to `Long.MIN_VALUE`, spends one sugar and completes the maintenance step. The extracted
+ordinary evolution throws `ArithmeticException: long overflow` at `Math.addExact(activeTicks, 1)` after the
+entity has incremented age to 11, before spending nutrition or completing simulation evidence. This is an
+ordinary live-rule difference, separately from the primitive's explicit refusal of an aggregate arithmetic
+overflow. Its frequency in natural play is not established. No production repair or application follows this
+negative. Original failed reference fixtures and their attribution are preserved in the packet; they do not
+erase the concrete counter discrepancy. The activation fixture initially counted the queen plus three worker
+activations; its exactly-one assertion now selects the queen UUID. The detached zero-prefix queen initially
+remained at the factory's world origin and had health 19 before maintenance; safe control placement preserves
+the exact health assertion. Both diagnosed fixture corrections pass one targeted two-name run. The counter
+case and original surface are not repeated, and the reference gate remains blocked.
+
+The fixed supplied surface case passes at helper tick **43,471**, with first Mature at **27,809**, 19 complete
+cells (11 recovered/placed and eight retained paid cells), zero releases, a real walker and 200 settled loaded
+ticks. Original supplies are 72 apples, 42 chickens and 56 clay. Its 34 participating adult identities complete
+**850,726** shadowed ordinary maintenance steps with no discrepancy. Every final adult nutrition receipt equation
+is exact. This is one controlled positive, not an explanation of T03's unresolved complete-a2 timeout.
+Final unfiltered fast passes **76 server / 124 unit / 26 model**, with **27** harness tests. Four new reference
+identities are green across the original plan and separately corrected fixtures; the actual counter identity
+remains red. The required 50-name integration acceptance is explicitly skipped at the live-rule stop condition.
+
+The pre-C application input and receipt remain requirements, **not implemented contracts**. A future input
+must be captured immutably at the adult's own boundary before age, maintenance, nutrition or controllers for C,
+with original identity/lineage/home, `(A,C)`, biology and established phase. Both callback orders must share that
+current return input; adult-first application must occur before the adult C step, and a late nursery callback
+must refuse without overwriting current biology. No earlier body may be inferred by subtracting clocks from
+the current body. One bounded current input must remain distinct from stale metadata.
+
+A future entity-save receipt must describe the same fully completed non-terminal application as its saved
+biology, preserve replay protection across reconstruction and later successful intervals, and survive timeline
+reversal without reopening an applied interval. Zero requests/completions must create no false receipt or
+activation. Before any mutation, identity, current interval, exact body, established phase, evidence coverage
+and unapplied status must agree. Damage-boundary, partial, UNKNOWN, history-loss, identity-conflict and stale
+requests must leave all biology and receipts unchanged. T04 does not claim these validations, refusal tests,
+save correspondence or genuine native application. The existing native fixture remains observation-only.
+
+Automatic reload dispatch remains inactive. There is no adult application adapter, deferred queue or retrospective
+application of T02/T03 observations. Terminal application, aggregate feeding/stocks, laying/brood, stages,
+full-world durability and final colony cost remain unaccepted. The next bounded dependency slice is to restore
+or explicitly settle the ordinary counter-boundary semantics, then re-establish the independent gate before
+proposing application. Neither an entity NBT round trip nor read-only comparison establishes crash durability.

@@ -32,7 +32,8 @@
     "GreatWorkerProbeMixin",
     "SurfaceChamberPaymentMixin",
     "ServerShardSelectionMixin",
-    "InitialHabitatConnectionMixin"
+    "InitialHabitatConnectionMixin",
+    "LegacyAdultShadowMixin"
   ],
   "injectors": {
     "defaultRequire": 1
