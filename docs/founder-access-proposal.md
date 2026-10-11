@@ -2,7 +2,7 @@
 
 **The owner authorized implementation on 2026-10-11. SurfaceWork now implements exactly these two relocations of
 currently owned, unreceipted spoil to expose the existing paid cell `(-4,3,0)`.** Current safe-access, founder complete-form,
-Great and infrastructure outcomes are separate in `<turnloop>/directions/prime-ants-stage1/turns/T16/raw/access-acceptance.json`.
+Great and infrastructure outcomes are separate in `<turnloop>/directions/prime-ants-stage1/turns/T17/raw/access-safety-acceptance.json`.
 The sections below preserve the T15 proposal's observations and then-unimplemented design; they are historical evidence,
 not a renewed permission request. The first source is physically reachable under the production selector.
 The second is currently covered by that first source. Both destinations already take soil within the existing Mature
@@ -13,9 +13,21 @@ T16's selected original founder earns the exact pair and ordinary target retenti
 passage walking and 200 settled loaded ticks at 53,657. The simultaneous six-body cohort exposes a separate negative:
 one clay delivery activates the existing Queen's Hall upgrade priority during operation one's carry. Access yields into
 exact named terminal custody, never starts operation two, and preserves prefix 4/19 at 60,000. Final saved physical
-evidence is 71 positively owned soil blocks plus the exact one-dirt ground entity, total 72. Controlled access safety passes;
-overall founder complete-form acceptance and Great acceptance remain false. No priority change, reminted attempt or
+evidence is 71 positively owned soil blocks plus the exact one-dirt ground entity, total 72. T16's controlled behavioral
+evidence missed empty-handed death/loadability and motivating-target revocation; eighteen frozen copy names also disagree
+with XML. Its safe-access and exact-assignment claims are qualified. No priority change, reminted attempt or
 wider clearing follows. The cohort is archived red with four passes and two failures.
+
+T17 repairs those two conditional safety paths and validates pre-run runtime assignments with one original plus two
+copies, then all six new safety bodies and two copies each (18/18). Actual five-tick empty-handed deaths load through new
+SavedDataStorage without inherited progress or duplicate cargo events; normal flushed named entity-region reads verify
+the original UUID/unit before native success discards fixture actors. Same-state motivating-target loss persistently
+stops source, carried and named-pickup phases; UNKNOWN observes 600 loaded ticks and two fresh confirmations. Bounds,
+permissions, protection and priorities are unchanged. Final fast passes (73 server/115 unit/26 model); selected long is
+29/30 with Great red. Selected founder completes 19/19 at 44,720, and the one fresh simultaneous cohort is 5/6 with founder
+19/19 at 45,290. Both include passage and 200 settled ticks. T16's priority cancellation and conserved negative remain
+historical qualifications; this turn does not rescue that priority or establish general unattended founder acceptance.
+Tier three, established colonies, 120-adult performance, broad persistence and release 0.2.0 acceptance remain unmet.
 
 The historical decision packet is `<turnloop>/directions/prime-ants-stage1/turns/T15/raw/founder-access-decision.json`.
 Its machine-readable proposal, original live snapshot, diagnostic XML/log, conservation model, rejection fixtures and

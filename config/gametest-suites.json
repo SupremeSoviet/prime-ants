@@ -2341,6 +2341,54 @@
       "suite": "long",
       "weight_ticks": 12000,
       "reason": "T16 finite physical access, reload, custody or refusal; fixed 12000 total and 600/200 loaded windows"
+    },
+    {
+      "name": "prime_ants_test:surface_access_safety_game_test_empty_handed_death_after_five_removal_ticks_loads_without_new_admission",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceAccessSafetyGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "T17 isolated real death/target-authority safety, original bounds and physical ledger"
+    },
+    {
+      "name": "prime_ants_test:surface_access_safety_game_test_empty_replacement_death_after_five_named_ticks_keeps_one_pickup_and_loads",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceAccessSafetyGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "T17 isolated real death/target-authority safety, original bounds and physical ledger"
+    },
+    {
+      "name": "prime_ants_test:surface_access_safety_game_test_same_state_paid_target_write_during_partial_removal_cancels_across_disk",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceAccessSafetyGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "T17 isolated real death/target-authority safety, original bounds and physical ledger"
+    },
+    {
+      "name": "prime_ants_test:surface_access_safety_game_test_same_state_paid_target_write_while_carrying_cancels_with_exact_custody",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceAccessSafetyGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "T17 isolated real death/target-authority safety, original bounds and physical ledger"
+    },
+    {
+      "name": "prime_ants_test:surface_access_safety_game_test_same_state_paid_target_write_during_named_pickup_cancels_without_acquisition",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceAccessSafetyGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "T17 isolated real death/target-authority safety, original bounds and physical ledger"
+    },
+    {
+      "name": "prime_ants_test:surface_access_safety_game_test_unavailable_paid_target_resets_partial_action_then_requires_two_fresh_confirmations",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceAccessSafetyGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "T17 isolated real death/target-authority safety, original bounds and physical ledger"
     }
   ]
 }

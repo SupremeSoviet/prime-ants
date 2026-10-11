@@ -15,6 +15,59 @@ spec=importlib.util.spec_from_file_location('harness',Path(__file__).with_name('
 h=importlib.util.module_from_spec(spec);spec.loader.exec_module(h)
 
 class HarnessTests(unittest.TestCase):
+    def test_pinned_fabric_names_preserve_digit_boundaries_and_ordinary_camel_case(self):
+        for source, expected in [('copy1ActualCarrierDeath','copy1actual_carrier_death'),
+                                 ('copy2ExactPair','copy2exact_pair'),('ordinaryCamelCase','ordinary_camel_case'),
+                                 ('SurfaceAccessGameTest','surface_access_game_test'),('tier2PaidTarget','tier2paid_target')]:
+            self.assertEqual(expected,h.snake(source))
+
+    def test_diagnostic_freeze_rejects_wrong_names_changed_inputs_body_and_bounds(self):
+        spec=importlib.util.spec_from_file_location('diagnostic',Path(__file__).with_name('diagnostic-gametest.py'))
+        d=importlib.util.module_from_spec(spec);spec.loader.exec_module(d)
+        mapping={'a':dict(method='a',mode='SAFE',body_sha256='body',common_body_sha256='common',annotation='maxTicks=12000')}
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);freeze=dict(captured_epoch=time.time()-20,expected_names=['a','b'],correspondence=mapping,launch={},inputs={'compiled':'frozen'})
+            h.write(root/'frozen.json',freeze);report=self.report(root,['a','b']);end=time.time()+10
+            with patch.object(d,'correspondence',return_value=mapping),patch.object(d.h,'inputs',return_value=freeze['inputs']):
+                self.assertTrue(d.collect(root,report,time.time()-10,end,0)['gameplay_passed'])
+                report=self.report(root,['a','copy1actual']);result=d.collect(root,report,time.time()-10,end,0)
+                self.assertFalse(result['infrastructure_valid']);self.assertTrue(any('missing/unexpected' in i for i in result['issues']))
+            report=self.report(root,['a','b'])
+            with patch.object(d,'correspondence',return_value={'a':dict(mapping['a'],annotation='maxTicks=12001')}),patch.object(d.h,'inputs',return_value={'compiled':'changed'}):
+                result=d.collect(root,report,time.time()-10,end,0)
+                self.assertFalse(result['infrastructure_valid']);self.assertIn('executable inputs changed during execution',result['issues']);self.assertIn('registered method/mode/body/bounds changed',result['issues'])
+
+    def test_diagnostic_identity_success_keeps_gameplay_failure_red(self):
+        spec=importlib.util.spec_from_file_location('diagnostic',Path(__file__).with_name('diagnostic-gametest.py'))
+        d=importlib.util.module_from_spec(spec);spec.loader.exec_module(d)
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);h.write(root/'frozen.json',dict(captured_epoch=time.time()-20,expected_names=['a','b'],correspondence={},launch={},inputs={}))
+            report=self.report(root,tag='failure');xml=ET.parse(report);xml.getroot().set('failures','1');xml.write(report)
+            with patch.object(d,'correspondence',return_value={}),patch.object(d.h,'inputs',return_value={}):
+                result=d.collect(root,report,time.time()-10,time.time()+10,1)
+            self.assertTrue(result['infrastructure_valid']);self.assertFalse(result['gameplay_passed']);self.assertEqual(1,len(result['failures']))
+
+    def test_copy_freeze_requires_three_identical_modes_bodies_and_annotation_bounds(self):
+        spec=importlib.util.spec_from_file_location('diagnostic',Path(__file__).with_name('diagnostic-gametest.py'))
+        d=importlib.util.module_from_spec(spec);spec.loader.exec_module(d)
+        original=dict(source='fixture.java',method='ordinaryBody',max_ticks=12000,annotation='maxTicks=12000',mode='SAFE',body_sha256='same',common_body_sha256='same common')
+        mapping={'original':original,'copy1':dict(original,method='copy1OrdinaryBody'),'copy2':dict(original,method='copy2OrdinaryBody')}
+        self.assertEqual(1,len(d.copy_equivalence(mapping)))
+        self.assertEqual(d.copy_equivalence(mapping),d.copy_equivalence(json.loads(json.dumps(mapping,sort_keys=True))))
+        with self.assertRaises(ValueError):d.copy_equivalence({k:v for k,v in mapping.items() if k!='copy2'})
+        for field in ('max_ticks','annotation','mode','body_sha256','common_body_sha256'):
+            wrong={**mapping,'copy2':dict(mapping['copy2'],**{field:'different'})}
+            with self.assertRaises(ValueError):d.copy_equivalence(wrong)
+
+    def test_native_exit_preserves_wrapped_gradle_failure_and_requires_completion(self):
+        spec=importlib.util.spec_from_file_location('diagnostic',Path(__file__).with_name('diagnostic-gametest.py'))
+        d=importlib.util.module_from_spec(spec);spec.loader.exec_module(d)
+        good='6 GAME TESTS COMPLETE\nGame test server shutting down'
+        for gap in (' ',' \n','\r\n  '):
+            text=good+"\nProcess 'command 'C:\\jdk\\bin\\java.exe'' finished with non-zero exit"+gap+'value 1'
+            self.assertEqual(1,d.native_exit_code(text))
+        self.assertEqual(0,d.native_exit_code(good));self.assertIsNone(d.native_exit_code('partial server startup'))
+
     def test_both_client_tasks_exclude_legacy_and_sharded_server_graphs(self):
         source=(h.ROOT/'build.gradle').read_text(encoding='utf-8')
         guard="onlyIf { !gradle.taskGraph.hasTask(':runGameTest') && !gradle.taskGraph.hasTask(':prepareGameTestServers') }"

@@ -61,7 +61,8 @@
       "dev.primeants.gametest.StoreUpgradeSafetyGameTest",
       "dev.primeants.gametest.SurfaceGameTest",
       "dev.primeants.gametest.SurfaceOracleGameTest",
-      "dev.primeants.gametest.SurfaceAccessGameTest"
+      "dev.primeants.gametest.SurfaceAccessGameTest",
+      "dev.primeants.gametest.SurfaceAccessSafetyGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

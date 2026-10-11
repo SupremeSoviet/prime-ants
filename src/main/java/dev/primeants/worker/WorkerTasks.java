@@ -1032,6 +1032,8 @@ public final class WorkerTasks {
         }
         var job=DigJob.claimedBy(l,worker);if(job instanceof Mining.Job mining)mining.released(l,worker,miningCargo,transfer);else if(job!=null)job.release(l,worker,constructionSoil);
         ChamberUpgrade.get(l).release(l,worker,upgradeClay,transfer);
+        var surfaceJob=SurfaceWork.get(l).claimedBy(worker);
+        if(surfaceJob!=null&&surfaceJob.access!=null&&!surfaceJob.access.complete())harvestingTicks=0;
         SurfaceWork.get(l).released(l,worker,transfer);
         var q=queen(l);if(q!=null)q.founding().releaseWorker(worker);
         ColonyMembers.get(l).died(worker);

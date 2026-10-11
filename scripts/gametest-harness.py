@@ -21,7 +21,10 @@ retention = importlib.util.module_from_spec(spec); spec.loader.exec_module(reten
 def read(p): return json.loads(Path(p).read_text(encoding='utf-8-sig'))
 def write(p, value): Path(p).write_text(json.dumps(value, indent=2, sort_keys=True), encoding='utf-8')
 def sha(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()
-def snake(s): return re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', s).lower()
+def snake(s):
+    # Fabric 0.161.0 uses lower-case-letter -> upper-case-letter boundaries only.
+    # A digit in copy1Actual is not a boundary: the runtime identity is copy1actual.
+    return re.sub(r'([a-z])([A-Z])', r'\1_\2', s).lower()
 
 def discover(root=ROOT):
     registrations = read(root/'src/gametest/resources/fabric.mod.json')['entrypoints']['fabric-gametest']

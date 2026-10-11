@@ -39,7 +39,7 @@ public final class SurfaceAccessGameTest {
     @GameTest(maxTicks=12000,structure="prime_ants_test:surface_ground")
     public void incompatibleCanonicalActorCargoIsQuarantinedWithoutRemintingTheUnit(GameTestHelper c){run(c,Mode.QUARANTINE);}
 
-    private static void disk(GameTestHelper c){
+    static void disk(GameTestHelper c){
         var l=c.getLevel();l.getDataStorage().saveAndJoin();
         try(var disk=new SavedDataStorage(net.minecraft.world.level.dimension.DimensionType.getStorageFolder(l.dimension(),l.getServer().getWorldPath(LevelResource.ROOT)).resolve("data"),net.minecraft.util.datafix.DataFixers.getDataFixer(),l.registryAccess())){
             l.getDataStorage().set(SurfaceWork.TYPE,Objects.requireNonNull(disk.get(SurfaceWork.TYPE)));
@@ -47,7 +47,7 @@ public final class SurfaceAccessGameTest {
             var custody=disk.get(TransferCustody.TYPE);if(custody!=null)l.getDataStorage().set(TransferCustody.TYPE,custody);
         }
     }
-    private static void reload(GameTestHelper c,SurfaceFixture fixture,SurfaceWork.Job j,LasiusNigerEntity w,String phase){
+    static void reload(GameTestHelper c,SurfaceFixture fixture,SurfaceWork.Job j,LasiusNigerEntity w,String phase){
         var l=c.getLevel();var before=SurfaceWork.CODEC.encodeStart(JsonOps.INSTANCE,SurfaceWork.get(l)).getOrThrow();var reservation=ColonyTerrain.CODEC.encodeStart(JsonOps.INSTANCE,ColonyTerrain.get(l)).getOrThrow();var clock=w==null?0:w.workerTasks().harvestingTicks();
         disk(c);if(w!=null)w=fixture.fx.f.restore(c,w);
         c.assertTrue(before.equals(SurfaceWork.CODEC.encodeStart(JsonOps.INSTANCE,SurfaceWork.get(l)).getOrThrow())&&reservation.equals(ColonyTerrain.CODEC.encodeStart(JsonOps.INSTANCE,ColonyTerrain.get(l)).getOrThrow()),"Actual disk data reload preserves exact bound attempt, locations, reservations, claim, partial clock and history");
@@ -59,7 +59,7 @@ public final class SurfaceAccessGameTest {
         var restored=(LasiusNigerEntity)net.minecraft.world.entity.EntityType.loadEntityRecursive(TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING,l.registryAccess(),tag),l,net.minecraft.world.entity.EntitySpawnReason.LOAD,e->e);
         c.assertTrue(restored!=null&&restored.getUUID().equals(id)&&a.cargo(restored)&&l.getEntity(id)==null,"Same serialized canonical actor and unit, temporarily outside loaded lookup; no death or cargo remint");return restored;
     }
-    private static void ledger(GameTestHelper c,SurfaceFixture fixture,LasiusNigerEntity q,SurfaceWork.Job j,boolean revokedStage,LasiusNigerEntity unavailable){
+    static void ledger(GameTestHelper c,SurfaceFixture fixture,LasiusNigerEntity q,SurfaceWork.Job j,boolean revokedStage,LasiusNigerEntity unavailable){
         fixture.soil(c,q,!revokedStage,unavailable);if(j.access==null)return;var a=j.access;
         if(unavailable!=null)c.assertTrue(unavailable.getUUID().equals(j.claim)&&a.cargo(unavailable)&&a.action==0,"Exact absent actor's canonical unit/claim pause; no alternative owner is admitted");
         if(revokedStage)c.assertTrue(a.action==0&&a.removed()==1&&a.redeposited()==0&&j.completed()==4,"Observed regression grants no material action, receipt or new worker admission");
@@ -76,7 +76,7 @@ public final class SurfaceAccessGameTest {
         }
         c.assertTrue(q.founding().removed()==0&&ChamberExcavation.get(c.getLevel()).jobs(q.getUUID()).isEmpty()&&ChamberUpgrade.get(c.getLevel()).jobs(q.getUUID()).isEmpty(),"Declared initial habitat gained no excavation/deposit/upgrade credit from access");
     }
-    private static void kill(GameTestHelper c,LasiusNigerEntity w,SurfaceWork.Job j){
+    static void kill(GameTestHelper c,LasiusNigerEntity w,SurfaceWork.Job j){
         var unit=j.access.current().unit;int releases=j.access.released();w.hurtServer(c.getLevel(),w.damageSources().genericKill(),1000);w.workerTasks().die(c.getLevel());w.workerTasks().die(c.getLevel());
         c.assertTrue(!w.isAlive()&&w.getMainHandItem().isEmpty()&&j.claim==null&&j.access.released()==releases+1,"Actual lethal/repeated death hands the canonical unit to custody only once");
         PrimeAnts.LOGGER.info("T16 ACCESS DEATH tick={} worker={} unit={} state={}",c.getTick(),w.getUUID(),unit,j.access.encode());

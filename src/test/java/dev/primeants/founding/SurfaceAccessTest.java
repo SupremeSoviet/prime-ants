@@ -54,4 +54,24 @@ class SurfaceAccessTest {
         var accepted=replace(data,j);assertEquals(accepted,SurfaceWork.CODEC.encodeStart(JsonOps.INSTANCE,SurfaceWork.CODEC.parse(JsonOps.INSTANCE,accepted).getOrThrow()).getOrThrow());
         a.addProperty("index",0);rejects(data,j);
     }
+    @Test void unclaimedPartialAccessRecordsRemainRejectedRatherThanGrantingCompatibilityAuthority() throws Exception {
+        var data=model();var j=job(data);var a=j.getAsJsonObject("access");a.addProperty("action",5);a.addProperty("lastActionTime",100);
+        rejects(data,j); // Exact T16 empty-death invalid shape is not silently admitted or given cargo.
+        j.addProperty("claim",UUID.randomUUID().toString());
+        assertEquals(replace(data,j),SurfaceWork.CODEC.encodeStart(JsonOps.INSTANCE,SurfaceWork.CODEC.parse(JsonOps.INSTANCE,replace(data,j)).getOrThrow()).getOrThrow());
+    }
+    @Test void emptySourceDeathResetsPartialClockAndStopsWithoutChangingBoundUnitsOrCredit() throws Exception {
+        var data=model();var owner=UUID.fromString(data.keySet().iterator().next().split(":")[0]);var restored=SurfaceWork.CODEC.parse(JsonOps.INSTANCE,data).getOrThrow();var j=restored.job(owner,ColonyStage.MATURE);
+        var a=j.access;var binding=a.binding;var operations=a.encode().getAsJsonArray("operations").deepCopy();var receipts=j.receipts();j.claim=UUID.randomUUID();a.action=5;a.lastActionTime=100;
+        a.emptyHandedDeath(j);a.emptyHandedDeath(j);
+        assertNull(j.claim);assertTrue(a.stopped);assertEquals(0,a.action);assertEquals(Long.MIN_VALUE,a.lastActionTime);assertEquals(binding,a.binding);
+        assertEquals(operations,a.encode().getAsJsonArray("operations"));assertEquals(receipts,j.receipts());assertEquals(0,a.released());assertEquals(0,a.current().deaths);
+        assertEquals(SurfaceWork.CODEC.encodeStart(JsonOps.INSTANCE,restored).getOrThrow(),SurfaceWork.CODEC.encodeStart(JsonOps.INSTANCE,SurfaceWork.CODEC.parse(JsonOps.INSTANCE,SurfaceWork.CODEC.encodeStart(JsonOps.INSTANCE,restored).getOrThrow()).getOrThrow()).getOrThrow());
+    }
+    @Test void savedTargetPauseGateIsAdditiveAndRejectsInheritedPartialWork() throws Exception {
+        var data=model();var j=job(data);var a=j.getAsJsonObject("access");a.addProperty("targetPaused",true);a.addProperty("targetConfirmations",1);a.addProperty("targetEvaluationAt",200);
+        var accepted=replace(data,j);assertEquals(job(accepted),job(SurfaceWork.CODEC.encodeStart(JsonOps.INSTANCE,SurfaceWork.CODEC.parse(JsonOps.INSTANCE,accepted).getOrThrow()).getOrThrow().getAsJsonObject()));
+        a.addProperty("action",5);a.addProperty("lastActionTime",300);j.addProperty("claim",UUID.randomUUID().toString());rejects(data,j);
+        a.addProperty("action",0);a.addProperty("targetConfirmations",3);rejects(data,j);
+    }
 }

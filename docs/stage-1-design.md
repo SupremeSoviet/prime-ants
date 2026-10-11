@@ -250,14 +250,54 @@ credit. Claims, fixed endpoints/stands, binding, clock, unit identities, actual 
 survive coherent normal saves without a job cargo stack. Unknowns pause; known revocation, regression and route failure
 end this attempt while preserving cargo. The ordinary selector must independently reach and retain the exposed paid
 target afterwards. No third move or broader Great repair is authorized. Outcomes and measured bounds are in
-`<turnloop>/directions/prime-ants-stage1/turns/T16/raw/access-acceptance.json`; this is not abrupt-crash, tier-three,
+`<turnloop>/directions/prime-ants-stage1/turns/T17/raw/access-safety-acceptance.json`; this is not abrupt-crash, tier-three,
 established-colony, 120-adult performance, broad persistence or release 0.2.0 acceptance.
 
 T16 outcomes: selected original founder completes nineteen paid cells, ordinary passage walking and 200 settled loaded
-ticks at 53,657. All nine access bodies and their two identical concurrent copies pass, and final fast acceptance is green.
+ticks at 53,657. The nine access bodies and their two copies have usable 27-body behavioral evidence, but eighteen
+frozen copy names differ from native XML; T16's exact-assignment claim is false. Its final fast is green (73 server,
+112 unit, 26 model), with 23/24 selected long passing and Great retained red. T16 missed empty-handed death/save and
+continuing motivating-target ownership paths; its general safe-access claim is qualified by the T17 reproductions.
 The required simultaneous six-body cohort remains red (four pass, two fail): founder reaches prefix 4/19, removes the
 first source, then yields permanently when newly delivered clay enables existing Queen's Hall upgrade priority; Great
 still misses its 12,000-tick deadline. Final founder custody is exactly the saved original one-dirt entity, with 71 positively
 owned physical soil blocks alongside it. Access history is `1+0=0+0+1`; no continuation or fresh admission is minted.
 This safe stop is a new founder negative and prevents overall complete-form acceptance despite the selected-run positive.
 Priorities are unchanged, no broader repair is attempted, and the next complete-long checkpoint remains T18.
+
+### T17 access death, target authority and diagnostic identities (2026-10-11)
+
+Real lethal damage after five consecutive empty-handed removal or named-pickup ticks reproduced unloadable normal
+saves: the dead claim cleared but access action progress remained. Access-specific cleanup now resets claim/action/time
+without changing binding, endpoints, reservations or unit history. Source death safely stops with zero material events;
+empty replacement death preserves the original named UUID/unit and carrier-death count, then permits only the existing
+one pickup and actual redeposition after twenty fresh ticks. Positive action without a saved actor claim remains rejected;
+already invalid T16-shaped records receive no cargo or authority migration. Old records without access and golden paid
+prefixes retain their fields and credit.
+
+The original paid target `(-4,3,0)` must remain positively owned throughout active access. Reconciliation before priority
+gating, consideration, worker action and commit enforce this guard. Ordinary same-state target writes during removal,
+carrying and named pickup stop the same attempt within 100 nursery-loaded ticks, preserving exact cargo/custody through
+normal disk reload. Physical target presence is separate from its revoked ownership. UNKNOWN pauses and resets partial
+work for the full 600 loaded ticks, then requires two fresh production evaluations. All other units and the original
+protection snapshot remain checked; no structural/excavation credit, supply, form, priority, reach or bound is changed.
+
+All six new bodies plus two identical concurrent copies pass (18/18). Pre-run runtime names exactly match XML; actual
+archived bytecode verifies each method's mode, 12,000-tick annotation and structure and one shared body implementation.
+Five-tick deaths, new SavedDataStorage reads, surviving canonical actors and fifteen named entity-region reads are
+evidenced. The latter precede native GameTest success, which discards fixture entities; post-success absence does not
+establish a production custody endpoint. T16's original mismatching packet and conserved founder negative are preserved.
+The discovery helper now matches Fabric's letter-to-uppercase rule, including its unsplit digit boundaries. Diagnostic
+collection freezes identities, bodies, bounds and inputs before launch, retains every red result, and validates native
+exits even when PowerShell wraps the error line. Temporary wrappers/classes are archived and removed.
+
+Current inventory is 267 server cases = 73 fast + 194 long, with 115 unit and 26 model cases. Final unfiltered fast passes;
+selected long is 29/30 (the original 24 plus six new bodies), Great's unchanged 12,000-tick timeout only. The selected
+founder completes 19/19 at 44,720; the one simultaneous six-body cohort is 5/6, with founder 19/19 at 45,290 and Great
+red. Both founder passes include passage walking and 200 settled loaded ticks. This fresh cohort does not erase T16's
+4/19 Queen's Hall priority cancellation, its 71 owned blocks plus one original named unit, or its never-started operation
+two; no priority repair or preferred-result restart occurred. Other 164 long identities lack the changed conditional
+access branches; T18 remains the next complete-long checkpoint. Packaging excludes test/copy classes and is not release
+acceptance. Historical mining preparation timeouts, regression/tier-two timing causes, the eighteen-unit failure at
+10,323, other paid-stall/persistence and unattended-development gaps remain. Tier three, established colonies,
+120-adult performance, broad persistence and release 0.2.0 acceptance remain unmet; three turns remain after T17.

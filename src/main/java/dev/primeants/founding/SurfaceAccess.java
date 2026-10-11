@@ -3,6 +3,7 @@ package dev.primeants.founding;
 import com.google.gson.*;
 import dev.primeants.PrimeAnts;
 import dev.primeants.brood.NurseryBlocks;
+import dev.primeants.brood.BroodPile;
 import dev.primeants.colony.ColonyStage;
 import dev.primeants.entity.LasiusNigerEntity;
 import dev.primeants.worker.TransferCustody;
@@ -36,6 +37,8 @@ public final class SurfaceAccess {
     public final UUID owner,binding; public final List<String> prefix; public final List<Operation> operations;
     private Map<String,Integer> excavationBaseline=Map.of();
     public int index,action; public long lastActionTime=Long.MIN_VALUE; public String reason="admitted"; public boolean stopped;
+    // Only a motivating-target UNKNOWN introduces this confirmation gate. No permission is inferred on restoration.
+    private boolean targetPaused; private int targetConfirmations; private long targetEvaluationAt=Long.MIN_VALUE;
     SurfaceAccess(UUID owner,SurfaceWork.Job j){this(owner,j,j.receipts().subList(0,4));}
     private SurfaceAccess(UUID owner,SurfaceWork.Job j,List<String> prefix){
         this.owner=owner;this.prefix=List.copyOf(prefix);binding=identity(owner+":"+j.home.entrance().asLong()+":"+j.home.direction()+":"+j.plan.description()+":"+prefix);
@@ -86,6 +89,13 @@ public final class SurfaceAccess {
     /** Checks both original units against their current named locations; unavailable is never absence. */
     public String problem(ServerLevel l,SurfaceWork.Job j){
         if(stopped)return "stopped_"+reason;if(complete())return null;if(!matches(j,owner))return "prefix_or_plan_changed";
+        var motivating=j.at(4);
+        if(!NestPlan.loaded(l,motivating)){
+            targetPaused=true;targetConfirmations=0;action=0;lastActionTime=Long.MIN_VALUE;
+            targetEvaluationAt=l.getBlockEntity(j.home.nursery()) instanceof BroodPile pile?pile.loadedTicks():Long.MIN_VALUE;
+            SurfaceWork.get(l).setDirty();return "unknown_motivating_target";
+        }
+        if(!ColonyTerrain.get(l).mound(l,motivating,owner))return "motivating_target_ownership_revoked";
         if(l.getEntity(owner) instanceof LasiusNigerEntity q){
             if(!q.isAlive())return "queen_dead";var home=q.founding().plan();if(home==null||!home.entrance().equals(j.home.entrance())||home.direction()!=j.home.direction())return "owner_home_changed";
             if(excavationBaseline.isEmpty()||!excavationBaseline.equals(excavation(l,owner)))return "excavation_history_changed";
@@ -101,7 +111,25 @@ public final class SurfaceAccess {
             else if(!t.accessReservation(l,o.destination,owner,o.unit))return "destination_reservation_revoked";
             else if(!destinationReady(l,j,owner,o.destination))return "destination_blocked_or_unsupported";
         }
-        return unknown;
+        if(unknown!=null)return unknown;
+        if(targetPaused){
+            if(l.getBlockEntity(j.home.nursery()) instanceof BroodPile pile&&pile.stageEvaluation()!=null&&pile.stageEvaluatedAt()>targetEvaluationAt){
+                targetEvaluationAt=pile.stageEvaluatedAt();
+                targetConfirmations=pile.operational()&&pile.stageEvaluation().stage().ordinal()>=ColonyStage.MATURE.ordinal()?targetConfirmations+1:0;
+                SurfaceWork.get(l).setDirty();
+            }
+            if(targetConfirmations<2)return "unknown_motivating_target_fresh_confirmations";
+            targetPaused=false;SurfaceWork.get(l).setDirty();
+        }
+        return null;
+    }
+    /** No material handoff occurred. Preserve all bound units/endpoints/reservations and named custody. */
+    void emptyHandedDeath(SurfaceWork.Job j){
+        if(carried()!=0)throw new IllegalStateException("Empty access cleanup cannot own cargo");
+        action=0;lastActionTime=Long.MIN_VALUE;j.claim=null;
+        if(current().phase==Phase.SOURCE){stopped=true;reason="empty_source_worker_dead";j.reason="stopped_access_"+reason;}
+        else if(current().phase==Phase.CUSTODY){reason="empty_named_worker_dead";j.reason="access_"+reason;}
+        else {stopped=true;reason="empty_access_worker_dead";j.reason="stopped_access_"+reason;}
     }
     public BlockPos target(ServerLevel l){return current().phase==Phase.SOURCE?current().source:current().phase==Phase.CARRIED?current().destination:
         l.getEntity(current().custody()) instanceof ItemEntity item?item.blockPosition():null;}
@@ -183,6 +211,7 @@ public final class SurfaceAccess {
     public JsonObject encode(){
         var o=new JsonObject();o.addProperty("cap",CAP);o.addProperty("owner",owner.toString());o.addProperty("binding",binding.toString());var p=new JsonArray();prefix.forEach(p::add);o.add("prefix",p);
         o.addProperty("index",index);o.addProperty("action",action);o.addProperty("lastActionTime",lastActionTime);o.addProperty("reason",reason);o.addProperty("stopped",stopped);var history=new JsonObject();excavationBaseline.forEach(history::addProperty);o.add("excavationBaseline",history);var ops=new JsonArray();
+        if(targetPaused||targetConfirmations!=0||targetEvaluationAt!=Long.MIN_VALUE){o.addProperty("targetPaused",targetPaused);o.addProperty("targetConfirmations",targetConfirmations);o.addProperty("targetEvaluationAt",targetEvaluationAt);}
         for(var op:operations){var row=new JsonObject();row.addProperty("unit",op.unit.toString());row.addProperty("source",op.source.asLong());row.addProperty("destination",op.destination.asLong());
             row.addProperty("removalStand",op.removalStand.asLong());row.addProperty("depositStand",op.depositStand.asLong());row.addProperty("expectedSource","owned_mound_nest_soil");row.addProperty("expectedDestination","reserved_canonical_air");
             row.addProperty("phase",op.phase.name());row.addProperty("removed",op.removed);row.addProperty("redeposited",op.redeposited);row.addProperty("pickups",op.pickups);row.addProperty("deaths",op.deaths);
@@ -195,6 +224,9 @@ public final class SurfaceAccess {
         var a=new SurfaceAccess(UUID.fromString(o.get("owner").getAsString()),j,savedPrefix);
         if(o.get("cap").getAsInt()!=CAP||!o.get("binding").getAsString().equals(a.binding.toString())||!o.getAsJsonArray("prefix").toString().equals(a.encode().getAsJsonArray("prefix").toString()))throw new IllegalArgumentException("Access owner/plan/prefix binding");
         a.index=o.get("index").getAsInt();a.action=o.get("action").getAsInt();a.lastActionTime=o.get("lastActionTime").getAsLong();a.reason=o.get("reason").getAsString();a.stopped=o.get("stopped").getAsBoolean();var ops=o.getAsJsonArray("operations");if(ops.size()!=CAP)throw new IllegalArgumentException("Access operation cap");
+        if(o.has("targetPaused")){
+            a.targetPaused=o.get("targetPaused").getAsBoolean();a.targetConfirmations=o.get("targetConfirmations").getAsInt();a.targetEvaluationAt=o.get("targetEvaluationAt").getAsLong();
+        }
         var history=new TreeMap<String,Integer>();o.getAsJsonObject("excavationBaseline").entrySet().forEach(e->history.put(e.getKey(),e.getValue().getAsInt()));if(history.values().stream().anyMatch(n->n<0))throw new IllegalArgumentException("Access excavation snapshot");a.excavationBaseline=Map.copyOf(history);
         for(int n=0;n<CAP;n++){var row=ops.get(n).getAsJsonObject();var op=a.operations.get(n);
             if(!row.get("unit").getAsString().equals(op.unit.toString())||row.get("source").getAsLong()!=op.source.asLong()||row.get("destination").getAsLong()!=op.destination.asLong()
@@ -205,6 +237,7 @@ public final class SurfaceAccess {
         }a.validate();return a;
     }
     public void validate(){
+        if(targetConfirmations<0||targetConfirmations>2||targetPaused&&action!=0)throw new IllegalArgumentException("Access target confirmation/action");
         if(index<0||index>CAP||action<0||action>=SurfaceWork.ACTION_TICKS||action>0&&lastActionTime<0||(stopped||complete())&&action!=0||carried()<0||carried()>1)throw new IllegalArgumentException("Access index/action/cargo");
         var releases=new HashSet<UUID>();for(int n=0;n<CAP;n++){var o=operations.get(n);
             if(o.pickups<0||o.pickups>1||o.deaths<0||o.deaths>2||o.releases.size()>2||o.pickups>o.deaths||o.carried()<0||o.carried()>1||o.redeposited&&!o.removed

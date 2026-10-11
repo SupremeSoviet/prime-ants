@@ -219,7 +219,18 @@ public final class SurfaceWork extends SavedData {
         }
     }
     public void reconcile(ServerLevel l,LasiusNigerEntity queen){
+        // Active finite permission is checked even without a worker (named custody) and before priority gating.
+        for(var j:jobs(queen.getUUID()))if(j.access!=null&&!j.access.complete()&&!j.access.stopped){
+            var problem=j.access.problem(l,j);
+            if(problem!=null){j.access.action=0;j.access.lastActionTime=Long.MIN_VALUE;j.access.reason=problem;
+                if(!problem.startsWith("unknown")){j.access.stopped=true;j.reason="stopped_access_"+problem;}
+                setDirty();
+            }
+        }
         for(var j:jobs(queen.getUUID()))if(j.claim!=null&&l.getEntity(j.claim) instanceof LasiusNigerEntity w){
+            if(j.access!=null&&!j.access.complete()&&!w.isAlive()&&j.access.carried()==0&&w.getMainHandItem().isEmpty()){
+                j.access.emptyHandedDeath(j);setDirty();continue;
+            }
             if(!ColonyMembers.get(l).belongs(w,queen.getUUID(),j.home.chamber())||!w.workerTasks().surfaceWorking()
                 ||w.workerTasks().plan()==null||!w.workerTasks().plan().entrance().equals(j.home.entrance())||w.workerTasks().plan().direction()!=j.home.direction()
                 ||(j.access!=null&&!j.access.complete()?j.access.carried()==1?!j.access.cargo(w):!w.getMainHandItem().isEmpty():j.carried()!= (w.getMainHandItem().is(Items.DIRT)?w.getMainHandItem().getCount():0))){
@@ -278,6 +289,9 @@ public final class SurfaceWork extends SavedData {
     }
     public void released(ServerLevel l,LasiusNigerEntity w,UUID transfer){
         var j=claimedBy(w);if(j==null)return;
+        if(j.access!=null&&!j.access.complete()&&j.access.carried()==0){
+            j.access.emptyHandedDeath(j);setDirty();return;
+        }
         if(j.access!=null&&!j.access.complete()&&j.access.carried()==1){
             var expected=SurfaceAccess.unitStack(j.access.current().unit);var pending=TransferCustody.get(l).contents().stream().filter(p->p.id().equals(transfer)).findFirst();
             boolean canonical=pending.isPresent()?ItemStack.matches(pending.get().stack(),expected):l.getEntity(transfer) instanceof net.minecraft.world.entity.item.ItemEntity item&&ItemStack.matches(item.getItem(),expected);
