@@ -63,7 +63,7 @@ public final class ReconciliationChunkGameTest implements ModInitializer {
         }
         @Override public void close(){release();fixtures.remove(this);}
     }
-    private static LasiusNigerEntity remoteEgg(GameTestHelper c, Fixture fixture) {
+    private static BlockPos remoteEgg(GameTestHelper c, Fixture fixture) {
         var l=fixture.level; fixture.hold(); l.getChunkSource().getChunk(fixture.chunk.x(),fixture.chunk.z(),ChunkStatus.FULL,true);
         // Disclosed controlled terrain/origin exactly like idle_ground founding, outside helper retention.
         var origin=NaturalSoil.CODEC.encodeStart(JsonOps.INSTANCE,NaturalSoil.get(l)).getOrThrow().getAsJsonObject();
@@ -82,16 +82,26 @@ public final class ReconciliationChunkGameTest implements ModInitializer {
         };
         var egg=new ItemStack(AntItems.DEBUG_QUEEN_EGG);player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,egg);
         c.assertTrue(egg.useOn(new net.minecraft.world.item.context.UseOnContext(l,player,net.minecraft.world.InteractionHand.MAIN_HAND,egg,new BlockHitResult(Vec3.atCenterOf(p).add(0,.5,0),Direction.UP,p,false))).consumesAction(),"Remote production queen egg");
-        return l.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(p).inflate(2),a->a.form()==AntForm.QUEEN).getFirst();
+        return p; // Remote entity visibility follows the native entity-manager tick, not the ticket request.
     }
 
     @GameTest(maxTicks=8000, structure="prime_ants_test:idle_ground")
     public void genuineRemoteChunkDisappearsAndReloadsOriginalColonyWhileLiveControlTicks(GameTestHelper c) {
-        var live=new WorkerForagingGameTest().start(c);var fixture=new Fixture(c);var q=remoteEgg(c,fixture);var l=c.getLevel();
+        var live=new WorkerForagingGameTest().start(c);var fixture=new Fixture(c);var spawn=remoteEgg(c,fixture);var l=c.getLevel();
+        LasiusNigerEntity[] remote={null};
         int[] phase={0}; long[] requested={0}, disappeared={0}, controlAge={0}, controlLatest={0}, nurseryLast={0}, oldAge={0}, oldLoaded={0};
         BroodPile[] old={null};List<LasiusNigerEntity> adults=new ArrayList<>();Map<UUID,AdultSimulation.Snapshot> boundaries=new LinkedHashMap<>();
-        Map<UUID,Long> ages=new LinkedHashMap<>();UUID queen=q.getUUID();Set<UUID> brood=new HashSet<>();
+        Map<UUID,Long> ages=new LinkedHashMap<>();Set<UUID> brood=new HashSet<>();
         c.onEachTick(()->{
+            if(remote[0]==null){
+                var candidates=l.getEntitiesOfClass(LasiusNigerEntity.class,new AABB(spawn).inflate(2),a->a.form()==AntForm.QUEEN);
+                if(candidates.isEmpty()){
+                    if(c.getTick()>100){fixture.diagnose("spawn_visibility_stalled");c.fail("Production remote egg body not visible after 100 actual manager ticks");}
+                    return;
+                }
+                c.assertTrue(candidates.size()==1,"Exactly one remote production egg body becomes visible");remote[0]=candidates.getFirst();
+            }
+            var q=remote[0];var queen=q.getUUID();
             if(phase[0]==0){
                 if(q.founding().plan()==null||!q.founding().ready())return;
                 var pos=q.founding().plan().nursery(); if(!(l.getBlockEntity(pos) instanceof BroodPile p))return;
@@ -143,9 +153,32 @@ public final class ReconciliationChunkGameTest implements ModInitializer {
                     c.assertTrue(adult!=original&&adult.getUUID().equals(original.getUUID())&&Objects.equals(adult.broodId(),original.broodId())
                         &&Objects.equals(adult.queenId(),original.queenId())&&Objects.equals(adult.nurseryHome(),original.nurseryHome()),"Native entity reload retains exact identity/lineage/home");
                     c.assertTrue(boundary!=null&&boundary.evidence().equals(saved)&&boundary.ownInterval().afterGameTime().orElseThrow()==saved.latest(),"Adult pre-step boundary retains exact persisted ranges before resumption");
-                    var reconciled=adult.simulationEvidence().reconcile(capture.interval());
+                    var capturedMember=ReconciliationGameTest.member(capture,adult.getUUID());
+                    c.assertTrue(capturedMember.reserved()&&capturedMember.adult().equals(original.getUUID())
+                        &&Objects.equals(capturedMember.brood(),original.broodId())&&capturedMember.queen().equals(queen),
+                        "Frozen capture retains every original identity and reservation");
                     long first=boundary.ownInterval().beforeGameTime();
-                    long observedAfterNursery=Math.max(0,Math.min(saved.latest(),capture.interval().beforeGameTime()-1)-nurseryLast[0]);
+                    long observedAfterNursery=0;
+                    for(var run:saved.runs()){
+                        long lo=Math.max(nurseryLast[0]+1,run.first()),hi=Math.min(capture.interval().beforeGameTime()-1,run.last());
+                        if(hi>=lo)observedAfterNursery+=hi-lo+1;
+                    }
+                    if(capturedMember.availability().equals("OBSERVED")){
+                        long capturedResumed=Math.max(0,Math.min(capturedMember.evidence().latest(),capture.interval().beforeGameTime()-1)-first+1);
+                        long expectedCaptured=observedAfterNursery+capturedResumed;
+                        c.assertTrue(capturedMember.coverage().status().equals("RESOLVED")
+                            &&capturedMember.coverage().alreadySimulated().orElseThrow()==expectedCaptured
+                            &&capturedMember.coverage().missed().orElseThrow()==capture.interval().ticks()-expectedCaptured,
+                            "Frozen nursery member evidence has exact native lifecycle counts");
+                        if(first==capture.interval().beforeGameTime())c.assertTrue(capturedMember.ownInterval().equals(boundary.ownInterval()),
+                            "Frozen current-C return retains original adult boundary in native ordering");
+                    }else{
+                        c.assertTrue(capturedMember.availability().equals("UNKNOWN_UNAVAILABLE")&&capturedMember.evidence()==null
+                            &&capturedMember.coverage().alreadySimulated().isEmpty()&&capturedMember.coverage().missed().isEmpty(),
+                            "Body unavailable at capture remains UNKNOWN even after its later native return");
+                    }
+                    // Later reconciliation is separate evidence; it never repairs/replaces a captured UNKNOWN row.
+                    var reconciled=adult.simulationEvidence().reconcile(capture.interval());
                     long expectedSimulated=observedAfterNursery+(first<capture.interval().beforeGameTime()?ColonyClock.missedTicks(first-1,capture.interval().beforeGameTime()):0);
                     c.assertTrue(reconciled.status().equals("RESOLVED")&&reconciled.alreadySimulated().orElseThrow()==expectedSimulated
                         &&reconciled.missed().orElseThrow()==capture.interval().ticks()-expectedSimulated,"Native intervals exact with zero tolerance, including resumed adult-before-nursery ticks");
@@ -154,7 +187,7 @@ public final class ReconciliationChunkGameTest implements ModInitializer {
                     c.assertTrue(adult.elapsedAgeTicks()-ages.get(adult.getUUID())==adult.simulationEvidence().latest()-first+1,"Only actual resumed adult steps changed age");returning.add(row);
                 }
                 c.assertTrue(ColonyMembers.get(l).occupied(queen)==3&&p.records().isEmpty(),"Same three reservations, no new adult or brood on native reload");
-                out.add("returning_adults",returning);out.addProperty("nursery_stamp_after_capture",p.lastSimulationGameTime().orElseThrow());out.addProperty("loaded_ticks_after",p.loadedTicks());out.addProperty("loaded_ticks_before",oldLoaded[0]);
+                out.add("later_returning_adults_reconciliation",returning);out.addProperty("nursery_stamp_after_capture",p.lastSimulationGameTime().orElseThrow());out.addProperty("loaded_ticks_after",p.loadedTicks());out.addProperty("loaded_ticks_before",oldLoaded[0]);
                 ReconciliationEvidence.log("native_reload_capture","genuine_chunk_lifecycle",out);fixture.close();phase[0]=4;c.succeed();
             }
         });

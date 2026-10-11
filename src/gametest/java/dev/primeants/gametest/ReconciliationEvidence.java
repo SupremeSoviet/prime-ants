@@ -27,7 +27,14 @@ final class ReconciliationEvidence {
         out.addProperty("availability",member.availability());out.addProperty("reserved",member.reserved());
         out.addProperty("status",member.coverage().status());number(out,"already_simulated",member.coverage().alreadySimulated());number(out,"missed",member.coverage().missed());
         out.addProperty("before_birth_boundary",member.coverage().beforeBoundary());
-        if(member.evidence()!=null){out.add("evidence",adult(member.evidence()));out.add("own_interval",interval(member.ownInterval()));}return out;
+        if(member.evidence()!=null){
+            out.add("evidence",adult(member.evidence()));out.add("own_interval",interval(member.ownInterval()));
+            out.add("current_timestamp_interval",interval(member.currentTimestampInterval()));
+            if(member.returnBoundary()!=null){
+                out.add("return_interval",interval(member.returnBoundary().ownInterval()));
+                out.add("return_evidence",adult(member.returnBoundary().evidence()));
+            }
+        }return out;
     }
     static JsonObject observation(ReloadObservation observation) {
         var out=new JsonObject();out.addProperty("queen",observation.queen().toString());out.addProperty("nursery",observation.nursery().asLong());

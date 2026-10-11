@@ -2533,6 +2533,110 @@
       "suite": "long",
       "weight_ticks": 8000,
       "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_game_test_captured_return_before_nursery_and_earlier_resumption_never_reuse_stale_boundary",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T03 direct captured return ordering and retained evidence assertions"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_prepaid_coverage_matches_ordinary_ticks",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_coverage_exhaustion_matches_ordinary_ticks",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_finite_sugar_exhaustion_matches_ordinary_ticks",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_nonzero_fasting_matches_ordinary_ticks",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_callow_saturation_matches_ordinary_ticks",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_worker_age_boundary_stops_before_ordinary_damage",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_maximum_long_request_stops_before_ordinary_starvation_damage",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_started_queen_matches_ordinary_ticks",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_reserve_only_queen_exemption_matches_ordinary_ticks",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_unsupported_phase_and_overflow_leave_explicit_input_unchanged",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_pending_starvation_damage_stops_before_next_ordinary_event",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_prepaid_coverage_resets_pending_starvation_damage",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
     }
   ]
 }

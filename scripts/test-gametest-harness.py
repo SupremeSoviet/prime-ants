@@ -17,6 +17,20 @@ spec=importlib.util.spec_from_file_location('harness',Path(__file__).with_name('
 h=importlib.util.module_from_spec(spec);spec.loader.exec_module(h)
 
 class HarnessTests(unittest.TestCase):
+    def test_fast_guard_cli_keeps_full_packet_with_bounded_console_summary(self):
+        # Regression for a completed guard blocked writing >4 KiB through Gradle's inherited pipe.
+        with tempfile.TemporaryDirectory() as temporary:
+            folder=Path(temporary);packet={'passed':True,'issues':[],'unit_count':121,'model_count':26,
+                'reports':{'report-'+str(i):{'sha256':'a'*64,'mtime':1} for i in range(100)}}
+            def guard(destination,since):
+                h.write(destination/'fast-guards.json',packet);return packet
+            output=io.StringIO()
+            with patch.object(h,'fast_guards',side_effect=guard),patch.object(sys,'argv',['harness','fast-guards','--folder',str(folder),'--since','0']),contextlib.redirect_stdout(output):
+                h.main()
+            self.assertEqual(packet,h.read(folder/'fast-guards.json'))
+            self.assertLess(len(output.getvalue().encode('utf-8')),4096)
+            self.assertEqual({'passed':True,'issues':[],'unit_count':121,'model_count':26},json.loads(output.getvalue()))
+
     def diagnostic_cli_fixture(self,label,log_text,launcher_exit=0,failed=False,log_mode='supplied'):
         """Fresh offline XML/logs through the real collector and CLI in a child Python.
 

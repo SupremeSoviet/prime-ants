@@ -1,6 +1,8 @@
 package dev.primeants.entity;
 
 import dev.primeants.founding.QueenFounding;
+import dev.primeants.worker.Nutrition;
+import java.util.OptionalLong;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -17,6 +19,49 @@ public final class AdultLife {
     private boolean started;
     private String death="";
     public static int maintenancePeriod(){return 4;}
+    public static int damagePeriod(){return 20;}
+    public enum Phase { ACTIVE, RESERVE_ONLY, UNKNOWN }
+    public record State(long lifespan,long grace,long fasting,long maintenanceTicks,long activeTicks,
+                        int damageTicks,int mealTicks,int coverageRemaining,long coveredTicks,boolean started,String death) {
+        public boolean valid(){return lifespan>0&&grace>0&&fasting>=0&&maintenanceTicks>=0&&activeTicks>=0
+            &&damageTicks>=0&&damageTicks<damagePeriod()&&mealTicks>=0&&mealTicks<20
+            &&coverageRemaining>=0&&coverageRemaining<maintenancePeriod()&&coveredTicks>=0&&death!=null&&death.isEmpty();}
+        State active(){return new State(lifespan,grace,fasting,maintenanceTicks,activeTicks,damageTicks,mealTicks,coverageRemaining,coveredTicks,true,death);}
+    }
+    public State snapshot(){return new State(lifespan,grace,fasting,maintenanceTicks,activeTicks,damageTicks,mealTicks,coverageRemaining,coveredTicks,started,death);}
+    private void restore(State s){fasting=s.fasting();maintenanceTicks=s.maintenanceTicks();activeTicks=s.activeTicks();damageTicks=s.damageTicks();coverageRemaining=s.coverageRemaining();coveredTicks=s.coveredTicks();started=s.started();}
+    record Evolution(State life,Nutrition.State nutrition,boolean damage) { }
+    private static long coverage(State s,Nutrition.State n){return Math.addExact(s.coverageRemaining(),Math.multiplyExact(n.sugar(),maintenancePeriod()));}
+    private static OptionalLong sum(long a,long b){return a>Long.MAX_VALUE-b?OptionalLong.empty():OptionalLong.of(a+b);}
+    /** First consecutive qualifying tick, including coverage's reset of prior fasting/damage. */
+    private static OptionalLong qualifying(State s,Nutrition.State n,AntForm form,long age){
+        long covered=coverage(s,n);
+        OptionalLong starving=covered>0?sum(covered,s.grace()):OptionalLong.of(Math.max(1,s.grace()-s.fasting()));
+        OptionalLong old=form==AntForm.WORKER?OptionalLong.of(age>=s.lifespan()?1:s.lifespan()-age):OptionalLong.empty();
+        if(old.isEmpty())return starving;if(starving.isEmpty())return old;
+        return OptionalLong.of(Math.min(old.getAsLong(),starving.getAsLong()));
+    }
+    static OptionalLong firstDamage(State s,Nutrition.State n,AntForm form,long age){
+        if(!s.started())return OptionalLong.empty();
+        var first=qualifying(s,n,form,age);if(first.isEmpty())return first;
+        return sum(first.getAsLong(),damagePeriod()-1L-(first.getAsLong()==1?s.damageTicks():0));
+    }
+    /** Constant work shared by the live one-tick owner and the non-terminal preview. */
+    static Evolution evolve(State s,Nutrition.State n,AntForm form,long age,long ticks){
+        if(!s.started()||ticks==0)return new Evolution(s,n,false);
+        long covered=Math.min(ticks,coverage(s,n)),newlyCovered=Math.max(0,covered-s.coverageRemaining());
+        long meals=newlyCovered/maintenancePeriod()+(newlyCovered%maintenancePeriod()==0?0:1);
+        int remaining=ticks<=s.coverageRemaining()?s.coverageRemaining()-(int)ticks
+            :(int)(Math.multiplyExact(meals,maintenancePeriod())-newlyCovered);
+        long fasting=covered>0?ticks-covered:(s.fasting()>Long.MAX_VALUE-ticks?Long.MAX_VALUE:s.fasting()+ticks);
+        var first=qualifying(s,n,form,age);long damage=first.isPresent()&&first.getAsLong()<=ticks
+            ?Math.addExact(ticks-first.getAsLong()+1,first.getAsLong()==1?s.damageTicks():0):0;
+        if(damage>damagePeriod())throw new IllegalArgumentException("Evolution crosses health event");
+        boolean event=damage==damagePeriod();
+        return new Evolution(new State(s.lifespan(),s.grace(),fasting,Math.addExact(s.maintenanceTicks(),meals),
+            Math.addExact(s.activeTicks(),ticks),event?0:(int)damage,s.mealTicks(),remaining,
+            Math.addExact(s.coveredTicks(),covered),true,s.death()),n.spend(meals,0),event);
+    }
     private static long duration(String key,long fallback){long n=Long.parseLong(System.getProperty(key,Long.toString(fallback)));if(n<1)throw new IllegalArgumentException("Adult duration must be positive: "+key);return n;}
     public long lifespan(){return lifespan;} public long grace(){return grace;}
     public long fasting(){return fasting;} public long maintenanceTicks(){return maintenanceTicks;}
@@ -32,16 +77,12 @@ public final class AdultLife {
     public void tick(ServerLevel level,LasiusNigerEntity ant){
         if(!started&&(ant.form()==AntForm.WORKER||!ant.founding().reserveOnlyFounding(level)))started=true;
         if(!started)return; // First-clutch queen uses only the unchanged 39,000 reserve budget.
-        activeTicks++;
-        boolean covered=coverageRemaining>0;
-        if(covered)coverageRemaining--;
-        else if(ant.nutrition().spend(1,0)){maintenanceTicks++;coverageRemaining=maintenancePeriod()-1;covered=true;}
-        if(covered){coveredTicks++;fasting=0;}else if(fasting<Long.MAX_VALUE)fasting++;
-        boolean old=ant.form()==AntForm.WORKER&&ant.elapsedAgeTicks()>=lifespan;
-        boolean starving=fasting>=grace;
-        if(!old&&!starving){damageTicks=0;return;}
-        if(++damageTicks<20)return;
-        damageTicks=0;death=old?"age_limit":"starvation";
+        var next=evolve(snapshot(),ant.nutrition().snapshot(),ant.form(),ant.elapsedAgeTicks()-1,1);
+        long spent=ant.nutrition().sugar()-next.nutrition().sugar();
+        if(!ant.nutrition().spend(spent,0))throw new IllegalStateException("Resolved maintenance spend failed");
+        restore(next.life());
+        if(!next.damage())return;
+        death=ant.form()==AntForm.WORKER&&ant.elapsedAgeTicks()>=lifespan?"age_limit":"starvation";
         ant.hurtServer(level,ant.damageSources().starve(),1.0F);
         if(ant.isAlive())death="";
     }

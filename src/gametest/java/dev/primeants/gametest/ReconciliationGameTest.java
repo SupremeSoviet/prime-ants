@@ -5,6 +5,7 @@ import dev.primeants.PrimeAnts;
 import dev.primeants.brood.*;
 import dev.primeants.colony.*;
 import dev.primeants.entity.*;
+import dev.primeants.founding.NestPlan;
 import dev.primeants.time.*;
 import dev.primeants.worker.*;
 import java.util.*;
@@ -89,6 +90,8 @@ public final class ReconciliationGameTest {
                 c.assertTrue(captured.interval().equals(interval(last, last + 7)) && captured.queen().equals(q.getUUID()), "Original exclusive interval survives nursery stamp C");
                 resolved(c, "live_queen_six", member(captured, q.getUUID()), 6, 0);
                 for (var worker : workers) resolved(c, "live_worker_six", member(captured, worker.getUUID()), 6, 0);
+                for (var row : captured.members()) c.assertTrue(row.ownInterval().ticks() == 0 && row.returnBoundary() == null,
+                    "Independently ticking captured adult has no return gap; no stale boundary becomes owed work");
                 c.assertTrue(beforeQueen.equals(save(c, q)) && beforeWorkers.equals(workers.stream().map(w -> save(c, w)).toList()), "Nursery capture does not simulate adults or alter cargo/health/nutrition/policies");
                 ordinary(c, resumed, last + 8);
                 c.assertTrue(resumed.reloadObservation() == captured, "Immutable observation retained through consecutive ordinary stamp; no dormant queue");
@@ -115,6 +118,11 @@ public final class ReconciliationGameTest {
                 var captured = resumed.reloadObservation(); var row = member(captured, adult.getUUID());
                 ReconciliationEvidence.log("current_order_" + adultFirst,"timestamp_and_removal",ReconciliationEvidence.observation(captured));
                 resolved(c, "distinct_" + (adultFirst ? "adult_first" : "nursery_first"), row, 1, 5);
+                c.assertTrue(row.ownInterval().equals(interval(adultLast,current)) && row.returnBoundary()!=null
+                    && row.returnBoundary().ownInterval().equals(interval(adultLast,current))
+                    && row.returnBoundary().evidence().latest()==adultLast, "Captured member retains original four-tick adult return in both orders");
+                c.assertTrue(row.currentTimestampInterval().equals(interval(adultFirst?current:adultLast,current)),
+                    "Current timestamp query explicitly differs from original return after adult-first C stamp");
                 c.assertTrue(captured.interval().ticks() == 6 && row.evidence().runs().stream().anyMatch(r -> r.last() >= adultLast), "Nursery six ticks differs from adult four-tick own gap");
                 if (!adultFirst) atTime(c, current, adult::tick);
                 c.assertTrue(adult.lastSimulationBoundary().ownInterval().equals(interval(adultLast, current)), "Adult returning boundary remains inspectable after its stamp");
@@ -122,6 +130,34 @@ public final class ReconciliationGameTest {
                 c.assertTrue(adult.elapsedAgeTicks() == detached.elapsedAgeTicks() + 1, "Only one current adult step in each ordering");
                 adult.remove(Entity.RemovalReason.UNLOADED_TO_CHUNK); p = resumed;
             }
+            c.succeed();
+        });
+    }
+
+    @GameTest(maxTicks=8000, structure="prime_ants_test:idle_ground")
+    public void capturedReturnBeforeNurseryAndEarlierResumptionNeverReuseStaleBoundary(GameTestHelper c) {
+        founded(c, false, (q, p) -> {
+            long last=p.lastSimulationGameTime().orElseThrow(), adultLast=last-2, current=last+7;
+            var tag=save(c,q);var detached=load(c,tag);atTime(c,adultLast,detached::tick);
+            var adultTag=save(c,detached);q.remove(Entity.RemovalReason.UNLOADED_TO_CHUNK);
+            for(boolean adultFirst:new boolean[]{false,true}){
+                var adult=load(c,adultTag);c.assertTrue(c.getLevel().tryAddFreshEntityWithPassengers(adult),"Original identity installed");
+                if(adultFirst)atTime(c,current,adult::tick);
+                var capture=ReloadObservation.capture(c.getLevel(),q.getUUID(),p.getBlockPos(),q.founding().plan().chamber(),interval(last,current));
+                var row=member(capture,q.getUUID());resolved(c,"pre_nursery_"+adultFirst,row,0,6);
+                c.assertTrue(row.ownInterval().equals(interval(adultLast,current))&&row.ownInterval().ticks()==8
+                    &&row.returnBoundary().evidence().latest()==adultLast,"Captured original adult return begins before nursery L, in both orders");
+                if(!adultFirst)atTime(c,current,adult::tick);
+                adult.remove(Entity.RemovalReason.UNLOADED_TO_CHUNK);
+            }
+            var earlier=load(c,adultTag);c.assertTrue(c.getLevel().tryAddFreshEntityWithPassengers(earlier),"Earlier resuming original");
+            atTime(c,current-1,earlier::tick);
+            var capture=ReloadObservation.capture(c.getLevel(),q.getUUID(),p.getBlockPos(),q.founding().plan().chamber(),interval(last,current));
+            var row=member(capture,q.getUUID());resolved(c,"earlier_resume",row,1,5);
+            c.assertTrue(earlier.lastSimulationBoundary().ownInterval().ticks()==7&&row.ownInterval().ticks()==0
+                &&row.ownInterval().equals(interval(current-1,current))&&row.returnBoundary()==null,
+                "Captured row never reuses the older seven-tick return as newly owed work");
+            ReconciliationEvidence.log("earlier_resume_capture","timestamp_and_removal",ReconciliationEvidence.observation(capture));
             c.succeed();
         });
     }
@@ -139,11 +175,18 @@ public final class ReconciliationGameTest {
             var installed = (LasiusNigerEntity)c.getLevel().getEntity(q.getUUID());
             var ant = load(c,save(c,installed)); installed.remove(Entity.RemovalReason.UNLOADED_TO_CHUNK);
             for (int i=1;i<=AdultSimulation.MAX_RUNS+2;i++) { long now = last + 10 + 2L*i; atTime(c, now, ant::tick); }
-            var evidence = load(c, save(c, ant)).simulationEvidence();
+            var compacted=load(c, save(c, ant));
+            c.assertTrue(c.getLevel().tryAddFreshEntityWithPassengers(compacted),"Compacted original identity installed");
+            var evidence = compacted.simulationEvidence();
             c.assertTrue(evidence.runs().size() == AdultSimulation.MAX_RUNS && evidence.knownAfter() > last,
                 "Evidence compaction has explicit coverage floor and fixed maximum ranges");
             var unknown = evidence.reconcile(interval(last, evidence.latest() + 1));
             c.assertTrue(unknown.status().startsWith("UNKNOWN_EVIDENCE_BEFORE_") && unknown.missed().isEmpty() && unknown.alreadySimulated().isEmpty(), "No guessed count after bounded evidence loss");
+            var captured=ReloadObservation.capture(c.getLevel(),q.getUUID(),resumed.getBlockPos(),q.founding().plan().chamber(),interval(last,evidence.latest()+1));
+            var row=member(captured,q.getUUID());
+            c.assertTrue(row.availability().equals("OBSERVED")&&row.reserved()&&row.evidence().equals(evidence)
+                &&row.coverage().equals(unknown)&&row.coverage().missed().isEmpty(),"Captured member below history floor retains identity/reservation and unresolved counts");
+            ReconciliationEvidence.log("captured_history_floor","timestamp_and_removal",ReconciliationEvidence.observation(captured));
             PrimeAnts.LOGGER.info("T02 RECON label=bounded_overflow result={} evidence={}", unknown, evidence); c.succeed();
         });
     }
@@ -159,6 +202,7 @@ public final class ReconciliationGameTest {
             var captured = resumed.reloadObservation(); var row = member(captured, worker.getUUID());
             ReconciliationEvidence.log("unavailable_capture","manual_unloaded_reason_removal",ReconciliationEvidence.observation(captured));
             c.assertTrue(row.availability().equals("UNKNOWN_UNAVAILABLE") && row.reserved() && row.coverage().missed().isEmpty()
+                &&row.evidence()==null&&row.ownInterval()==null&&row.currentTimestampInterval()==null&&row.returnBoundary()==null
                 && row.adult().equals(worker.getUUID()) && row.brood().equals(worker.broodId()) && row.home().equals(worker.nurseryHome()), "UNKNOWN retains exact identity and reservation, no guessed ticks");
             c.assertTrue(ColonyMembers.get(c.getLevel()).occupied(q.getUUID()) == occupied && !ColonyMembers.get(c.getLevel()).member(worker.getUUID()).dead()
                 && resumed.consumed().equals(brood) && resumed.records().isEmpty() && c.getLevel().getEntity(worker.getUUID()) == null, "No death, replacement, free slot or repeated brood emergence");
@@ -212,10 +256,12 @@ public final class ReconciliationGameTest {
                 c.assertTrue(workers.stream().filter(w->w.workerTasks().nursing()).count()>=2
                     &&workers.stream().filter(w->w.workerTasks().nursing()).noneMatch(w->w.workerTasks().nursingAuthorized(c.getLevel())),
                     "Real nursing roles retain identity while UNKNOWN pauses their ordinary work authorization");
-                var wall = plan.at(5,-2,-3); var state = c.getLevel().getBlockState(wall);
+                var wall = plan.at(6,-1,-1); var state = c.getLevel().getBlockState(wall);
+                c.assertTrue(NestPlan.loaded(c.getLevel(),wall)&&state.isSolidRender(),"Actual loaded solid back wall before controlled breach");
                 c.getLevel().setBlock(wall, Blocks.AIR.defaultBlockState(), 3);
                 var damaged = ColonyDevelopment.evaluate(c.getLevel(), q.getUUID(), plan, p.operational(), p.adultCapacity(), p.loadedTicks());
-                c.assertTrue(damaged.chambers().getFirst().functions().get(ChamberFunction.NURSERY) == ColonyDevelopment.Presence.ABSENT, "Loaded broken wall wins over unrelated UNKNOWN");
+                c.assertTrue(damaged.chambers().getFirst().functions().get(ChamberFunction.NURSERY) == ColonyDevelopment.Presence.ABSENT,
+                    "Loaded broken wall wins over unrelated UNKNOWN: "+damaged);
                 c.getLevel().setBlock(wall, state, 3);
                 PrimeAnts.LOGGER.info("T02 RECON label=partial_terrain observation={} unknown={} damaged={}", capture, evaluation, damaged);
             }
@@ -227,13 +273,17 @@ public final class ReconciliationGameTest {
     public void completedDeathStepAndEarlyReturnsAreObservedButSavingIsNot(GameTestHelper c) {
         var worker = AntEntities.WORKER.create(c.getLevel(), EntitySpawnReason.BREEDING);
         c.assertTrue(worker != null, "New adult factory");
+        // Detached fixture must not suffocate at the factory's default world origin before biology begins.
+        var safe=net.minecraft.world.phys.Vec3.atCenterOf(c.absolutePos(new net.minecraft.core.BlockPos(1,3,1)));
+        worker.setPos(safe.x,safe.y,safe.z);worker.setNoGravity(true);
         worker.initializeCallow(UUID.randomUUID(), UUID.randomUUID(), c.absolutePos(net.minecraft.core.BlockPos.ZERO), 1, 1);
         worker.setNoAi(true); worker.setHealth(1);
         long start = c.getLevel().getGameTime();
         var baseline = worker.simulationEvidence(); var tag = save(c, worker);
         c.assertTrue(worker.simulationEvidence().equals(baseline) && load(c,tag).simulationEvidence().equals(baseline), "Save/inspection/load are no completed step");
         for (int i=1;i<=20;i++) { long now=start+i; atTime(c, now, worker::tick); }
-        c.assertTrue(!worker.isAlive() && worker.elapsedAgeTicks() == 20 && worker.simulationEvidence().latest() == start+20, "Fatal AdultLife early return records terminal biological step");
+        c.assertTrue(!worker.isAlive() && worker.elapsedAgeTicks() == 20 && worker.simulationEvidence().latest() == start+20,
+            "Fatal AdultLife early return records terminal biological step: age="+worker.elapsedAgeTicks()+" health="+worker.getHealth()+" evidence="+worker.simulationEvidence());
         var row = com.google.gson.JsonParser.parseString(AdultHistory.get(c.getLevel()).records().get(worker.getUUID().toString())).getAsJsonObject();
         c.assertTrue(row.get("lastSimulationGameTime").getAsLong() == start+20 && row.get("age").getAsLong() == 20, "Terminal receipt observes same death step before vanilla removes body");
         PrimeAnts.LOGGER.info("T02 RECON label=terminal_step evidence={} receipt={}", worker.simulationEvidence(), row); c.succeed();

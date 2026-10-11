@@ -1,4 +1,4 @@
-# Saved clock and reload reconciliation (T01–T02)
+# Saved clocks, reload reconciliation and bounded adult calculation (T01–T03)
 
 T01 delivers a saved observation boundary. Gameplay catch-up remains inactive: detecting absence does not apply it.
 The colony's one `BroodPile` owns optional NBT long `LastSimulationGameTime`, beside its existing `Queen` UUID and nest
@@ -46,8 +46,17 @@ simulation-path tests, **not actual chunk-unload coverage**. They establish no a
 `loadedTicks++`, supply observation, stage evaluation, brood changes or the final `clock.completed(C)`.
 The capture contains the original exclusive `(L,C)`, queen UUID, nursery position and immutable member rows.
 Every row retains adult UUID, brood lineage, queen, home, reservation, availability, an immutable adult evidence
-snapshot when available, that adult's own exclusive last-step interval and its reconciliation result for `(L,C)`.
+snapshot when available, its exclusive return interval and its reconciliation result for `(L,C)`.
 The current tick C is excluded irrespective of whether that adult has already ticked at C.
+
+T03 corrects the captured member interface. `ownInterval` is the pre-C interval in both current-step orderings.
+`currentTimestampInterval` explicitly queries the adult's latest completed timestamp: it can be `(C,C)` after
+the adult stamps C, while `ownInterval` still holds `(A,C)`. For a positive current return gap, `returnBoundary`
+also retains the immutable pre-step adult evidence. Nursery-first capture constructs this value before the adult
+step; adult-first capture uses that adult's boundary only when its before endpoint and latest completion are C.
+An older retained return is never newly owed work. An adult that resumed earlier exposes its current interval,
+not that earlier gap. Independently ticking adults have no return gap; unavailable rows have no adult intervals
+or evidence. Reconciliation of retained ranges remains separate from these interval views.
 
 The instance holds exactly one latest capture. A newly loaded instance captures at its first authorized ordinary
 step, even for a zero interval; a later discontinuity replaces it. Consecutive steps retain the same immutable
@@ -55,8 +64,8 @@ capture after the nursery timestamp advances. Loading new NBT clears the transie
 again. It is neither serialized as a work queue nor labeled applied; there is no dormant backlog. Repeated
 same-time reconstruction can expose the same interval, but does not apply anything.
 
-T03's consumer must run synchronously **at this capture point**, before ordinary biology or the stamp, and establish
-its own durable, idempotent application contract. Reconstructing `(L,C)` from the overwritten nursery clock is
+Any future applying consumer must run synchronously **at this capture point**, before ordinary biology or the stamp,
+and establish its own durable, idempotent application contract. Reconstructing `(L,C)` from the overwritten nursery clock is
 incorrect. Read-only re-observation of a returning adult is explicit; this snapshot never polls unavailable UUIDs
 or retrospectively replaces an earlier UNKNOWN row. T02 does not promise durable deferral for unavailable members.
 
@@ -110,27 +119,80 @@ The adult also retains one transient immutable `Boundary` before its first resum
 saved interval remains inspectable after it stamps C. Nursery capture can happen before or after that ordinary
 adult step: range intersection excludes C in both orderings.
 
-## Acceptance scope and next slice
+## T03 reconciliation acceptance
 
-T02 currently has compilation, six exact reconciliation unit cases and existing unit/model/guard verification.
-Its nine new permanent GameTests are compiled but **server acceptance is pending**: launches were held while the
-parallel Stage-1 campaign occupied three servers, under the safest global reading of T02's two-server limit.
-The T02 settling packet records this partial result; genuine chunk eviction/reload is not yet verified.
+T03 closes T02's missing production gate before implementing advancement: unfiltered fast acceptance passes
+76 server / 121 unit / 26 model cases, then 52 exact affected long identities pass, including T02's seven long
+and two fast production cases, the new captured-row ordering case and terminal receipt regressions.
+The owner clarified that this worktree may run two of its own servers alongside the parallel campaign.
+T02's original unexecuted packet and T03's initial fixture failures remain preserved separately.
 
 `ReconciliationGameTest` labels timestamp, detached entity/nursery and manual removal fixtures explicitly. They
 exercise actual production tick/save/reconstruction methods but are not chunk eviction. `ReconciliationChunkGameTest`
 uses a controlled-origin egg-founded remote colony outside helper retention, a uniquely registered fixture ticket,
 normal server checkpoint and ticket removal, actual chunk-unload event/unavailability and native entity disappearance,
 a measured 40-game-tick absent interval with an independently ticking live control, then normal ticket/chunk reload.
-The fixture releases only its own ticket, including on failure. Its recorded pre-step intervals/identities, not a
-requested ticket removal, settle genuine lifecycle coverage when the test passes. This is normal running-server
-chunk persistence, not cold restart or abrupt-crash durability.
+The fixture releases only its own ticket, including on failure. T03 verifies actual chunk disappearance, an unload
+event, original body removal with `UNLOADED_TO_CHUNK`, a measured 40-game-tick non-ticking span and exactly 40 live
+control steps, followed by normal reconstruction of the nursery, queen and three worker identities/reservations.
+Assertions use the member evidence frozen in nursery capture. An unavailable captured body stays UNKNOWN;
+later return/reconciliation is separately labeled evidence and cannot revise it. Resolved captured counts are exact.
+This is normal running-server chunk persistence, not cold restart or abrupt-crash durability. Timestamp fixtures,
+manual removal and detached reconstruction remain separately labeled coverage.
 
-T02 leaves all aggregation inactive. T03 should first add a finite adult age/callow and `AdultLife` maintenance
-aggregate slice for **resolved, observed members only**, deriving the adult's eligible interval from retained
-evidence and excluding completed ordinary ticks. It must reuse birth policies and prepaid coverage, preserve
-UNKNOWN reservations, add durable application idempotence at the pre-step boundary, and prove equivalence to
-ordinary biology including early death/custody. Feeding, laying, brood and stage/stock aggregation remain deferred;
-digging/building/mining are not fast-forwarded. T03 is also due the **complete long checkpoint**, including the
-unresolved historical Great case. Reconciliation success alone establishes neither lifecycle accuracy nor the
-final catch-up cost limit.
+## Bounded adult primitive and limits
+
+`LasiusNigerEntity.advanceAdult` accepts an explicitly supplied immutable `Biology` and established `AdultLife.Phase`.
+It has no world lookup, member selection, mutation or automatic call from reload capture. It advances elapsed age,
+saturating callow progress and finite ingested maintenance through the existing rule owners. `AdultLife.evolve`
+is shared with ordinary one-tick maintenance, fasting and damage-clock progression; `Nutrition.State.spend`
+is shared with ordinary nutrition spending. Lifespan, fasting grace, meal progress and selected policies remain
+unchanged. Protein and every food-item/transfer receipt remain exact; no cargo, health or controller is applied.
+
+The calculation spends prepaid coverage first, then each sugar unit prepays the existing four maintenance ticks.
+Covered ticks reset fasting; uncovered ticks advance saturating fasting. Worker age and starvation share the
+existing consecutive twenty-tick damage clock, including its pending progress and coverage reset. The result stops
+before the first health-damage tick, returning requested/completed/remaining ticks and the one-based event offset.
+The remainder includes the event tick. It never labels a capped absence complete. Unknown unstarted-queen phase,
+invalid biology, counter overflow and unsupported age continuation return the original input with an explicit
+unresolved status and zero completion. Neither a zero request nor a zero-completed prefix at the first damage
+boundary latches Started: activation belongs to an actual completed tick. The founding exemption is retained
+only for an explicitly established reserve-only phase; physical founding/first-clutch changes are not predicted.
+
+Work and storage are constant independent of the request: fixed arithmetic and immutable values, no tick replay,
+history growth, entity scan or terrain loading. The frozen no-incoming-meal control table includes short prepaid,
+coverage exhaustion, sugar exhaustion, nonzero fasting, callow saturation and started/exempt queen spans; worker
+age and long starvation stop before ordinary health events. A `Long.MAX_VALUE` starvation request completes 34
+ticks and retains `Long.MAX_VALUE - 34`; a pending-damage control completes two ticks before its next event.
+Integer state tolerance is zero. Boundary controls compare the real state immediately before the event and
+require the next ordinary server tick to cause exactly one health point of damage. Expected states are fixed in
+the test table, not obtained by running the primitive again. Numeric controls start from disclosed NBT-seeded,
+owner-validated states with seeded ingested receipts, then tick normally in the server; they are not naturally
+aged colonies or a physical nursing acceptance. These controlled adults receive no incoming meals;
+they establish neither aggregate nursing nor shared food allocation, colony stocks or natural absence accuracy.
+
+T03's complete checkpoint and original failures are settled in external
+`<turnloop>/directions/prime-ants-catchup/turns/T03/raw/adult-advance-acceptance.json`.
+Primitive nanosecond observations, command wall time and eventual colony cost are separate measurements.
+The final catch-up cost limit remains unaccepted.
+
+The first T03 complete attempt stopped at a blocked Windows inherited-output pipe after its fast guard had
+written a passing packet. It is retained as incomplete infrastructure, not a complete gameplay checkpoint.
+The harness now prints a small guard summary while retaining all report hashes and checks in JSON. A synthetic
+pipe reproducer, permanent packet-preservation regression and the same guard under Gradle verify targeted recovery
+before a changed complete rerun. That complete checkpoint is retained with Great and a newly observed supplied
+surface timeout. Later review reproduced a zero-completed activation mismatch, corrected only the preview's
+zero-prefix result and strengthened the existing ordinary-tick control before the final changed-source checkpoint.
+No report validator, test membership, original tolerance or failure gate is relaxed.
+
+Next integration boundary: retain a resolved pre-C biological input alongside the current return metadata, then
+establish an idempotent adult-only application receipt. The current member row retains clock evidence, not a
+pre-C nutrition/phase snapshot; adult-first application must not treat the post-C body as that earlier input.
+Start with fully completed non-terminal return gaps, preserving UNKNOWN identities/reservations and explicitly
+deferring requests that reach a health boundary. Handle a returned health event through the existing
+terminal/custody owners in a separate measured slice before attempting larger biology.
+Before applying this result, settle the complete checkpoint's newly observed supplied-surface timeout through a
+bounded comparison with the pre-extraction live rules after merging current master. Its cause is unclassified;
+fixed no-incoming-meal accuracy does not establish whole-colony behavior or resolve that negative.
+Automatic catch-up, terminal application, aggregate feeding/stocks, laying/brood and stages remain undelivered.
+Digging, building and mining remain excluded.

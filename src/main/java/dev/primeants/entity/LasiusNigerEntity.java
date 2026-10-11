@@ -39,11 +39,52 @@ public final class LasiusNigerEntity extends PathfinderMob {
     private boolean biologicalStepInProgress;
     public dev.primeants.time.AdultSimulation.Snapshot simulationEvidence() { return simulation.snapshot(); }
     public dev.primeants.time.AdultSimulation.Boundary lastSimulationBoundary() { return simulation.lastBoundary(); }
+    public dev.primeants.time.AdultSimulation.Boundary simulationBoundaryBefore(long now) { return simulation.boundaryBefore(now); }
     private long broodNeglectGrace=dev.primeants.brood.BroodRecord.selectedDuration("prime_ants.broodNeglectTicks",dev.primeants.brood.BroodRecord.DEFAULT_NEGLECT);
     private long cocoonWaitingBound=dev.primeants.brood.BroodRecord.selectedDuration("prime_ants.cocoonWaitingTicks",dev.primeants.brood.BroodRecord.DEFAULT_COCOON_WAIT);
     public long broodNeglectGrace(){return broodNeglectGrace;} public long cocoonWaitingBound(){return cocoonWaitingBound;}
     public boolean nurseryClaimed(){return nurseryClaimed;}
     public AdultLife adultLife(){return adultLife;}
+    /** Explicit immutable biology only. Identity, cargo, health, founding/work controllers are outside this value. */
+    public record Biology(AntForm form,long age,boolean hasBrood,long callowAge,long callowDuration,
+                          AdultLife.State life,dev.primeants.worker.Nutrition.State nutrition) { }
+    public record Advancement(String status,Biology state,long requested,long completed,long remaining,
+                              java.util.OptionalLong eventTick,String event) { }
+    public Biology biologySnapshot(){return new Biology(form,elapsedAgeTicks,broodId!=null,callowAgeTicks,callowDuration,adultLife.snapshot(),nutrition.snapshot());}
+    private static long ageAfter(long age,long ticks){return Math.addExact(age,ticks);}
+    private static long callowAfter(long age,long duration,long ticks){return age+Math.min(ticks,Math.max(0,duration-age));}
+    /** O(1), no world access or mutation. The caller supplies a resolved phase; no reload application exists. */
+    public static Advancement advanceAdult(Biology input,AdultLife.Phase phase,long requested){
+        String unsupported=null;
+        if(input==null||input.form()==null||input.life()==null||input.nutrition()==null||phase==null||requested<0)unsupported="UNRESOLVED_INPUT";
+        else if(input.age()<0||input.callowAge()<0||input.callowDuration()<0||input.callowAge()>input.callowDuration()
+            ||input.hasBrood()&&(input.form()!=AntForm.WORKER||input.callowDuration()<1)
+            ||!input.hasBrood()&&(input.callowAge()!=0||input.callowDuration()!=0)
+            ||!input.life().valid()||!input.nutrition().valid())unsupported="UNRESOLVED_BIOLOGY";
+        else if(!input.life().started()&&input.form()==AntForm.QUEEN&&phase==AdultLife.Phase.UNKNOWN)unsupported="UNRESOLVED_QUEEN_PHASE";
+        else if(input.form()==AntForm.WORKER&&phase!=AdultLife.Phase.ACTIVE)unsupported="UNRESOLVED_WORKER_PHASE";
+        if(unsupported!=null)return new Advancement(unsupported,input,requested,0,requested,java.util.OptionalLong.empty(),"NONE");
+        if(requested==0)return new Advancement("COMPLETED",input,0,0,0,java.util.OptionalLong.empty(),"NONE");
+        try{
+            var life=input.life();
+            if(!life.started()&&(input.form()==AntForm.WORKER||phase==AdultLife.Phase.ACTIVE))life=life.active();
+            var damage=AdultLife.firstDamage(life,input.nutrition(),input.form(),input.age());
+            boolean boundary=damage.isPresent()&&damage.getAsLong()<=requested;
+            long completed=boundary?damage.getAsLong()-1:requested;
+            String event=boundary?(input.form()==AntForm.WORKER&&damage.getAsLong()>=input.life().lifespan()-input.age()?"AGE_DAMAGE":"STARVATION_DAMAGE"):"NONE";
+            // Activation belongs to the first completed ordinary tick, not to a zero-prefix preview.
+            if(completed==0)return new Advancement("DAMAGE_BOUNDARY",input,requested,0,requested,damage,event);
+            // The live entity ceases its biological branch at MAX age; an unsupported continuation is explicit.
+            if(completed>Long.MAX_VALUE-input.age())return new Advancement("UNRESOLVED_AGE_DOMAIN",input,requested,0,requested,java.util.OptionalLong.empty(),"NONE");
+            var next=AdultLife.evolve(life,input.nutrition(),input.form(),input.age(),completed);
+            var state=new Biology(input.form(),ageAfter(input.age(),completed),input.hasBrood(),
+                input.hasBrood()?callowAfter(input.callowAge(),input.callowDuration(),completed):0,input.callowDuration(),next.life(),next.nutrition());
+            return new Advancement(boundary?"DAMAGE_BOUNDARY":"COMPLETED",state,requested,completed,requested-completed,
+                boundary?damage:java.util.OptionalLong.empty(),event);
+        }catch(ArithmeticException|IllegalArgumentException e){
+            return new Advancement("UNRESOLVED_ARITHMETIC",input,requested,0,requested,java.util.OptionalLong.empty(),"NONE");
+        }
+    }
     // Birth-selected upper bound on the colony stage cap (decision 17); the stage cap owns the limit.
     private int colonyAdultCapacity=Integer.getInteger(dev.primeants.colony.AdultBound.PROPERTY,dev.primeants.colony.AdultBound.MAX);
     public int colonyAdultCapacity(){return colonyAdultCapacity;}
@@ -185,12 +226,12 @@ public final class LasiusNigerEntity extends PathfinderMob {
             biologicalStepInProgress = true;
             boolean completed = false;
             try {
-                elapsedAgeTicks++;
+                elapsedAgeTicks=ageAfter(elapsedAgeTicks,1);
                 adultLife.tick((ServerLevel)level(),this);
                 if(!isAlive()){completed = true; return;}
                 if(form!=AntForm.QUEEN||!workerTasks.sharing().tick((ServerLevel)level()))founding.tick((ServerLevel)level());
                 if (broodId != null) {
-                    if (callowAgeTicks < callowDuration) callowAgeTicks++;
+                    callowAgeTicks=callowAfter(callowAgeTicks,callowDuration,1);
                     entityData.set(CALLOW, (int)Math.min(1000, callowAgeTicks * 1000 / Math.max(1, callowDuration)));
                     workerTasks.tick((ServerLevel)level());
                 }

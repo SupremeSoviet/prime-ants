@@ -15,7 +15,8 @@ public record ReloadObservation(UUID queen, BlockPos nursery, ColonyClock.Interv
     public ReloadObservation { nursery = nursery.immutable(); members = List.copyOf(members); }
     public record Member(UUID adult, UUID brood, UUID queen, BlockPos home, String availability,
                          boolean reserved, AdultSimulation.Snapshot evidence,
-                         ColonyClock.Interval ownInterval, AdultSimulation.Coverage coverage) { }
+                         ColonyClock.Interval ownInterval, ColonyClock.Interval currentTimestampInterval,
+                         AdultSimulation.Boundary returnBoundary, AdultSimulation.Coverage coverage) { }
 
     public static ReloadObservation capture(ServerLevel level, UUID queen, BlockPos nursery, BlockPos home,
                                             ColonyClock.Interval interval) {
@@ -33,15 +34,21 @@ public record ReloadObservation(UUID queen, BlockPos nursery, ColonyClock.Interv
         var entity = level.getEntity(id); // UUID lookup only: never requests terrain or scans world entities.
         String availability = dead ? "DEAD" : "UNKNOWN_UNAVAILABLE";
         AdultSimulation.Snapshot snapshot = null;
+        AdultSimulation.Boundary boundary = null;
         if (!dead && entity instanceof LasiusNigerEntity ant && ant.isAlive() && !ant.isRemoved()) {
             boolean identity = brood == null ? ant.form() == AntForm.QUEEN && id.equals(ant.colonyIdentity())
                 : ant.form() == AntForm.WORKER && brood.equals(ant.broodId())
                   && queen.equals(ant.queenId()) && home.equals(ant.nurseryHome());
             availability = identity ? "OBSERVED" : "UNKNOWN_IDENTITY_CONFLICT";
-            if (identity) snapshot = ant.simulationEvidence();
+            if (identity) {
+                snapshot = ant.simulationEvidence();
+                boundary = ant.simulationBoundaryBefore(interval.beforeGameTime());
+            }
         }
         return new Member(id, brood, queen, home.immutable(), availability, reserved, snapshot,
+            boundary == null ? null : boundary.ownInterval(),
             snapshot == null ? null : snapshot.ownIntervalBefore(interval.beforeGameTime()),
+            boundary == null || boundary.ownInterval().ticks() == 0 ? null : boundary,
             snapshot == null ? AdultSimulation.Coverage.unresolved(availability) : snapshot.reconcile(interval));
     }
 }

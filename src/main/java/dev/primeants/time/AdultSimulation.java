@@ -66,6 +66,12 @@ public final class AdultSimulation {
         return new Snapshot(boundary, origin, knownAfter, clock.lastGameTime().orElseThrow(), invalidTime, runs);
     }
     public Boundary lastBoundary() { return lastBoundary; }
+    /** The pre-C return boundary only when it belongs to C; older retained captures are never newly owed. */
+    public Boundary boundaryBefore(long now) {
+        if (lastBoundary != null && lastBoundary.ownInterval().beforeGameTime() == now
+                && clock.lastGameTime().orElseThrow() == now) return lastBoundary;
+        return new Boundary(clock.before(now), snapshot());
+    }
     public void beforeStep(long now) {
         var interval = clock.before(now);
         if (pendingBoundary || interval.ticks() > 0 || now < clock.lastGameTime().orElseThrow()) {
