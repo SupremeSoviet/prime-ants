@@ -2493,6 +2493,30 @@
       "suite": "long",
       "weight_ticks": 18000,
       "reason": "T04 exact foreign non-food nursing cargo and recipient retained with no food or nutrition credit for 200 real ticks"
+    },
+    {
+      "name": "prime_ants_test:founder_access_priority_game_test_physical_clay_delivery_before_hall_upgrade_cannot_terminally_lose_the_finite_access_pair",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\FounderAccessPriorityGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "Real-tick causal access admission and physical hall supply regression; original plus two concurrent copies"
+    },
+    {
+      "name": "prime_ants_test:founder_access_priority_game_test_copy1physical_clay_delivery_before_hall_upgrade_cannot_terminally_lose_the_finite_access_pair",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\FounderAccessPriorityGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "Real-tick causal access admission and physical hall supply regression; original plus two concurrent copies"
+    },
+    {
+      "name": "prime_ants_test:founder_access_priority_game_test_copy2physical_clay_delivery_before_hall_upgrade_cannot_terminally_lose_the_finite_access_pair",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\FounderAccessPriorityGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "Real-tick causal access admission and physical hall supply regression; original plus two concurrent copies"
     }
   ]
 }

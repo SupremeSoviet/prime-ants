@@ -634,3 +634,47 @@ checkpoint stays RED/INCOMPLETE; controlled Great is separate. No policy/fixture
 Current T04 other acceptances: hauling20123/14393; tier-two natural54198/48468. Inventory19306 retains8 apples+6 chickens
 and67 clay across all five exact in-memory boundaries. Controlled Great11265 retains57/57,19/38,soil80,stone32,food59,
 walking passage and200 settlement, separate from supplied founder/Mature4/19 timeout. Older timing causes remain unresolved.
+
+
+### Stage-1c T05 (2026-10-12): finite access admission ordering
+
+Original supplied founder is PASS at helper 43678 within unchanged60,000. Its fixture, supplies,
+histories, terrain/accounting, stage promotion, physical19-cell form, ordinary passage and 200 loaded settlement assertions
+remain unchanged. This is one current original result, not general timing robustness. Controlled Great independently passes
+11238:57 physical cells,19+38 worker payments,soil 80/stone 32/food 59, passage and 200 settlement. Nursing recovery and controls pass.
+
+The prospective read-only observer captures the actual first stopping decision in a controlled real-tick reproducer at 545:
+Mature/unlocked true, widening/excavation/existing-upgrade/mining false, confirmed Queen's Hall tier 1 with one physically
+delivered clay enabling genuine tier-two priority. Operation one carries its original named dirt, operation two is unstarted,
+and prefix remains4/19. Nondeath terminal custody conserves 71 owned soil+one named unit=72. This matches T16's Hall mechanism;
+T04's matching native sequence still has no individual first-stop predicate/exact timeout census, and nursing attribution
+remains unproved. Pre-repair instrumented original PASS 43818 is separate evidence, not the causal before-run.
+
+A single new-admission guard waits through pending genuine tier-two selection, including a temporarily unfunded gap.
+Earlier priorities, exclusive builder, saved shapes and terminal/revocation safeguards retain their behavior. Identical
+before3/after1 test source changes red 547 to green 5058: ordinary ten-clay Hall completion precedes one access admission,
+then both authorized physical relocations, actual motivating-target payment and 200 loaded settlement occur. Binding,
+prefix and original two unit identities remain continuous within each attempt; fresh-world IDs differ. Access custody
+settles with zero deaths/pickups/releases; later ordinary surface work may still use its one builder. No old terminal
+attempt is revived, no priority suppressed and no third relocation authorized. Semantic surface coordinates and dy=layer+1
+remain; original disk/revocation/stage-loss/death/obstruction/cargo-quarantine controls execute unchanged.
+
+Fast 73/118/26 passes in 127.769s. One unfiltered native long suite is 207/210 in 5596.806s,
+native exits [0, 1, 2]; final inventory 283=73+210 includes three causal copies. COMBINED: max chain 1, 20,000 timeout; HALL: max chain 1, 20,000 timeout.
+Tier-two natural growth also times out at 60,000: all chamber functions are built, but natural brood display/reload/UNKNOWN phases are unreached; last bounded diagnostic 59506/53776 shows recent-income shortage. Its relationship to this repair is unproved.
+Historical T04 Hall maxima2/1 and T01–T04 negatives remain distinct; founder/Great do not cover Hall. No unchanged Hall
+campaign is added. T06's scheduled complete suite remains mandatory.
+
+Executor session storage failure disconnects the original Gradle client at11:16:19, cancelling its wrapper while frozen
+native servers continue. Original parent exits remain UNKNOWN. Targeted durable-launcher exit 42 and report-only gate0
+prove orchestration recovery. First report gate 1 fails on the missing original aggregate; exact single-case aggregation
+smoke then native 210-row reconstruction restore the report path. The recovered final checkLong exit 1 validates those same complete reports with no new
+gameplay, compile, world or server restart. Actual original guard-SKIPs,1073 frozen inputs/archives, protected clients,
+newest-ten+active leases, concurrency≤3 and prelaunch25GB minimum are preserved. Registration-blocked/inconclusive
+prototype setup and local reader/display errors stay disclosed in the appendix; no original acceptance is relaxed.
+
+Settlement: `<turnloop>/directions/prime-ants-stage1c/turns/T05/raw/founder-access-acceptance.json`; linked report, appendix,
+causal/final-native/recovery evidence and final commit/tree verification remain external. No-new-green count 0 is earned
+by demonstrated physical before/after access progress. Food 10323, mining-death/timing uncertainties and historical
+Great 47/57 persist. In-memory nursing/inventory reconstruction is separate from disk/world persistence; established
+generation, performance/broad persistence and release 0.2.0 remain open.

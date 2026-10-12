@@ -19,6 +19,7 @@
       "dev.primeants.gametest.T27ReleaseHarness"
     ],
     "fabric-gametest": [
+      "dev.primeants.gametest.FounderAccessPriorityGameTest",
       "dev.primeants.gametest.BootstrapGameTest",
       "dev.primeants.gametest.AntEntityGameTest",
       "dev.primeants.gametest.QueenFoundingGameTest",

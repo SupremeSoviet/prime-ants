@@ -203,7 +203,7 @@ public final class ChamberUpgrade extends SavedData {
      * claimed, stopped or completed job needs no builder; a job waiting for clay resumes under the same conditions. */
     /** Available upgrade work, including the gap before its next saved job is created. Empty miners yield;
      * already carried units finish their physical destination first. No stage/food/care rule changes. */
-    private record Selection(ColonyDevelopment.ChamberState state, Job job, int tier) { }
+    public record Selection(ColonyDevelopment.ChamberState state, Job job, int tier) { }
     private Selection selection(ServerLevel l, UUID owner, NestPlan home) {
         if (!NestPlan.loaded(l, home.nursery()) || !(l.getBlockEntity(home.nursery()) instanceof BroodPile pile) || pile.stageEvaluation() == null) return null;
         var e = pile.stageEvaluation();
@@ -220,9 +220,22 @@ public final class ChamberUpgrade extends SavedData {
         return null;
     }
     /** An exact recipe unit in a confirmed physical store is required even between claims. */
-    public boolean hasPriority(ServerLevel l, UUID owner, NestPlan home) {
+    public record PrioritySelection(Selection selection, boolean confirmedStore, int recipeUnits) {
+        public boolean applies() { return selection != null && confirmedStore && recipeUnits > 0; }
+    }
+    public PrioritySelection prioritySelection(ServerLevel l, UUID owner, NestPlan home) {
         var selected = selection(l, owner, home); var store = MaterialStore.confirmed(l, owner, home);
-        return selected != null && store != null && store.recipeUnits(selected.tier == 2 ? Items.CLAY_BALL : Items.STONE) > 0;
+        return new PrioritySelection(selected, store != null,
+            selected == null || store == null ? 0 : store.recipeUnits(selected.tier == 2 ? Items.CLAY_BALL : Items.STONE));
+    }
+    public boolean hasPriority(ServerLevel l, UUID owner, NestPlan home) {
+        return prioritySelection(l, owner, home).applies();
+    }
+    /** A new finite access attempt must not enter the temporary supply gap before ordinary tier-two work.
+     * This is admission ordering only: it grants no chamber work without its original recipe and guards. */
+    public boolean awaitingTierTwo(ServerLevel l, UUID owner, NestPlan home) {
+        var selected = selection(l, owner, home);
+        return selected != null && selected.tier == 2;
     }
     public void consider(ServerLevel l, LasiusNigerEntity q, List<LasiusNigerEntity> workers) {
         var p = q.founding().plan(); var owner = q.getUUID();
