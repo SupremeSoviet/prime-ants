@@ -63,6 +63,9 @@ tasks.named('runLongGameTests') { mustRunAfter tasks.named('checkFast') }
 tasks.register('checkServerSmoke') { group='verification'; description='Two real isolated server processes; diagnostic smoke only'; dependsOn tasks.named('runSmokeGameTests') }
 tasks.register('verifyShardedGameTests') {
     dependsOn tasks.named('checkFast'),tasks.named('checkLong')
+    // `check assemble` must retain reviewable catchup jars even when the complete gameplay union
+    // is red. Packaging still belongs to this one graph; the acceptance verdict remains strict.
+    mustRunAfter tasks.named('assemble')
     doLast {
         def p=new ProcessBuilder('python',file('scripts/gametest-harness.py').absolutePath,'merge','--folder',runFolder.absolutePath).inheritIO().start()
         def mergedExit=p.waitFor()

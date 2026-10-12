@@ -28,6 +28,7 @@ public final class AggregateFeeding {
     // A completed abstract return is a location for service accounting, never an actor position.
     // Its completion timestamp lets ordinary actor observations revoke this approximation.
     private final Map<UUID,Long> cacheReturned=new LinkedHashMap<>();
+    private long cropWake=Long.MAX_VALUE;
     public int pending(){return services.size();}
     public List<String> observations(){return services.stream().map(Service::encode).toList();}
     public long nextCompletion(){return services.stream().mapToLong(Service::due).min().orElse(Long.MAX_VALUE);}
@@ -68,10 +69,15 @@ public final class AggregateFeeding {
         cacheReturned.entrySet().removeIf(e->{var actor=adults.stream().filter(a->a.getUUID().equals(e.getKey())).findFirst().orElse(null);boolean revoked=actor==null||actor.workerTasks().sharing().lastLoadedTick()>e.getValue();if(revoked)ready.remove(e.getKey());return revoked;});
         var home=pile.catchupPlan();var queen=l.getEntity(pile.queenId()) instanceof LasiusNigerEntity q?q:null;
         // Ordinary crop sharing precedes personal cache eating. Its transfer uses the shared exact reserve/portion.
-        for(var target:adults)if(target.nutrition().sugar()<CropSharing.PORTION&&target.adultLife().fasting()>=Math.max(1,target.adultLife().grace()/4)&&!receiving(target.getUUID())){
-            var donor=adults.stream().filter(a->a.form()==AntForm.WORKER&&!busy(a.getUUID())&&ready.getOrDefault(a.getUUID(),0L)<=cursor&&CropSharing.aggregateEligible(l,a,target))
-                .min(Comparator.comparingDouble(a->a.distanceToSqr(target))).orElse(null);
-            if(donor!=null){boolean near=WorkerTasks.reaches(l,donor,target.position().add(0,.25,0))&&WorkerTasks.reaches(l,target,donor.position().add(0,.25,0));int partial=target.getUUID().equals(donor.workerTasks().sharing().target())&&near?donor.workerTasks().sharing().actionTicks():0;
+        cropWake=Long.MAX_VALUE;
+        for(var donor:adults){
+            if(!CropSharing.aggregateDonorEligible(l,donor)||receiving(donor.getUUID()))continue;
+            int cooldown=donor.workerTasks().sharing().cooldownRemaining();
+            if(cooldown>0){cropWake=Math.min(cropWake,AdultLife.saturatingAdd(cursor,cooldown));continue;}
+            if(busy(donor.getUUID())||ready.getOrDefault(donor.getUUID(),0L)>cursor)continue;
+            var target=adults.stream().filter(a->!receiving(a.getUUID())&&!busy(a.getUUID())&&CropSharing.aggregateEligible(l,donor,a))
+                .min(CropSharing.recipientOrder(donor)).orElse(null);
+            if(target!=null){boolean near=WorkerTasks.reaches(l,donor,target.position().add(0,.25,0))&&WorkerTasks.reaches(l,target,donor.position().add(0,.25,0));int partial=target.getUUID().equals(donor.workerTasks().sharing().target())&&near?donor.workerTasks().sharing().actionTicks():0;
                 long approach=near?0:route(donor,donor.position(),target.position(),1);add(donor,target.getUUID(),"crop","crop",cursor,CropSharing.ACTION_TICKS-partial+approach,40);}
         }
         if(cache==null||cache.size()==0&&adults.stream().noneMatch(a->WorkerTasks.food(a.getMainHandItem())))return;
@@ -102,7 +108,16 @@ public final class AggregateFeeding {
             add(actor,to,cargo?"cargo":"cache",kind(unit),cursor,fetch+(cargo?0:1)+travel+WorkerTasks.FEEDING_TICKS-partial,back);if(!cargo)available.remove(unit);
         }
     }
-    public long nextEvent(long cursor){long due=Math.min(nextCompletion(),ready.values().stream().filter(n->n>cursor).mapToLong(Long::longValue).min().orElse(Long.MAX_VALUE));return due==Long.MAX_VALUE?Long.MAX_VALUE:due<=cursor?1:due-cursor;}
+    public long nextEvent(long cursor){long due=Math.min(cropWake,Math.min(nextCompletion(),ready.values().stream().filter(n->n>cursor).mapToLong(Long::longValue).min().orElse(Long.MAX_VALUE)));return due==Long.MAX_VALUE?Long.MAX_VALUE:due<=cursor?1:due-cursor;}
+    /** Called only for the coordinator's confirmed missing adult segments, before biological debit.
+     * Stop cooldown counting at the exact maintenance step that would remove donor eligibility. */
+    public void advanceCooldown(ServerLevel l,List<LasiusNigerEntity> adults,long ticks){
+        for(var a:adults)if(CropSharing.aggregateDonorEligible(l,a)&&!receiving(a.getUUID())){
+            long units=a.nutrition().sugar()-CropSharing.RESERVE-1;
+            long eligible=AdultLife.saturatingAdd(a.adultLife().coverageRemaining(),units>Long.MAX_VALUE/AdultLife.maintenancePeriod()?Long.MAX_VALUE:units*AdultLife.maintenancePeriod());
+            a.workerTasks().sharing().advanceAggregateCooldown(Math.min(ticks,eligible));
+        }
+    }
     public void complete(ServerLevel l,BroodPile pile,NestCache cache,long now){
         for(var service:List.copyOf(services))if(service.due<=now){
             var entity=l.getEntity(service.actor);var recipient=l.getEntity(service.recipient);

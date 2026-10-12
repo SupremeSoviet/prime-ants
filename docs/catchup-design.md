@@ -1,3 +1,19 @@
+# Current final status (T08)
+
+Qualified partial delivery. Catch-up runs automatically when an owned colony area reloads: adults age and pay maintenance, confirmed food is served, existing brood develops, affordable eggs may be laid, and StageRules evaluates the resulting colony. Digging, building and mining are excluded from aggregate replay.
+
+[The final public handoff](catchup-report.md) and T08 `raw/final-catchup-acceptance.json` settle the delivery. Final complete acceptance is red; this is not completed catch-up acceptance: 346/350 server cases, 124 unit and 26 model cases. All actual permanent identities were collected on the final executable inputs, with native failures preserved.
+
+The formal Gradle guard also remains rejected: expected345 versus actual350. Its fixed173 legacy term omits three FounderAccessPriority and two HallFunding identities; all five ran and passed. T08 offline accounting diagnosis proves exact native coverage without changing the executable or restarting acceptance. Repairing that guard remains an owner integration dependency.
+
+Crop recipient ordering and saved eligible-time cooldown are shared without changing ordinary behavior. The finite-cache case now uses a fixed independent400-tick horizon. Exact live evidence corrects only the four-unit promotion expectation; original negative evidence and separate funded birth/stage coverage remain. The final two competing vectors and unchanged tolerances are in the report. T07’s129/120 negative remains rejected historical evidence.
+
+Automatic adults, food, laying, existing brood and StageRules behavior remains enabled. Food/material stocks and ordinary saves, partial load orders and replay have scoped acceptance; general navigation equivalence, cross-object crash durability and long-growing cost do not. Runtime/source0.1.0 jars are unreleased catchup artifacts. The eight-turn direction closes without T09 or release acceptance.
+
+## Dated checkpoint history
+
+The sections below preserve prior checkpoint statements. They describe their dated inputs and intermediate acceptance, including stale inactive-era statements; use the current status and final report above for delivery. Historical negatives are not erased by later positives.
+
 # Persistence and bounded competing service (T07)
 
 [The T07 status note](catchup-t07.md) records the current persistence and two frozen growth controls.

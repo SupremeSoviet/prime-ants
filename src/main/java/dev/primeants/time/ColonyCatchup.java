@@ -23,6 +23,7 @@ public final class ColonyCatchup {
     private final AggregateFeeding feeding=new AggregateFeeding();
     public int pendingServices(){return feeding.pending();}
     public long nextServiceCompletion(){return feeding.nextCompletion();}
+    public long nextServiceEvent(long cursor){return feeding.nextEvent(cursor);}
     public List<String> serviceObservations(){return feeding.observations();}
     public long pendingTicks(){return cursor<0?0:through-cursor+1;}
     public long appliedTicks(){return appliedTicks;}
@@ -158,6 +159,7 @@ public final class ColonyCatchup {
                 // Avoid arithmetic overflow in the nursery's speed accounting, even for maximal saved time domains.
                 span=Math.min(span,Long.MAX_VALUE/BroodCapacity.MAX_SLOTS/4);
                 long end=cursor+span-1;
+                if(habitat.verdict()==Findings.Verdict.CLEAR)feeding.advanceCooldown(level,segments.entrySet().stream().filter(e->e.getValue().missing()).map(Map.Entry::getKey).toList(),span);
                 for(var entry:segments.entrySet())if(entry.getValue().missing())entry.getKey().advanceMissing(level,cursor,end);
                 int eventsBeforeService=lastEvents;
                 if(habitat.verdict()==Findings.Verdict.CLEAR)feeding.complete(level,pile,cache,end);

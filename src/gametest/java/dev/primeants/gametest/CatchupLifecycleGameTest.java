@@ -19,6 +19,22 @@ import net.minecraft.world.level.storage.*;
 
 /** Explicit accepted-history/timestamp controls, separate from the native eviction case. No test calls aggregate application. */
 public final class CatchupLifecycleGameTest {
+    @GameTest(maxTicks=8000,structure="prime_ants_test:idle_ground")
+    public void savedCropCooldownCountsOnlyEligibleMissingTimeAndSurvivesReplay(GameTestHelper c){
+        new AutomaticCatchupGameTest().colony(c,true,(q,p)->{
+            var workers=new WorkerForagingGameTest().workers(c,q);var funded=workers.get(0);var empty=workers.get(1);
+            for(var a:List.of(funded,empty)){c.assertTrue(a.nutrition().spend(a.nutrition().sugar(),0),"Declared pre-boundary spending");var tag=ReconciliationGameTest.save(c,a);tag.getCompoundOrEmpty("WorkerTask").getCompoundOrEmpty("CropSharing").putInt("Cooldown",40);AutomaticCatchupGameTest.replace(c,a,tag);}
+            funded=(LasiusNigerEntity)c.getLevel().getEntity(funded.getUUID());empty=(LasiusNigerEntity)c.getLevel().getEntity(empty.getUUID());
+            c.assertTrue(funded.nutrition().ingest(new ItemStack(Items.APPLE),8000,0),"One physical baseline funded crop");
+            long ordinary=funded.workerTasks().sharing().lastLoadedTick(),last=p.lastSimulationGameTime().orElseThrow();AutomaticCatchupGameTest.tickPile(c,p,last+11);
+            c.assertTrue(funded.workerTasks().sharing().cooldownRemaining()==30&&empty.workerTasks().sharing().cooldownRemaining()==40&&funded.workerTasks().sharing().lastLoadedTick()==ordinary,"Ten confirmed missing eligible steps spend only funded cooldown, without inventing an ordinary controller observation");
+            var saved=p.saveWithFullMetadata(c.getLevel().registryAccess());p=BroodGameTest.restorePile(c,p,saved);AutomaticCatchupGameTest.tickPile(c,p,last+11);AutomaticCatchupGameTest.tickPile(c,p,last+10);
+            c.assertTrue(funded.workerTasks().sharing().cooldownRemaining()==30&&empty.workerTasks().sharing().cooldownRemaining()==40,"Same/older replay spends no cooldown");
+            AutomaticCatchupGameTest.tickPile(c,p,last+42);c.assertTrue(funded.workerTasks().sharing().cooldownRemaining()==0&&empty.workerTasks().sharing().cooldownRemaining()==40,"Known eligible virtual elapsed time clears cooldown; low crop does not");
+            c.assertTrue(empty.nutrition().ingest(new ItemStack(Items.APPLE),8000,0),"A separate actual new receipt funds the previously empty donor");AutomaticCatchupGameTest.tickPile(c,p,last+53);
+            c.assertTrue(empty.workerTasks().sharing().cooldownRemaining()==30,"Cooldown starts counting at real eligibility, never retroactively");c.succeed();
+        });
+    }
     private static BroodPile pile(GameTestHelper c,LasiusNigerEntity q){return new NursingGameTest().pile(c,q);}
     private static List<LasiusNigerEntity> adults(GameTestHelper c,LasiusNigerEntity q){return AutomaticCatchupGameTest.adults(c,q);}
     private static void tick(GameTestHelper c,LasiusNigerEntity q,long now){

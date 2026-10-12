@@ -186,15 +186,16 @@ public final class AutomaticCatchupGameTest {
             out.putInt("InventoryFormat",3);out.putString("Colony",q.getUUID().toString());out.store("Entrance",net.minecraft.core.BlockPos.CODEC,plan.entrance());out.putString("Direction",plan.direction().getName());
             out.store("Contents",ItemStack.CODEC.listOf(),List.of(new ItemStack(Items.APPLE),new ItemStack(Items.SWEET_BERRIES),new ItemStack(Items.CHICKEN)));
             cache.loadCustomOnly(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING,c.getLevel().registryAccess(),out.buildResult()));cache.setChanged();
-            long last=resumed.lastSimulationGameTime().orElseThrow();tickPile(c,resumed,last+11);
+            long last=resumed.lastSimulationGameTime().orElseThrow();AllocationObservations.log(c,q,resumed,last+1,"finite_baseline");tickPile(c,resumed,last+11);
+            AllocationObservations.log(c,q,resumed,last+11,"finite_eleven");
             var larva=resumed.records().stream().filter(b->b.id().equals(id)).findFirst().orElseThrow();
             c.assertTrue(resumed.operational(),"Already opened queen controller effect survives the nursery's stale saved observation in either hook ordering");
             c.assertTrue(cache.size()==3&&hungry.nutrition().apples()==0&&larva.nutrition().consumedUnits()==0&&resumed.catchup().pendingServices()>0&&larva.progress()==0,"Eleven ticks cannot earn a twenty-tick feeding action: all three real units remain owned, with no premature receipt or larval spending");
             var pending=resumed.saveWithFullMetadata(c.getLevel().registryAccess());resumed=BroodGameTest.restorePile(c,resumed,pending);tickPile(c,resumed,last+11);c.assertTrue(resumed.saveWithFullMetadata(c.getLevel().registryAccess()).equals(pending),"Normal same-time reconstruction preserves every pending service clock and canonical food unit");
-            long completedAt=last+11;
-            for(int service=0;service<3&&cache.size()>0;service++){
-                long due=resumed.catchup().nextServiceCompletion();c.assertTrue(due!=Long.MAX_VALUE&&due<last+400,"Each selected unit has a finite shared action/geometry service deadline within the existing controller bound");completedAt=due+1;tickPile(c,resumed,completedAt);
-            }
+            // Prospectively fixed horizon and sample schedule. An empty queue during return cooldown
+            // is observed separately from a missing wake; no implementation deadline chooses our steps.
+            long completedAt=last+400;
+            for(long offset:new long[]{40,80,120,200,300,400}){tickPile(c,resumed,last+offset);AllocationObservations.log(c,q,resumed,last+offset,"finite_fixed_horizon_"+offset);}
             larva=resumed.records().stream().filter(b->b.id().equals(id)).findFirst().orElseThrow();
             c.assertTrue(cache.size()==0&&hungry.nutrition().apples()==1&&larva.nutrition().berries()==1&&larva.nutrition().chickens()==1,"At actual service completion all three original physical units are consumed once and credited by kind to one owner");
             c.assertTrue(larva.progress()>0&&larva.nourishment()>0&&larva.nutrition().snapshot().valid()&&hungry.nutrition().snapshot().valid(),"Shared brood spending begins after service and preserves exact per-owner residual equations");
@@ -206,6 +207,11 @@ public final class AutomaticCatchupGameTest {
     }
     @GameTest(maxTicks=8000,structure="prime_ants_test:idle_ground")
     public void foodFedExistingBroodPromotesYoungAndLongReturnRegressesThroughStageRules(GameTestHelper c){
+        fourUnit(c,false);
+    }
+    @GameTest(maxTicks=8000,structure="prime_ants_test:idle_ground")
+    public void exactFourUnitLiveControlSettlesExistingEggEmergence(GameTestHelper c){fourUnit(c,true);}
+    private void fourUnit(GameTestHelper c,boolean live){
         var f=new WorkerForagingGameTest();var q=f.start(c);boolean[] done={false};
         c.onEachTick(()->{
             if(done[0])return;var p=new NursingGameTest().pile(c,q);var plan=q.founding().plan();
@@ -219,18 +225,27 @@ public final class AutomaticCatchupGameTest {
             out.putInt("InventoryFormat",3);out.putString("Colony",q.getUUID().toString());out.store("Entrance",net.minecraft.core.BlockPos.CODEC,plan.entrance());out.putString("Direction",plan.direction().getName());
             out.store("Contents",ItemStack.CODEC.listOf(),List.of(new ItemStack(Items.APPLE),new ItemStack(Items.CHICKEN)));
             cache.loadCustomOnly(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING,c.getLevel().registryAccess(),out.buildResult()));
-            long last=p.lastSimulationGameTime().orElseThrow(),span=p.stageDuration()*3+1;tickPile(c,p,last+span+1);
+            long last=p.lastSimulationGameTime().orElseThrow(),span=p.stageDuration()*3+1;
+            c.assertTrue(p.stageDuration()==120&&span==361,"Exact original duration120 and span361, no extra food");
+            GrowthObservations.start(c,q,live?"four_unit_live":"four_unit_catchup");AllocationObservations.log(c,q,p,last+1,live?"four_live_baseline":"four_aggregate_baseline");
+            if(live)for(long offset=1;offset<=span+1;offset++){long time=last+offset;ReconciliationGameTest.atTime(c,time,()->adults(c,q).forEach(LasiusNigerEntity::tick));tickPile(c,p,time);GrowthObservations.sample(c,q,time,"ordinary_after_bodies_and_pile");}
+            else tickPile(c,p,last+span+1);
+            GrowthObservations.sample(c,q,last+span+1,"final");GrowthObservations.stop(q);AllocationObservations.log(c,q,p,last+span+1,live?"four_live_final":"four_aggregate_final");
             var disposition=new JsonObject();disposition.addProperty("requested_span",span);disposition.addProperty("stage_duration",p.stageDuration());disposition.add("queen_nutrition",new Gson().toJsonTree(q.nutrition().snapshot()));disposition.add("records",new Gson().toJsonTree(p.records().stream().map(r->Map.of("stage",r.stage(),"progress",r.progress(),"nutrition",r.nutrition().snapshot())).toList()));disposition.add("cache_contents",new Gson().toJsonTree(cache.contents().stream().map(ItemStack::toString).toList()));disposition.add("service_intentions",new Gson().toJsonTree(p.catchup().serviceObservations()));disposition.addProperty("occupied_workers",ColonyMembers.get(c.getLevel()).occupied(q.getUUID()));log(c,"four_unit_existing_egg_before_promotion_verdict",p,disposition);
-            c.assertTrue(c.getLevel().getEntity(ColonyMembers.workerId(brood)) instanceof LasiusNigerEntity&&p.consumed().contains(brood)&&ColonyMembers.get(c.getLevel()).occupied(q.getUUID())==4,"Existing fed brood emerges as the fifth real colony adult");
-            c.assertTrue(cache.size()==0&&p.consumedApples()==1&&p.consumedChickens()==1&&q.nutrition().snapshot().valid(),"Exactly four initial units: two queen receipts, two brood receipts, no income");
-            c.assertTrue(p.stageEvaluation().stage()==ColonyStage.YOUNG,"Existing ColonyDevelopment/StageRules promotes on real adults and confirmed nursery/cache");
-            var row=new JsonObject();row.addProperty("promoted_stage",p.stageEvaluation().stage().name());row.addProperty("promoted_adults",5);row.addProperty("initial_physical_units",4);
+            // T08 exact ordinary control disproved the original fifth-adult assumption. Keep this
+            // permanent identity and its original archived failure; never create another food unit.
+            var dependent=p.records().stream().filter(r->r.id().equals(brood)).findFirst().orElseThrow();
+            c.assertTrue(c.getLevel().getEntity(ColonyMembers.workerId(brood))==null&&!p.consumed().contains(brood)&&ColonyMembers.get(c.getLevel()).occupied(q.getUUID())==3&&dependent.stage()==BroodStage.LARVA&&dependent.progress()==0,"Exact live-proven four-unit counterexample: unpaid larval sugar prevents fifth adult");
+            c.assertTrue(cache.size()==0&&p.consumedApples()==0&&p.consumedChickens()==1&&q.nutrition().apples()==2&&q.nutrition().chickens()==1&&q.nutrition().snapshot().valid()&&dependent.nutrition().snapshot().valid()&&dependent.nutrition().sugar()==0&&dependent.nutrition().protein()==8000,"Exactly four original units: three queen receipts and one larval protein receipt; no income");
+            if(live){c.succeed();return;}
+            c.assertTrue(p.stageEvaluation().stage()==ColonyStage.FOUNDING,"Unchanged StageRules cannot promote a four-adult colony");
+            var row=new JsonObject();row.addProperty("counterexample_stage",p.stageEvaluation().stage().name());row.addProperty("counterexample_adults",4);row.addProperty("initial_physical_units",4);
             var restored=BroodGameTest.restorePile(c,p,p.saveWithFullMetadata(c.getLevel().registryAccess()));
             tickPile(c,restored,last+span+1+1_000_001);
             c.assertTrue(restored.catchup().pendingTicks()==0&&ColonyMembers.get(c.getLevel()).occupied(q.getUUID())==0&&restored.stageEvaluation().stage()==ColonyStage.FOUNDING,"Long return causes real deaths and catastrophic regression through unchanged StageRules");
             // Save/reconstruct after an aggregate time jump also validates the ordinary income sampler's discontinuity.
             var saved=restored.saveWithFullMetadata(c.getLevel().registryAccess());var replay=BroodGameTest.restorePile(c,restored,saved);
-            c.assertTrue(replay.catchup().appliedTicks()==span+1_000_000&&replay.consumed().contains(brood),"Applied interval and real birth identity survive normal reconstruction");
+            c.assertTrue(replay.catchup().appliedTicks()==span+1_000_000&&replay.original().equals(p.original())&&!replay.consumed().contains(brood),"Applied interval and unpromoted dependent identity survive normal reconstruction");
             row.addProperty("regressed_stage",restored.stageEvaluation().stage().name());row.addProperty("remaining_workers",0);row.addProperty("laying_deferred",true);log(c,"stage_promotion_regression",restored,row);c.succeed();
         });
     }

@@ -20,6 +20,14 @@ public final class CropSharing {
     public int actionTicks(){return actionTicks;} public UUID target(){return target;}
     /** Persisted ordinary controller observation; aggregate biology never stamps it. */
     public long lastLoadedTick(){return lastTick;}
+    public int cooldownRemaining(){return cooldown;}
+    /** Same ordering in ordinary and bounded sharing; path acceptance remains ordinary-owned. */
+    public static Comparator<LasiusNigerEntity> recipientOrder(LasiusNigerEntity donor){
+        return Comparator.comparingLong((LasiusNigerEntity a)->-a.adultLife().fasting()).thenComparingDouble(donor::distanceToSqr);
+    }
+    public static boolean aggregateDonorEligible(ServerLevel l,LasiusNigerEntity a){return live(l,a)&&a.form()==AntForm.WORKER&&a.nutrition().sugar()>RESERVE;}
+    /** Only confirmed missing steps may spend saved cooldown. Never stamp an ordinary observation. */
+    public void advanceAggregateCooldown(long eligibleTicks){if(eligibleTicks<0)throw new IllegalArgumentException("Negative crop elapsed time");cooldown-=(int)Math.min(cooldown,eligibleTicks);}
     private static boolean live(ServerLevel l,LasiusNigerEntity a){
         if(l.getEntity(a.getUUID())!=a||!a.isAlive()||a.isRemoved()||a.isNoAi()||a.isCallow()||a.workerTasks().defending()
             ||!NestPlan.loaded(l,a.blockPosition())||!l.isPositionEntityTicking(a.blockPosition()))return false;
@@ -30,8 +38,9 @@ public final class CropSharing {
         &&a.workerTasks().sharing().target==null;}
     /** Shared live identity, fasting, portion and reserve policy; only travel is approximated by the aggregate. */
     public static boolean aggregateEligible(ServerLevel l,LasiusNigerEntity donor,LasiusNigerEntity recipient){
-        return live(l,donor)&&donor.form()==AntForm.WORKER&&donor.nutrition().sugar()>RESERVE
+        return aggregateDonorEligible(l,donor)
             &&donor.workerTasks().sharing().recipient(l,recipient)&&donor.distanceToSqr(recipient)<=256
+            &&(recipient.workerTasks().sharing().receivingFrom==null||recipient.workerTasks().sharing().receivingFrom.equals(donor.getUUID()))
             &&(donor.workerTasks().sharing().target==null||donor.workerTasks().sharing().target.equals(recipient.getUUID()));
     }
     private static boolean transferNutrition(LasiusNigerEntity donor,LasiusNigerEntity recipient){
@@ -71,7 +80,7 @@ public final class CropSharing {
             var choices=new ArrayList<LasiusNigerEntity>();
             for(var m:ColonyMembers.get(l).members(donor.queenId()))if(l.getEntity(m.worker()) instanceof LasiusNigerEntity a&&recipient(l,a)&&donor.distanceToSqr(a)<=256)choices.add(a);
             if(l.getEntity(donor.queenId()) instanceof LasiusNigerEntity a&&recipient(l,a)&&donor.distanceToSqr(a)<=256)choices.add(a);
-            choices.sort(Comparator.comparingLong((LasiusNigerEntity a)->-a.adultLife().fasting()).thenComparingDouble(donor::distanceToSqr));
+            choices.sort(recipientOrder(donor));
             int trials=0;for(var a:choices){if(++trials>8)break;if(a.workerTasks().sharing().receivingFrom!=null)continue;
                 var path=donor.getNavigation().createPath(a.blockPosition(),0,24);if(path!=null&&path.canReach()){target=a.getUUID();donor.getNavigation().moveTo(path,1.0);break;}}
         }
