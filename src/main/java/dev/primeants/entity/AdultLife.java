@@ -9,6 +9,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 
 /** Loaded adult ticks only. Configuration is selected once at birth, independent of brood speed. */
 public final class AdultLife {
+    public static final int MEAL_TICKS=20;
     public static final long DEFAULT_LIFESPAN=144_000, DEFAULT_FASTING=24_000;
     private long lifespan=duration("prime_ants.adultLifespanTicks",DEFAULT_LIFESPAN);
     private long grace=duration("prime_ants.adultFastingTicks",DEFAULT_FASTING);
@@ -78,7 +79,7 @@ public final class AdultLife {
         if(ant.elapsedAgeTicks()!=0||started||selectedLifespan<1||selectedGrace<1)throw new IllegalStateException("Adult policy is birth-time only");
         lifespan=selectedLifespan;grace=selectedGrace;
     }
-    public boolean mealAction(){return ++mealTicks>=20;}
+    public boolean mealAction(){return ++mealTicks>=MEAL_TICKS;}
     public void tick(ServerLevel level,LasiusNigerEntity ant){
         if(!started&&(ant.form()==AntForm.WORKER||!ant.founding().reserveOnlyFounding(level)))started=true;
         if(!started)return; // First-clutch queen uses only the unchanged 39,000 reserve budget.

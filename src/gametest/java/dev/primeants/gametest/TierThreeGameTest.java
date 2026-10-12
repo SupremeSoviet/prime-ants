@@ -43,6 +43,10 @@ public final class TierThreeGameTest {
             probe.sample();
             var jobs=ChamberUpgrade.get(l).jobs(q.getUUID());
             c.assertTrue(fixture.fx.food.total(c,q)==fixture.apples+fixture.chickens,"Independent physical and ingested food conservation");
+            if(witness==EffectWitness.INVENTORIES&&(c.getTick()%500==0||c.getTick()==19999)){
+                var e=pile.stageEvaluation();var tiers=new TreeMap<String,Object>();for(var function:ChamberFunction.values())tiers.put(function.name(),e==null?"unavailable":e.inputs().tier(function).toString());
+                probe.emit("t07_first_unmet",Map.of("firstPredicate",!fixture.complete(c,q)?"fixture.complete":pile.loadedTicks()-completed[0]<200?"settled200":cache.size()<=12?"foodAbove12":store.size()<=64?"materialAbove64":mostBrood[0]<=10?"naturalBroodAbove10":measuredSteps[0]<20?"doubleSteps20":"ready","tiers",tiers,"inventories",probe.inventories(),"jobs",jobs.stream().map(job->Map.of("chamber",job.chamber,"tier",job.tier,"complete",job.complete(),"claim",String.valueOf(job.claim),"carried",job.carried(),"built",job.built().size())).toList()));
+            }
             if(!fixture.complete(c,q))return;
             if(completed[0]<0){
                 completed[0]=pile.loadedTicks();

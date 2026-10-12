@@ -18,6 +18,8 @@ public final class CropSharing {
     public CropSharing(LasiusNigerEntity ant){donor=ant;}
     public boolean busy(){return target!=null||receivingFrom!=null;}
     public int actionTicks(){return actionTicks;} public UUID target(){return target;}
+    /** Persisted ordinary controller observation; aggregate biology never stamps it. */
+    public long lastLoadedTick(){return lastTick;}
     private static boolean live(ServerLevel l,LasiusNigerEntity a){
         if(l.getEntity(a.getUUID())!=a||!a.isAlive()||a.isRemoved()||a.isNoAi()||a.isCallow()||a.workerTasks().defending()
             ||!NestPlan.loaded(l,a.blockPosition())||!l.isPositionEntityTicking(a.blockPosition()))return false;
@@ -26,6 +28,17 @@ public final class CropSharing {
     private boolean recipient(ServerLevel l,LasiusNigerEntity a){return a!=donor&&live(l,a)&&Objects.equals(donor.colonyIdentity(),a.colonyIdentity())
         &&a.nutrition().sugar()<PORTION&&a.adultLife().fasting()>=Math.max(1,a.adultLife().grace()/4)
         &&a.workerTasks().sharing().target==null;}
+    /** Shared live identity, fasting, portion and reserve policy; only travel is approximated by the aggregate. */
+    public static boolean aggregateEligible(ServerLevel l,LasiusNigerEntity donor,LasiusNigerEntity recipient){
+        return live(l,donor)&&donor.form()==AntForm.WORKER&&donor.nutrition().sugar()>RESERVE
+            &&donor.workerTasks().sharing().recipient(l,recipient)&&donor.distanceToSqr(recipient)<=256
+            &&(donor.workerTasks().sharing().target==null||donor.workerTasks().sharing().target.equals(recipient.getUUID()));
+    }
+    private static boolean transferNutrition(LasiusNigerEntity donor,LasiusNigerEntity recipient){
+        long amount=Math.min(PORTION,Math.min(donor.nutrition().sugar()-RESERVE,Nutrition.QUEEN_SUGAR_CAPACITY-recipient.nutrition().sugar()));
+        return donor.nutrition().shareWith(recipient.nutrition(),amount,RESERVE,Nutrition.QUEEN_SUGAR_CAPACITY);
+    }
+    public static boolean transferAggregate(ServerLevel l,LasiusNigerEntity donor,LasiusNigerEntity recipient){return aggregateEligible(l,donor,recipient)&&transferNutrition(donor,recipient);}
     public boolean needsCrop(ServerLevel l){
         if(!live(l,donor)||donor.form()!=AntForm.WORKER||donor.nutrition().sugar()>RESERVE)return false;
         for(var m:ColonyMembers.get(l).members(donor.queenId()))if(l.getEntity(m.worker()) instanceof LasiusNigerEntity a&&recipient(l,a)&&donor.distanceToSqr(a)<=256)return true;
@@ -80,7 +93,7 @@ public final class CropSharing {
         // No asynchronous callbacks between paired mutations. Clear action before any later callback.
         long amount=Math.min(PORTION,Math.min(donor.nutrition().sugar()-RESERVE,Nutrition.QUEEN_SUGAR_CAPACITY-a.nutrition().sugar()));
         if(live(l,donor)&&recipient(l,a)&&WorkerTasks.reaches(l,donor,mouth)&&WorkerTasks.reaches(l,a,donor.position().add(0,.25,0))
-            &&donor.nutrition().shareWith(a.nutrition(),amount,RESERVE,Nutrition.QUEEN_SUGAR_CAPACITY))
+            &&transferNutrition(donor,a))
             dev.primeants.PrimeAnts.LOGGER.info("Physical crop sharing donor={} recipient={} loadedActionTicks={} quantity={} donorGiven={} recipientReceived={}",donor.getUUID(),a.getUUID(),actionTicks,amount,donor.nutrition().givenSugar(),a.nutrition().receivedSugar());
         clear(l);return true;
     }

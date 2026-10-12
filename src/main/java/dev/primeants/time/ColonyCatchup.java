@@ -20,6 +20,10 @@ public final class ColonyCatchup {
     private String status="idle";
     private long invokedAt=Long.MIN_VALUE;
     private boolean running;
+    private final AggregateFeeding feeding=new AggregateFeeding();
+    public int pendingServices(){return feeding.pending();}
+    public long nextServiceCompletion(){return feeding.nextCompletion();}
+    public List<String> serviceObservations(){return feeding.observations();}
     public long pendingTicks(){return cursor<0?0:through-cursor+1;}
     public long appliedTicks(){return appliedTicks;}
     public long appliedThrough(){return appliedThrough;}
@@ -130,31 +134,24 @@ public final class ColonyCatchup {
                 var plan=pile.catchupPlan();
                 NestCache cache=habitat.verdict()==Findings.Verdict.CLEAR&&NestPlan.loaded(level,plan.cache())
                     &&level.getBlockEntity(plan.cache()) instanceof NestCache c&&c.ownedBy(pile.queenId(),plan)?c:null;
-                boolean nurse=adults.stream().anyMatch(a->a.form()==AntForm.WORKER&&a.workerTasks().caregiver(level,plan));
                 // One decision batch plus all physical units it could allocate fits before any mutation.
-                int reserve=1+(cache==null?0:cache.size());
+                int reserve=1+(cache==null?0:cache.size())+feeding.pending()+(int)adults.stream().filter(a->WorkerTasks.food(a.getMainHandItem())).count();
                 if(lastEvents>MAX_EVENTS-reserve){status="pending_event_bound";return false;}
                 var segments=new LinkedHashMap<LasiusNigerEntity,Segment>();
-                int foodBefore=cache==null?0:cache.size();
                 long span=through-cursor+1;
                 for(var a:adults){
                     var sg=segment(a.simulationEvidence(),cursor,through);
                     if(sg==null){status="pending_unknown_adult_evidence";return false;}
                     segments.put(a,sg);span=Math.min(span,sg.length());
                     if(sg.missing()){
-                        if(cache!=null&&a.adultLife().hungry()&&(a.form()==AntForm.WORKER||nurse)
-                            &&cache.serveAggregate(a.nutrition(),Nutrition.QUEEN_SUGAR_CAPACITY,a.form()==AntForm.WORKER?0:Nutrition.QUEEN_PROTEIN_CAPACITY,s->Nutrition.sugarYield(s)>0))lastEvents++;
                         var phase=a.form()==AntForm.WORKER||a.adultLife().started()||!a.founding().reserveOnlyFounding(level)?AdultLife.Phase.ACTIVE:AdultLife.Phase.RESERVE_ONLY;
                         span=Math.min(span,a.adultLife().nextEvent(a,phase));
                         if(a.elapsedAgeTicks()==Long.MAX_VALUE){status="pending_age_domain";return false;}
                         span=Math.min(span,Long.MAX_VALUE-a.elapsedAgeTicks());
                     }
                 }
-                if(cache!=null&&nurse)for(var brood:pile.records()){
-                    // Actual kinds and larval lifetime intake caps; no new nutrition rules or virtual income.
-                    while(lastEvents<MAX_EVENTS-1&&cache.serveAggregate(brood.nutrition(),Nutrition.LARVA_SUGAR,Nutrition.LARVA_PROTEIN,s->pile.accepts(brood,s)))lastEvents++;
-                }
-                if(cache!=null&&cache.size()!=foodBefore){pile.aggregateFoodChanged();pile.refreshAggregateStage(level,true);}
+                if(habitat.verdict()==Findings.Verdict.CLEAR)feeding.plan(level,pile,segments.entrySet().stream().filter(e->e.getValue().missing()).map(Map.Entry::getKey).toList(),cache,cursor);
+                span=Math.min(span,feeding.nextEvent(cursor));
                 span=Math.min(span,pile.nextBroodEvent(level,habitat.problem()));
                 span=Math.min(span,pile.nextLayingEvent(level,habitat.problem()));
                 span=Math.min(span,pile.nextStageEvent(level));
@@ -162,6 +159,9 @@ public final class ColonyCatchup {
                 span=Math.min(span,Long.MAX_VALUE/BroodCapacity.MAX_SLOTS/4);
                 long end=cursor+span-1;
                 for(var entry:segments.entrySet())if(entry.getValue().missing())entry.getKey().advanceMissing(level,cursor,end);
+                int eventsBeforeService=lastEvents;
+                if(habitat.verdict()==Findings.Verdict.CLEAR)feeding.complete(level,pile,cache,end);
+                if(lastEvents!=eventsBeforeService)pile.refreshAggregateStage(level,true);
                 lifecycleNanos+=System.nanoTime()-phaseStart-(stageNanos+commitNanos-workNested);phaseStart=System.nanoTime();long nested=stageNanos+commitNanos;
                 pile.advanceAggregate(level,span,end,habitat.problem());
                 lifecycleNanos+=System.nanoTime()-phaseStart-(stageNanos+commitNanos-nested);phaseStart=System.nanoTime();
@@ -176,8 +176,9 @@ public final class ColonyCatchup {
             lastNanos=System.nanoTime()-start;running=false;pile.setChanged();
         }
     }
-    public void save(ValueOutput out){out.putInt("Version",1);out.putLong("Cursor",cursor);out.putLong("Through",through);out.putLong("AppliedThrough",appliedThrough);out.putLong("AppliedTicks",appliedTicks);out.putLong("Invocations",invocations);out.putString("Status",status);out.putLong("RecoveryBaseline",recoveryBaseline);out.putLong("UnknownTicks",unknownTicks);out.putLong("UnknownThrough",unknownThrough);}
+    public void save(ValueOutput out){out.putInt("Version",1);out.putLong("Cursor",cursor);out.putLong("Through",through);out.putLong("AppliedThrough",appliedThrough);out.putLong("AppliedTicks",appliedTicks);out.putLong("Invocations",invocations);out.putString("Status",status);out.putLong("RecoveryBaseline",recoveryBaseline);out.putLong("UnknownTicks",unknownTicks);out.putLong("UnknownThrough",unknownThrough);feeding.save(out);}
     public void load(ValueInput in){
+        feeding.load(in);
         cursor=in.getLongOr("Cursor",-1);through=in.getLongOr("Through",-1);appliedThrough=in.getLongOr("AppliedThrough",-1);
         appliedTicks=in.getLongOr("AppliedTicks",0);invocations=in.getLongOr("Invocations",0);status=in.getStringOr("Status","idle");
         recoveryBaseline=in.getLongOr("RecoveryBaseline",-1);unknownTicks=in.getLongOr("UnknownTicks",0);unknownThrough=in.getLongOr("UnknownThrough",-1);

@@ -64,6 +64,7 @@ public final class BroodPile extends BlockEntity {
     }
     private boolean reloadBoundaryPending = true;
     private long lastOrdinaryGameTime=-1;
+    private long restoredOrdinaryFloor=-1;
     /** Latest immutable pre-step capture for this instance; not an applied ledger or dormant queue. */
     public dev.primeants.time.ReloadObservation reloadObservation() { return reloadObservation; }
     public java.util.OptionalLong lastSimulationGameTime() { return clock.lastGameTime(); }
@@ -268,7 +269,9 @@ public final class BroodPile extends BlockEntity {
     }
     void serverTick(ServerLevel server) {
         if (queenId == null || plan == null || !ownedBy(queenId, plan)) return;
-        if(lastOrdinaryGameTime==server.getGameTime())return;
+        // A normal clock rebase without aggregate receipts still belongs to ColonyClock.
+        // An already applied historical tick cannot earn a second ordinary step after restoration.
+        if(lastOrdinaryGameTime==server.getGameTime()||server.getGameTime()<=restoredOrdinaryFloor||catchup.appliedThrough()>=server.getGameTime())return;
         if(!resumeCatchup(server)){setChanged();return;}
         loadedTicks=dev.primeants.entity.AdultLife.saturatingAdd(loadedTicks,1);
         growth.observe(loadedTicks,supply(server));
@@ -422,17 +425,7 @@ public final class BroodPile extends BlockEntity {
      * actors cannot pay her egg cost. Only her nutrition or actually serviceable confirmed cache units can. */
     private boolean aggregateEggFunding(ServerLevel server){
         if(!(server.getEntity(queenId) instanceof LasiusNigerEntity q))return false;
-        long sugar=q.nutrition().sugar(),protein=q.nutrition().protein();
-        if(sugar>=Nutrition.EGG_SUGAR&&protein>=Nutrition.EGG_PROTEIN)return true;
-        if(!(server.getBlockEntity(plan.cache()) instanceof dev.primeants.worker.NestCache cache)||!cache.ownedBy(queenId,plan))return false;
-        boolean nurse=ColonyMembers.get(server).members(queenId).stream().filter(m->!m.dead())
-            .anyMatch(m->server.getEntity(m.worker()) instanceof LasiusNigerEntity a&&a.workerTasks().caregiver(server,plan));
-        if(!nurse)return false;
-        for(var unit:cache.contents()){
-            if(sugar<Nutrition.EGG_SUGAR)sugar+=Nutrition.sugarYield(unit);
-            if(protein<Nutrition.EGG_PROTEIN)protein+=Nutrition.proteinYield(unit);
-        }
-        return sugar>=Nutrition.EGG_SUGAR&&protein>=Nutrition.EGG_PROTEIN;
+        return q.nutrition().sugar()>=Nutrition.EGG_SUGAR&&q.nutrition().protein()>=Nutrition.EGG_PROTEIN;
     }
     /** Existing StageRules clocks in this nursery's clock domain; no requirement first seen at C is backdated. */
     public long nextStageEvent(ServerLevel server){
@@ -452,15 +445,6 @@ public final class BroodPile extends BlockEntity {
         // Validate replay, current eligibility and the coordinator's reserved event budget before any egg-funding transfer.
         if(habitat==null&&loadedTicks-lastLayingTick>=aggregateCadence&&nextLayingEvent(server,habitat)==1
             &&layingIdentityAvailable(server,layingIdentity(loadedTicks,slot))&&catchup.eventAvailable()){
-            var plan=catchupPlan();var adults=ColonyMembers.get(server).members(queenId);
-            boolean nurse=adults.stream().filter(m->!m.dead()).anyMatch(m->server.getEntity(m.worker()) instanceof LasiusNigerEntity a&&a.workerTasks().caregiver(server,plan));
-            if(nurse&&q!=null&&server.getBlockEntity(plan.cache()) instanceof dev.primeants.worker.NestCache cache&&cache.ownedBy(queenId,plan)){
-                int before=cache.size();
-                while((q.nutrition().sugar()<Nutrition.EGG_SUGAR||q.nutrition().protein()<Nutrition.EGG_PROTEIN)
-                    &&catchup.foodAvailable()
-                    &&cache.serveAggregate(q.nutrition(),Nutrition.QUEEN_SUGAR_CAPACITY,Nutrition.QUEEN_PROTEIN_CAPACITY,s->Nutrition.sugarYield(s)>0&&q.nutrition().sugar()<Nutrition.EGG_SUGAR||Nutrition.proteinYield(s)>0&&q.nutrition().protein()<Nutrition.EGG_PROTEIN))catchup.foodEvent();
-                if(cache.size()!=before)aggregateFoodChanged();
-            }
             lay(server,q,aggregateCare(server),true);
         }
         refreshAggregateStage(server,false);changed();
@@ -563,6 +547,9 @@ public final class BroodPile extends BlockEntity {
         growth.load(in.childOrEmpty("GrowthFlow"));
         super.loadAdditional(in); records.clear(); consumed.clear();original.clear();expired.clear(); queenId = null; plan = null; stageEvaluation = null;
         clock.load(in);catchup.load(in.childOrEmpty("Catchup"));lastOrdinaryGameTime=in.getLongOr("LastOrdinaryGameTime",clock.lastGameTime().orElse(-1));
+        // Legacy level-access migration can establish a different baseline while retaining the old
+        // ordinary field. Preserve both fields; only a coherent completed pair proves a restore floor.
+        restoredOrdinaryFloor=lastOrdinaryGameTime>=0&&clock.lastGameTime().isPresent()&&clock.lastGameTime().getAsLong()==lastOrdinaryGameTime?lastOrdinaryGameTime:-1;
         reloadObservation = null; reloadBoundaryPending = true;
         adultLifespan=in.getLongOr("AdultLifespan",dev.primeants.entity.AdultLife.DEFAULT_LIFESPAN);fastingGrace=in.getLongOr("AdultFastingGrace",dev.primeants.entity.AdultLife.DEFAULT_FASTING);
         // A 0.1.0 pile has only the fixed AdultCapacity (4..30); it migrates once to an upper bound (AdultBound.fromLegacy).

@@ -32,10 +32,16 @@ public final class CatchupLifecycleGameTest {
         var registry=ChamberRegistry.get(c.getLevel()).colony(q.getUUID());
         var restored=BroodGameTest.restorePile(c,p,saved);AutomaticCatchupGameTest.tickPile(c,restored,now);
         c.assertTrue(restored.saveWithFullMetadata(c.getLevel().registryAccess()).equals(saved)&&biology.equals(adults(c,q).stream().map(LasiusNigerEntity::biologySnapshot).toList())&&registry.equals(ChamberRegistry.get(c.getLevel()).colony(q.getUUID())),"Same-C reconstruction preserves exact brood/adult/clock receipts and identities");
+        AutomaticCatchupGameTest.tickPile(c,restored,now-1);
+        var replayBefore=new JsonObject();replayBefore.addProperty("pile_nbt",saved.toString());var replayAfter=new JsonObject();replayAfter.addProperty("pile_nbt",restored.saveWithFullMetadata(c.getLevel().registryAccess()).toString());PersistenceDiagnostics.observe(c,"lifecycle_older_C",replayBefore,replayAfter);
+        c.assertTrue(restored.saveWithFullMetadata(c.getLevel().registryAccess()).equals(saved)&&biology.equals(adults(c,q).stream().map(LasiusNigerEntity::biologySnapshot).toList()),"Older-C reconstruction cannot replay any completed investment or pending service");
     }
     private static void fundedLarva(GameTestHelper c,LasiusNigerEntity q,BroodPile p,long duration){
+        existingLarva(c,q,p,duration,true);
+    }
+    private static void existingLarva(GameTestHelper c,LasiusNigerEntity q,BroodPile p,long duration,boolean fed){
         c.assertTrue(q.nutrition().spend(Nutrition.EGG_SUGAR,Nutrition.EGG_PROTEIN),"Existing dependent's real egg investment");
-        var n=new Nutrition();c.assertTrue(n.ingest(new ItemStack(Items.APPLE),Nutrition.LARVA_SUGAR,Nutrition.LARVA_PROTEIN)&&n.ingest(new ItemStack(Items.CHICKEN),Nutrition.LARVA_SUGAR,Nutrition.LARVA_PROTEIN),"Two declared physical baseline larval receipts");
+        var n=new Nutrition();if(fed)c.assertTrue(n.ingest(new ItemStack(Items.APPLE),Nutrition.LARVA_SUGAR,Nutrition.LARVA_PROTEIN)&&n.ingest(new ItemStack(Items.CHICKEN),Nutrition.LARVA_SUGAR,Nutrition.LARVA_PROTEIN),"Two declared physical baseline larval receipts");
         var out=TagValueOutput.createWithContext(ProblemReporter.DISCARDING,c.getLevel().registryAccess());n.save(out);
         var r=new CompoundTag();r.putString("Id",UUID.randomUUID().toString());r.putString("Queen",q.getUUID().toString());r.putInt("Slot",0);r.putString("Stage","LARVA");r.putLong("Progress",0);r.putLong("Nourishment",0);r.putBoolean("Founding",false);r.put("Nutrition",out.buildResult());
         var tag=p.saveWithFullMetadata(c.getLevel().registryAccess());var list=new ListTag();list.add(r);tag.put("Brood",list);tag.putLong("StageDuration",duration);tag.putLong("LastLayingTick",2400);tag.putLong("LoadedTicks",2400);
@@ -57,6 +63,13 @@ public final class CatchupLifecycleGameTest {
     }
     @GameTest(maxTicks=8000,structure="prime_ants_test:surface_ground")
     public void competingFiniteResourcesLayingAndVirtualBirthsMatchLiveControl(GameTestHelper c){
+        competition(c,true);
+    }
+    @GameTest(maxTicks=8000,structure="prime_ants_test:surface_ground")
+    public void finiteResourcesWithoutInitialAdultDemandMatchFrozenLiveControl(GameTestHelper c){
+        competition(c,false);
+    }
+    private void competition(GameTestHelper c,boolean adultDemand){
         var live=new TierThreeFixture().start(c,32,false,4,new BlockPos(20,4,26),Direction.EAST,true);
         var away=new TierThreeFixture().start(c,32,false,4,new BlockPos(38,4,26),Direction.EAST,false);boolean[] started={false};
         for(var q:List.of(live,away))AutomaticCatchupGameTest.finiteCache(c,q,List.of());
@@ -72,20 +85,32 @@ public final class CatchupLifecycleGameTest {
                 fundedLarva(c,q,pile(c,q),duration);
                 var cache=AutomaticCatchupGameTest.finiteCache(c,q,food(4));c.assertTrue(cache.capacity()>=8&&cache.size()==8,"Four actual apple and four chicken units in confirmed valid capacity");
                 var target=adults(c,q).stream().filter(a->a.form()==AntForm.WORKER&&!a.workerTasks().nursing()).findFirst().orElseThrow();
-                c.assertTrue(target.nutrition().spend(target.nutrition().sugar(),0),"Declared adult's consumed initial apple is spent before B");
+                if(adultDemand){c.assertTrue(target.nutrition().spend(target.nutrition().sugar(),0),"Declared adult's consumed initial apple is spent before B");
                 var tag=ReconciliationGameTest.save(c,target);var life=tag.getCompound("AdultLife").orElseThrow();life.putLong("Fasting",target.adultLife().grace()/2);life.putInt("CoverageRemaining",0);life.putBoolean("Started",true);
-                AutomaticCatchupGameTest.replace(c,target,tag);
+                AutomaticCatchupGameTest.replace(c,target,tag);}
             }
             });
             var ca=(NestCache)c.getLevel().getBlockEntity(live.founding().plan().cache());var cb=(NestCache)c.getLevel().getBlockEntity(away.founding().plan().cache());
             long totalA=accounted(c,live,ca),totalB=accounted(c,away,cb);var material=(MaterialStore)c.getLevel().getBlockEntity(ChamberExcavation.build(away.founding().plan(),"right").marker());var materialBefore=material.saveWithFullMetadata(c.getLevel().registryAccess());
             c.assertTrue(totalA==totalB&&ca.size()==cb.size(),"Matched finite baseline has identical real unit totals and stock counts");
+            var oldMaterial=material;SurfaceFixture.loadBlock(c,material,materialBefore);
+            material=(MaterialStore)c.getLevel().getBlockEntity(oldMaterial.getBlockPos());
+            c.assertTrue(material!=oldMaterial&&material.getBlockPos().equals(oldMaterial.getBlockPos())&&material.saveWithFullMetadata(c.getLevel().registryAccess()).equals(materialBefore)&&material.contents().stream().filter(s->s.is(Items.STONE)).count()==32,"Different normally deserialized material store at the original marker retains all 32 stone units, ownership, release identity and saved accounting");
+            var materialProof=new JsonObject();materialProof.addProperty("phase","before_automatic_catchup");materialProof.addProperty("different_object",true);materialProof.addProperty("marker",material.getBlockPos().toString());materialProof.addProperty("saved_tag",materialBefore.toString());materialProof.add("contents",new Gson().toJsonTree(TierThreeEffectsProbe.contents(material.contents())));evidence("material_deserialization",materialProof);
             var initialAdults=adults(c,away).stream().map(LasiusNigerEntity::getUUID).collect(java.util.stream.Collectors.toSet());
-            for(long i=1;i<=span+1;i++)tick(c,live,last+i);
+            GrowthObservations.start(c,live,(adultDemand?"original":"no_initial_adult_demand")+"_live");GrowthObservations.start(c,away,(adultDemand?"original":"no_initial_adult_demand")+"_catchup");
+            for(long i=1;i<=span+1;i++){tick(c,live,last+i);GrowthObservations.sample(c,live,last+i,"ordinary_after_bodies_and_pile");}
             AutomaticCatchupGameTest.tickPile(c,pile(c,away),last+span+1);
+            GrowthObservations.sample(c,live,last+span+1,"final");GrowthObservations.sample(c,away,last+span+1,"final");
+            var livePhysiology=GrowthObservations.snapshot(live);var awayPhysiology=GrowthObservations.snapshot(away);GrowthObservations.stop(live);GrowthObservations.stop(away);
             var a=pile(c,live);var b=pile(c,away);var row=new JsonObject();row.add("live",state(c,live));row.add("catchup",state(c,away));row.addProperty("span",span);row.addProperty("stage_duration",duration);row.addProperty("accounted_live",accounted(c,live,ca));row.addProperty("accounted_catchup",accounted(c,away,cb));row.addProperty("initial_accounted_live",totalA);row.addProperty("initial_accounted_catchup",totalB);
             var stocks=new JsonObject();for(var kind:List.of(Items.APPLE,Items.CHICKEN)){long x=ca.contents().stream().filter(s->s.is(kind)).count(),y=cb.contents().stream().filter(s->s.is(kind)).count();stocks.addProperty(kind.toString()+"_live",x);stocks.addProperty(kind.toString()+"_catchup",y);}row.add("stocks",stocks);evidence("competition",row);
             c.assertTrue(a.consumed().size()>3&&b.consumed().size()>3&&a.lastLayingTick()>2400&&b.lastLayingTick()>2400,"Both controls produce real dependent births and new costed eggs");
+            var physiology=new JsonObject();physiology.addProperty("case",adultDemand?"original":"no_initial_adult_demand");physiology.add("live",livePhysiology);physiology.add("catchup",awayPhysiology);var differences=new JsonArray();boolean physiologicalMatch=true;
+            for(int i=0;i<livePhysiology.getAsJsonArray("original_adults").size();i++){
+                var x=livePhysiology.getAsJsonArray("original_adults").get(i).getAsJsonObject();var y=awayPhysiology.getAsJsonArray("original_adults").get(i).getAsJsonObject();var n=x.getAsJsonObject("nutrition");var m=y.getAsJsonObject("nutrition");var delta=new JsonObject();delta.add("matched",x.get("matched"));long ds=m.get("sugar").getAsLong()-n.get("sugar").getAsLong(),dp=m.get("protein").getAsLong()-n.get("protein").getAsLong();delta.addProperty("catchup_minus_live_sugar",ds);delta.addProperty("catchup_minus_live_protein",dp);boolean classes=x.get("hungry").equals(y.get("hungry"))&&x.get("starving").equals(y.get("starving"));delta.addProperty("hunger_starvation_match",classes);differences.add(delta);physiologicalMatch&=Math.abs(ds)<=Nutrition.APPLE_SUGAR&&Math.abs(dp)<=Nutrition.CHICKEN_PROTEIN&&classes;
+            }
+            physiology.add("recipient_differences",differences);physiology.addProperty("within_one_unit_and_classes",physiologicalMatch);physiology.addProperty("queen_affordability_match",livePhysiology.get("queen_next_egg_affordable").equals(awayPhysiology.get("queen_next_egg_affordable")));evidence("cross_run_physiology",physiology);
             c.assertTrue(Math.abs(adults(c,live).size()-adults(c,away).size())<=1&&Math.abs(a.records().size()-b.records().size())<=1,"Frozen one adult and one occupied brood slot tolerances");
             for(var kind:List.of(Items.APPLE,Items.CHICKEN))c.assertTrue(Math.abs(ca.contents().stream().filter(s->s.is(kind)).count()-cb.contents().stream().filter(s->s.is(kind)).count())<=1,"Frozen one cached unit per represented kind");
             c.assertTrue(accounted(c,live,ca)==totalA&&accounted(c,away,cb)==totalB&&adults(c,live).stream().allMatch(a1->a1.nutrition().snapshot().valid())&&adults(c,away).stream().allMatch(a1->a1.nutrition().snapshot().valid())&&a.records().stream().allMatch(r->r.nutrition().snapshot().valid())&&b.records().stream().allMatch(r->r.nutrition().snapshot().valid()),"Exact within-run food/cargo/ingested conservation and nutrition equations");
@@ -95,7 +120,14 @@ public final class CatchupLifecycleGameTest {
             var born=adults(c,away).stream().filter(w->!initialAdults.contains(w.getUUID())).toList();
             c.assertTrue(!born.isEmpty()&&born.stream().allMatch(w->w.elapsedAgeTicks()>0&&w.simulationEvidence().boundary()<last+span),"Real aggregate births use virtual timestamps and continue aging through the remaining interval");
             replay(c,away,b,last+span+1);c.assertTrue(material.saveWithFullMetadata(c.getLevel().registryAccess()).equals(materialBefore),"Material save/replay exact");
+            var marker=material.getBlockPos();var entrance=away.founding().plan().entrance();var previousEntrance=c.getLevel().getBlockState(entrance);
+            c.getLevel().setBlock(entrance,net.minecraft.world.level.block.Blocks.GLASS.defaultBlockState(),3);
+            c.assertTrue(material.capacity()==MaterialStore.CAPACITY&&material.size()==32&&material.saveWithFullMetadata(c.getLevel().registryAccess()).equals(materialBefore),"Capacity loss retains all canonical stone units and saved release/accounting fields without truncation");
+            SurfaceFixture.loadBlock(c,material,materialBefore);var reduced=(MaterialStore)c.getLevel().getBlockEntity(marker);
+            c.assertTrue(reduced!=material&&reduced.capacity()==MaterialStore.CAPACITY&&reduced.contents().stream().filter(s->s.is(Items.STONE)).count()==32&&reduced.saveWithFullMetadata(c.getLevel().registryAccess()).equals(materialBefore),"Another normal material deserialization under reduced capacity retains all 32 units");
+            var reducedProof=new JsonObject();reducedProof.addProperty("capacity",reduced.capacity());reducedProof.addProperty("units",reduced.size());reducedProof.addProperty("different_object",true);reducedProof.addProperty("saved_fields_exact",true);reducedProof.addProperty("automatic_and_nursery_replay_exact",true);reducedProof.add("contents",new Gson().toJsonTree(TierThreeEffectsProbe.contents(reduced.contents())));evidence("material_reconstruction_and_capacity_loss",reducedProof);c.getLevel().setBlock(entrance,previousEntrance,3);
             var exact=new JsonObject();exact.addProperty("material_units",material.size());exact.addProperty("material_save_replay_exact",true);exact.addProperty("food_each",totalA);exact.addProperty("food_conservation_exact",true);exact.add("virtual_adult_births",new Gson().toJsonTree(born.stream().map(w->w.getUUID()+":"+w.simulationEvidence().boundary()+":"+w.elapsedAgeTicks()).toList()));exact.add("live_development",new Gson().toJsonTree(liveProgress));exact.add("catchup_development",new Gson().toJsonTree(awayProgress));evidence("competition_exact_before_timing_verdict",exact);
+            c.assertTrue(physiologicalMatch&&livePhysiology.get("queen_next_egg_affordable").equals(awayPhysiology.get("queen_next_egg_affordable")),"Original recipients match hunger/starvation and at most one represented unit of residual nutrition; queen next egg affordability agrees");
             c.assertTrue(liveProgress.length==awayProgress.length,"This matched finite control must retain corresponding occupied brood");
             for(int i=0;i<liveProgress.length;i++)c.assertTrue(Math.abs(liveProgress[i]-awayProgress[i])<=duration*.1,"Frozen brood timing tolerance, including stage transitions: live="+Arrays.toString(liveProgress)+" catchup="+Arrays.toString(awayProgress));c.succeed();
         });
@@ -185,6 +217,81 @@ public final class CatchupLifecycleGameTest {
             conflict.remove(net.minecraft.world.entity.Entity.RemovalReason.DISCARDED);AutomaticCatchupGameTest.tickPile(c,p,last+2);
             c.assertTrue(p.records().size()==2&&q.nutrition().spentSugar()==nutrition.spentSugar()+Nutrition.EGG_SUGAR&&q.nutrition().spentProtein()==nutrition.spentProtein()+Nutrition.EGG_PROTEIN,"Later eligible ordinary event lays exactly one real brood with unchanged costs");
             var row=new JsonObject();row.addProperty("refused_event",id.toString());row.addProperty("queen_sugar_debit",Nutrition.EGG_SUGAR);row.addProperty("queen_protein_debit",Nutrition.EGG_PROTEIN);evidence("laying_refusal",row);replay(c,q,p,last+2);c.succeed();
+        });
+    }
+    @GameTest(maxTicks=8000,structure="prime_ants_test:surface_ground")
+    public void ownedNonzeroMaterialStoreDeserializesBeforeAutomaticCatchupAndCapacityLoss(GameTestHelper c){
+        var q=new TierThreeFixture().start(c,32,false,4,new BlockPos(32,4,32),Direction.EAST,true);boolean[] started={false};
+        c.onEachTick(()->{
+            if(started[0]||!q.founding().ready()||pile(c,q).stageEvaluation()==null||adults(c,q).stream().filter(a->a.form()==AntForm.WORKER&&a.workerTasks().caregiver(c.getLevel(),q.founding().plan())).count()<2)return;started[0]=true;
+            var l=c.getLevel();var original=MaterialStore.owned(l,q.getUUID(),q.founding().plan());var saved=original.saveWithFullMetadata(l.registryAccess());var marker=original.getBlockPos();
+            SurfaceFixture.loadBlock(c,original,saved);var restored=MaterialStore.owned(l,q.getUUID(),q.founding().plan());
+            c.assertTrue(restored!=original&&restored.getBlockPos().equals(marker)&&restored.contents().stream().filter(s->s.is(Items.STONE)).count()==32&&restored.saveWithFullMetadata(l.registryAccess()).equals(saved),"Normal loader installs a different owned store with all 32 canonical stone units and exact release/accounting fields");
+            long now=l.getGameTime()+101;AutomaticCatchupGameTest.tickPile(c,pile(c,q),now);replay(c,q,pile(c,q),now);
+            c.assertTrue(pile(c,q).catchup().appliedTicks()==100&&MaterialStore.owned(l,q.getUUID(),q.founding().plan())==restored&&restored.saveWithFullMetadata(l.registryAccess()).equals(saved),"Automatic catchup and nursery same/older replay leave the reconstructed canonical store exact");
+            var entrance=q.founding().plan().entrance();var oldEntrance=l.getBlockState(entrance);l.setBlock(entrance,net.minecraft.world.level.block.Blocks.GLASS.defaultBlockState(),3);
+            c.assertTrue(restored.capacity()==MaterialStore.CAPACITY&&restored.size()==32&&!restored.room(new ItemStack(Items.STONE)),"Capacity loss refuses new stock without truncating the 32 represented stone units, including the reduced non-clay share");
+            SurfaceFixture.loadBlock(c,restored,saved);var reduced=MaterialStore.owned(l,q.getUUID(),q.founding().plan());
+            c.assertTrue(reduced!=restored&&reduced.capacity()==MaterialStore.CAPACITY&&reduced.contents().stream().filter(s->s.is(Items.STONE)).count()==32&&reduced.saveWithFullMetadata(l.registryAccess()).equals(saved),"Reconstruction under capacity loss retains exact canonical contents, owner, release identity and accounting");
+            var row=new JsonObject();row.addProperty("different_object_before_automatic",true);row.addProperty("different_object_under_capacity_loss",true);row.addProperty("marker",marker.toString());row.addProperty("owner",reduced.componentOwner().toString());row.addProperty("saved_tag",saved.toString());row.addProperty("final_tag",reduced.saveWithFullMetadata(l.registryAccess()).toString());row.addProperty("capacity_after_loss",reduced.capacity());row.addProperty("automatic_ticks",100);row.addProperty("nursery_same_and_older_replay",true);row.add("per_kind",new Gson().toJsonTree(TierThreeEffectsProbe.contents(reduced.contents())));evidence("owned_material_store_normal_loader",row);l.setBlock(entrance,oldEntrance,3);c.succeed();
+        });
+    }
+    @GameTest(maxTicks=8000,structure="prime_ants_test:surface_ground")
+    public void partialNurseServiceActorFirstReloadUnknownAndOlderReplayKeepExactCustody(GameTestHelper c){partialService(c,true);}
+    @GameTest(maxTicks=8000,structure="prime_ants_test:surface_ground")
+    public void partialNurseServiceNurseryFirstReloadUnknownAndOlderReplayKeepExactCustody(GameTestHelper c){partialService(c,false);}
+    private void partialService(GameTestHelper c,boolean adultFirst){
+        var f=new TierThreeFixture();var q=f.start(c,32,false,4,new BlockPos(32,4,32),Direction.EAST,true);boolean[] initialized={false},started={false};
+        c.onEachTick(()->{
+            if(started[0]||!q.founding().ready()||adults(c,q).stream().filter(a->a.form()==AntForm.WORKER&&a.workerTasks().caregiver(c.getLevel(),q.founding().plan())).count()<2)return;
+            if(!initialized[0]){existingLarva(c,q,pile(c,q),1200,false);AutomaticCatchupGameTest.finiteCache(c,q,food(1));initialized[0]=true;return;}
+            var selected=adults(c,q).stream().filter(a->a.form()==AntForm.WORKER&&a.workerTasks().phase()==WorkerTasks.Phase.NURSE_FEED&&a.workerTasks().feedingTicks()>=5&&WorkerTasks.food(a.getMainHandItem())&&pile(c,q).records().stream().anyMatch(r->r.id().equals(a.workerTasks().recipientId())))
+                .max(Comparator.comparingInt(a->a.workerTasks().feedingTicks())).orElse(null);
+            if(selected==null)return;started[0]=true;var l=c.getLevel();var p=pile(c,q);var cache=(NestCache)l.getBlockEntity(q.founding().plan().cache());long total=accounted(c,q,cache),last=l.getGameTime();
+            var unit=selected.getMainHandItem().copy();var id=selected.getUUID();var recipient=selected.workerTasks().recipientId();int partial=selected.workerTasks().feedingTicks();
+            var position=selected.position();var nutrition=p.records().stream().filter(r->r.id().equals(recipient)).findFirst().orElseThrow().nutrition().snapshot();
+            AutomaticCatchupGameTest.tickPile(c,p,last+2);
+            c.assertTrue(p.catchup().pendingServices()>0&&ItemStack.matches(selected.getMainHandItem(),unit)&&selected.workerTasks().feedingTicks()==partial&&selected.position().equals(position)&&accounted(c,q,cache)==total,"Actual ordinary partial service becomes saved aggregate intention while its exact food stays in the original actor's canonical hand; no teleport or early receipt");
+            var saved=p.saveWithFullMetadata(l.registryAccess());BroodPile[] back={p};var original=p;
+            ReconciliationGameTest.atTime(c,last+2,()->{
+                if(!adultFirst)back[0]=BroodGameTest.restorePile(c,original,saved);
+                for(var actor:new ArrayList<>(f.workers(c,q)))f.fx.f.restore(c,actor);
+                if(adultFirst)back[0]=BroodGameTest.restorePile(c,original,saved);
+            });p=back[0];var restored=(LasiusNigerEntity)l.getEntity(id);
+            c.assertTrue(p.saveWithFullMetadata(l.registryAccess()).equals(saved)&&ItemStack.matches(restored.getMainHandItem(),unit)&&restored.workerTasks().feedingTicks()==partial&&restored.position().equals(position),"Normal entity/block loaders preserve service clock, actor identity, exact partial action and original unit in either load order");
+            replay(c,q,p,last+2);p=pile(c,q);var intentions=p.catchup().serviceObservations();
+            try(var hidden=UnavailableCells.hide(c,q.founding().plan().at(2,-2,-3))){
+                AutomaticCatchupGameTest.tickPile(c,p,last+5);
+                c.assertTrue(p.catchup().pendingTicks()==2&&intentions.equals(p.catchup().serviceObservations())&&ItemStack.matches(restored.getMainHandItem(),unit)&&accounted(c,q,cache)==total,"UNKNOWN preserves exact saved service intentions and physical custody without granting action or a receipt");
+            }
+            AutomaticCatchupGameTest.tickPile(c,p,last+7);c.assertTrue(p.catchup().pendingTicks()==0&&accounted(c,q,cache)==total,"Restored known geometry resumes the same service state with exact food conservation");
+            long completion=p.catchup().nextServiceCompletion();c.assertTrue(completion>=last+7&&completion<last+WorkerTasks.FEEDING_TICKS,"Saved actual partial action determines a finite remaining service rather than restarting the twenty-tick action");
+            AutomaticCatchupGameTest.tickPile(c,p,completion);c.assertTrue(ItemStack.matches(restored.getMainHandItem(),unit)&&p.catchup().serviceObservations().stream().anyMatch(s->s.contains(id.toString())),"A deadline at ordinary C keeps its original service clock and custody until an owned missing service step; it cannot drop the pending action");replay(c,q,p,completion);p=pile(c,q);
+            AutomaticCatchupGameTest.tickPile(c,p,completion+2);var larva=p.records().stream().filter(r->r.id().equals(recipient)).findFirst().orElseThrow();
+            c.assertTrue(restored.getMainHandItem().isEmpty()&&restored.position().equals(position)&&larva.nutrition().snapshot().valid()&&larva.nutrition().consumedUnits()>nutrition.apples()+nutrition.chickens()&&accounted(c,q,cache)==total,"Completion consumes and credits the original physical unit together, once, with exact receipt equations and unchanged actual actor position");
+            var row=new JsonObject();row.addProperty("load_order",adultFirst?"actor_first":"nursery_first");row.addProperty("ordinary_partial_ticks",partial);row.addProperty("original_actor",id.toString());row.addProperty("original_unit",unit.toString());row.addProperty("planned_service_completion",completion);row.addProperty("applied_service_completion",completion+1);row.addProperty("boundary",last);row.addProperty("accounted_before",total);row.addProperty("accounted_after",accounted(c,q,cache));row.addProperty("physical_actor_not_moved",true);row.add("saved_intentions",new Gson().toJsonTree(intentions));evidence("partial_service_reload_unknown_replay",row);replay(c,q,p,completion+2);c.succeed();
+        });
+    }
+    @GameTest(maxTicks=8000,structure="prime_ants_test:surface_ground")
+    public void automaticAggregateLayingConflictRefusesBeforeInvestmentAndReplaysExactly(GameTestHelper c){
+        var q=new TierThreeFixture().start(c,32,false,4,new BlockPos(32,4,32),Direction.EAST,true);boolean[] started={false};
+        c.onEachTick(()->{
+            if(started[0]||!q.founding().ready()||adults(c,q).stream().filter(a->a.form()==AntForm.WORKER&&a.workerTasks().caregiver(c.getLevel(),q.founding().plan())).count()<2)return;started[0]=true;
+            long last=c.getLevel().getGameTime();fundedLarva(c,q,pile(c,q),1200);var p=pile(c,q);var tag=p.saveWithFullMetadata(c.getLevel().registryAccess());tag.putLong("LastLayingTick",0);p=BroodGameTest.restorePile(c,p,tag);
+            var cache=AutomaticCatchupGameTest.finiteCache(c,q,food(4));var conflicts=new ArrayList<LasiusNigerEntity>();
+            // The one historical decision and resumed ordinary C decision have distinct event identities.
+            // Occupy both to observe aggregate refusal independently of C's unavoidable maintenance.
+            for(long at:List.of(2401L,2402L)){
+                var id=UUID.nameUUIDFromBytes(("prime_ants:egg:"+q.getUUID()+":"+at+":1").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                var conflict=AntEntities.WORKER.create(c.getLevel(),net.minecraft.world.entity.EntitySpawnReason.COMMAND);c.assertTrue(conflict!=null,"Real conflicting prospective body");conflict.initializeCallow(id,UUID.randomUUID(),c.absolutePos(BlockPos.ZERO));conflict.setUUID(ColonyMembers.workerId(id));conflict.setPos(net.minecraft.world.phys.Vec3.atCenterOf(c.absolutePos(new BlockPos(15,6,15))));c.assertTrue(c.getLevel().addFreshEntity(conflict),"Prospective event body is occupied before the production hook");conflicts.add(conflict);
+            }
+            var nutrition=q.nutrition().snapshot();long maintenance=q.adultLife().maintenanceTicks();var contents=ItemStack.CODEC.listOf().encodeStart(JsonOps.INSTANCE,cache.contents()).getOrThrow();var brood=p.records().stream().map(BroodRecord::id).toList();var consumed=p.consumed();long accountedBefore=accounted(c,q,cache);
+            c.assertTrue(p.aggregateCare(c.getLevel())&&p.growth().allowsAggregate(p.supply(c.getLevel()))&&q.nutrition().sugar()>=Nutrition.EGG_SUGAR&&q.nutrition().protein()>=Nutrition.EGG_PROTEIN,"Actual refusal baseline has care, finite funding and queen affordability before automatic aggregate dispatch");GrowthObservations.start(c,q,"aggregate_refusal");
+            AutomaticCatchupGameTest.tickPile(c,p,last+2);int decisions=GrowthObservations.aggregateLayingDecisions(q);GrowthObservations.stop(q);
+            c.assertTrue(p.catchup().appliedTicks()==1&&p.catchup().lastEvents()>0&&p.loadedTicks()==2402&&decisions>0,"Production next-laying hook proves automatic aggregate dispatch reaches a funded laying decision before refusal and resumed C");
+            c.assertTrue(p.records().stream().map(BroodRecord::id).toList().equals(brood)&&p.consumed().equals(consumed)&&p.lastLayingTick()==0&&q.nutrition().spentProtein()==nutrition.spentProtein()&&q.nutrition().spentSugar()-nutrition.spentSugar()==q.adultLife().maintenanceTicks()-maintenance&&q.nutrition().consumedUnits()==nutrition.apples()+nutrition.chickens()&&contents.equals(ItemStack.CODEC.listOf().encodeStart(JsonOps.INSTANCE,cache.contents()).getOrThrow()),"Aggregate refusal adds no egg debit, food transfer, new brood identity or investment receipt; only exact adult maintenance is paid");
+            c.assertTrue(accounted(c,q,cache)==accountedBefore&&q.nutrition().snapshot().valid(),"Refused automatic investment conserves every represented physical/ingested unit and exact nutrition equation");
+            var row=new JsonObject();row.addProperty("aggregate_missed_ticks",1);row.addProperty("resumed_ordinary_ticks",1);row.addProperty("events",p.catchup().lastEvents());row.addProperty("maintenance_sugar",q.adultLife().maintenanceTicks()-maintenance);row.addProperty("egg_spending",0);row.addProperty("food_transfer",0);row.addProperty("new_brood_identity",false);row.addProperty("investment_receipt",false);row.addProperty("accounted_units",accounted(c,q,cache));evidence("aggregate_identity_refusal",row);replay(c,q,p,last+2);conflicts.forEach(LasiusNigerEntity::discard);c.succeed();
         });
     }
     @GameTest(maxTicks=8000,structure="prime_ants_test:surface_ground")

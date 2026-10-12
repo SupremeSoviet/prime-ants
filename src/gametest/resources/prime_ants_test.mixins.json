@@ -42,7 +42,8 @@
     "SurfaceChamberPaymentMixin",
     "ServerShardSelectionMixin",
     "InitialHabitatConnectionMixin",
-    "LegacyAdultShadowMixin"
+    "LegacyAdultShadowMixin",
+    "GrowthObservationMixin"
   ],
   "injectors": {
     "defaultRequire": 1

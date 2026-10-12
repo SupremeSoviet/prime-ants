@@ -1,3 +1,31 @@
+# Persistence and bounded competing service (T07)
+
+[The T07 status note](catchup-t07.md) records the current persistence and two frozen growth controls.
+Normal nonzero store deserialization, partial nurse custody in both load orders, UNKNOWN recovery,
+funded production aggregate refusal and same/older replay have scoped executable acceptance.
+The original three persistence negatives are current positives on the stable merged baseline;
+their T06 failures remain historical evidence without an asserted causal repair.
+
+`AppliedThrough` now prevents an older restored nursery callback from repeating an ordinary step in
+an applied interval. It does not change ordinary backward-clock rebasing without an aggregate receipt.
+The ordinary timestamp loaded from a save also acts as a restore boundary; callbacks through that saved
+step are refused, while the existing in-place backward-clock control retains its behavior.
+Aggregate service uses the shared ordinary recipient/crop/cost rules and validated supported stand
+geometry. Saved intentions keep food in its original cache or actual carrier until atomic consumption
+and ingestion at service completion. A logical return is charged once; real controller observations
+supersede that approximation. No actor teleportation, path replay, speculative food or absence income is used.
+
+The two bounded controls retain development difference<=120, adult/slot difference<=1, stock difference<=1
+per kind, matching original-adult hunger/starvation classes and residual quantization<=4000 sugar/8000 protein.
+Exact matched vectors in these controls do not establish general exact physiology or arbitrary navigation.
+The older eleven-tick instant-ingestion fixture now verifies delayed ownership and completion instead;
+its supply and deadline are unchanged. Final complete acceptance remains T08's obligation.
+
+Final T07 growth is unsupported: the original fresh control differs by129 against120 even though an earlier
+scoped run passed. The second prospectively frozen control passes; exact current nutrition differences stay
+within the4000/8000 allowance. A finite-cache service-deadline negative and the original four-unit promotion
+negative are retained. No bound, supply, positive assertion or ordinary nursing rule changes to obtain green.
+
 # Enabled laying, stage clocks and history recovery (T06)
 
 T06 resumes the preserved merge/diff and retains automatic production dispatch. Ordinary successful brood substeps
