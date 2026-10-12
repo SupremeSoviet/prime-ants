@@ -14,6 +14,8 @@ public final class ColonyCatchup {
     public static final int MAX_EVENTS=512;
     private long cursor=-1,through=-1,appliedThrough=-1;
     private long appliedTicks,invocations,lastNanos;
+    private long recoveryBaseline=-1,unknownTicks,unknownThrough=-1;
+    private long captureNanos,stageNanos,lifecycleNanos,commitNanos;
     private int lastEvents;
     private String status="idle";
     private long invokedAt=Long.MIN_VALUE;
@@ -25,7 +27,18 @@ public final class ColonyCatchup {
     public long lastNanos(){return lastNanos;}
     public int lastEvents(){return lastEvents;}
     public String status(){return status;}
-    public void measuredInvocation(long nanos){lastNanos=nanos;}
+    public long recoveryBaseline(){return recoveryBaseline;}
+    public long unknownTicks(){return unknownTicks;}
+    public long unknownThrough(){return unknownThrough;}
+    public long captureNanos(){return captureNanos;} public long stageNanos(){return stageNanos;}
+    public long lifecycleNanos(){return lifecycleNanos;} public long commitNanos(){return commitNanos;}
+    public void measuredInvocation(long nanos,long preNanos){lastNanos=nanos;captureNanos+=preNanos;}
+    public void stageCost(long nanos){if(running)stageNanos+=nanos;}
+    public void commitCost(long nanos){if(running)commitNanos+=nanos;}
+    public void foodEvent(){if(!running||lastEvents>=MAX_EVENTS-1)throw new IllegalStateException("Unreserved food event");lastEvents++;}
+    public boolean eventAvailable(){return running&&lastEvents<MAX_EVENTS;}
+    public boolean foodAvailable(){return running&&lastEvents<MAX_EVENTS-1;}
+    public boolean active(){return running;}
 
     public static void beforeAdult(ServerLevel level,LasiusNigerEntity adult){
         if(level.getEntity(adult.getUUID())!=adult||adult.isRemoved())return;
@@ -77,19 +90,43 @@ public final class ColonyCatchup {
         through=now-1; // Nursery ordinary biology is paused while pending. Every waiting game tick remains owed.
         if(invokedAt==now)return false;
         invokedAt=now;running=true;long start=System.nanoTime();lastEvents=0;invocations++;
+        captureNanos=stageNanos=lifecycleNanos=commitNanos=0;long phaseStart=start;
         try{
             String identity=pile.reconcileCatchupMembers(level);
             if(identity!=null){status=identity;return false;}
             var adults=confirmed(level,pile);
             if(adults==null){status="pending_unknown_members";return false;}
+            captureNanos+=System.nanoTime()-phaseStart;phaseStart=System.nanoTime();
             var habitat=pile.catchupPlan().nurseryFindings(level,pile.queenId(),pile.operational());
-            if(habitat.verdict()==Findings.Verdict.UNKNOWN){status="pending_unknown_terrain";return false;}
+            stageNanos+=System.nanoTime()-phaseStart;phaseStart=System.nanoTime();
+            if(habitat.verdict()==Findings.Verdict.UNKNOWN){pile.observeUnknownTerrain(level);status="pending_unknown_terrain";return false;}
+            long floor=-1;
+            for(var a:adults){
+                var evidence=a.simulationEvidence();
+                if(evidence.invalidTime()){status="pending_unknown_adult_evidence";return false;}
+                // Before a real birth there was no actor. Legacy/rebased or compacted history instead
+                // establishes a conservative common recovery baseline, never a simulated receipt.
+                if(cursor-1<evidence.knownAfter()&&!(evidence.origin()==AdultSimulation.Origin.BIRTH&&evidence.knownAfter()==evidence.boundary()))floor=Math.max(floor,evidence.knownAfter());
+            }
+            if(floor>=cursor){
+                long end=Math.min(through,floor);
+                unknownTicks=AdultLife.saturatingAdd(unknownTicks,end-cursor+1);unknownThrough=end;
+                recoveryBaseline=Math.max(recoveryBaseline,floor);
+                cursor=end==through?-1:end+1;
+                // Unknown pre-baseline continuity cannot extend a persisted shortfall clock.
+                dev.primeants.colony.ColonyDevelopment.recoverUnknownHistory(level,pile.queenId());
+                pile.setChanged();
+                if(cursor<0){status="recovered_unknown_history";return true;}
+            }
             for(var a:adults)if(segment(a.simulationEvidence(),cursor,through)==null){status="pending_unknown_adult_evidence";return false;}
             for(var a:adults)if(a.elapsedAgeTicks()==Long.MAX_VALUE){status="pending_age_domain";return false;}
-            pile.evaluateAggregateStart(level);
+            captureNanos+=System.nanoTime()-phaseStart;
+            pile.evaluateAggregateStart(level,through-cursor+1);
             while(cursor>=0&&lastEvents<MAX_EVENTS){
+                phaseStart=System.nanoTime();
                 adults=confirmed(level,pile);
                 if(adults==null){status="pending_unknown_members";return false;}
+                captureNanos+=System.nanoTime()-phaseStart;phaseStart=System.nanoTime();long workNested=stageNanos+commitNanos;
                 var plan=pile.catchupPlan();
                 NestCache cache=habitat.verdict()==Findings.Verdict.CLEAR&&NestPlan.loaded(level,plan.cache())
                     &&level.getBlockEntity(plan.cache()) instanceof NestCache c&&c.ownedBy(pile.queenId(),plan)?c:null;
@@ -98,6 +135,7 @@ public final class ColonyCatchup {
                 int reserve=1+(cache==null?0:cache.size());
                 if(lastEvents>MAX_EVENTS-reserve){status="pending_event_bound";return false;}
                 var segments=new LinkedHashMap<LasiusNigerEntity,Segment>();
+                int foodBefore=cache==null?0:cache.size();
                 long span=through-cursor+1;
                 for(var a:adults){
                     var sg=segment(a.simulationEvidence(),cursor,through);
@@ -116,27 +154,34 @@ public final class ColonyCatchup {
                     // Actual kinds and larval lifetime intake caps; no new nutrition rules or virtual income.
                     while(lastEvents<MAX_EVENTS-1&&cache.serveAggregate(brood.nutrition(),Nutrition.LARVA_SUGAR,Nutrition.LARVA_PROTEIN,s->pile.accepts(brood,s)))lastEvents++;
                 }
+                if(cache!=null&&cache.size()!=foodBefore){pile.aggregateFoodChanged();pile.refreshAggregateStage(level,true);}
                 span=Math.min(span,pile.nextBroodEvent(level,habitat.problem()));
+                span=Math.min(span,pile.nextLayingEvent(level,habitat.problem()));
+                span=Math.min(span,pile.nextStageEvent(level));
                 // Avoid arithmetic overflow in the nursery's speed accounting, even for maximal saved time domains.
                 span=Math.min(span,Long.MAX_VALUE/BroodCapacity.MAX_SLOTS/4);
                 long end=cursor+span-1;
                 for(var entry:segments.entrySet())if(entry.getValue().missing())entry.getKey().advanceMissing(level,cursor,end);
+                lifecycleNanos+=System.nanoTime()-phaseStart-(stageNanos+commitNanos-workNested);phaseStart=System.nanoTime();long nested=stageNanos+commitNanos;
                 pile.advanceAggregate(level,span,end,habitat.problem());
+                lifecycleNanos+=System.nanoTime()-phaseStart-(stageNanos+commitNanos-nested);phaseStart=System.nanoTime();
                 lastEvents++;appliedTicks=AdultLife.saturatingAdd(appliedTicks,span);appliedThrough=end;
                 cursor=end==through?-1:end+1;
                 pile.setChanged();
+                commitNanos+=System.nanoTime()-phaseStart;
             }
             status=cursor<0?"completed":"pending_event_bound";
             return cursor<0;
         }finally{
             lastNanos=System.nanoTime()-start;running=false;pile.setChanged();
-            PrimeAnts.LOGGER.info("AUTOMATIC_CATCHUP queen={} status={} applied={} pending={} events={} nanos={} through={}",pile.queenId(),status,appliedTicks,pendingTicks(),lastEvents,lastNanos,appliedThrough);
         }
     }
-    public void save(ValueOutput out){out.putInt("Version",1);out.putLong("Cursor",cursor);out.putLong("Through",through);out.putLong("AppliedThrough",appliedThrough);out.putLong("AppliedTicks",appliedTicks);out.putLong("Invocations",invocations);out.putString("Status",status);}
+    public void save(ValueOutput out){out.putInt("Version",1);out.putLong("Cursor",cursor);out.putLong("Through",through);out.putLong("AppliedThrough",appliedThrough);out.putLong("AppliedTicks",appliedTicks);out.putLong("Invocations",invocations);out.putString("Status",status);out.putLong("RecoveryBaseline",recoveryBaseline);out.putLong("UnknownTicks",unknownTicks);out.putLong("UnknownThrough",unknownThrough);}
     public void load(ValueInput in){
         cursor=in.getLongOr("Cursor",-1);through=in.getLongOr("Through",-1);appliedThrough=in.getLongOr("AppliedThrough",-1);
         appliedTicks=in.getLongOr("AppliedTicks",0);invocations=in.getLongOr("Invocations",0);status=in.getStringOr("Status","idle");
+        recoveryBaseline=in.getLongOr("RecoveryBaseline",-1);unknownTicks=in.getLongOr("UnknownTicks",0);unknownThrough=in.getLongOr("UnknownThrough",-1);
+        if(recoveryBaseline< -1||unknownTicks<0||unknownThrough< -1||unknownThrough>recoveryBaseline)throw new IllegalArgumentException("Invalid recovery baseline");
         if(in.getIntOr("Version",1)!=1||cursor< -1||through< -1||appliedThrough< -1||appliedTicks<0||invocations<0||cursor>=0&&(through<cursor||cursor<=appliedThrough))throw new IllegalArgumentException("Invalid catchup ledger");
         invokedAt=Long.MIN_VALUE;running=false;lastEvents=0;lastNanos=0;
     }

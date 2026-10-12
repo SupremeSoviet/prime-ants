@@ -50,6 +50,9 @@ public final class AdultLife {
     }
     /** Constant work shared by the live one-tick owner and the non-terminal preview. */
     static Evolution evolve(State s,Nutrition.State n,AntForm form,long age,long ticks){
+        return evolve(s,n,form,age,ticks,false);
+    }
+    private static Evolution evolve(State s,Nutrition.State n,AntForm form,long age,long ticks,boolean immune){
         if(!s.started()||ticks==0)return new Evolution(s,n,false);
         long covered=Math.min(ticks,coverage(s,n)),newlyCovered=Math.max(0,covered-s.coverageRemaining());
         long meals=newlyCovered/maintenancePeriod()+(newlyCovered%maintenancePeriod()==0?0:1);
@@ -58,10 +61,10 @@ public final class AdultLife {
         long fasting=covered>0?ticks-covered:(s.fasting()>Long.MAX_VALUE-ticks?Long.MAX_VALUE:s.fasting()+ticks);
         var first=qualifying(s,n,form,age);long damage=first.isPresent()&&first.getAsLong()<=ticks
             ?Math.addExact(ticks-first.getAsLong()+1,first.getAsLong()==1?s.damageTicks():0):0;
-        if(damage>damagePeriod())throw new IllegalArgumentException("Evolution crosses health event");
-        boolean event=damage==damagePeriod();
+        if(!immune&&damage>damagePeriod())throw new IllegalArgumentException("Evolution crosses health event");
+        boolean event=!immune&&damage==damagePeriod();
         return new Evolution(new State(s.lifespan(),s.grace(),fasting,saturatingAdd(s.maintenanceTicks(),meals),
-            saturatingAdd(s.activeTicks(),ticks),event?0:(int)damage,s.mealTicks(),remaining,
+            saturatingAdd(s.activeTicks(),ticks),immune?(int)(damage%damagePeriod()):event?0:(int)damage,s.mealTicks(),remaining,
             saturatingAdd(s.coveredTicks(),covered),true,s.death()),n.spend(meals,0),event);
     }
     private static long duration(String key,long fallback){long n=Long.parseLong(System.getProperty(key,Long.toString(fallback)));if(n<1)throw new IllegalArgumentException("Adult duration must be positive: "+key);return n;}
@@ -84,14 +87,16 @@ public final class AdultLife {
     /** Shared spending and damage owner. The coordinator stops at the next health event. */
     public long nextEvent(LasiusNigerEntity ant,Phase phase){
         var s=snapshot();if(!s.started()&&phase==Phase.ACTIVE)s=s.active();
-        long result=firstDamage(s,ant.nutrition().snapshot(),ant.form(),ant.elapsedAgeTicks()).orElse(Long.MAX_VALUE);
+        long result=ant.isPermanentlyInvulnerable()?Long.MAX_VALUE:firstDamage(s,ant.nutrition().snapshot(),ant.form(),ant.elapsedAgeTicks()).orElse(Long.MAX_VALUE);
         if(s.started()&&!hungry())result=Math.min(result,saturatingAdd(coverage(s,ant.nutrition().snapshot()),Math.max(1,Math.max(1,grace/2)-fasting)));
         return Math.max(1,result);
     }
     void advance(ServerLevel level,LasiusNigerEntity ant,long priorAge,long ticks,boolean aggregate){
         var s=snapshot();
         if(!s.started()&&(ant.form()==AntForm.WORKER||!ant.founding().reserveOnlyFounding(level)))s=s.active();
-        var next=evolve(s,ant.nutrition().snapshot(),ant.form(),priorAge,ticks);
+        // Permanent source-independent immunity is stable for this server-thread invocation. Ordinary
+        // steps and temporary cooldowns keep the original damage path; only repeated no-op events fold.
+        var next=evolve(s,ant.nutrition().snapshot(),ant.form(),priorAge,ticks,aggregate&&ant.isPermanentlyInvulnerable());
         long spent=ant.nutrition().sugar()-next.nutrition().sugar();
         if(!ant.nutrition().spend(spent,0))throw new IllegalStateException("Resolved maintenance spend failed");
         restore(next.life());

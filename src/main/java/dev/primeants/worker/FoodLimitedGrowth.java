@@ -45,6 +45,16 @@ public final class FoodLimitedGrowth {
         else why="funded_growth";
         set(why.equals("funded_growth"),why);return open;
     }
+    /** Absence has no rolling income observations. This explicit finite-stock admission keeps the same
+     * brood commitments, 25% maintenance reserve and hungry-adult gate, without claiming an income rate.
+     * It never changes the ordinary rolling window or its open/paused state. */
+    public boolean allowsAggregate(Supply s){
+        long projected=s.adults()+s.brood()+1;
+        long maintenance=(projected*WINDOW*5+4L*dev.primeants.entity.AdultLife.maintenancePeriod()-1)/(4L*dev.primeants.entity.AdultLife.maintenancePeriod());
+        return s.complete()&&!s.hungry()
+            &&s.storedSugar()>=s.committedSugar()+Nutrition.EGG_SUGAR+Nutrition.LARVA_SUGAR+maintenance
+            &&s.storedProtein()>=s.committedProtein()+Nutrition.EGG_PROTEIN+Nutrition.LARVA_PROTEIN;
+    }
     public void save(ValueOutput o){o.store("Times",Codec.LONG.listOf(),times);o.store("Sugar",Codec.LONG.listOf(),sugar);o.store("Protein",Codec.LONG.listOf(),protein);o.putLong("Clock",clock);o.putLong("Pauses",pauses);o.putLong("Resumes",resumes);o.putBoolean("Open",open);o.putString("Reason",reason);}
     public void load(ValueInput i){times.clear();sugar.clear();protein.clear();times.addAll(i.read("Times",Codec.LONG.listOf()).orElse(List.of()));sugar.addAll(i.read("Sugar",Codec.LONG.listOf()).orElse(List.of()));protein.addAll(i.read("Protein",Codec.LONG.listOf()).orElse(List.of()));clock=i.getLongOr("Clock",0);pauses=i.getLongOr("Pauses",0);resumes=i.getLongOr("Resumes",0);open=i.getBooleanOr("Open",false);reason=i.getStringOr("Reason","income_warmup");
         if(times.size()>WINDOW/SAMPLE+1||times.size()!=sugar.size()||times.size()!=protein.size()||clock<0||pauses<0||resumes<0)throw new IllegalArgumentException("Invalid food flow");

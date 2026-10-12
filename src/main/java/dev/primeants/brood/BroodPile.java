@@ -57,8 +57,9 @@ public final class BroodPile extends BlockEntity {
         if(server.getEntity(queenId) instanceof LasiusNigerEntity q&&q.founding().lifecycle()!=dev.primeants.founding.QueenFounding.Lifecycle.CLAUSTRAL)operational=true;
         var interval=clock.before(server.getGameTime());
         if(reloadBoundaryPending||interval.ticks()>0&&(reloadObservation==null||!reloadObservation.interval().afterGameTime().equals(interval.afterGameTime()))){reloadObservation=dev.primeants.time.ReloadObservation.capture(server,queenId,getBlockPos(),plan.chamber(),interval);reloadBoundaryPending=false;}
+        long preNanos=System.nanoTime()-start;
         boolean completed=catchup.resume(server,this,interval);
-        if(catchup.invocations()!=invocations){catchup.measuredInvocation(System.nanoTime()-start);PrimeAnts.LOGGER.info("AUTOMATIC_CATCHUP_COST queen={} events={} pending={} nanos={}",queenId,catchup.lastEvents(),catchup.pendingTicks(),catchup.lastNanos());}
+        if(catchup.invocations()!=invocations){catchup.measuredInvocation(System.nanoTime()-start,preNanos);PrimeAnts.LOGGER.info("AUTOMATIC_CATCHUP_COST queen={} events={} pending={} nanos={} capture={} stage={} lifecycle={} commit={}",queenId,catchup.lastEvents(),catchup.pendingTicks(),catchup.lastNanos(),catchup.captureNanos(),catchup.stageNanos(),catchup.lifecycleNanos(),catchup.commitNanos());}
         return completed;
     }
     private boolean reloadBoundaryPending = true;
@@ -103,9 +104,11 @@ public final class BroodPile extends BlockEntity {
     public long stageEvaluatedAt(){return stageEvaluatedAt;}
     private ColonyDevelopment.Evaluation development(ServerLevel l){
         var members=ColonyMembers.get(l);var registry=dev.primeants.colony.ChamberRegistry.get(l);
-        if(stageEvaluation==null||members!=stageMembers||members.revision()!=stageMembersRevision||registry!=stageRegistry||loadedTicks-stageEvaluatedAt>=ColonyDevelopment.INTERVAL){
+        if(stageEvaluation==null||members!=stageMembers||members.revision()!=stageMembersRevision||registry!=stageRegistry||!catchup.active()&&loadedTicks-stageEvaluatedAt>=ColonyDevelopment.INTERVAL){
+            long start=System.nanoTime();
             stageEvaluation=ColonyDevelopment.evaluate(l,queenId,plan,operational,adultCapacity,loadedTicks);
             stageEvaluatedAt=loadedTicks;stageMembers=members;stageMembersRevision=members.revision();stageRegistry=registry;
+            catchup.stageCost(System.nanoTime()-start);
         }
         return stageEvaluation;
     }
@@ -204,18 +207,36 @@ public final class BroodPile extends BlockEntity {
         for(var r:records){stockS+=r.nutrition().sugar();stockP+=r.nutrition().protein();if(!r.founding()&&r.stage()!=BroodStage.COCOON){commitS+=Math.max(0,Nutrition.LARVA_SUGAR-r.nutrition().spentSugar());commitP+=Math.max(0,Nutrition.LARVA_PROTEIN-r.nutrition().spentProtein());}}
         return new dev.primeants.worker.FoodLimitedGrowth.Supply(complete,hungry,incomeS,incomeP,stockS,stockP,commitS,commitP,adults,records.size());
     }
+    /** Admission belongs to the next virtual tick. An already ingested maintenance unit (or its
+     * remaining coverage) resets fasting on that tick; do not postpone admission until a distant brood boundary. */
+    private dev.primeants.worker.FoodLimitedGrowth.Supply aggregateSupply(ServerLevel server){
+        var s=supply(server);boolean hungry=false;
+        var ids=new ArrayList<UUID>();ids.add(queenId);for(var m:ColonyMembers.get(server).members(queenId))if(!m.dead())ids.add(m.worker());
+        for(var id:ids)if(server.getEntity(id) instanceof LasiusNigerEntity a)
+            hungry|=a.adultLife().fasting()>=Math.max(1,a.adultLife().grace()/4)&&a.nutrition().sugar()==0&&a.adultLife().coverageRemaining()==0;
+        return new dev.primeants.worker.FoodLimitedGrowth.Supply(s.complete(),hungry,s.foodSugar(),s.foodProtein(),s.storedSugar(),s.storedProtein(),s.committedSugar(),s.committedProtein(),s.adults(),s.brood());
+    }
     private boolean lay(ServerLevel l,LasiusNigerEntity q,boolean care){
+        return lay(l,q,care,false);
+    }
+    private boolean lay(ServerLevel l,LasiusNigerEntity q,boolean care,boolean aggregate){
         if(!care||!operational||!originalTerminal())return false;
-        long cadence=layingInterval(l); if(loadedTicks-lastLayingTick<cadence)return false;
+        long cadence=aggregate?aggregateCadence:layingInterval(l); if(loadedTicks-lastLayingTick<cadence)return false;
         if(records.size()>=nursery().slots()){if(!condition.equals("larva_sugar_or_protein_exhausted"))condition="nursery_slots_full";return false;}
         if(ColonyMembers.get(l).occupied(queenId)+records.size()>=adultCap(l)-1){condition="colony_capacity_full_or_unloaded";return false;}
-        if(!growth.allows(supply(l))){condition=growth.reason();return false;}
-        if(!q.nutrition().spend(Nutrition.EGG_SUGAR,Nutrition.EGG_PROTEIN)){condition="queen_ingested_nutrition_exhausted";return false;}
+        if(!(aggregate?growth.allowsAggregate(aggregateSupply(l)):growth.allows(supply(l)))){condition=aggregate?"finite_stores_below_commitments":growth.reason();return false;}
+        if(q==null||!q.isAlive()||q.isRemoved())return false;
         int slot=0;while(true){final int index=slot;if(records.stream().noneMatch(r->r.slot()==index))break;slot++;}
-        var r=new BroodRecord(UUID.randomUUID(),queenId,slot,neglectGrace,waitingBound);r.founding=false;records.add(r);lastLayingTick=loadedTicks;condition="food_fed_egg_laid";
+        // One canonical event identity survives reconstruction and also owns its deterministic worker identity.
+        var id=layingIdentity(loadedTicks,slot);
+        if(!layingIdentityAvailable(l,id)){condition="laying_event_already_represented";return false;}
+        if(aggregate&&!catchup.eventAvailable())return false;
+        if(!q.nutrition().spend(Nutrition.EGG_SUGAR,Nutrition.EGG_PROTEIN)){condition="queen_ingested_nutrition_exhausted";return false;}
+        var r=new BroodRecord(id,queenId,slot,neglectGrace,waitingBound);r.founding=false;records.add(r);lastLayingTick=loadedTicks;condition="food_fed_egg_laid";
         PrimeAnts.LOGGER.info("Food-fed egg queen={} brood={} slot={} pileTicks={} cadence={} sugarCost={} proteinCost={}",queenId,r.id(),slot,loadedTicks,cadence,Nutrition.EGG_SUGAR,Nutrition.EGG_PROTEIN);return true;
     }
     private void changed() {
+        long start=System.nanoTime();
         setChanged();
         if (level == null || level.isClientSide()) return;
         BlockState before = getBlockState(), next = before;
@@ -229,6 +250,7 @@ public final class BroodPile extends BlockEntity {
         next = next.setValue(BroodPileBlock.MORE, BroodPileBlock.more((int)records.stream().filter(r -> r.slot() >= properties.size()).count()));
         if (!next.equals(before)) level.setBlock(getBlockPos(), next, 3);
         level.sendBlockUpdated(getBlockPos(), before, next, 3);
+        catchup.commitCost(System.nanoTime()-start);
     }
     private boolean reconcileMember(ServerLevel server,BroodRecord r){
         var member=ColonyMembers.get(server).member(r.workerId());var existing=server.getEntity(r.workerId());
@@ -268,7 +290,8 @@ public final class BroodPile extends BlockEntity {
     }
     /** A span ends at the earliest lifecycle event selected by the coordinator. No missed-tick loop. */
     private boolean advanceBrood(ServerLevel server,long ticks,LasiusNigerEntity queen,boolean care,String habitat) {
-        var n=nursery();long steps=Math.addExact(Math.multiplyExact(ticks,n.speed()),developmentCredit)/BroodCapacity.SPEED_DIVISOR;
+        var n=nursery();int initialCredit=developmentCredit;
+        long steps=Math.addExact(Math.multiplyExact(ticks,n.speed()),developmentCredit)/BroodCapacity.SPEED_DIVISOR;
         developmentCredit=(int)((ticks%BroodCapacity.SPEED_DIVISOR*n.speed()+developmentCredit)%BroodCapacity.SPEED_DIVISOR);
         boolean visual=false;
         for(var r:List.copyOf(records)){
@@ -292,8 +315,11 @@ public final class BroodPile extends BlockEntity {
                     if(count>0&&!nourish(r,next,queen,care))throw new IllegalStateException("Resolved brood cost refused");
                     if(count==0&&r.progress<stageDuration){
                         condition=r.founding?(care?"queen_reserve_exhausted":"larva_care_missing"):"larva_sugar_or_protein_exhausted";
-                        long unsupportedTicks=Math.max(1,(left*BroodCapacity.SPEED_DIVISOR+n.speed()-1)/n.speed());
-                        visual|=unsupported(server,r,condition,Math.min(ticks,unsupportedTicks));break;
+                        // A successful substep protects its entire ordinary tick. The unsupported tail starts
+                        // on the next tick, including at x1.5/x2 and across a saved fractional credit.
+                        long supportedTicks=Math.max(0,((steps-left)*BroodCapacity.SPEED_DIVISOR-initialCredit+n.speed()-1)/n.speed());
+                        long unsupportedTicks=Math.max(0,ticks-supportedTicks);
+                        if(unsupportedTicks>0)visual|=unsupported(server,r,condition,unsupportedTicks);break;
                     }
                 }
                 r.progress=next;left-=count;
@@ -301,7 +327,14 @@ public final class BroodPile extends BlockEntity {
                 if(r.progress<stageDuration)continue;
                 if(r.stage==BroodStage.COCOON){
                     if(emerge(server,r))visual=true;
-                    else visual|=unsupported(server,r,condition,Math.max(1,Math.min(ticks,(left*BroodCapacity.SPEED_DIVISOR+n.speed()-1)/n.speed())));
+                    else {
+                        // Inherited cocoon waiting is charged when emergence is attempted on a tick's
+                        // first substep, even if that substep just completed its progress.
+                        long priorSteps=Math.max(0,steps-left-(count>0?1:0));
+                        long supportedTicks=Math.max(0,(priorSteps*BroodCapacity.SPEED_DIVISOR-initialCredit+n.speed()-1)/n.speed());
+                        long waiting=Math.max(0,ticks-supportedTicks);
+                        if(waiting>0)visual|=unsupported(server,r,condition,waiting);
+                    }
                     break;
                 }
                 if(r.stage==BroodStage.LARVA&&r.nourishment!=LARVA_COST)break;
@@ -368,15 +401,114 @@ public final class BroodPile extends BlockEntity {
         return result;
     }
     private long aggregateBirthTime=-1;
+    private long aggregateCadence;
+    private long aggregateObservationTick;
+    private final Set<String> deferredInitialShortfalls=new HashSet<>();
+    private UUID layingIdentity(long tick,int slot){return UUID.nameUUIDFromBytes(("prime_ants:egg:"+queenId+":"+tick+":"+slot).getBytes(java.nio.charset.StandardCharsets.UTF_8));}
+    private boolean layingIdentityAvailable(ServerLevel server,UUID id){
+        return !consumed.contains(id)&&!expired.containsKey(id)&&records.stream().noneMatch(r->r.id().equals(id))
+            &&BroodHistory.get(server).terminal(id)==null&&ColonyMembers.get(server).member(ColonyMembers.workerId(id))==null
+            &&server.getEntity(ColonyMembers.workerId(id))==null;
+    }
+    /** A funded event can occur when its confirmed hall cadence is due. Unsupported admission creates no tick loop. */
+    public long nextLayingEvent(ServerLevel server,String habitat){
+        if(habitat!=null||!aggregateCare(server)||!operational||!originalTerminal()||records.size()>=nursery().slots()
+            ||ColonyMembers.get(server).occupied(queenId)+records.size()>=adultCap(server)-1||!aggregateEggFunding(server)||!growth.allowsAggregate(aggregateSupply(server)))return Long.MAX_VALUE;
+        long delay=Math.max(1,aggregateCadence-(loadedTicks-lastLayingTick));
+        int slot=0;while(true){final int index=slot;if(records.stream().noneMatch(r->r.slot()==index))break;slot++;}
+        return layingIdentityAvailable(server,layingIdentity(dev.primeants.entity.AdultLife.saturatingAdd(loadedTicks,delay),slot))?delay:Long.MAX_VALUE;
+    }
+    /** A failed queen-funding decision is not a new event every virtual tick. Food held by other
+     * actors cannot pay her egg cost. Only her nutrition or actually serviceable confirmed cache units can. */
+    private boolean aggregateEggFunding(ServerLevel server){
+        if(!(server.getEntity(queenId) instanceof LasiusNigerEntity q))return false;
+        long sugar=q.nutrition().sugar(),protein=q.nutrition().protein();
+        if(sugar>=Nutrition.EGG_SUGAR&&protein>=Nutrition.EGG_PROTEIN)return true;
+        if(!(server.getBlockEntity(plan.cache()) instanceof dev.primeants.worker.NestCache cache)||!cache.ownedBy(queenId,plan))return false;
+        boolean nurse=ColonyMembers.get(server).members(queenId).stream().filter(m->!m.dead())
+            .anyMatch(m->server.getEntity(m.worker()) instanceof LasiusNigerEntity a&&a.workerTasks().caregiver(server,plan));
+        if(!nurse)return false;
+        for(var unit:cache.contents()){
+            if(sugar<Nutrition.EGG_SUGAR)sugar+=Nutrition.sugarYield(unit);
+            if(protein<Nutrition.EGG_PROTEIN)protein+=Nutrition.proteinYield(unit);
+        }
+        return sugar>=Nutrition.EGG_SUGAR&&protein>=Nutrition.EGG_PROTEIN;
+    }
+    /** Existing StageRules clocks in this nursery's clock domain; no requirement first seen at C is backdated. */
+    public long nextStageEvent(ServerLevel server){
+        var colony=dev.primeants.colony.ChamberRegistry.get(server).colony(queenId);
+        long next=Long.MAX_VALUE;
+        if(colony!=null)for(long since:colony.unmetSince().values())
+            next=Math.min(next,Math.max(1,dev.primeants.entity.AdultLife.saturatingAdd(since,dev.primeants.colony.StageRules.GRACE)-loadedTicks));
+        return next;
+    }
     public void advanceAggregate(ServerLevel server,long ticks,long gameTime,String habitat){
         loadedTicks=dev.primeants.entity.AdultLife.saturatingAdd(loadedTicks,ticks);
         var q=server.getEntity(queenId) instanceof LasiusNigerEntity a&&a.isAlive()&&!a.isRemoved()?a:null;
         aggregateBirthTime=gameTime;
         try{advanceBrood(server,ticks,q,habitat==null&&aggregateCare(server),habitat);}finally{aggregateBirthTime=-1;}
-        // No artificial income window: ordinary FoodLimitedGrowth samples remain the only laying authorization.
-        stageEvaluation=null;development(server);changed();
+        refreshAggregateStage(server,false);
+        int slot=0;while(true){final int index=slot;if(records.stream().noneMatch(r->r.slot()==index))break;slot++;}
+        // Validate replay, current eligibility and the coordinator's reserved event budget before any egg-funding transfer.
+        if(habitat==null&&loadedTicks-lastLayingTick>=aggregateCadence&&nextLayingEvent(server,habitat)==1
+            &&layingIdentityAvailable(server,layingIdentity(loadedTicks,slot))&&catchup.eventAvailable()){
+            var plan=catchupPlan();var adults=ColonyMembers.get(server).members(queenId);
+            boolean nurse=adults.stream().filter(m->!m.dead()).anyMatch(m->server.getEntity(m.worker()) instanceof LasiusNigerEntity a&&a.workerTasks().caregiver(server,plan));
+            if(nurse&&q!=null&&server.getBlockEntity(plan.cache()) instanceof dev.primeants.worker.NestCache cache&&cache.ownedBy(queenId,plan)){
+                int before=cache.size();
+                while((q.nutrition().sugar()<Nutrition.EGG_SUGAR||q.nutrition().protein()<Nutrition.EGG_PROTEIN)
+                    &&catchup.foodAvailable()
+                    &&cache.serveAggregate(q.nutrition(),Nutrition.QUEEN_SUGAR_CAPACITY,Nutrition.QUEEN_PROTEIN_CAPACITY,s->Nutrition.sugarYield(s)>0&&q.nutrition().sugar()<Nutrition.EGG_SUGAR||Nutrition.proteinYield(s)>0&&q.nutrition().protein()<Nutrition.EGG_PROTEIN))catchup.foodEvent();
+                if(cache.size()!=before)aggregateFoodChanged();
+            }
+            lay(server,q,aggregateCare(server),true);
+        }
+        refreshAggregateStage(server,false);changed();
     }
-    public void evaluateAggregateStart(ServerLevel server){stageEvaluation=null;development(server);}
+    public void evaluateAggregateStart(ServerLevel server,long remaining){
+        long start=System.nanoTime();
+        aggregateObservationTick=dev.primeants.entity.AdultLife.saturatingAdd(loadedTicks,remaining);
+        var previous=dev.primeants.colony.ChamberRegistry.get(server).colony(queenId);
+        var clocks=previous==null?java.util.Map.<String,Long>of():previous.unmetSince();
+        stageEvaluation=ColonyDevelopment.evaluate(server,queenId,plan,operational,adultCapacity,dev.primeants.entity.AdultLife.saturatingAdd(loadedTicks,1));
+        deferredInitialShortfalls.clear();deferredInitialShortfalls.addAll(stageEvaluation.result().unmetSince().keySet());deferredInitialShortfalls.removeAll(clocks.keySet());
+        deferUnobservedClocks(server);
+        stageEvaluatedAt=loadedTicks;stageMembers=ColonyMembers.get(server);stageMembersRevision=ColonyMembers.get(server).revision();stageRegistry=dev.primeants.colony.ChamberRegistry.get(server);
+        aggregateCadence=layingInterval(server);
+        catchup.stageCost(System.nanoTime()-start);
+    }
+    public void refreshAggregateStage(ServerLevel server,boolean firstTick){
+        long start=System.nanoTime();var members=ColonyMembers.get(server);
+        long now=firstTick?dev.primeants.entity.AdultLife.saturatingAdd(loadedTicks,1):loadedTicks;
+        boolean dead=dev.primeants.worker.AdultHistory.get(server).recorded(queenId);
+        if(stageEvaluation==null||members!=stageMembers||members.revision()!=stageMembersRevision||dead!=stageEvaluation.inputs().queenDead()){
+            deferredInitialShortfalls.removeIf(key->key.endsWith(":adults"));
+            stageEvaluation=ColonyDevelopment.evaluate(server,queenId,plan,operational,adultCapacity,now);
+        }else stageEvaluation=ColonyDevelopment.refreshFoodAndClocks(server,queenId,adultCapacity,now,stageEvaluation);
+        deferUnobservedClocks(server);
+        stageEvaluatedAt=loadedTicks;stageMembers=members;stageMembersRevision=members.revision();stageRegistry=dev.primeants.colony.ChamberRegistry.get(server);
+        catchup.stageCost(System.nanoTime()-start);
+    }
+    /** A newly observed reload shortfall has no evidence that it existed at B. Hold its clock until C;
+     * exact resource/population changes during the interval instead establish their own event time. */
+    private void deferUnobservedClocks(ServerLevel server){
+        if(loadedTicks>=aggregateObservationTick||deferredInitialShortfalls.isEmpty())return;
+        var result=stageEvaluation.result();var clocks=new java.util.TreeMap<>(result.unmetSince());
+        deferredInitialShortfalls.forEach(clocks::remove);
+        if(clocks.equals(result.unmetSince()))return;
+        ColonyDevelopment.retainObservedClocks(server,queenId,clocks);
+        var retained=new dev.primeants.colony.StageRules.Result(result.stage(),result.certain(),result.possible(),result.missing(),
+            result.pending().stream().filter(p->!deferredInitialShortfalls.contains(p.requirement().key())).toList(),java.util.Map.copyOf(clocks));
+        stageEvaluation=new ColonyDevelopment.Evaluation(stageEvaluation.previous(),retained,stageEvaluation.inputs(),stageEvaluation.chambers(),stageEvaluation.cap());
+    }
+    public void aggregateFoodChanged(){deferredInitialShortfalls.remove("mature:food");}
+    /** UNKNOWN clears only requirements whose certainty is broken, through the ordinary StageRules evaluator. */
+    public void observeUnknownTerrain(ServerLevel server){
+        long start=System.nanoTime();
+        stageEvaluation=ColonyDevelopment.evaluate(server,queenId,plan,operational,adultCapacity,loadedTicks);
+        stageMembers=ColonyMembers.get(server);stageMembersRevision=ColonyMembers.get(server).revision();stageRegistry=dev.primeants.colony.ChamberRegistry.get(server);stageEvaluatedAt=loadedTicks;
+        catchup.stageCost(System.nanoTime()-start);
+    }
     private boolean emerge(ServerLevel server, BroodRecord r) {
         var member=ColonyMembers.get(server).member(r.workerId());
         if(member!=null){

@@ -1,3 +1,15 @@
+# Enabled laying, stage clocks and history recovery (T06)
+
+T06 resumes the preserved merge/diff and retains automatic production dispatch. Ordinary successful brood substeps
+keep their living identities; unreconstructable history is separately recorded and recovered without retrospective
+charges. Real eggs, virtual births, finite-stock aggregate admission and the existing stage grace are enabled.
+The protected million-tick fixture completes in one invocation within the unchanged 512-event ceiling.
+
+[The T06 lifecycle and acceptance record](catchup-t06.md) defines the current controls and attribution limits.
+Its strict competing-resource timing comparison remains red when aggregate nursing/allocation exceeds the frozen
+10% bound. This is unsupported accuracy, not a relaxed tolerance. Historical T05 floor/laying/clock limits below
+are superseded only by the stated T06 scoped evidence; historical negatives and durability limits remain.
+
 # Enabled automatic reload catch-up (T05)
 
 T05 switches on bounded server catch-up for adults, confirmed cache food and existing brood. The owner checkpoint

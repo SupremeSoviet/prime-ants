@@ -38,9 +38,13 @@ final class TierThreeFixture {
     int withdrawals,conversions;
     LasiusNigerEntity start(GameTestHelper c,int stoneUnits){return start(c,stoneUnits,false);}
     LasiusNigerEntity start(GameTestHelper c,int stoneUnits,boolean hungry){
+        return start(c,stoneUnits,hungry,49,new BlockPos(32,4,32),Direction.EAST,true);
+    }
+    /** T06 controlled registered-population/catch-up fixture; the original Stage-1 calls keep their inputs. */
+    LasiusNigerEntity start(GameTestHelper c,int stoneUnits,boolean hungry,int count,BlockPos entrance,Direction facing,boolean initializeTerrain){
         hungryInitialAdults=hungry;
-        SurfaceFixture.terrain(c);var l=c.getLevel();var home=NestPlan.geometry(c.absolutePos(new BlockPos(32,4,32)),Direction.EAST);
-        int count=49;var broodIds=new ArrayList<UUID>();for(int n=0;n<count;n++)broodIds.add(UUID.randomUUID());
+        if(initializeTerrain)SurfaceFixture.terrain(c);var l=c.getLevel();var home=NestPlan.geometry(c.absolutePos(entrance),facing);
+        apples=count+5;var broodIds=new ArrayList<UUID>();for(int n=0;n<count;n++)broodIds.add(UUID.randomUUID());
         var queen=AntEntities.QUEEN.create(l,EntitySpawnReason.COMMAND);c.assertTrue(queen!=null,"Real initial habitat queen");queen.setPos(Vec3.atBottomCenterOf(home.chamber()));
         var state=new CompoundTag();state.putString("Phase","SETTLED");state.putString("Lifecycle","OPEN");SurfaceFixture.identity(state,home,"FixtureOwner",queen.getUUID());
         state.put("Tasks",BlockPos.CODEC.listOf().encodeStart(NbtOps.INSTANCE,home.tasks()).getOrThrow());
@@ -93,7 +97,7 @@ final class TierThreeFixture {
         c.assertTrue(initialWalls.stream().allMatch(at->ColonyTerrain.get(l).retainedClay(l,at,queen.getUUID())),"Every initial wall is explicitly pre-existing paid tier two");
         c.assertTrue(initialWalls.stream().noneMatch(at->l.getBlockState(at).is(NurseryBlocks.NEST_CUT_STONE)),"No initial tier-three walls");
         c.assertTrue(MoundSoil.cells(l,home,queen.getUUID()).stream().noneMatch(at->ColonyTerrain.get(l).mound(l,at,queen.getUUID())||ColonyTerrain.get(l).surface(l,at,queen.getUUID())),"No recoverable surface construction supplies in this chamber fixture");
-        PrimeAnts.LOGGER.info("T3 ACCEPTANCE BOUNDARY queen={} workers=49 initialClayCores={} initialStone={} initialCache=8 initialIngestedApples=50 initialIngestedChicken=1 tierThreeCells=0 upgradeReceipts=0 hungryAdults={} historicalSpentSugarPerWorker={}",queen.getUUID(),initialWalls.size(),stoneUnits,hungry,hungry?4000:0);
+        PrimeAnts.LOGGER.info("T3 ACCEPTANCE BOUNDARY queen={} workers={} initialClayCores={} initialStone={} initialCache=8 initialIngestedApples={} initialIngestedChicken=1 tierThreeCells=0 upgradeReceipts=0 hungryAdults={} historicalSpentSugarPerWorker={}",queen.getUUID(),count,initialWalls.size(),stoneUnits,count+1,hungry,hungry?4000:0);
         return queen;
     }
     void drop(GameTestHelper c,LasiusNigerEntity q,Item item,int n){

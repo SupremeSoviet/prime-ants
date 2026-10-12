@@ -18,7 +18,7 @@ import net.minecraft.world.phys.Vec3;
 /** Small prospective acceptance set. Timestamp fixtures invoke only ordinary entity/block lifecycle methods.
  * Genuine native disappearance/reload is independently exercised by ReconciliationChunkGameTest. */
 public final class AutomaticCatchupGameTest {
-    private void colony(GameTestHelper c,boolean mature,BiConsumer<LasiusNigerEntity,BroodPile> body){
+    void colony(GameTestHelper c,boolean mature,BiConsumer<LasiusNigerEntity,BroodPile> body){
         var f=new WorkerForagingGameTest();var q=f.start(c);boolean[] started={false};
         c.onEachTick(()->{
             if(started[0])return;var p=new NursingGameTest().pile(c,q);
@@ -26,10 +26,10 @@ public final class AutomaticCatchupGameTest {
             started[0]=true;body.accept(q,p);
         });
     }
-    private static void tickPile(GameTestHelper c,BroodPile p,long now){
+    static void tickPile(GameTestHelper c,BroodPile p,long now){
         ReconciliationGameTest.atTime(c,now,()->((BroodPileBlock)p.getBlockState().getBlock()).getTicker(c.getLevel(),p.getBlockState(),NurseryBlocks.BROOD_TYPE).tick(c.getLevel(),p.getBlockPos(),p.getBlockState(),p));
     }
-    private static List<LasiusNigerEntity> adults(GameTestHelper c,LasiusNigerEntity q){
+    static List<LasiusNigerEntity> adults(GameTestHelper c,LasiusNigerEntity q){
         var result=new ArrayList<LasiusNigerEntity>();result.add(q);
         for(var m:ColonyMembers.get(c.getLevel()).members(q.getUUID()))if(!m.dead())result.add((LasiusNigerEntity)c.getLevel().getEntity(m.worker()));
         return result;
@@ -42,11 +42,11 @@ public final class AutomaticCatchupGameTest {
         extra.addProperty("brood_slots",p.records().size());extra.add("consumed_brood",new Gson().toJsonTree(p.consumed()));
         ReconciliationEvidence.log("automatic_acceptance","ordinary_production_hooks",extra);
     }
-    private static LasiusNigerEntity replace(GameTestHelper c,LasiusNigerEntity old,CompoundTag tag){
+    static LasiusNigerEntity replace(GameTestHelper c,LasiusNigerEntity old,CompoundTag tag){
         old.remove(Entity.RemovalReason.UNLOADED_TO_CHUNK);var copy=ReconciliationGameTest.load(c,tag);
         c.assertTrue(c.getLevel().tryAddFreshEntityWithPassengers(copy),"Original identity restored normally");return copy;
     }
-    private static NestCache finiteCache(GameTestHelper c,LasiusNigerEntity q,List<ItemStack> units){
+    static NestCache finiteCache(GameTestHelper c,LasiusNigerEntity q,List<ItemStack> units){
         var plan=q.founding().plan();c.getLevel().setBlock(plan.cache(),NurseryBlocks.NEST_CACHE.defaultBlockState(),3);var cache=(NestCache)c.getLevel().getBlockEntity(plan.cache());
         var out=net.minecraft.world.level.storage.TagValueOutput.createWithContext(net.minecraft.util.ProblemReporter.DISCARDING,c.getLevel().registryAccess());
         out.putInt("InventoryFormat",3);out.putString("Colony",q.getUUID().toString());out.store("Entrance",net.minecraft.core.BlockPos.CODEC,plan.entrance());out.putString("Direction",plan.direction().getName());out.store("Contents",ItemStack.CODEC.listOf(),units);
@@ -123,13 +123,15 @@ public final class AutomaticCatchupGameTest {
             var worker=new WorkerForagingGameTest().workers(c,q).getFirst();worker.setPermanentlyInvulnerable(true);
             long last=p.lastSimulationGameTime().orElseThrow();tickPile(c,p,last+1_000_001);
             long applied=p.catchup().appliedTicks(),pending=p.catchup().pendingTicks();
-            c.assertTrue(p.catchup().lastEvents()==ColonyCatchup.MAX_EVENTS&&applied>0&&pending>0&&applied+pending==1_000_000,"Fixed 512 bound retains explicit exact remainder for a protected live actor");
+            c.assertTrue(p.catchup().lastEvents()<=ColonyCatchup.MAX_EVENTS&&applied==1_000_000&&pending==0&&worker.isAlive(),"Protected no-op damage folds analytically and the entire million ticks complete in one bounded invocation");
             var row=new JsonObject();row.addProperty("first_applied",applied);row.addProperty("first_pending",pending);row.addProperty("first_events",p.catchup().lastEvents());row.addProperty("first_nanoseconds",p.catchup().lastNanos());
             var saved=p.saveWithFullMetadata(c.getLevel().registryAccess());var restored=BroodGameTest.restorePile(c,p,saved);
             c.assertTrue(restored.catchup().appliedTicks()==applied&&restored.catchup().pendingTicks()==pending,"Normal save/reload retains application and bounded remainder exactly");
-            worker.setPermanentlyInvulnerable(false);tickPile(c,restored,last+1_000_002);
-            c.assertTrue(restored.catchup().pendingTicks()==0&&restored.catchup().appliedTicks()==1_000_001&&!worker.isAlive(),"Next ordinary lifecycle invocation completes remaining plus paused C without replaying prior work");
-            row.addProperty("multi_invocation_single_step_limit",true);log(c,"event_bound_pending_replay",restored,row);c.succeed();
+            var biology=worker.biologySnapshot();tickPile(c,restored,last+1_000_001);
+            c.assertTrue(worker.biologySnapshot().equals(biology)&&restored.saveWithFullMetadata(c.getLevel().registryAccess()).equals(saved),"Completed protected application reconstructs and same-C does not replay");
+            worker.setPermanentlyInvulnerable(false);tickPile(c,restored,last+1_001_002);
+            c.assertTrue(restored.catchup().pendingTicks()==0&&restored.catchup().appliedTicks()==1_001_000&&!worker.isAlive(),"Later unprotected absence applies real damage without replaying prior work");
+            row.addProperty("single_invocation_complete",true);log(c,"event_bound_pending_replay",restored,row);c.succeed();
         });
     }
     @GameTest(maxTicks=8000,structure="prime_ants_test:idle_ground")
