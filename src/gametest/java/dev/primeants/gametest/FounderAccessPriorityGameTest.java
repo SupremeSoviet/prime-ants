@@ -33,6 +33,17 @@ public final class FounderAccessPriorityGameTest {
         registry.register(q.getUUID(),new ChamberRegistry.Chamber(initialHall.id(),initialHall.min(),initialHall.max(),initialHall.functions(),1,initialHall.markers()));
         PrimeAnts.LOGGER.info("T05 CAUSAL INITIAL queen={} nurseryAndStoreTier=2 hallTier=1 existingHallClay=4 convertibleHallEarth=10 soil=72 clay=0 laborReceipts=0 beforeFirstTick=true",q.getUUID());
         f.snapshot(c,q);var probe=FounderAccessProbe.watch(c,q,12000);
+        int[] admissions={0};
+        probe.onAdmission(access->{
+            var paidHall=ChamberUpgrade.get(l).job(q.getUUID(),ChamberExcavation.HALL,2);
+            c.assertTrue(++admissions[0]==1,"Only the first actual finite-access admission is allowed");
+            c.assertTrue(paidHall!=null&&paidHall.complete()&&paidHall.taken()==10&&paidHall.built().size()==10
+                &&paidHall.claim==null&&paidHall.carried()==0&&paidHall.released()==0&&paidHall.ledger().exact(),
+                "Ten paid Hall conversions, completion and builder release precede actual admission");
+            c.assertTrue(ColonyDevelopment.confirmedTier(l,q.getUUID(),home,ChamberExcavation.HALL,ChamberFunction.QUEENS_HALL)==2,
+                "The live physical Hall is confirmed tier two at actual admission");
+            PrimeAnts.LOGGER.info("T06 HALL BEFORE ACCESS queen={} tick={} gameTime={} binding={} paid=10 complete=true claim=null carried=0 released=0 liveHallTier=2 event=actual_admit_return",q.getUUID(),c.getTick(),l.getGameTime(),access.binding);
+        });
         long[] prefixAt={-1},settled={-1};int[] supplied={0};UUID[] binding={null};List<UUID> units=new ArrayList<>();List<String> prefix=new ArrayList<>();boolean[] enabled={false},pairPhysical={false};
         c.onEachTick(()->{
             var pile=NestPlanFixture.pile(c,q);if(pile==null)return;
@@ -68,6 +79,7 @@ public final class FounderAccessPriorityGameTest {
                 pairPhysical[0]=true;PrimeAnts.LOGGER.info("T05 CAUSAL PAIR queen={} tick={} state={} physicalBoth=true soil=72",q.getUUID(),c.getTick(),a.encode());
             }
             if(!enabled[0]||!pairPhysical[0]||j.completed()<5||hall==null||!hall.complete()||hall.claim!=null)return;
+            c.assertTrue(admissions[0]==1,"Physical completion requires the actual admission-time ordering assertion");
             c.assertTrue(ColonyTerrain.get(l).surface(l,j.at(4),q.getUUID())&&l.getBlockState(j.at(4)).is(NurseryBlocks.NEST_SOIL),"Ordinary worker physically constructs the exact motivating target after both relocations");
             c.assertTrue(hall.taken()==10&&hall.built().size()==10&&ground==0&&carried==0&&custody==0&&store.units(MaterialUnits.Material.CLAY)==0,"Ten ordinary paid hall cells settle all ten finite clay units");
             if(settled[0]<0)settled[0]=pile.loadedTicks();if(pile.loadedTicks()-settled[0]<200)return;

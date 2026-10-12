@@ -21,6 +21,7 @@ public final class FounderAccessProbe implements AutoCloseable {
     private Boolean priority,unlocked; private ChamberUpgrade.PrioritySelection available;
     private boolean deciding; private long decisionAt=-1;
     private JsonObject firstStop;
+    private java.util.function.Consumer<SurfaceAccess> admission;
     private FounderAccessProbe(GameTestHelper c,LasiusNigerEntity q,int bound){test=c;queen=q;this.bound=bound;scopes.put(q.getUUID(),this);}
     public static FounderAccessProbe watch(GameTestHelper c,LasiusNigerEntity q,int bound){
         var p=new FounderAccessProbe(c,q,bound);
@@ -33,6 +34,12 @@ public final class FounderAccessProbe implements AutoCloseable {
         });return p;
     }
     public JsonObject firstStop(){return firstStop==null?null:firstStop.deepCopy();}
+    public void onAdmission(java.util.function.Consumer<SurfaceAccess> assertion){admission=assertion;}
+    public static void admitted(ServerLevel l,UUID owner,SurfaceAccess access){
+        var p=scopes.get(owner);if(p==null||p.test.getLevel()!=l||access==null)return;
+        if(p.admission!=null)p.admission.accept(access);
+        p.emit("actual_admission_after_ordering_assertion",p.snapshot(null,null));
+    }
     public static void begin(UUID owner){var p=scopes.get(owner);if(p!=null){p.deciding=true;p.decisionAt=p.test.getLevel().getGameTime();p.priority=null;p.unlocked=null;p.available=null;}}
     public static void priority(UUID owner,boolean value){var p=scopes.get(owner);if(p!=null)p.priority=value;}
     public static void unlocked(UUID owner,boolean value){var p=scopes.get(owner);if(p!=null){p.unlocked=value;p.deciding=false;}}

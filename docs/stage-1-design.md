@@ -678,3 +678,47 @@ causal/final-native/recovery evidence and final commit/tree verification remain 
 by demonstrated physical before/after access progress. Food 10323, mining-death/timing uncertainties and historical
 Great 47/57 persist. In-memory nursing/inventory reconstruction is separate from disk/world persistence; established
 generation, performance/broad persistence and release 0.2.0 remain open.
+
+
+### Stage-1c T06 (2026-10-12): actual admission ordering and a bounded funding negative
+
+The shared original/copy founder regression now checks the real nonnull SurfaceAccess.admit return: all ten paid
+Hall conversions and completion, released builder/null claim, zero carried/released clay, exact ledger and physically
+confirmed live Hall2 must already hold. Same-clock event order is accepted; no extra tick is added. Both authorized
+relocations, immutable prefix/binding/unit identities, physical motivating target, finite39 food/10 clay/72 soil,
+6,000-loaded/12,000-total bounds and200 settlement remain. Original and both copies pass targeted and complete checks.
+
+An independent new control declares an existing tier-three habitat with nine workers and zero initial food/nutrition
+receipts. Its finite16 apples/6 chicken budget (64,000/48,000) is dropped physically in two fixed waves; matched shortage
+uses one chicken. Preparation4800, measurement600 loaded and total5400 are frozen. Both controls fail preparation:
+queen genuinely consumes2 apples/1 chicken, workers consume zero, and maximum real recent sugar8000 misses the8250
+minimum reserve. Ordinary peer-service eligibility needs6000 fasting ticks (personal hunger12000), outside preparation.
+Current stock and independent physical+single-consumed16/6 and16/1 ledgers remain exact; ground units are excluded.
+No actual eggs or intervals are obtained, no budget/bound is extended and no hall-cadence defect/repair is claimed.
+The plan predates every native child but follows wrapper compilation/freeze by0.060s after a CRLF checker error;
+JSON first-wave1 versus frozen executable0/1 (actual0) is disclosed. Setup is neither worker construction nor new birth.
+
+T05 tier-two's first recorded missed window after nursery expansion is30939/25210: income32000>=22500 but current
+sugar27216<31500. Two ordinary pickups add8000 real cargo without intake receipts; next lay31050/25321 follows112
+loaded ticks instead of12. Third-brood31203 needs37000 vs32029. At59506/53776, current29664>=24000 disables the
+fixture's wave while growth needs37250 current and32250 income (actual4000). Meals/feeding/deliveries continue;
+permanent service stall, bad accounting and admission-repair causation are unproved. Exact T05 timeout census remains
+UNKNOWN; existing59800/54070 observation is separate. No original fixture, policy, cost/reserve or saved format changes.
+
+Mandatory fast passes73/118/26, exit0, 140.061s. Complete original-plus-control long is207/212,
+exit1, 7280.720s, native[1, 3, 1]; final inventory285=73+212. Original Hall maxima HALL:1, COMBINED:2,
+both timeout20000; current tier-two PASS at54153 (does not explain T05). Original supplied founder times out60000
+at4/19; Great passes57/57 at11426. Their original physical/passage/accounting/200-settlement assertions remain;
+earlier negatives and the current original-founder failure are preserved.
+Current original supplied founder4/19 timeout60000 has admission59911 (89 ticks remaining), both operations stillSOURCE,
+action0 and no first terminal stop; the preceding delay cause is unproved. Focused copies do not replace it. T05's original
+19/19 at43678 remains separate historical acceptance. Current tier-two PASS, if present, does not diagnose T05's red run.
+Durable smoke42 and real wrapper exits verify; no recovery/replay, client launches or executable mutation while native
+servers run. Actual client guard-SKIPs,962 archived source/class/resource inputs plus120 pinned JAR hashes, protected
+clients, newest-ten+active leases and25GB floor verify. Command durations are not colony performance.
+
+Settlement: `<turnloop>/directions/prime-ants-stage1c/turns/T06/raw/t06-hall-funding-checkpoint.json`, with report/appendix,
+native/merged XML, logs, freezes, exits, shutdown, conservation and final verification. No-new-green1; a fresh
+prospective control must establish ordinary adult service/recent income eligibility before measuring cadence. T01–T05
+hall negatives, T16/T04 founder history, food10323, mining/hauling uncertainties and Great47/57 remain. In-memory
+reconstruction is separate from persistence; generation, performance/broad persistence and release0.2.0 stay open.
