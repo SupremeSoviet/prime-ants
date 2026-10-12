@@ -2469,6 +2469,30 @@
       "suite": "long",
       "weight_ticks": 20000,
       "reason": "T02 independent current-inventory or gate-qualified hall witness; frozen final T01 fixture and 20000-tick bound"
+    },
+    {
+      "name": "prime_ants_test:nursing_recovery_game_test_personal_meal_of_carried_food_resumes_physical_service_by_the_same_nurse",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NursingRecoveryGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "T04 real personal meal, same-nurse physical replacement and 20-tick feeding; 600 recovery and 200 settled ticks"
+    },
+    {
+      "name": "prime_ants_test:nursing_recovery_game_test_saved_empty_feeding_phase_recovers_without_save_editing",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NursingRecoveryGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "T04 disclosed saved empty phase recovers through ordinary loaded withdrawal and feeding without save editing"
+    },
+    {
+      "name": "prime_ants_test:nursing_recovery_game_test_non_food_feeding_cargo_remains_canonical_and_uncredited",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NursingRecoveryGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "T04 exact foreign non-food nursing cargo and recipient retained with no food or nutrition credit for 200 real ticks"
     }
   ]
 }

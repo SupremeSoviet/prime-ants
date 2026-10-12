@@ -590,3 +590,47 @@ Settlement: `<turnloop>/directions/prime-ants-stage1c/turns/T03/raw/t03-food-ser
 No-new-green count 0 reflects both restored older complete acceptances and the green regression checkpoint;
 no causal production repair or general timing robustness is claimed. Historical food 10,323, mining-death/regression/tier-two timing uncertainty and
 Great 47/57 remain. Generation, performance/broad persistence and release 0.2.0 remain later work.
+
+
+### Stage-1c T04 (2026-10-12): personal-meal nursing recovery accepted; hall remains separate
+
+Real-tick frozen regression before repair witnesses original nurse personally eating its carried apple, then empty
+NURSE_FEED retaining the old recipient through600 ticks despite an accepting queen and one reachable replacement.
+Three production lines now distinguish genuinely empty feed cargo: clear stale recipient/action and resume ordinary
+NURSE_CACHE. Meal priority, actual single personal receipt, nonempty invalid cargo, authorization/caregiver counting,
+ordinary cache withdrawal/walking/reach/20-tick feeding/revalidation/return, other claims and saved phases are unchanged.
+Same living nurse after repair: meal6324, recovery6325, replacement6350, actual feeding6370, settlement6570.
+Exactly one personal and one recipient consumption conserve two units independently;200 settled ordinary caregiver ticks.
+Saved-empty and non-food controls pass targeted and complete long. Initial checkpoint/history is explicit; no forced
+empty transition, direct ingestion or controller tick after the acceptance boundary. Nursing restore scope is in-memory.
+
+Original same-server missing-supply/cargo-reload pair reproduces the reference failure, then passes2/2 after a narrow
+assertion correction to persisted logical identity and paid-prefix continuity. Two actual reconstruction overlaps
+include another colony's waiting1/8 job; global persisted jobs/terrain/registry/custody and canonical claimed cargo/task
+state match exactly. Original600 pause, resumption and200 settlement retained. T03 co-run518/reload514 and isolated
+control remain historical negatives; final sharding alone is not this interaction proof.
+
+Unchanged targeted hall pair still times out at20000. Complete hall comparison: HALL: empty 0 worker-ticks / invalid-empty 0, max interval chain 2; COMBINED: empty 3 worker-ticks / invalid-empty 0, max interval chain 1.
+Long empty-feed dwell is repaired, but actual withdrawal/feeding counts and independent nutrition/funding/income/slots
+still interrupt the four-egg/three-consecutive-qualified-interval contract. No hall cause or threshold/prefeeding policy
+is inferred from nursing recovery; final T01/T02 fixtures, supplies/history, positions, waves, multipliers, recipes,
+capacities, cadence, reserves and queenNeedsFood remain frozen. Strict helper<20000; listener clocks are diagnostic.
+
+Final fast73/118/26 green, exit0,117.807s. One complete unfiltered long204/207, exit1,
+6592.480s, native[0, 2, 1]. Regression checkpoint green=False; item2 accepted=False.
+280 exact identities,1061 frozen inputs, native/merged XML/logs/executable archives, actual guard-SKIPs, protected clients,
+leases/newest-ten retention and concurrency≤3 preserved. No unchanged full retry. No-new-green count0 is earned by
+demonstrated same-nurse physical recovery, not repeated older positives. Settlement:
+`<turnloop>/directions/prime-ants-stage1c/turns/T04/raw/nursing-recovery-acceptance.json`.
+
+T01/T02/T03 hall timeouts and older unexplained hauling/tier-two outcomes, food10323, mining-death/timing uncertainties
+and historical Great47/57 remain separate from later positives. Current inventory reconstruction is in-memory;
+original carried-job disk/data safety is distinct. Established generation, performance/broad persistence and0.2.0 stay open.
+The supplied founder/Mature surface identity additionally times out at60000. Original59500 receipt prefix4/19,
+recovered2/placed2,cargo0/claimnull andstopped_access_stage_or_priority_changed remain bounded native evidence;
+complete form, passage and200 settlement unmet. Relationship to nursing recovery is not established. Shared regression
+checkpoint stays RED/INCOMPLETE; controlled Great is separate. No policy/fixture/route expansion or preferred-result retry.
+
+Current T04 other acceptances: hauling20123/14393; tier-two natural54198/48468. Inventory19306 retains8 apples+6 chickens
+and67 clay across all five exact in-memory boundaries. Controlled Great11265 retains57/57,19/38,soil80,stone32,food59,
+walking passage and200 settlement, separate from supplied founder/Mature4/19 timeout. Older timing causes remain unresolved.

@@ -450,6 +450,9 @@ public final class WorkerTasks {
         }
     }
     private void nurseFeed(ServerLevel l){
+        // Personal eating owns the carried unit before nursing dispatch. A saved or
+        // newly empty feed has no action left to commit; resume an ordinary cache trip.
+        if(worker.getMainHandItem().isEmpty()){recipient=null;feedingTicks=0;next(Phase.NURSE_CACHE,"nurse_empty_feed_recovery");return;}
         if(!food(worker.getMainHandItem())){hold("nurse_cargo_invalid_retained");return;}
         // Revalidate the exact recipient; a changed/refusing recipient never consumes cargo.
         var q=queen(l);boolean toQueen=recipient!=null&&recipient.equals(worker.queenId());
