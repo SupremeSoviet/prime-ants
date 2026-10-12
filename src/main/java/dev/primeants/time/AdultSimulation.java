@@ -66,6 +66,25 @@ public final class AdultSimulation {
         return new Snapshot(boundary, origin, knownAfter, clock.lastGameTime().orElseThrow(), invalidTime, runs);
     }
     public Boundary lastBoundary() { return lastBoundary; }
+    public boolean completedAt(long now){return clock.lastGameTime().orElseThrow()==now&&runs.stream().anyMatch(r->r.first()<=now&&r.last()>=now);}
+    /** Real aggregate completion fills a confirmed missing span without replacing ordinary observations. */
+    public void applied(long first,long last) {
+        if(first<0||last<first||invalidTime)throw new IllegalArgumentException("Invalid application span");
+        var all=new ArrayList<Run>(runs);all.add(new Run(first,last));all.sort(java.util.Comparator.comparingLong(Run::first));
+        runs.clear();
+        for(var run:all){
+            if(!runs.isEmpty()&&(run.first()<=runs.getLast().last()||runs.getLast().last()<Long.MAX_VALUE&&run.first()==runs.getLast().last()+1)){
+                var old=runs.removeLast();runs.add(new Run(old.first(),Math.max(old.last(),run.last())));
+            }else runs.add(run);
+        }
+        while(runs.size()>MAX_RUNS)knownAfter=Math.max(knownAfter,runs.removeFirst().last());
+        if(last>clock.lastGameTime().orElseThrow())clock.completed(last);
+    }
+    /** Only a real newly constructed, unstepped worker may select its historical birth event. */
+    public void birthAt(long now){
+        if(origin!=Origin.BIRTH||!runs.isEmpty())throw new IllegalStateException("Birth already observed");
+        boundary=knownAfter=now;clock.completed(now);
+    }
     /** The pre-C return boundary only when it belongs to C; older retained captures are never newly owed. */
     public Boundary boundaryBefore(long now) {
         if (lastBoundary != null && lastBoundary.ownInterval().beforeGameTime() == now
@@ -73,6 +92,7 @@ public final class AdultSimulation {
         return new Boundary(clock.before(now), snapshot());
     }
     public void beforeStep(long now) {
+        if(lastBoundary!=null&&lastBoundary.ownInterval().beforeGameTime()==now)return;
         var interval = clock.before(now);
         if (pendingBoundary || interval.ticks() > 0 || now < clock.lastGameTime().orElseThrow()) {
             lastBoundary = new Boundary(interval, snapshot()); pendingBoundary = false;

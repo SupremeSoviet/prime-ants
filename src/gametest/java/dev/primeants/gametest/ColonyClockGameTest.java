@@ -63,11 +63,12 @@ public final class ColonyClockGameTest {
     }
     private static void ordinary(GameTestHelper c, BroodPile p, long now) {
         c.assertTrue(c.getLevel().getBlockEntity(p.getBlockPos()) == p, "Ordinary ticker only runs on installed nursery");
-        long loaded = p.loadedTicks();
+        long loaded = p.loadedTicks(),applied=p.catchup().appliedTicks();
         atTime(c, now, () -> ((dev.primeants.brood.BroodPileBlock)p.getBlockState().getBlock()).getTicker(c.getLevel(), p.getBlockState(), NurseryBlocks.BROOD_TYPE)
             .tick(c.getLevel(), p.getBlockPos(), p.getBlockState(), p));
-        c.assertTrue(p.loadedTicks() == loaded + 1 && p.lastSimulationGameTime().orElseThrow() == now,
-            "One completed production step stamps exactly its gameTime");
+        c.assertTrue(p.catchup().pendingTicks()>0?p.loadedTicks()==loaded:
+            p.loadedTicks() == loaded + 1+p.catchup().appliedTicks()-applied && p.lastSimulationGameTime().orElseThrow() == now,
+            "Production completion accounts aggregate spans plus C; pending work retains its unstamped clock");
     }
     private static CompoundTag biology(CompoundTag tag) {
         var copy = tag.copy(); copy.remove(ColonyClock.FIELD); return copy;
@@ -115,8 +116,9 @@ public final class ColonyClockGameTest {
             var resumed = BroodGameTest.restorePile(c, control, tag);
             interval(c, resumed, last + 1_000_001, 1_000_000, "long_absence_one_million");
             ordinary(c, resumed, last + 1_000_001);
-            c.assertTrue(biology(save(c, resumed)).equals(controlAfter),
-                "Long timestamp absence changes no biology: precisely the same one ordinary step as live control");
+            c.assertTrue(!biology(save(c, resumed)).equals(controlAfter)&&resumed.catchup().appliedTicks()==1_000_000
+                &&resumed.catchup().pendingTicks()==0&&resumed.original().equals(p.original()),
+                "Enabled long reload changes biology and accounts the full interval with original identities");
             interval(c, resumed, last + 1_000_002, 0, "long_after_one_ordinary_step"); c.succeed();
         });
     }

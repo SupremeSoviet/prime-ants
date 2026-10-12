@@ -2757,6 +2757,94 @@
       "suite": "long",
       "weight_ticks": 1000,
       "reason": "T04 independent pre-extraction ordinary adult reference including arithmetic boundaries; finite comparisons, no application"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_accepted_maintenance_maximum_saturates_ordinary_and_reconstructs",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_accepted_covered_ticks_maximum_saturates_ordinary_and_reconstructs",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_short_reload_matches_live_ticks_and_does_not_repeat_after_save",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_long_no_food_return_kills_real_workers_releases_cargo_once_and_regresses_stage",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_partial_member_loading_persists_pending_and_excludes_waiting_ordinary_ticks",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_unknown_terrain_defers_biology_and_restoration_resumes_automatically",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_existing_original_brood_emerges_as_real_workers_from_aggregate_spans",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_confirmed_finite_cache_feeds_adults_and_existing_food_fed_larva_exactly_once",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_food_fed_existing_brood_promotes_young_and_long_return_regresses_through_stage_rules",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_paired_finite_live_control_and_reload_agree_on_original_brood_growth",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_fixed_event_bound_persists_applied_and_pending_work_until_next_automatic_invocation",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
     }
   ]
 }

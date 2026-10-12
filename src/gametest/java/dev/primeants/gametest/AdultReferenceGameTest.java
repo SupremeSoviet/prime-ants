@@ -106,9 +106,13 @@ public final class AdultReferenceGameTest {
     public void loadedActiveCounterMaximumMatchesIndependentLegacy(GameTestHelper c){
         var colony=UUID.randomUUID();var ant=worker(c,colony,10,1000,50,2,0,0,0,Long.MAX_VALUE);
         c.assertTrue(ant.adultLife().snapshot().valid()&&ant.nutrition().snapshot().valid(),"Existing owners accept the boundary save input");
-        var shadow=LegacyAdultShadow.watch(c,colony,"detached_valid_loaded_active_counter_maximum");
-        ordinary(c,ant,shadow,c.getLevel().getGameTime()+1);
-        c.assertTrue(ant.adultLife().activeTicks()==Long.MIN_VALUE,"Inherited ordinary increment uses Java long wrap at its arithmetic boundary");
-        shadow.close();c.succeed();
+        ReconciliationGameTest.atTime(c,c.getLevel().getGameTime()+1,ant::tick);
+        c.assertTrue(ant.adultLife().activeTicks()==Long.MAX_VALUE,"Owner-authorized saturation replaces the historical wrap/exception discrepancy");
+        c.assertTrue(ant.elapsedAgeTicks()==11&&ant.adultLife().maintenanceTicks()==8&&ant.adultLife().coveredTicks()==29
+            &&ant.adultLife().coverageRemaining()==3&&ant.nutrition().sugar()==1&&ant.nutrition().spentSugar()==3999,
+            "All non-boundary effects retain their exact historical values");
+        var saved=ReconciliationGameTest.save(c,ant);var reconstructed=ReconciliationGameTest.load(c,saved);
+        c.assertTrue(saved.equals(ReconciliationGameTest.save(c,reconstructed)),"Maximum remains accepted after advance/save/reconstruct");
+        ReconciliationEvidence.log("counter_active_saturation","accepted_maximum_ordinary_save",new com.google.gson.Gson().toJsonTree(ant.biologySnapshot()).getAsJsonObject());c.succeed();
     }
 }

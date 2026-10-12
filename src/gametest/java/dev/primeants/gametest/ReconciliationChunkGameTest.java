@@ -179,14 +179,20 @@ public final class ReconciliationChunkGameTest implements ModInitializer {
                     }
                     // Later reconciliation is separate evidence; it never repairs/replaces a captured UNKNOWN row.
                     var reconciled=adult.simulationEvidence().reconcile(capture.interval());
-                    long expectedSimulated=observedAfterNursery+(first<capture.interval().beforeGameTime()?ColonyClock.missedTicks(first-1,capture.interval().beforeGameTime()):0);
-                    c.assertTrue(reconciled.status().equals("RESOLVED")&&reconciled.alreadySimulated().orElseThrow()==expectedSimulated
-                        &&reconciled.missed().orElseThrow()==capture.interval().ticks()-expectedSimulated,"Native intervals exact with zero tolerance, including resumed adult-before-nursery ticks");
+                    c.assertTrue(reconciled.status().equals("RESOLVED")&&reconciled.missed().orElseThrow()==0,
+                        "Production hooks automatically fill all confirmed absence; no test application callback");
                     var row=ReconciliationEvidence.adult(adult.simulationEvidence());row.addProperty("uuid",adult.getUUID().toString());row.add("own_boundary",ReconciliationEvidence.interval(boundary.ownInterval()));
                     row.addProperty("already_simulated",reconciled.alreadySimulated().orElseThrow());row.addProperty("missed",reconciled.missed().orElseThrow());row.addProperty("saved_age",ages.get(adult.getUUID()));row.addProperty("reloaded_age",adult.elapsedAgeTicks());
-                    c.assertTrue(adult.elapsedAgeTicks()-ages.get(adult.getUUID())==adult.simulationEvidence().latest()-first+1,"Only actual resumed adult steps changed age");returning.add(row);
+                    long totalAfter=adult.simulationEvidence().latest()-Math.max(nurseryLast[0],saved.latest());
+                    c.assertTrue(adult.elapsedAgeTicks()-ages.get(adult.getUUID())==totalAfter,
+                        "Native reload changes age by exact absent plus resumed ticks, including C only once");returning.add(row);
                 }
                 c.assertTrue(ColonyMembers.get(l).occupied(queen)==3&&p.records().isEmpty(),"Same three reservations, no new adult or brood on native reload");
+                c.assertTrue(p.catchup().pendingTicks()==0&&p.catchup().appliedTicks()>=40&&p.catchup().lastEvents()<=ColonyCatchup.MAX_EVENTS,"Native reload applies bounded catchup automatically");
+                out.addProperty("applied_ticks",p.catchup().appliedTicks());out.addProperty("pending_ticks",p.catchup().pendingTicks());out.addProperty("events",p.catchup().lastEvents());out.addProperty("application_nanoseconds",p.catchup().lastNanos());
+                out.addProperty("no_manual_application",true);out.addProperty("live_control_adults",ColonyMembers.get(l).occupied(live.getUUID())+1);out.addProperty("catchup_adults",ColonyMembers.get(l).occupied(queen)+1);
+                out.addProperty("finite_initial_queen_reserve",BroodPile.MAX_RESERVE);out.addProperty("incoming_supplies",0);
+                c.assertTrue(ColonyMembers.get(l).occupied(live.getUUID())==3&&p.records().isEmpty()&&new NursingGameTest().pile(c,live).records().isEmpty(),"Matched finite live control has same four adults, zero brood and no incoming supplies");
                 out.add("later_returning_adults_reconciliation",returning);out.addProperty("nursery_stamp_after_capture",p.lastSimulationGameTime().orElseThrow());out.addProperty("loaded_ticks_after",p.loadedTicks());out.addProperty("loaded_ticks_before",oldLoaded[0]);
                 ReconciliationEvidence.log("native_reload_capture","genuine_chunk_lifecycle",out);fixture.close();phase[0]=4;c.succeed();
             }

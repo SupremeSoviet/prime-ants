@@ -52,10 +52,11 @@ public final class ReconciliationGameTest {
         try { data.setGameTime(now); body.run(); } finally { data.setGameTime(old); }
     }
     static void ordinary(GameTestHelper c, BroodPile pile, long now) {
-        long ticks = pile.loadedTicks();
+        long ticks = pile.loadedTicks(),applied=pile.catchup().appliedTicks();
         atTime(c, now, () -> ((BroodPileBlock)pile.getBlockState().getBlock()).getTicker(c.getLevel(), pile.getBlockState(), NurseryBlocks.BROOD_TYPE)
             .tick(c.getLevel(), pile.getBlockPos(), pile.getBlockState(), pile));
-        c.assertTrue(pile.loadedTicks() == ticks + 1 && pile.lastSimulationGameTime().orElseThrow() == now, "Exactly one ordinary nursery step");
+        c.assertTrue(pile.catchup().pendingTicks()>0?pile.loadedTicks()==ticks:
+            pile.loadedTicks() == ticks + 1+pile.catchup().appliedTicks()-applied && pile.lastSimulationGameTime().orElseThrow() == now, "Committed aggregate spans plus C, or explicit unstamped pending work");
     }
     static ColonyClock.Interval interval(long after, long before) {
         return new ColonyClock.Interval(OptionalLong.of(after), before, ColonyClock.missedTicks(after, before));
@@ -121,13 +122,13 @@ public final class ReconciliationGameTest {
                 c.assertTrue(row.ownInterval().equals(interval(adultLast,current)) && row.returnBoundary()!=null
                     && row.returnBoundary().ownInterval().equals(interval(adultLast,current))
                     && row.returnBoundary().evidence().latest()==adultLast, "Captured member retains original four-tick adult return in both orders");
-                c.assertTrue(row.currentTimestampInterval().equals(interval(adultFirst?current:adultLast,current)),
-                    "Current timestamp query explicitly differs from original return after adult-first C stamp");
+                c.assertTrue(row.currentTimestampInterval().equals(interval(adultLast,current)),
+                    "Automatic pre-C hook captures the original timestamp in both lifecycle orderings");
                 c.assertTrue(captured.interval().ticks() == 6 && row.evidence().runs().stream().anyMatch(r -> r.last() >= adultLast), "Nursery six ticks differs from adult four-tick own gap");
                 if (!adultFirst) atTime(c, current, adult::tick);
                 c.assertTrue(adult.lastSimulationBoundary().ownInterval().equals(interval(adultLast, current)), "Adult returning boundary remains inspectable after its stamp");
                 c.assertTrue(adult.simulationEvidence().latest() == current && captured.interval().equals(interval(nurseryLast, current)), "Both current-step orderings count C only in ordinary biology");
-                c.assertTrue(adult.elapsedAgeTicks() == detached.elapsedAgeTicks() + 1, "Only one current adult step in each ordering");
+                c.assertTrue(adult.elapsedAgeTicks() == detached.elapsedAgeTicks() + 6, "Five absent adult ticks and exactly one current C in both orderings");
                 adult.remove(Entity.RemovalReason.UNLOADED_TO_CHUNK); p = resumed;
             }
             c.succeed();
@@ -138,22 +139,25 @@ public final class ReconciliationGameTest {
     public void capturedReturnBeforeNurseryAndEarlierResumptionNeverReuseStaleBoundary(GameTestHelper c) {
         founded(c, false, (q, p) -> {
             long last=p.lastSimulationGameTime().orElseThrow(), adultLast=last-2, current=last+7;
+            var initialNursery=p.saveWithFullMetadata(c.getLevel().registryAccess());
             var tag=save(c,q);var detached=load(c,tag);atTime(c,adultLast,detached::tick);
             var adultTag=save(c,detached);q.remove(Entity.RemovalReason.UNLOADED_TO_CHUNK);
             for(boolean adultFirst:new boolean[]{false,true}){
+                p=BroodGameTest.restorePile(c,p,initialNursery);
                 var adult=load(c,adultTag);c.assertTrue(c.getLevel().tryAddFreshEntityWithPassengers(adult),"Original identity installed");
                 if(adultFirst)atTime(c,current,adult::tick);
                 var capture=ReloadObservation.capture(c.getLevel(),q.getUUID(),p.getBlockPos(),q.founding().plan().chamber(),interval(last,current));
-                var row=member(capture,q.getUUID());resolved(c,"pre_nursery_"+adultFirst,row,0,6);
+                var row=member(capture,q.getUUID());resolved(c,"pre_nursery_"+adultFirst,row,adultFirst?6:0,adultFirst?0:6);
                 c.assertTrue(row.ownInterval().equals(interval(adultLast,current))&&row.ownInterval().ticks()==8
                     &&row.returnBoundary().evidence().latest()==adultLast,"Captured original adult return begins before nursery L, in both orders");
                 if(!adultFirst)atTime(c,current,adult::tick);
                 adult.remove(Entity.RemovalReason.UNLOADED_TO_CHUNK);
             }
+            p=BroodGameTest.restorePile(c,p,initialNursery);
             var earlier=load(c,adultTag);c.assertTrue(c.getLevel().tryAddFreshEntityWithPassengers(earlier),"Earlier resuming original");
             atTime(c,current-1,earlier::tick);
             var capture=ReloadObservation.capture(c.getLevel(),q.getUUID(),p.getBlockPos(),q.founding().plan().chamber(),interval(last,current));
-            var row=member(capture,q.getUUID());resolved(c,"earlier_resume",row,1,5);
+            var row=member(capture,q.getUUID());resolved(c,"earlier_resume",row,6,0);
             c.assertTrue(earlier.lastSimulationBoundary().ownInterval().ticks()==7&&row.ownInterval().ticks()==0
                 &&row.ownInterval().equals(interval(current-1,current))&&row.returnBoundary()==null,
                 "Captured row never reuses the older seven-tick return as newly owed work");

@@ -1,4 +1,82 @@
-# Saved clocks, reload reconciliation and bounded adult calculation (T01–T04)
+# Enabled automatic reload catch-up (T05)
+
+T05 switches on bounded server catch-up for adults, confirmed cache food and existing brood. The owner checkpoint
+redirect of 2026-10-12 supersedes the inactive dispatch/equivalence prerequisites in the historical T01-T04 sections
+below. Reload changes biology without a command, callback or opt-in flag.
+
+`LasiusNigerEntity.tick` calls `ColonyCatchup.beforeAdult` before ordinary biology; `BroodPile.serverTick` calls the
+same nursery coordinator before its stamp. Only installed, owned loaded state qualifies. The exclusive nursery
+interval is captured first. Current adult state advances in missing observation spans: old snapshots never replace
+current nutrition, health or controller effects. Ordinary ranges, birth boundaries and applied ranges exclude
+independent work and current tick C. Persisted evidence, nursery cursor/applied-through and ordinary-C guards protect
+normal save/reload replay. Accepted maximum ActiveTicks, Maintenance and CoveredTicks saturate in both paths.
+
+All living reserved members must resolve to their real lineage/home. Missing members remain UNKNOWN and reserve
+capacity. The nursery retains explicit pending work and pauses ordinary nursery biology/stamping; adults may keep
+ordinary ticking. Pending work includes waiting ticks, and completed adult ranges exclude that work on recovery.
+Compacted evidence can leave an explicit UNKNOWN floor; it is never guessed away. UNKNOWN terrain grants neither
+aggregate growth/resources nor starvation, neglect or stage regression. Findings' loaded damage wins over unrelated
+unavailability, retaining live neglect/stage owners. Retained-nurse and StageRules definitions are unchanged.
+
+The fixed ceiling is **512 decision batches plus physical food allocations per colony per game-time invocation**.
+Each batch touches bounded adults (120), brood (15), cache and observation ranges (32 per adult). Boundaries include
+health, hunger, brood stages, funding exhaustion, viability and evidence runs. No missed-tick or pathfinding loop
+runs. At the ceiling the exact remainder stays saved. The protected-actor fixture demonstrates multi-invocation
+completion, a limitation of the desired single-step contract. Reversed/same time does not open an applied interval;
+a future pending domain waits explicitly. Legacy clock/evidence migration begins at level/entity load. Stopped-server
+wall time contributes no simulation.
+
+Food service approximates travel and feeding cadence: units in saved cache order, hungry adults in queen/member
+registry order, then food-fed brood in slot order. Workers serve their own sugar; queens and larvae require a real
+authorized caregiver. Current live queen readiness/reach owns eggs and founding larval reserve use. A physical unit
+passes atomically from the confirmed cache to one Nutrition receipt, using its actual kind/yield/capacity. Shared
+BroodPile operations own cumulative nourishment costs, neglect, cocoon waiting, retirement and real emergence in
+ordinary and aggregate advancement. No forage, cargo delivery, protein or materials are invented. Existing health
+losses remain; historical damage uses the existing damage/death path with cooldowns separated across simulation
+events, while preserving the resumed actor's cooldown.
+
+Deaths use AdultHistory, member tombstones and stable cargo custody identities. Real births use the original brood
+ID, deterministic worker UUID, capacity/collision checks and verified insertion owner. Blocked emergence retains a
+real cocoon until its existing waiting/viability owner expires it. Birth evidence uses the historical event time,
+allowing the real worker to age during later spans. Displays refresh after canonical changes only.
+
+`LoadedTicks` adds committed aggregate spans to map ColonyDevelopment/StageRules to simulation time. Reevaluation
+at batch endpoints exercises promotion and catastrophic regression. Exact shortfall observation times within batches
+and full time-based hysteresis accuracy are **deferred**. Laying is **not aggregated**: its ordinary egg costs,
+slots, care, capacity and FoodLimitedGrowth gates remain active. Discontinuous income sampling starts a fresh
+observed live window; absence cannot fabricate income rate. T06 must integrate feasible laying and finer stage
+clock events. **Digging, building and mining are excluded**; aggregate code never credits/spends material stores.
+
+Prospective tolerances: exact comparable short survivor age/callow and C; exact identities and conservation in each
+run; long interval complete or explicit pending; exact controlled no-food survivors; growing control within one adult
+and one occupied slot; food control within one cached unit of each kind; brood timing within 10% of one configured
+stage duration. No tolerance is widened. The initial target is **p95 <=20 ms per colony invocation**, including
+capture/application/displays/birth/death, separate from chunk I/O and Gradle duration. Actual costs and adverse results
+are settled in the T05 packet; the protected-actor stress workload may miss this target.
+
+The native fixture proves actual chunk disappearance, 40 measured absent game ticks, original identity reload and
+automatic application versus a finite live colony, with no application callback. Paired growing and short fixtures
+separately compare real brood/adults with finite ordinary controls. A finite cache fixture accounts each apple,
+berry and chicken receipt plus exact residual stores. Active maximum is tested by the updated former wrap regression;
+Maintenance/CoveredTicks have one focused ordinary-load/advance/save/reconstruct body each.
+
+T05 settlement: all eleven new automatic/boundary identities and updated active-maximum regression pass. Final
+unfiltered fast is 76 server / 124 unit / 26 model. The exact affected-long checkpoint is **119/121 valid red**:
+the unchanged combined tier-three effects and independent hall identities retain their tested-master 20,000-tick
+timeouts already documented by Stage-1c T02/T03. Their current colonies make no aggregate invocation. No parallel
+feeding-policy repair, timeout change or dispatch disable is made. The tested merge uses master `92077f5`; later
+master `d16fded` is recorded for T06's initial merge and complete checkpoint. This is not a causal equivalence claim
+for every ordinary shared operation. Final input correspondence is exact across four accepted/integration workloads.
+
+The nineteen automatic/native fixture invocations, including deferrals and protected-actor stress, measure nearest-rank
+**p95/max 67.0136 ms**, missing the initial 20 ms target. The fixed 512 ceiling and explicit pending remainder work;
+this is not universal single-step completion or 120-adult cost acceptance. Load-time legacy migration is asserted,
+but mixed metadata/staggered legacy floor recovery and nonzero material-store aggregate comparison remain coverage
+gaps. All normal save/replay, identity/resource equations and current scenario bounds remain unchanged. The external
+T05 packet/report retain failures, correction evidence and the separate unresolved T03 surface timeout/T04 positive.
+
+## Historical T01-T04 design and evidence
+
 
 T01 delivers a saved observation boundary. Gameplay catch-up remains inactive: detecting absence does not apply it.
 The colony's one `BroodPile` owns optional NBT long `LastSimulationGameTime`, beside its existing `Queen` UUID and nest

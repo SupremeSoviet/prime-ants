@@ -30,6 +30,8 @@ public final class AdultLife {
     }
     public State snapshot(){return new State(lifespan,grace,fasting,maintenanceTicks,activeTicks,damageTicks,mealTicks,coverageRemaining,coveredTicks,started,death);}
     private void restore(State s){fasting=s.fasting();maintenanceTicks=s.maintenanceTicks();activeTicks=s.activeTicks();damageTicks=s.damageTicks();coverageRemaining=s.coverageRemaining();coveredTicks=s.coveredTicks();started=s.started();}
+    /** Accepted nonnegative counters retain their maximum, in both ordinary and aggregate advancement. */
+    public static long saturatingAdd(long a,long b){if(a<0||b<0)throw new IllegalArgumentException("Negative counter");return a>Long.MAX_VALUE-b?Long.MAX_VALUE:a+b;}
     record Evolution(State life,Nutrition.State nutrition,boolean damage) { }
     private static long coverage(State s,Nutrition.State n){return Math.addExact(s.coverageRemaining(),Math.multiplyExact(n.sugar(),maintenancePeriod()));}
     private static OptionalLong sum(long a,long b){return a>Long.MAX_VALUE-b?OptionalLong.empty():OptionalLong.of(a+b);}
@@ -58,9 +60,9 @@ public final class AdultLife {
             ?Math.addExact(ticks-first.getAsLong()+1,first.getAsLong()==1?s.damageTicks():0):0;
         if(damage>damagePeriod())throw new IllegalArgumentException("Evolution crosses health event");
         boolean event=damage==damagePeriod();
-        return new Evolution(new State(s.lifespan(),s.grace(),fasting,Math.addExact(s.maintenanceTicks(),meals),
-            Math.addExact(s.activeTicks(),ticks),event?0:(int)damage,s.mealTicks(),remaining,
-            Math.addExact(s.coveredTicks(),covered),true,s.death()),n.spend(meals,0),event);
+        return new Evolution(new State(s.lifespan(),s.grace(),fasting,saturatingAdd(s.maintenanceTicks(),meals),
+            saturatingAdd(s.activeTicks(),ticks),event?0:(int)damage,s.mealTicks(),remaining,
+            saturatingAdd(s.coveredTicks(),covered),true,s.death()),n.spend(meals,0),event);
     }
     private static long duration(String key,long fallback){long n=Long.parseLong(System.getProperty(key,Long.toString(fallback)));if(n<1)throw new IllegalArgumentException("Adult duration must be positive: "+key);return n;}
     public long lifespan(){return lifespan;} public long grace(){return grace;}
@@ -77,13 +79,30 @@ public final class AdultLife {
     public void tick(ServerLevel level,LasiusNigerEntity ant){
         if(!started&&(ant.form()==AntForm.WORKER||!ant.founding().reserveOnlyFounding(level)))started=true;
         if(!started)return; // First-clutch queen uses only the unchanged 39,000 reserve budget.
-        var next=evolve(snapshot(),ant.nutrition().snapshot(),ant.form(),ant.elapsedAgeTicks()-1,1);
+        advance(level,ant,ant.elapsedAgeTicks()-1,1,false);
+    }
+    /** Shared spending and damage owner. The coordinator stops at the next health event. */
+    public long nextEvent(LasiusNigerEntity ant,Phase phase){
+        var s=snapshot();if(!s.started()&&phase==Phase.ACTIVE)s=s.active();
+        long result=firstDamage(s,ant.nutrition().snapshot(),ant.form(),ant.elapsedAgeTicks()).orElse(Long.MAX_VALUE);
+        if(s.started()&&!hungry())result=Math.min(result,saturatingAdd(coverage(s,ant.nutrition().snapshot()),Math.max(1,Math.max(1,grace/2)-fasting)));
+        return Math.max(1,result);
+    }
+    void advance(ServerLevel level,LasiusNigerEntity ant,long priorAge,long ticks,boolean aggregate){
+        var s=snapshot();
+        if(!s.started()&&(ant.form()==AntForm.WORKER||!ant.founding().reserveOnlyFounding(level)))s=s.active();
+        var next=evolve(s,ant.nutrition().snapshot(),ant.form(),priorAge,ticks);
         long spent=ant.nutrition().sugar()-next.nutrition().sugar();
         if(!ant.nutrition().spend(spent,0))throw new IllegalStateException("Resolved maintenance spend failed");
         restore(next.life());
         if(!next.damage())return;
         death=ant.form()==AntForm.WORKER&&ant.elapsedAgeTicks()>=lifespan?"age_limit":"starvation";
+        // Historical damage events are separated by simulation ticks, not by this one server invocation.
+        // Preserve the currently loaded invulnerability window for the resumed ordinary tick.
+        int cooldown=ant.damageCooldownTime;
+        if(aggregate)ant.damageCooldownTime=0;
         ant.hurtServer(level,ant.damageSources().starve(),1.0F);
+        if(aggregate)ant.damageCooldownTime=cooldown;
         if(ant.isAlive())death="";
     }
     public void save(ValueOutput o){o.putInt("CoverageRemaining",coverageRemaining);o.putLong("CoveredTicks",coveredTicks);o.putLong("Lifespan",lifespan);o.putLong("FastingGrace",grace);o.putLong("Fasting",fasting);o.putLong("Maintenance",maintenanceTicks);o.putLong("ActiveTicks",activeTicks);o.putInt("DamageTicks",damageTicks);o.putInt("MealTicks",mealTicks);o.putBoolean("Started",started);o.putString("Death",death);}

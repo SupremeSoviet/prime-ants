@@ -20,6 +20,8 @@ public final class FoodLimitedGrowth {
     public void observe(long loadedTick,Supply s){
         clock=loadedTick;
         if(!s.complete()){times.clear();sugar.clear();protein.clear();set(false,"income_data_unavailable");return;}
+        // Aggregate time is not a stream of observed income. A discontinuous sample starts a fresh live window.
+        if(!times.isEmpty()&&clock-times.getLast()>SAMPLE){times.clear();sugar.clear();protein.clear();set(false,"income_observation_gap");}
         if(!sugar.isEmpty()&&(s.foodSugar()<sugar.getLast()||s.foodProtein()<protein.getLast())){times.clear();sugar.clear();protein.clear();set(false,"income_receipts_regressed");}
         if(times.isEmpty()||clock-times.getLast()>=SAMPLE){
             times.add(clock);sugar.add(s.foodSugar());protein.add(s.foodProtein());

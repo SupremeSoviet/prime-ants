@@ -108,7 +108,7 @@ public final class AdultAdvanceGameTest {
         var s=initial.life();var over=new AdultLife.State(s.lifespan(),s.grace(),0,0,Long.MAX_VALUE,0,0,0,0,true,"");
         var input=new LasiusNigerEntity.Biology(AntForm.QUEEN,10,false,0,0,over,initial.nutrition());
         var overflow=LasiusNigerEntity.advanceAdult(input,AdultLife.Phase.ACTIVE,1);
-        c.assertTrue(overflow.status().equals("UNRESOLVED_ARITHMETIC")&&overflow.state()==input&&overflow.completed()==0&&overflow.remaining()==1,"Counter overflow is explicit, atomic and unchanged");
+        c.assertTrue(overflow.status().equals("COMPLETED")&&overflow.state().life().activeTicks()==Long.MAX_VALUE&&overflow.completed()==1&&overflow.remaining()==0,"Owner-authorized counters saturate in aggregate advancement too");
         var ageInput=new LasiusNigerEntity.Biology(AntForm.QUEEN,Long.MAX_VALUE,false,0,0,s,initial.nutrition());
         var age=LasiusNigerEntity.advanceAdult(ageInput,AdultLife.Phase.RESERVE_ONLY,1);
         c.assertTrue(age.status().equals("UNRESOLVED_AGE_DOMAIN")&&age.state()==ageInput&&age.remaining()==1,"No silent maximum-age clamp");

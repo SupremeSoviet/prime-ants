@@ -51,9 +51,25 @@ public final class LasiusNigerEntity extends PathfinderMob {
     public record Advancement(String status,Biology state,long requested,long completed,long remaining,
                               java.util.OptionalLong eventTick,String event) { }
     public Biology biologySnapshot(){return new Biology(form,elapsedAgeTicks,broodId!=null,callowAgeTicks,callowDuration,adultLife.snapshot(),nutrition.snapshot());}
+    public void simulationBirthAt(long now){if(elapsedAgeTicks!=0)throw new IllegalStateException("Not newborn");simulation.birthAt(now);}
+    /** Apply to current stores/controllers, never to the older reload snapshot. */
+    public void advanceMissing(ServerLevel level,long first,long last){
+        long ticks=last-first+1,prior=elapsedAgeTicks;
+        if(!isAlive()||isRemoved()||ticks<1||ticks>Long.MAX_VALUE-prior)throw new IllegalStateException("Unresolved adult application");
+        simulation.beforeStep(level.getGameTime());
+        elapsedAgeTicks=ageAfter(prior,ticks);
+        simulation.applied(first,last); // Includes the terminal event before its existing history owner runs.
+        adultLife.advance(level,this,prior,ticks,true);
+        if(broodId!=null){
+            // Ordinary fatal biology omits only the terminal tick's callow/controller action, not the span's prefix.
+            long development=isAlive()?ticks:Math.max(0,ticks-1);
+            callowAgeTicks=callowAfter(callowAgeTicks,callowDuration,development);
+            entityData.set(CALLOW,(int)Math.min(1000,callowAgeTicks*1000/Math.max(1,callowDuration)));
+        }
+    }
     private static long ageAfter(long age,long ticks){return Math.addExact(age,ticks);}
     private static long callowAfter(long age,long duration,long ticks){return age+Math.min(ticks,Math.max(0,duration-age));}
-    /** O(1), no world access or mutation. The caller supplies a resolved phase; no reload application exists. */
+    /** O(1) preview with no world access or mutation. Production application belongs to the bounded coordinator. */
     public static Advancement advanceAdult(Biology input,AdultLife.Phase phase,long requested){
         String unsupported=null;
         if(input==null||input.form()==null||input.life()==null||input.nutrition()==null||phase==null||requested<0)unsupported="UNRESOLVED_INPUT";
@@ -218,11 +234,14 @@ public final class LasiusNigerEntity extends PathfinderMob {
 
     @Override
     public void tick() {
+        if(!level().isClientSide()&&simulation.completedAt(level().getGameTime()))return;
         super.tick();
         // The only biological clock owner. No daylight-time subtraction or renderer mutation.
         if (!level().isClientSide() && isAlive() && elapsedAgeTicks < Long.MAX_VALUE) {
             long now = level().getGameTime();
             simulation.beforeStep(now);
+            dev.primeants.time.ColonyCatchup.beforeAdult((ServerLevel)level(),this);
+            if(!isAlive())return;
             biologicalStepInProgress = true;
             boolean completed = false;
             try {

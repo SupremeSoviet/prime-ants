@@ -69,7 +69,8 @@
       "dev.primeants.gametest.ReconciliationGameTest",
       "dev.primeants.gametest.ReconciliationChunkGameTest",
       "dev.primeants.gametest.AdultAdvanceGameTest",
-      "dev.primeants.gametest.AdultReferenceGameTest"
+      "dev.primeants.gametest.AdultReferenceGameTest",
+      "dev.primeants.gametest.AutomaticCatchupGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",
