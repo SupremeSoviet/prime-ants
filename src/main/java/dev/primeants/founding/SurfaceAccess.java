@@ -61,6 +61,7 @@ public final class SurfaceAccess {
         &&j.receipts().stream().filter(r->r.startsWith("retained_paid_foundation:")).count()==2;}
     public static SurfaceAccess admit(ServerLevel l,SurfaceWork.Job j,UUID owner,LasiusNigerEntity worker){
         if(j.access!=null||j.claim!=null||!prefix(j)||!worker.workerTasks().canConstruct(j.home)||!j.unlocked(l,owner)
+            ||ChamberUpgrade.get(l).awaitingTierTwo(l,owner,j.home)
             ||!ColonyTerrain.get(l).mound(l,j.next(),owner)||SurfaceWork.targetProblem(l,owner,j)!=null)return null;
         var a=new SurfaceAccess(owner,j);var t=ColonyTerrain.get(l);
         if(a.operations.stream().anyMatch(o->!t.mound(l,o.source,owner)||t.surface(l,o.source,owner)||!t.canReserveAccess(l,o.destination)||!destinationReady(l,j,owner,o.destination)

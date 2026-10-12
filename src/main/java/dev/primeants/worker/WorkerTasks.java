@@ -211,7 +211,10 @@ public final class WorkerTasks {
     }
     private void surfaceAccess(ServerLevel l,SurfaceWork work,SurfaceWork.Job j){
         var a=j.access;
-        if(a.stopped||work.priority(l,worker.queenId(),plan)||!j.unlocked(l,worker.queenId())){
+        // These read-only results belong to this one decision, including stage when priority applies.
+        boolean priority=!a.stopped&&work.priority(l,worker.queenId(),plan);
+        boolean unlocked=!a.stopped&&j.unlocked(l,worker.queenId());
+        if(a.stopped||priority||!unlocked){
             work.stopAccess(l,worker,j,a.stopped?a.reason:"stage_or_priority_changed");harvestingTicks=0;
             if(worker.getMainHandItem().isEmpty())next(Phase.NURSE_CACHE,"finite_access_stopped");else hold("access_quarantined_cargo_retained");return;
         }

@@ -129,6 +129,7 @@ public final class SurfaceGameTest {
     @GameTest(maxTicks=60000,structure="prime_ants_test:surface_ground")
     public void suppliedFoundingToMatureRetainsItsSmallMoundAndWorkersBuildLargerCrestsAndAnOpenArch(GameTestHelper c){
         var fixture=new SurfaceFixture();var player=new TierTwoFixture(40,true);var q=fixture.founder(c);
+        FounderAccessProbe.watch(c,q,60000);
         var legacy=LegacyAdultShadow.watch(c,q.getUUID(),"original_supplied_surface_60000_tick_bound");
         long[] settled={-1},mature={-1};int[] youngPeak={-1};boolean[] snapshot={false};BlockPos[] protectedPlayer={null};var walking=new Walking();
         c.onEachTick(()->{

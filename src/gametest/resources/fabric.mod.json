@@ -20,6 +20,7 @@
       "dev.primeants.gametest.ReconciliationChunkGameTest"
     ],
     "fabric-gametest": [
+      "dev.primeants.gametest.FounderAccessPriorityGameTest",
       "dev.primeants.gametest.BootstrapGameTest",
       "dev.primeants.gametest.AntEntityGameTest",
       "dev.primeants.gametest.QueenFoundingGameTest",
@@ -66,6 +67,7 @@
       "dev.primeants.gametest.SurfaceAccessGameTest",
       "dev.primeants.gametest.SurfaceAccessSafetyGameTest",
       "dev.primeants.gametest.TierThreeGameTest",
+      "dev.primeants.gametest.HallFundingGameTest",
       "dev.primeants.gametest.ColonyClockGameTest",
       "dev.primeants.gametest.ReconciliationGameTest",
       "dev.primeants.gametest.ReconciliationChunkGameTest",

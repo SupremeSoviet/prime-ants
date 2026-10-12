@@ -2957,6 +2957,44 @@
       "weight_ticks": 8000,
       "source": "src/gametest/java/dev/primeants/gametest/CatchupLifecycleGameTest.java",
       "reason": "T06 production lifecycle, bounded completion, frozen matched control or prospective cost sampling."
+    },
+    {
+      "name": "prime_ants_test:founder_access_priority_game_test_physical_clay_delivery_before_hall_upgrade_cannot_terminally_lose_the_finite_access_pair",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\FounderAccessPriorityGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "Real-tick causal access admission and physical hall supply regression; original plus two concurrent copies"
+    },
+    {
+      "name": "prime_ants_test:founder_access_priority_game_test_copy1physical_clay_delivery_before_hall_upgrade_cannot_terminally_lose_the_finite_access_pair",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\FounderAccessPriorityGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "Real-tick causal access admission and physical hall supply regression; original plus two concurrent copies"
+    },
+    {
+      "name": "prime_ants_test:founder_access_priority_game_test_copy2physical_clay_delivery_before_hall_upgrade_cannot_terminally_lose_the_finite_access_pair",
+      "max_ticks": 12000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\FounderAccessPriorityGameTest.java",
+      "suite": "long",
+      "weight_ticks": 12000,
+      "reason": "Real-tick causal access admission and physical hall supply regression; original plus two concurrent copies"
+    },
+    {
+      "name": "prime_ants_test:hall_funding_game_test_physical_funding_delivers_four_eggs_at_three_uninterrupted_hall_intervals",
+      "max_ticks": 5400,
+      "suite": "long",
+      "weight_ticks": 5400,
+      "reason": "Independent T06 physically funded hall witness / matched protein availability control; original hall acceptance separate"
+    },
+    {
+      "name": "prime_ants_test:hall_funding_game_test_matched_physical_protein_shortage_refuses_unfunded_investment",
+      "max_ticks": 5400,
+      "suite": "long",
+      "weight_ticks": 5400,
+      "reason": "Independent T06 physically funded hall witness / matched protein availability control; original hall acceptance separate"
     }
   ]
 }

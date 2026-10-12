@@ -3,6 +3,10 @@
   "package": "dev.primeants.gametest.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
+    "FounderAccessAdmissionMixin",
+    "FounderAccessWorkerMixin",
+    "FounderAccessWorkMixin",
+    "FounderAccessUpgradeMixin",
     "FoodServiceWorkerMixin",
     "FoodServiceCacheMixin",
     "TierThreeLayingProbeMixin",

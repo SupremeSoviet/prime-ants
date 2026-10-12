@@ -634,3 +634,154 @@ checkpoint stays RED/INCOMPLETE; controlled Great is separate. No policy/fixture
 Current T04 other acceptances: hauling20123/14393; tier-two natural54198/48468. Inventory19306 retains8 apples+6 chickens
 and67 clay across all five exact in-memory boundaries. Controlled Great11265 retains57/57,19/38,soil80,stone32,food59,
 walking passage and200 settlement, separate from supplied founder/Mature4/19 timeout. Older timing causes remain unresolved.
+
+
+### Stage-1c T05 (2026-10-12): finite access admission ordering
+
+Original supplied founder is PASS at helper 43678 within unchanged60,000. Its fixture, supplies,
+histories, terrain/accounting, stage promotion, physical19-cell form, ordinary passage and 200 loaded settlement assertions
+remain unchanged. This is one current original result, not general timing robustness. Controlled Great independently passes
+11238:57 physical cells,19+38 worker payments,soil 80/stone 32/food 59, passage and 200 settlement. Nursing recovery and controls pass.
+
+The prospective read-only observer captures the actual first stopping decision in a controlled real-tick reproducer at 545:
+Mature/unlocked true, widening/excavation/existing-upgrade/mining false, confirmed Queen's Hall tier 1 with one physically
+delivered clay enabling genuine tier-two priority. Operation one carries its original named dirt, operation two is unstarted,
+and prefix remains4/19. Nondeath terminal custody conserves 71 owned soil+one named unit=72. This matches T16's Hall mechanism;
+T04's matching native sequence still has no individual first-stop predicate/exact timeout census, and nursing attribution
+remains unproved. Pre-repair instrumented original PASS 43818 is separate evidence, not the causal before-run.
+
+A single new-admission guard waits through pending genuine tier-two selection, including a temporarily unfunded gap.
+Earlier priorities, exclusive builder, saved shapes and terminal/revocation safeguards retain their behavior. Identical
+before3/after1 test source changes red 547 to green 5058: ordinary ten-clay Hall completion precedes one access admission,
+then both authorized physical relocations, actual motivating-target payment and 200 loaded settlement occur. Binding,
+prefix and original two unit identities remain continuous within each attempt; fresh-world IDs differ. Access custody
+settles with zero deaths/pickups/releases; later ordinary surface work may still use its one builder. No old terminal
+attempt is revived, no priority suppressed and no third relocation authorized. Semantic surface coordinates and dy=layer+1
+remain; original disk/revocation/stage-loss/death/obstruction/cargo-quarantine controls execute unchanged.
+
+Fast 73/118/26 passes in 127.769s. One unfiltered native long suite is 207/210 in 5596.806s,
+native exits [0, 1, 2]; final inventory 283=73+210 includes three causal copies. COMBINED: max chain 1, 20,000 timeout; HALL: max chain 1, 20,000 timeout.
+Tier-two natural growth also times out at 60,000: all chamber functions are built, but natural brood display/reload/UNKNOWN phases are unreached; last bounded diagnostic 59506/53776 shows recent-income shortage. Its relationship to this repair is unproved.
+Historical T04 Hall maxima2/1 and T01–T04 negatives remain distinct; founder/Great do not cover Hall. No unchanged Hall
+campaign is added. T06's scheduled complete suite remains mandatory.
+
+Executor session storage failure disconnects the original Gradle client at11:16:19, cancelling its wrapper while frozen
+native servers continue. Original parent exits remain UNKNOWN. Targeted durable-launcher exit 42 and report-only gate0
+prove orchestration recovery. First report gate 1 fails on the missing original aggregate; exact single-case aggregation
+smoke then native 210-row reconstruction restore the report path. The recovered final checkLong exit 1 validates those same complete reports with no new
+gameplay, compile, world or server restart. Actual original guard-SKIPs,1073 frozen inputs/archives, protected clients,
+newest-ten+active leases, concurrency≤3 and prelaunch25GB minimum are preserved. Registration-blocked/inconclusive
+prototype setup and local reader/display errors stay disclosed in the appendix; no original acceptance is relaxed.
+
+Settlement: `<turnloop>/directions/prime-ants-stage1c/turns/T05/raw/founder-access-acceptance.json`; linked report, appendix,
+causal/final-native/recovery evidence and final commit/tree verification remain external. No-new-green count 0 is earned
+by demonstrated physical before/after access progress. Food 10323, mining-death/timing uncertainties and historical
+Great 47/57 persist. In-memory nursing/inventory reconstruction is separate from disk/world persistence; established
+generation, performance/broad persistence and release 0.2.0 remain open.
+
+
+### Stage-1c T06 (2026-10-12): actual admission ordering and a bounded funding negative
+
+The shared original/copy founder regression now checks the real nonnull SurfaceAccess.admit return: all ten paid
+Hall conversions and completion, released builder/null claim, zero carried/released clay, exact ledger and physically
+confirmed live Hall2 must already hold. Same-clock event order is accepted; no extra tick is added. Both authorized
+relocations, immutable prefix/binding/unit identities, physical motivating target, finite39 food/10 clay/72 soil,
+6,000-loaded/12,000-total bounds and200 settlement remain. Original and both copies pass targeted and complete checks.
+
+An independent new control declares an existing tier-three habitat with nine workers and zero initial food/nutrition
+receipts. Its finite16 apples/6 chicken budget (64,000/48,000) is dropped physically in two fixed waves; matched shortage
+uses one chicken. Preparation4800, measurement600 loaded and total5400 are frozen. Both controls fail preparation:
+queen genuinely consumes2 apples/1 chicken, workers consume zero, and maximum real recent sugar8000 misses the8250
+minimum reserve. Ordinary peer-service eligibility needs6000 fasting ticks (personal hunger12000), outside preparation.
+Current stock and independent physical+single-consumed16/6 and16/1 ledgers remain exact; ground units are excluded.
+No actual eggs or intervals are obtained, no budget/bound is extended and no hall-cadence defect/repair is claimed.
+The plan predates every native child but follows wrapper compilation/freeze by0.060s after a CRLF checker error;
+JSON first-wave1 versus frozen executable0/1 (actual0) is disclosed. Setup is neither worker construction nor new birth.
+
+T05 tier-two's first recorded missed window after nursery expansion is30939/25210: income32000>=22500 but current
+sugar27216<31500. Two ordinary pickups add8000 real cargo without intake receipts; next lay31050/25321 follows112
+loaded ticks instead of12. Third-brood31203 needs37000 vs32029. At59506/53776, current29664>=24000 disables the
+fixture's wave while growth needs37250 current and32250 income (actual4000). Meals/feeding/deliveries continue;
+permanent service stall, bad accounting and admission-repair causation are unproved. Exact T05 timeout census remains
+UNKNOWN; existing59800/54070 observation is separate. No original fixture, policy, cost/reserve or saved format changes.
+
+Mandatory fast passes73/118/26, exit0, 140.061s. Complete original-plus-control long is207/212,
+exit1, 7280.720s, native[1, 3, 1]; final inventory285=73+212. Original Hall maxima HALL:1, COMBINED:2,
+both timeout20000; current tier-two PASS at54153 (does not explain T05). Original supplied founder times out60000
+at4/19; Great passes57/57 at11426. Their original physical/passage/accounting/200-settlement assertions remain;
+earlier negatives and the current original-founder failure are preserved.
+Current original supplied founder4/19 timeout60000 has admission59911 (89 ticks remaining), both operations stillSOURCE,
+action0 and no first terminal stop; the preceding delay cause is unproved. Focused copies do not replace it. T05's original
+19/19 at43678 remains separate historical acceptance. Current tier-two PASS, if present, does not diagnose T05's red run.
+Durable smoke42 and real wrapper exits verify; no recovery/replay, client launches or executable mutation while native
+servers run. Actual client guard-SKIPs,962 archived source/class/resource inputs plus120 pinned JAR hashes, protected
+clients, newest-ten+active leases and25GB floor verify. Command durations are not colony performance.
+
+Settlement: `<turnloop>/directions/prime-ants-stage1c/turns/T06/raw/t06-hall-funding-checkpoint.json`, with report/appendix,
+native/merged XML, logs, freezes, exits, shutdown, conservation and final verification. No-new-green1; a fresh
+prospective control must establish ordinary adult service/recent income eligibility before measuring cadence. T01–T05
+hall negatives, T16/T04 founder history, food10323, mining/hauling uncertainties and Great47/57 remain. In-memory
+reconstruction is separate from persistence; generation, performance/broad persistence and release0.2.0 stay open.
+
+### Stage-1c T07 (2026-10-12): meal-eligible physical hall control pair accepted
+
+The independent HallFunding pair now declares nine mature workers and the queen with coherent 12,000-tick
+age/active/fasting history, default 144,000 lifespan/24,000 grace, completed callow clocks and zero initial
+nutrition, ingestion, maintenance or coverage receipts. This is pre-existing adult history, not new birth or
+nutrition credit. All histories and supported initial positions are fixed before the first callback.
+The same finite 16 apples/6 chicken (shortage 16/1) is allocated as initial physical cache 8/3 (8/1), then
+ordinary dropped remaining 8/3 (8/0) at the explicitly declared helper 0/1 startup callback. No second wave,
+post-boundary actor manipulation, direct ingestion or growth call is used. Preparation 4,800, measurement
+600 nursery-loaded and total 5,400 bounds and original four-event/three-interval/30-refusal assertions remain.
+
+The plan precedes compilation and wrapper launch, with normalized Git-content and actual-byte source/hash
+correspondence passing first. An initial validation error read the detached empty cache object after
+SurfaceFixture.loadBlock had replaced it: both native controls fail the setup assertion at tick0. Its exact
+source, plan, native XML/logs and exits [1,1] remain archived. Only that assertion's reference changes to the
+actual world cache; the physical setup, histories, resources, schedule and bounds are unchanged. The ensuing
+matched run passes both controls, exit0/native[0,0]. This is a disclosed assertion correction, not an adjusted
+preparation experiment. Any measured failed preparation would still prohibit a setup retry or extension.
+
+Five genuine worker apple ingestions occur at loaded20/20/25/37/37, with queen apple/chicken receipts visible
+by73/74; ordinary crop sharing serves remaining fasting adults without ingestion credit. At warmup2401,
+recent sugar is24,000 and all ten adults qualify. Funded eggs are four distinct UUIDs at2401/2404/2407/2410;
+all nine intervening loaded pre-decision rows qualify and three consecutive unchanged3-tick intervals pass.
+The decision sugar/protein stocks are54,104/48,000;53,094/46,000;52,086/44,000;51,082/42,000, against unchanged
+requirements13,250/10,000;18,000/18,000;22,750/26,000;27,500/34,000. Queen nutrition also qualifies at every lay.
+The shortage arm records thirty actual FoodLimitedGrowth.allows false returns at2401..2430 with protein
+8,000<10,000 while care/habitat/slots/population/queen/income/current sugar qualify; zero eggs are laid.
+Observers distinguish calculated eligibility, earlier/cadence permission, actual funding return and laying;
+no observer invokes a second mutating decision and interruption resets remain intact.
+
+Independent per-callback unit and yield ledgers and the explicit before-success census conserve every item.
+Funded apples:1 ground+9 canonical cargo+6 consumed; chicken:5 cached+1 consumed. Shortage apples:10 cached+
+6 consumed; chicken:1 consumed. Custody is zero. All declared adult UUIDs survive, genuine births zero.
+Funded maintenance is5,918 sugar plus4,000/8,000 egg spending; shortage maintenance5,968. Listener snapshots
+after habitat cleanup/result finalization are not substituted for this acceptance census. The controls do
+not prove eventual larval development, worker construction of the initial habitat or integrated hall success.
+
+T06's failed zero-worker-consumption preparation, sources, plans and five complete-checkpoint failures remain
+unchanged. Wording correction:30,939/25,210 is a calculated pre-lay funding shortfall, not an actual funding
+refusal. Previous lay25,209/cadence12 causes an earlier return; first due25,221 was not captured. Retained
+growth.reason is not another decision. T06's accepted fast73/118/26, complete207/212 and Great57/57 at11,426
+remain historical checkpoint facts, separate from the current component result.
+
+Original founder native chronology: founding settles5,757, first Young8,572, first Mature47,081 (28 adults,
+physical clay16), access59,911. Young-to-Mature consumes38,509 ticks; serial8/22/10 paid clay upgrades with
+eight material-store/two Hall waiting-for-store releases consume another12,830 after Mature. Actual Hall2
+completion/released builder precedes admission. T06 still times out4/19 with both operations SOURCE, no action
+or terminal stop and only89 ticks, below even the unchanged200 settlement. Exact silent supply callbacks,
+continuous caregiver/free-builder availability and the longest continuously blocked admission predicate are
+UNKNOWN; events without clocks retain neighboring native-clock brackets. No original rerun or causal repair
+is claimed, and focused-copy success does not replace this supplied founder negative.
+
+Final scoped acceptance: checkFast with explicit shards3/concurrency3 passes73/118/26, exit0; selected long is
+the exact two independent identities,2/2. Inventory remains285=73+212, Python harness26 passes. Shared production,
+common helpers/observers and original TierThree/TierTwo/Surface fixtures are unchanged, so no unfiltered long
+suite is launched; T09's scheduled complete suite remains mandatory. Actual client guard-SKIPs, protected client
+inventories, frozen input archives/120 pinned JAR hashes, exits/shutdown, newest-ten+active leases and25GB floor
+verify. Settlement is `<turnloop>/directions/prime-ants-stage1c/turns/T07/raw/t07-hall-control-acceptance.json`,
+with linked report/appendix and primary native evidence. No-new-green resets1->0 on the qualifying pair.
+Original integrated hall acceptance and founder reliability remain open; recurrent tier-two/hauling, food10,323,
+mining-death and historical Great47/57 uncertainties persist. UNKNOWN nursing and loaded-damage mining bounds,
+established generation, performance/broad persistence and release0.2.0 remain unchanged/open.
