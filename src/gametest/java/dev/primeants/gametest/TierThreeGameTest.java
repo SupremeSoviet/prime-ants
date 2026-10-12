@@ -187,9 +187,11 @@ public final class TierThreeGameTest {
     @GameTest(maxTicks=12000,structure="prime_ants_test:surface_ground")
     public void missingFacingSupplyReleasesBuilderAndResumesTheSamePaidPrefix(GameTestHelper c){
         var fixture=new TierThreeFixture();var q=fixture.start(c,1);long[] wait={-1},settled={-1};ChamberUpgrade.Job[] original={null};boolean[] dropped={false};
+        TierThreeReloadProbe.watch(c,q);List<BlockPos>[] previousPrefix=new List[]{List.of()};
         c.onEachTick(()->{
             fixture.feed(c,q);fixture.ledger(c,q);var pile=NestPlanFixture.pile(c,q);var j=founding(c,q);if(j==null)return;
-            if(original[0]==null)original[0]=j;c.assertTrue(original[0]==j,"Missing supply resumes the same physical job");
+            if(original[0]==null)original[0]=j;TierThreeReloadProbe.sameLogicalJob(c,q,original[0],j);
+            c.assertTrue(j.built().size()>=previousPrefix[0].size()&&j.built().subList(0,previousPrefix[0].size()).equals(previousPrefix[0]),"Same job never loses or replaces its exact paid prefix across reconstruction/resumption");previousPrefix[0]=j.built();
             if(!dropped[0]){
                 if(j.built().size()!=1||j.carried()!=0||j.claim!=null)return;
                 if(wait[0]<0)wait[0]=pile.loadedTicks();
@@ -224,10 +226,11 @@ public final class TierThreeGameTest {
         });
     }
     private static void disk(GameTestHelper c){
-        var l=c.getLevel();l.getDataStorage().saveAndJoin();
+        var l=c.getLevel();var before=TierThreeReloadProbe.before(c);l.getDataStorage().saveAndJoin();
         try(var storage=new net.minecraft.world.level.storage.SavedDataStorage(net.minecraft.world.level.dimension.DimensionType.getStorageFolder(l.dimension(),l.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT)).resolve("data"),net.minecraft.util.datafix.DataFixers.getDataFixer(),l.registryAccess())){
             var upgrades=storage.get(ChamberUpgrade.TYPE);var terrain=storage.get(ColonyTerrain.TYPE);var registry=storage.get(ChamberRegistry.TYPE);var custody=storage.get(TransferCustody.TYPE);
             c.assertTrue(upgrades!=null&&terrain!=null&&registry!=null,"Real disk/data reload");l.getDataStorage().set(ChamberUpgrade.TYPE,upgrades);l.getDataStorage().set(ColonyTerrain.TYPE,terrain);l.getDataStorage().set(ChamberRegistry.TYPE,registry);if(custody!=null)l.getDataStorage().set(TransferCustody.TYPE,custody);
         }
+        TierThreeReloadProbe.after(c,before);
     }
 }
