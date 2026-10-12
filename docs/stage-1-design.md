@@ -722,3 +722,66 @@ native/merged XML, logs, freezes, exits, shutdown, conservation and final verifi
 prospective control must establish ordinary adult service/recent income eligibility before measuring cadence. T01–T05
 hall negatives, T16/T04 founder history, food10323, mining/hauling uncertainties and Great47/57 remain. In-memory
 reconstruction is separate from persistence; generation, performance/broad persistence and release0.2.0 stay open.
+
+### Stage-1c T07 (2026-10-12): meal-eligible physical hall control pair accepted
+
+The independent HallFunding pair now declares nine mature workers and the queen with coherent 12,000-tick
+age/active/fasting history, default 144,000 lifespan/24,000 grace, completed callow clocks and zero initial
+nutrition, ingestion, maintenance or coverage receipts. This is pre-existing adult history, not new birth or
+nutrition credit. All histories and supported initial positions are fixed before the first callback.
+The same finite 16 apples/6 chicken (shortage 16/1) is allocated as initial physical cache 8/3 (8/1), then
+ordinary dropped remaining 8/3 (8/0) at the explicitly declared helper 0/1 startup callback. No second wave,
+post-boundary actor manipulation, direct ingestion or growth call is used. Preparation 4,800, measurement
+600 nursery-loaded and total 5,400 bounds and original four-event/three-interval/30-refusal assertions remain.
+
+The plan precedes compilation and wrapper launch, with normalized Git-content and actual-byte source/hash
+correspondence passing first. An initial validation error read the detached empty cache object after
+SurfaceFixture.loadBlock had replaced it: both native controls fail the setup assertion at tick0. Its exact
+source, plan, native XML/logs and exits [1,1] remain archived. Only that assertion's reference changes to the
+actual world cache; the physical setup, histories, resources, schedule and bounds are unchanged. The ensuing
+matched run passes both controls, exit0/native[0,0]. This is a disclosed assertion correction, not an adjusted
+preparation experiment. Any measured failed preparation would still prohibit a setup retry or extension.
+
+Five genuine worker apple ingestions occur at loaded20/20/25/37/37, with queen apple/chicken receipts visible
+by73/74; ordinary crop sharing serves remaining fasting adults without ingestion credit. At warmup2401,
+recent sugar is24,000 and all ten adults qualify. Funded eggs are four distinct UUIDs at2401/2404/2407/2410;
+all nine intervening loaded pre-decision rows qualify and three consecutive unchanged3-tick intervals pass.
+The decision sugar/protein stocks are54,104/48,000;53,094/46,000;52,086/44,000;51,082/42,000, against unchanged
+requirements13,250/10,000;18,000/18,000;22,750/26,000;27,500/34,000. Queen nutrition also qualifies at every lay.
+The shortage arm records thirty actual FoodLimitedGrowth.allows false returns at2401..2430 with protein
+8,000<10,000 while care/habitat/slots/population/queen/income/current sugar qualify; zero eggs are laid.
+Observers distinguish calculated eligibility, earlier/cadence permission, actual funding return and laying;
+no observer invokes a second mutating decision and interruption resets remain intact.
+
+Independent per-callback unit and yield ledgers and the explicit before-success census conserve every item.
+Funded apples:1 ground+9 canonical cargo+6 consumed; chicken:5 cached+1 consumed. Shortage apples:10 cached+
+6 consumed; chicken:1 consumed. Custody is zero. All declared adult UUIDs survive, genuine births zero.
+Funded maintenance is5,918 sugar plus4,000/8,000 egg spending; shortage maintenance5,968. Listener snapshots
+after habitat cleanup/result finalization are not substituted for this acceptance census. The controls do
+not prove eventual larval development, worker construction of the initial habitat or integrated hall success.
+
+T06's failed zero-worker-consumption preparation, sources, plans and five complete-checkpoint failures remain
+unchanged. Wording correction:30,939/25,210 is a calculated pre-lay funding shortfall, not an actual funding
+refusal. Previous lay25,209/cadence12 causes an earlier return; first due25,221 was not captured. Retained
+growth.reason is not another decision. T06's accepted fast73/118/26, complete207/212 and Great57/57 at11,426
+remain historical checkpoint facts, separate from the current component result.
+
+Original founder native chronology: founding settles5,757, first Young8,572, first Mature47,081 (28 adults,
+physical clay16), access59,911. Young-to-Mature consumes38,509 ticks; serial8/22/10 paid clay upgrades with
+eight material-store/two Hall waiting-for-store releases consume another12,830 after Mature. Actual Hall2
+completion/released builder precedes admission. T06 still times out4/19 with both operations SOURCE, no action
+or terminal stop and only89 ticks, below even the unchanged200 settlement. Exact silent supply callbacks,
+continuous caregiver/free-builder availability and the longest continuously blocked admission predicate are
+UNKNOWN; events without clocks retain neighboring native-clock brackets. No original rerun or causal repair
+is claimed, and focused-copy success does not replace this supplied founder negative.
+
+Final scoped acceptance: checkFast with explicit shards3/concurrency3 passes73/118/26, exit0; selected long is
+the exact two independent identities,2/2. Inventory remains285=73+212, Python harness26 passes. Shared production,
+common helpers/observers and original TierThree/TierTwo/Surface fixtures are unchanged, so no unfiltered long
+suite is launched; T09's scheduled complete suite remains mandatory. Actual client guard-SKIPs, protected client
+inventories, frozen input archives/120 pinned JAR hashes, exits/shutdown, newest-ten+active leases and25GB floor
+verify. Settlement is `<turnloop>/directions/prime-ants-stage1c/turns/T07/raw/t07-hall-control-acceptance.json`,
+with linked report/appendix and primary native evidence. No-new-green resets1->0 on the qualifying pair.
+Original integrated hall acceptance and founder reliability remain open; recurrent tier-two/hauling, food10,323,
+mining-death and historical Great47/57 uncertainties persist. UNKNOWN nursing and loaded-damage mining bounds,
+established generation, performance/broad persistence and release0.2.0 remain unchanged/open.

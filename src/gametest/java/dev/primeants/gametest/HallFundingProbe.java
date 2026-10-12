@@ -32,7 +32,7 @@ public final class HallFundingProbe {
         });return p;
     }
     int shortageDecisions(){return shortageDecisions;} long measurement(){return measurement;} boolean accepted(){return consecutive==3;}
-    private void emit(String type,Object value){PrimeAnts.LOGGER.info("T06 HALL FUNDING {}",JSON.toJson(Map.of("type",type,"shortage",shortage,"queen",q.getUUID(),"helperTick",c.getTick(),"nurseryLoaded",NestPlanFixture.pile(c,q).loadedTicks(),"value",value)));}
+    private void emit(String type,Object value){PrimeAnts.LOGGER.info("T07 HALL FUNDING {}",JSON.toJson(Map.of("type",type,"shortage",shortage,"queen",q.getUUID(),"helperTick",c.getTick(),"nurseryLoaded",NestPlanFixture.pile(c,q).loadedTicks(),"value",value)));}
     private Map<String,Object> state(){return Map.of("lastPreDecision",latest,"measurementLoaded",measurement,"consecutive",consecutive,"eggs",eggs,"chain",chain,"shortageDecisions",shortageDecisions,"apples",f.apples,"chickens",f.chickens,"conservedApples",f.units(c,q,Items.APPLE),"conservedChickens",f.units(c,q,Items.CHICKEN));}
     void accept(){emit("accepted_physical_result",state());}
     private void finish(String why){if(closed)return;emit("endpoint",Map.of("scope",why,"state",state()));closed=true;ACTIVE.remove(q.getUUID(),this);}
@@ -47,7 +47,9 @@ public final class HallFundingProbe {
         boolean income=s.complete()&&!s.hungry()&&g.observedTicks()>=FoodLimitedGrowth.WARMUP&&g.recentSugar()>=reserve;
         boolean funded=s.storedSugar()>=requiredS&&s.storedProtein()>=requiredP;
         boolean eligible=base&&nutrition&&income&&funded;
+        boolean due=pile.loadedTicks()-pile.lastLayingTick()>=pile.layingInterval(l);
         var row=new LinkedHashMap<String,Object>();row.put("loaded",pile.loadedTicks());row.put("care",care);row.put("habitat",p.q.founding().plan().nurseryProblem(l,p.q.getUUID(),pile.operational()));row.put("operational",pile.operational());row.put("originalTerminal",original);row.put("hallTier",hall);row.put("cadence",pile.layingInterval(l));row.put("slots",pile.nursery().slots());row.put("brood",pile.records().size());row.put("occupied",ColonyMembers.get(l).occupied(p.q.getUUID()));row.put("cap",cap);row.put("supply",s);row.put("requiredSugar",requiredS);row.put("requiredProtein",requiredP);row.put("maintenance",reserve);row.put("recentSugar",g.recentSugar());row.put("recentProtein",g.recentProtein());row.put("observedIncomeTicks",g.observedTicks());row.put("queenSugar",queen==null?0:queen.nutrition().sugar());row.put("queenProtein",queen==null?0:queen.nutrition().protein());row.put("qualified",eligible);row.put("proteinOnlyShortage",base&&nutrition&&income&&s.storedSugar()>=requiredS&&s.storedProtein()<requiredP);p.latest=row;
+        row.put("cadenceDue",due);row.put("lastActualLay",pile.lastLayingTick());row.put("earlierGatesPermitFundingCall",base&&due);
         if(eligible&&p.measurement<0){p.measurement=pile.loadedTicks();p.emit("measurement_boundary_pre_decision",row);}
         if(p.c.getTick()%200==0)p.emit("preparation_or_measurement_sample",row);
         if(p.lastLay>=0){
@@ -58,9 +60,12 @@ public final class HallFundingProbe {
     }
     public static void fundingDecision(FoodLimitedGrowth growth,FoodLimitedGrowth.Supply s,boolean allowed){
         for(var p:ACTIVE.values())if(!p.closed&&NestPlanFixture.pile(p.c,p.q).growth()==growth){
+            p.c.assertTrue(Boolean.TRUE.equals(p.latest.get("earlierGatesPermitFundingCall")),"Actual funding return belongs to this due production callback");
+            if(Boolean.TRUE.equals(p.latest.get("qualified"))||Boolean.TRUE.equals(p.latest.get("proteinOnlyShortage")))p.emit("actual_funding_return",Map.of("preDecision",p.latest,"actualSupply",s,"actualReason",growth.reason(),"allowed",allowed));
             if(Boolean.TRUE.equals(p.latest.get("qualified")))p.c.assertTrue(allowed,"Qualified mirror must agree with actual unchanged funding gate");
             if(Boolean.TRUE.equals(p.latest.get("proteinOnlyShortage"))){
                 p.c.assertTrue(!allowed&&growth.reason().equals("stores_below_brood_and_safety_commitments"),"Actual existing gate refuses only the declared physical protein shortage");
+                if(p.measurement<0){p.measurement=NestPlanFixture.pile(p.c,p.q).loadedTicks();p.emit("measurement_boundary_actual_protein_refusal",p.latest);}
                 p.shortageDecisions++;if(p.shortageDecisions==1)p.emit("actual_protein_only_funding_refusal",Map.of("preDecision",p.latest,"actualReason",growth.reason(),"allowed",allowed));
             }
         }
