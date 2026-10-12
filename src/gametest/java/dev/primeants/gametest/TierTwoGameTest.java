@@ -17,6 +17,7 @@ public final class TierTwoGameTest {
     public void naturalMatureColonyUpgradesEveryFunctionAndShowsExpandedBroodAndUnknownEntranceStability(GameTestHelper c){longPath(c);}
     private void longPath(GameTestHelper c){
         var player=new TierTwoFixture(64,true);var q=player.fx.start(c);var scope=StageEvaluations.watch(c,q.getUUID());
+        FoodServiceProbe.watch(c,q,60000,"tier_two_natural");
         var tiers=new LinkedHashMap<String,Long>();ColonyDevelopment.Evaluation[] seen={null};
         long[] lastEgg={0},reloadedAt={-1},eggProgress={-1},hiddenAt={-1};UUID[] egg={null};
         boolean[] naturalDisplay={false},reloadStep={false},foodEffect={false},materialEffect={false},hallEffect={false};
@@ -109,6 +110,7 @@ public final class TierTwoGameTest {
             c.assertTrue(scope.loss==null&&scope.held>0&&naturalDisplay[0]&&mostBrood[0]>3,"Complete natural brood and the entire Mature stability window");
             PrimeAnts.LOGGER.info("T08 U1/B1 DONE queen={} promotion={} promotionLoaded={} tiers={} end={} everyMatureEvaluation={} unknownHallEvaluations={} restoredEvaluations={} mostNaturalBrood={} foodEffect={} materialEffect={} hallEffect={} clay={}",
                 q.getUUID(),scope.promotion,scope.promotionLoaded,tiers,c.getTick(),scope.held,scope.unknownHall,restored[0],mostBrood[0],foodEffect[0],materialEffect[0],hallEffect[0],player.clay);
+            FoodServiceProbe.terminal(c,q);
             scope.close();c.succeed();
         });
     }

@@ -516,3 +516,77 @@ Retained nurses during UNKNOWN, loaded-damage miner cargo waits, named recovery 
 60,000 total and 600/200 windows are unchanged. **Tier three, established colonies, 120-adult performance, broad
 persistence and release 0.2.0 acceptance remain unmet.** T20 has one turn for a verified partial handoff or honest closure,
 using T18's complete checkpoint plus T19's bounded unresolved Great diagnosis, without claiming complete Stage 1.
+
+
+### Stage-1c T02 (2026-10-12): current oversized retention; hall remains valid red
+
+The frozen final T01 fixture, all supplies/history/timing/placement and the 20,000-tick combined bound remain unchanged.
+A scoped causal check finds native-food positions scanned after both actual native admission gates close, while dropped
+materials remain admissible. Five `WorkerTasks.search` lines now use the existing material search after the full dropped-food
+turn for a live tier-three cache in that state; pickup still rechecks food. The actual clay-window inadmissible inspections
+change 134,456 to 0, with real food 18/material 6/200 settlement. Earlier cache tiers, recipes, food/growth rules, nursing,
+single-unit trips, one builder, reach/supports and action durations stay unchanged.
+
+The new independent larger-inventory body passes at 19,622: current 8 apples + 5 chickens and 65 clay survive all five exact
+ownership/content/display boundaries, in-memory serialization/reconstruction and loaded capacity loss 18/96 to 6/32.
+Both inventories remain oversized; admission refuses more units. This is block-entity reconstruction in the same loaded
+level, not disk/world reload. T01 carried-job disk/data proof remains separate. The body preserves 44 stone payments and
+paid clay cores, empty construction claims/cargo, 15 natural brood, 1,770 doubled measurements and 12,133 settled loaded ticks.
+
+Hall acceptance now requires four actual egg UUIDs and three consecutive intervals with all non-cadence gates observed
+before production decisions throughout each interval. The original combined and independent hall identities still time out at 20k;
+each final peak is one interval. Queen nutrition/funding shortages and later 15/15 slots interrupt eligibility; no laying rule,
+food gate or fixture is changed to manufacture a fourth event. Last bounded combined clocks 19,999/20,000 show 7 food and 74
+materials (72 clay + 2 cobble), valid care/hall/free adult cap and funded growth, but no free brood slot. Listener 20,002 is
+diagnostic lifecycle evidence and adds no acceptance time. T01's 19,500: 51 materials/two isolated pairs, timeout stock UNKNOWN
+and unreached reconstruction/loss phase remain distinct.
+
+Final fast 73/118/26 passes, exit 0, 152.409s. One complete unfiltered long run is 200/204, exit 1, 7,133.617s, native 1/1/2.
+The other negatives are original material hauling 48k and tier-two natural growth 60k; attribution is unresolved, with their
+unchanged sources and endpoint limits retained. 194/196 pre-T01 and 199/201 previously green T01 long pass. All five existing
+green tier-three safety/construction bodies and the new inventory witness pass. Original Great remains green at 11,262,
+57/57, 19/38 placements, soil 80, stone 32, food 59, passage and 200 settlement, with unchanged 12,000/200 bounds.
+
+Infrastructure validates 277 unique server identities, 1,048 matching input hashes, guards, protected clients, leases/newest-ten
+retention and original native/XML evidence. No unchanged broad restart or relaxation occurs. Settling evidence is
+`<turnloop>/directions/prime-ants-stage1c/turns/T02/raw/tier-three-effects-acceptance.json`, with linked gate and negative packets.
+Item 2 remains open; consecutive no-new-green count 0. Historical food 10,323, mining-death/timing uncertainties and Great 47/57
+stay historical. Established colonies, performance/broad persistence and release 0.2.0 remain later work.
+
+
+### T03 food-service regression checkpoint (2026-10-12)
+
+VALID_RED; item 2 remains open. T03 adds scoped read-only FoodServiceProbe observations, actual controller-action
+traces and live pre-success snapshots for the original older bodies. Production, fixtures, supplies/history, multipliers,
+recipes, capacities, reach/actions, one builder, food-first rules, reserves and queenNeedsFood's protein threshold remain unchanged.
+The four-event/three-consecutive-interval counter and strict 20k helper deadline remain unchanged.
+
+Final fast 73/118/26 passes, exit 0, 127.249s. One complete unfiltered long run is 202/204,
+exit 1, 5882.835s, native 0/1/1. Exact original results:
+Material hauling PASS (48000; 20063/14333); Tier-two natural PASS (60000; 52018/46288); Combined tier-three RED (20000; timeout 20000); Independent hall RED (20000; timeout 20000).
+All native negatives remain visible; no unchanged complete suite is repeated for a preferred outcome.
+
+Independent complete/canonical cache, ingested adult/brood and worker-cargo decomposition matches production funding.
+Commitments remain obligations; historical consumption receipts are not current stock. T02's loaded 8423 sugar closure
+(51731<55000, queen protein 6,000) and 11877 protein closure (19200<27200, queen protein 2,000) remain adverse evidence.
+Later 15/15 slots legitimately block laying. No hall defect or protein-prefeeding necessity is inferred from these counters.
+Physical pickup/delivery, nurse withdrawal/recipient/approach/feeding/return and actual consumption clocks remain inspectable.
+
+T02's original material carrier stalls in DEPOSIT after crop sharing and later starves/releases its one clay. Its exact
+historical route and timeout inventory remain unknown; later green replays do not establish a repair. T02's earliest
+all-earlier-effects tier-two interval has true sugar/income deficits and unreached natural phases. New exact observations
+and any current positives remain separate from those historical failures. A targeted missing-supply reference-equality
+negative after another test's global saved-data reinstall is retained; the isolated original reuses identical compiled
+inputs and passes. No fixture/assertion repair is used to conceal it.
+
+Independent current inventory passes at helper 18,585: 5 apples + 9 chickens and 67 clay at all five reconstruction/loss
+boundaries. Original Great passes at 11,241 with 57/57 cells, 19/38 placements, soil 80, stone 32, food 59, real passage and
+200 settled loaded ticks. These new observations do not replace T02's exact positives or historical negatives.
+
+Infrastructure validates 277 unique server identities, 1,055 frozen inputs, original native/merged XML and logs, protected
+clients, actual guard-SKIPs and leases/newest-ten retention. Tier-three inventory preservation remains in-memory
+block-entity reconstruction and loaded capacity loss 18/96 to 6/32; existing carried-job disk/data safety is separate.
+Settlement: `<turnloop>/directions/prime-ants-stage1c/turns/T03/raw/t03-food-service-checkpoint.json`.
+No-new-green count 0 reflects both restored older complete acceptances and the green regression checkpoint;
+no causal production repair or general timing robustness is claimed. Historical food 10,323, mining-death/regression/tier-two timing uncertainty and
+Great 47/57 remain. Generation, performance/broad persistence and release 0.2.0 remain later work.

@@ -2455,6 +2455,22 @@
       "max_ticks": 6000
     },
     {
+      "name": "prime_ants_test:tier_three_game_test_physical_oversized_inventories_survive_in_memory_reconstruction_and_capacity_loss",
+      "max_ticks": 20000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TierThreeGameTest.java",
+      "suite": "long",
+      "weight_ticks": 20000,
+      "reason": "T02 independent current-inventory or gate-qualified hall witness; frozen final T01 fixture and 20000-tick bound"
+    },
+    {
+      "name": "prime_ants_test:tier_three_game_test_hall_has_three_consecutive_gate_qualified_laying_intervals",
+      "max_ticks": 20000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\TierThreeGameTest.java",
+      "suite": "long",
+      "weight_ticks": 20000,
+      "reason": "T02 independent current-inventory or gate-qualified hall witness; frozen final T01 fixture and 20000-tick bound"
+    },
+    {
       "name": "prime_ants_test:colony_clock_game_test_consecutive_ordinary_ticks_have_no_missed_interval",
       "max_ticks": 8000,
       "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyClockGameTest.java",

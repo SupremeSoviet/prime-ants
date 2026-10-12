@@ -18,17 +18,35 @@ import net.minecraft.world.item.*;
 public final class TierThreeGameTest {
     @GameTest(maxTicks=20000,structure="prime_ants_test:surface_ground")
     public void workerBuiltStoneChambersConfirmAllFunctionsAndDeliverEveryTierThreeEffect(GameTestHelper c){
+        effects(c,EffectWitness.COMBINED);
+    }
+    @GameTest(maxTicks=20000,structure="prime_ants_test:surface_ground")
+    public void physicalOversizedInventoriesSurviveInMemoryReconstructionAndCapacityLoss(GameTestHelper c){
+        effects(c,EffectWitness.INVENTORIES);
+    }
+    @GameTest(maxTicks=20000,structure="prime_ants_test:surface_ground")
+    public void hallHasThreeConsecutiveGateQualifiedLayingIntervals(GameTestHelper c){
+        effects(c,EffectWitness.HALL);
+    }
+    private enum EffectWitness { COMBINED, INVENTORIES, HALL }
+    /** All three bodies use the final T01 actors, supplies, triggers, placement and deadline unchanged. */
+    private void effects(GameTestHelper c,EffectWitness witness){
         var fixture=new TierThreeFixture();var q=fixture.start(c,32,true);
-        long[] completed={-1},lastEgg={-1},previousLoaded={-1};int[] measuredSteps={0},cadences={0},mostBrood={0};
-        boolean[] food={false},material={false},reloaded={false},loss={false},foodWave={false};
+        FoodServiceProbe.watch(c,q,20000,"tier_three_"+witness);
+        var probe=TierThreeEffectsProbe.watch(c,q,fixture);
+        probe.emit("effect_witness",Map.of("kind",witness,"deadline",20000));
+        long[] completed={-1},previousLoaded={-1};int[] measuredSteps={0},cadences={0},mostBrood={0};
+        boolean[] food={false},material={false},foodWave={false};
         Map<UUID,Long> eggs=new HashMap<>();
         c.onEachTick(()->{
             var l=c.getLevel();fixture.feed(c,q);fixture.ledger(c,q);var pile=NestPlanFixture.pile(c,q);var cache=fixture.fx.f.cache(c,q);var store=MaterialStore.owned(l,q.getUUID(),q.founding().plan());
+            probe.sample();
             var jobs=ChamberUpgrade.get(l).jobs(q.getUUID());
             c.assertTrue(fixture.fx.food.total(c,q)==fixture.apples+fixture.chickens,"Independent physical and ingested food conservation");
             if(!fixture.complete(c,q))return;
             if(completed[0]<0){
                 completed[0]=pile.loadedTicks();
+                probe.completed(completed[0]);
                 long payments=jobs.stream().mapToLong(j->j.built().size()).sum();
                 c.assertTrue(payments==fixture.initialWalls.size()&&jobs.stream().flatMap(j->j.built().stream()).distinct().count()==payments,"One payment per unique physical wall; three jobs serve four functions");
                 c.assertTrue(fixture.initialWalls.stream().allMatch(at->ColonyTerrain.get(l).built(l,at,q.getUUID(),NurseryBlocks.NEST_CUT_STONE)&&ColonyTerrain.get(l).retainedClay(l,at,q.getUUID())),"Every required physical wall converted with clay retained");
@@ -43,13 +61,7 @@ public final class TierThreeGameTest {
                 c.assertTrue(r.progress()==eggs.get(r.id())+2,"Actual consecutive cared egg development spends exactly two steps");measuredSteps[0]++;
             }
             eggs.clear();pile.records().stream().filter(r->r.stage()==BroodStage.EGG&&r.neglectTicks()==0).forEach(r->eggs.put(r.id(),r.progress()));previousLoaded[0]=pile.loadedTicks();
-            if(pile.lastLayingTick()!=lastEgg[0]){
-                if(lastEgg[0]>=completed[0]&&pile.lastLayingTick()-lastEgg[0]==BroodPile.layingCadence(3)){
-                    c.assertTrue(pile.layingInterval(l)==BroodPile.layingCadence(3)&&pile.supply(l).complete()&&pile.stageEvaluation().cap()==120&&pile.records().size()<=15,"Actual laying obeys unchanged food/care/population gates");cadences[0]++;
-                    PrimeAnts.LOGGER.info("T3 MEASURED LAY queen={} tick={} interval={} cadence={} foodGate={} supply={}",q.getUUID(),c.getTick(),pile.lastLayingTick()-lastEgg[0],pile.layingInterval(l),pile.growth().reason(),pile.supply(l));
-                }
-                lastEgg[0]=pile.lastLayingTick();
-            }
+            cadences[0]=probe.maxConsecutive();
             if(cache.size()>12){
                 long sugar=cache.contents().stream().filter(s->!NestCache.protein(s)).count(),protein=cache.size()-sugar;
                 c.assertTrue(cache.capacity()==18&&sugar<=12&&protein<=12&&sugar>0&&protein>0&&cache.getBlockState().getValue(NestCacheBlock.UNITS)==cache.size(),"Actual expanded food with protected shares and exact display");food[0]=true;
@@ -60,27 +72,57 @@ public final class TierThreeGameTest {
             }
             if(material[0]&&!foodWave[0]){foodWave[0]=true;fixture.drop(c,q,Items.APPLE,18);fixture.drop(c,q,Items.CHICKEN,18);}
             if(c.getTick()%500==0)PrimeAnts.LOGGER.info("T3 EFFECT STATE queen={} tick={} completedLoaded={} settled={} mostNaturalBrood={} doubleSteps={} exactCadences={} foodAccepted={} materialAccepted={} foodWave={} foodNow={} materialsNow={} gate={}",q.getUUID(),c.getTick(),completed[0],pile.loadedTicks()-completed[0],mostBrood[0],measuredSteps[0],cadences[0],food[0],material[0],foodWave[0],cache.size(),store.size(),pile.growth().reason());
-            if(!food[0]||!material[0]||mostBrood[0]<=10||measuredSteps[0]<20||cadences[0]<3||pile.loadedTicks()-completed[0]<200)return;
-            if(!reloaded[0]){
-                var foodBefore=cache.contents();var materialBefore=store.contents();SurfaceFixture.loadBlock(c,cache,cache.saveWithFullMetadata(l.registryAccess()));SurfaceFixture.loadBlock(c,store,store.saveWithFullMetadata(l.registryAccess()));
-                c.assertTrue(equal(foodBefore,fixture.fx.f.cache(c,q).contents())&&equal(materialBefore,MaterialStore.owned(l,q.getUUID(),q.founding().plan()).contents()),"Larger inventories reload without truncation");reloaded[0]=true;
-                PrimeAnts.LOGGER.info("T3 EFFECTS queen={} tick={} completedLoaded={} settled={} naturalBrood={} measuredDoubleSteps={} exactCadences={} food={} materials={} retainedClay={}",q.getUUID(),c.getTick(),completed[0],pile.loadedTicks()-completed[0],mostBrood[0],measuredSteps[0],cadences[0],cache.size(),store.size(),fixture.initialWalls.size());
-                // A loaded same-state write reduces admission but keeps every canonical unit, including across reload.
-                var at=q.founding().plan().entrance();l.setBlock(at,net.minecraft.world.level.block.Blocks.GLASS.defaultBlockState(),3);loss[0]=true;
-                cache=fixture.fx.f.cache(c,q);store=MaterialStore.owned(l,q.getUUID(),q.founding().plan());
-                c.assertTrue(cache.capacity()==6&&store.capacity()==32&&equal(foodBefore,cache.contents())&&equal(materialBefore,store.contents()),"Loaded habitat authority loss retains inventories while reducing admission");
-                SurfaceFixture.loadBlock(c,cache,cache.saveWithFullMetadata(l.registryAccess()));SurfaceFixture.loadBlock(c,store,store.saveWithFullMetadata(l.registryAccess()));
-                c.assertTrue(equal(foodBefore,fixture.fx.f.cache(c,q).contents())&&equal(materialBefore,MaterialStore.owned(l,q.getUUID(),q.founding().plan()).contents()),"Overfull mixed inventories survive reload after capacity loss");
-                c.assertTrue(loss[0],"Capacity loss phase exercised");c.succeed();
+            if(c.getTick()>=20000)return; // Automatic timeout-lifecycle observations cannot become acceptance time.
+            if(pile.loadedTicks()-completed[0]<200)return;
+            if(witness==EffectWitness.HALL){
+                if(cadences[0]<3)return;
+                probe.emit("hall_witness_pass",Map.of("consecutiveIntervals",cadences[0],"settledLoaded",pile.loadedTicks()-completed[0]));c.succeed();return;
             }
+            // Historical peaks describe behavior; they never authorize a serialization boundary.
+            if(cache.size()<=12||store.size()<=64||mostBrood[0]<=10||measuredSteps[0]<20||witness==EffectWitness.COMBINED&&cadences[0]<3)return;
+            reconstructionAndLoss(c,q,fixture,probe);
+            PrimeAnts.LOGGER.info("T3 EFFECTS queen={} tick={} witness={} completedLoaded={} settled={} naturalBrood={} measuredDoubleSteps={} consecutiveCadences={} currentFood={} currentMaterials={} retainedClay={} scope=in_memory_serialization_reconstruction",q.getUUID(),c.getTick(),witness,completed[0],pile.loadedTicks()-completed[0],mostBrood[0],measuredSteps[0],cadences[0],fixture.fx.f.cache(c,q).size(),MaterialStore.owned(l,q.getUUID(),q.founding().plan()).size(),fixture.initialWalls.size());c.succeed();
         });
     }
     private static boolean equal(List<ItemStack> a,List<ItemStack> b){return a.size()==b.size()&&java.util.stream.IntStream.range(0,a.size()).allMatch(i->ItemStack.matches(a.get(i),b.get(i)));}
+    private static void inventoryBoundary(GameTestHelper c,LasiusNigerEntity q,TierThreeFixture f,TierThreeEffectsProbe probe,String phase,List<ItemStack> food,List<ItemStack> material,int foodCapacity,int materialCapacity){
+        var cache=f.fx.f.cache(c,q);var store=MaterialStore.owned(c.getLevel(),q.getUUID(),q.founding().plan());
+        c.assertTrue(cache.size()>12&&store.size()>64,"Both ACTUAL CURRENT inventories exceed tier-two capacity at "+phase);
+        c.assertTrue(equal(food,cache.contents())&&equal(material,store.contents()),"Every exact ordered item/count/component survives without truncation or duplication at "+phase);
+        c.assertTrue(q.getUUID().equals(cache.componentOwner())&&q.getUUID().equals(store.componentOwner())&&cache.capacity()==foodCapacity&&store.capacity()==materialCapacity,"Canonical ownership and current live capacities at "+phase);
+        c.assertTrue(NestCacheBlock.showing(cache.getBlockState(),cache.contents()).equals(cache.getBlockState()),"Exact current food display at "+phase);
+        var d=MaterialUnits.display(store.contents().stream().map(MaterialStore::kind).toList());var s=store.getBlockState();
+        c.assertTrue(s.getValue(MaterialStoreBlock.CLAY)==d.clay()&&s.getValue(MaterialStoreBlock.STOCK)==d.stock()&&s.getValue(MaterialStoreBlock.STONE)==d.stone()&&s.getValue(MaterialStoreBlock.GRAVEL)==d.gravel()&&s.getValue(MaterialStoreBlock.SAND)==d.sand()&&s.getValue(MaterialStoreBlock.ORE)==d.ore(),"Exact current material display at "+phase);
+        probe.emit("inventory_boundary",Map.of("phase",phase,"scope","in_memory_serialization_reconstruction","inventories",probe.inventories()));
+    }
+    private static void reconstructionAndLoss(GameTestHelper c,LasiusNigerEntity q,TierThreeFixture f,TierThreeEffectsProbe probe){
+        var l=c.getLevel();var cache=f.fx.f.cache(c,q);var store=MaterialStore.owned(l,q.getUUID(),q.founding().plan());var food=cache.contents();var material=store.contents();
+        inventoryBoundary(c,q,f,probe,"immediately_before_serialization",food,material,18,96);
+        reconstruct(c,q,f,probe,"tier_three",cache,store);
+        inventoryBoundary(c,q,f,probe,"after_reconstruction",food,material,18,96);
+        inventoryBoundary(c,q,f,probe,"immediately_before_capacity_loss",food,material,18,96);
+        l.setBlock(q.founding().plan().entrance(),net.minecraft.world.level.block.Blocks.GLASS.defaultBlockState(),3);
+        inventoryBoundary(c,q,f,probe,"loaded_capacity_loss_before_serialization",food,material,6,32);
+        cache=f.fx.f.cache(c,q);store=MaterialStore.owned(l,q.getUUID(),q.founding().plan());
+        c.assertTrue(!cache.admits(new ItemStack(Items.APPLE))&&!cache.admits(new ItemStack(Items.CHICKEN))&&!store.room(new ItemStack(Items.CLAY_BALL))&&!store.room(new ItemStack(Items.COBBLESTONE)),"Reduced live capacities deny new food/material admission while retaining every oversized unit");
+        reconstruct(c,q,f,probe,"reduced_capacity",cache,store);
+        inventoryBoundary(c,q,f,probe,"after_reconstruction_under_reduced_capacity",food,material,6,32);
+    }
+    private static void reconstruct(GameTestHelper c,LasiusNigerEntity q,TierThreeFixture f,TierThreeEffectsProbe probe,String phase,NestCache cache,MaterialStore store){
+        var l=c.getLevel();var foodTag=cache.saveWithFullMetadata(l.registryAccess());var materialTag=store.saveWithFullMetadata(l.registryAccess());
+        probe.emit("serialized_tags",Map.of("phase",phase,"food",foodTag.toString(),"materials",materialTag.toString(),"scope","in_memory_only_no_disk_world_reload"));
+        SurfaceFixture.loadBlock(c,cache,foodTag);SurfaceFixture.loadBlock(c,store,materialTag);
+        var foodBack=f.fx.f.cache(c,q).saveWithFullMetadata(l.registryAccess());var materialBack=MaterialStore.owned(l,q.getUUID(),q.founding().plan()).saveWithFullMetadata(l.registryAccess());
+        for(var key:List.of("Contents","Colony","Entrance","Direction","ReleaseId","InventoryFormat","SharesShed"))c.assertTrue(Objects.equals(foodTag.get(key),foodBack.get(key)),"Exact serialized food field at "+phase+": "+key);
+        for(var key:List.of("Contents","Colony","Entrance","Direction","Placement","ReleaseId","InventoryFormat"))c.assertTrue(Objects.equals(materialTag.get(key),materialBack.get(key)),"Exact serialized material field at "+phase+": "+key);
+    }
     @GameTest(maxTicks=6000,structure="prime_ants_test:surface_ground")
     public void workerBuiltTierThreeFoodStoreDoesNotOverbookFullFoodTripsAndStillReceivesPhysicalMaterials(GameTestHelper c){
         var fixture=new TierThreeFixture();var q=fixture.start(c,32);boolean[] supplied={false},full={false};long[] settled={-1};
+        var probe=TierThreeEffectsProbe.watch(c,q,fixture,6000);
         c.onEachTick(()->{
             var l=c.getLevel();fixture.ledger(c,q);var cache=fixture.fx.f.cache(c,q);var store=MaterialStore.owned(l,q.getUUID(),q.founding().plan());
+            probe.sample();
             c.assertTrue(fixture.fx.food.total(c,q)==fixture.apples+fixture.chickens,"Every initial and newly supplied food unit remains physical or terminally consumed");
             if(!supplied[0]){
                 if(ColonyDevelopment.confirmedTier(l,q.getUUID(),q.founding().plan(),ChamberRegistry.FOUNDING,ChamberFunction.FOOD_STORE)!=3)return;
