@@ -552,3 +552,41 @@ retention and original native/XML evidence. No unchanged broad restart or relaxa
 `<turnloop>/directions/prime-ants-stage1c/turns/T02/raw/tier-three-effects-acceptance.json`, with linked gate and negative packets.
 Item 2 remains open; consecutive no-new-green count 0. Historical food 10,323, mining-death/timing uncertainties and Great 47/57
 stay historical. Established colonies, performance/broad persistence and release 0.2.0 remain later work.
+
+
+### T03 food-service regression checkpoint (2026-10-12)
+
+VALID_RED; item 2 remains open. T03 adds scoped read-only FoodServiceProbe observations, actual controller-action
+traces and live pre-success snapshots for the original older bodies. Production, fixtures, supplies/history, multipliers,
+recipes, capacities, reach/actions, one builder, food-first rules, reserves and queenNeedsFood's protein threshold remain unchanged.
+The four-event/three-consecutive-interval counter and strict 20k helper deadline remain unchanged.
+
+Final fast 73/118/26 passes, exit 0, 127.249s. One complete unfiltered long run is 202/204,
+exit 1, 5882.835s, native 0/1/1. Exact original results:
+Material hauling PASS (48000; 20063/14333); Tier-two natural PASS (60000; 52018/46288); Combined tier-three RED (20000; timeout 20000); Independent hall RED (20000; timeout 20000).
+All native negatives remain visible; no unchanged complete suite is repeated for a preferred outcome.
+
+Independent complete/canonical cache, ingested adult/brood and worker-cargo decomposition matches production funding.
+Commitments remain obligations; historical consumption receipts are not current stock. T02's loaded 8423 sugar closure
+(51731<55000, queen protein 6,000) and 11877 protein closure (19200<27200, queen protein 2,000) remain adverse evidence.
+Later 15/15 slots legitimately block laying. No hall defect or protein-prefeeding necessity is inferred from these counters.
+Physical pickup/delivery, nurse withdrawal/recipient/approach/feeding/return and actual consumption clocks remain inspectable.
+
+T02's original material carrier stalls in DEPOSIT after crop sharing and later starves/releases its one clay. Its exact
+historical route and timeout inventory remain unknown; later green replays do not establish a repair. T02's earliest
+all-earlier-effects tier-two interval has true sugar/income deficits and unreached natural phases. New exact observations
+and any current positives remain separate from those historical failures. A targeted missing-supply reference-equality
+negative after another test's global saved-data reinstall is retained; the isolated original reuses identical compiled
+inputs and passes. No fixture/assertion repair is used to conceal it.
+
+Independent current inventory passes at helper 18,585: 5 apples + 9 chickens and 67 clay at all five reconstruction/loss
+boundaries. Original Great passes at 11,241 with 57/57 cells, 19/38 placements, soil 80, stone 32, food 59, real passage and
+200 settled loaded ticks. These new observations do not replace T02's exact positives or historical negatives.
+
+Infrastructure validates 277 unique server identities, 1,055 frozen inputs, original native/merged XML and logs, protected
+clients, actual guard-SKIPs and leases/newest-ten retention. Tier-three inventory preservation remains in-memory
+block-entity reconstruction and loaded capacity loss 18/96 to 6/32; existing carried-job disk/data safety is separate.
+Settlement: `<turnloop>/directions/prime-ants-stage1c/turns/T03/raw/t03-food-service-checkpoint.json`.
+No-new-green count 0 reflects both restored older complete acceptances and the green regression checkpoint;
+no causal production repair or general timing robustness is claimed. Historical food 10,323, mining-death/regression/tier-two timing uncertainty and
+Great 47/57 remain. Generation, performance/broad persistence and release 0.2.0 remain later work.

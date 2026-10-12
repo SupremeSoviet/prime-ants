@@ -32,6 +32,7 @@ public final class TierThreeGameTest {
     /** All three bodies use the final T01 actors, supplies, triggers, placement and deadline unchanged. */
     private void effects(GameTestHelper c,EffectWitness witness){
         var fixture=new TierThreeFixture();var q=fixture.start(c,32,true);
+        FoodServiceProbe.watch(c,q,20000,"tier_three_"+witness);
         var probe=TierThreeEffectsProbe.watch(c,q,fixture);
         probe.emit("effect_witness",Map.of("kind",witness,"deadline",20000));
         long[] completed={-1},previousLoaded={-1};int[] measuredSteps={0},cadences={0},mostBrood={0};

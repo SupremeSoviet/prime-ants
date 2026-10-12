@@ -54,6 +54,7 @@ public final class MaterialHaulingGameTest {
     @GameTest(maxTicks=48000,structure="prime_ants_test:idle_ground")
     public void droppedClayCobblestoneAndCoalReachTheConfirmedStoreAfterTheFoodWithExactAccounting(GameTestHelper c){
         var q=fx.start(c);boolean[] supplied={false},dropped={false};Map<Item,Integer> drops=new LinkedHashMap<>();Map<UUID,ItemStack> held=new HashMap<>();long[] pickups={0};
+        FoodServiceProbe.watch(c,q,48000,"material_hauling_original");
         c.onEachTick(()->{
             var l=c.getLevel();var p=NestPlanFixture.pile(c,q);fx.grow(c,q,supplied);if(p==null)return;
             var e=p.stageEvaluation();
@@ -81,6 +82,7 @@ public final class MaterialHaulingGameTest {
                 &&!state.getValue(MaterialStoreBlock.GRAVEL)&&!state.getValue(MaterialStoreBlock.SAND),"The store shows a clay heap, a heap of other stock, and stone and ore lumps for its cobblestone and coal: "+state);
             if(e==null||e.inputs().clay().known()!=3)return; // the nursery's next evaluation
             c.assertTrue(e.inputs().clay().equals(new StageRules.Bound(3,3))&&e.inputs().stone().equals(new StageRules.Bound(2,2))&&NestPlanFixture.storeConfirmed(e),"The evaluator counts clay and stone from the confirmed store; coal is ore: "+e.inputs());
+            FoodServiceProbe.terminal(c,q);
             PrimeAnts.LOGGER.info("T04 HAUL STORED queen={} tick={} contents={} state={} evaluation={}",q.getUUID(),c.getTick(),s.contents(),state,e);c.succeed();
         });
     }
