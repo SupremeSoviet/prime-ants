@@ -38,7 +38,7 @@ public final class CatchupLifecycleGameTest {
     private static BroodPile pile(GameTestHelper c,LasiusNigerEntity q){return new NursingGameTest().pile(c,q);}
     private static List<LasiusNigerEntity> adults(GameTestHelper c,LasiusNigerEntity q){return AutomaticCatchupGameTest.adults(c,q);}
     private static void tick(GameTestHelper c,LasiusNigerEntity q,long now){
-        var bodies=adults(c,q);ReconciliationGameTest.atTime(c,now,()->bodies.forEach(LasiusNigerEntity::tick));
+        LiveReferenceDriver.adults(c,q,now);
         AutomaticCatchupGameTest.tickPile(c,pile(c,q),now);
     }
     private static List<ItemStack> food(int each){var units=new ArrayList<ItemStack>();for(int n=0;n<each;n++){units.add(new ItemStack(Items.APPLE));units.add(new ItemStack(Items.CHICKEN));}return units;}
@@ -114,8 +114,11 @@ public final class CatchupLifecycleGameTest {
             c.assertTrue(material!=oldMaterial&&material.getBlockPos().equals(oldMaterial.getBlockPos())&&material.saveWithFullMetadata(c.getLevel().registryAccess()).equals(materialBefore)&&material.contents().stream().filter(s->s.is(Items.STONE)).count()==32,"Different normally deserialized material store at the original marker retains all 32 stone units, ownership, release identity and saved accounting");
             var materialProof=new JsonObject();materialProof.addProperty("phase","before_automatic_catchup");materialProof.addProperty("different_object",true);materialProof.addProperty("marker",material.getBlockPos().toString());materialProof.addProperty("saved_tag",materialBefore.toString());materialProof.add("contents",new Gson().toJsonTree(TierThreeEffectsProbe.contents(material.contents())));evidence("material_deserialization",materialProof);
             var initialAdults=adults(c,away).stream().map(LasiusNigerEntity::getUUID).collect(java.util.stream.Collectors.toSet());
+            var liveCadence=new JsonObject();liveCadence.add("initial",LiveReferenceDriver.counters(c,live));long liveInvocations=pile(c,live).catchup().invocations(),liveApplied=pile(c,live).catchup().appliedTicks();
             GrowthObservations.start(c,live,(adultDemand?"original":"no_initial_adult_demand")+"_live");GrowthObservations.start(c,away,(adultDemand?"original":"no_initial_adult_demand")+"_catchup");
             for(long i=1;i<=span+1;i++){tick(c,live,last+i);GrowthObservations.sample(c,live,last+i,"ordinary_after_bodies_and_pile");}
+            liveCadence.add("final",LiveReferenceDriver.counters(c,live));liveCadence.addProperty("steps",span+1);liveCadence.addProperty("aggregate_invocations",pile(c,live).catchup().invocations()-liveInvocations);liveCadence.addProperty("aggregate_applied",pile(c,live).catchup().appliedTicks()-liveApplied);evidence((adultDemand?"original":"no_initial_adult_demand")+"_reference_cadence",liveCadence);
+            c.assertTrue(pile(c,live).catchup().invocations()==liveInvocations&&pile(c,live).catchup().appliedTicks()==liveApplied,"Frozen growth reference earns no aggregate application");
             AutomaticCatchupGameTest.tickPile(c,pile(c,away),last+span+1);
             GrowthObservations.sample(c,live,last+span+1,"final");GrowthObservations.sample(c,away,last+span+1,"final");
             var livePhysiology=GrowthObservations.snapshot(live);var awayPhysiology=GrowthObservations.snapshot(away);GrowthObservations.stop(live);GrowthObservations.stop(away);

@@ -34,6 +34,35 @@ public final class AutomaticCatchupGameTest {
         for(var m:ColonyMembers.get(c.getLevel()).members(q.getUUID()))if(!m.dead())result.add((LasiusNigerEntity)c.getLevel().getEntity(m.worker()));
         return result;
     }
+    @GameTest(maxTicks=8000,structure="prime_ants_test:idle_ground")
+    public void nativeServerCadenceAgreesWithOrdinaryReferenceAcrossSearchBoundaries(GameTestHelper c){
+        var f=new WorkerForagingGameTest();var q=f.start(c);int[] steps={-1};
+        Map<UUID,Integer> initial=new LinkedHashMap<>(),previous=new LinkedHashMap<>(),boundaries=new LinkedHashMap<>();
+        long[] invocations={0},applied={0};
+        c.onEachTick(()->{
+            var p=new NursingGameTest().pile(c,q);
+            if(steps[0]<0){
+                if(p==null||!p.operational()||f.workers(c,q).size()!=3||f.workers(c,q).stream().anyMatch(LasiusNigerEntity::isCallow))return;
+                for(var a:adults(c,q)){initial.put(a.getUUID(),a.tickCount);previous.put(a.getUUID(),a.tickCount);boundaries.put(a.getUUID(),0);}
+                invocations[0]=p.catchup().invocations();applied[0]=p.catchup().appliedTicks();steps[0]=0;return;
+            }
+            // No entity or nursery lifecycle calls in this phase: the real server owns these ticks.
+            steps[0]++;
+            for(var a:adults(c,q)){
+                c.assertTrue(previous.containsKey(a.getUUID())&&a.tickCount==previous.get(a.getUUID())+1,"Genuine server advances every surviving adult once per reference observation");
+                previous.put(a.getUUID(),a.tickCount);
+                if(a.tickCount%20==0){boundaries.merge(a.getUUID(),1,Integer::sum);var row=new JsonObject();row.addProperty("step",steps[0]);row.addProperty("id",a.getUUID().toString());row.addProperty("tick_count",a.tickCount);row.addProperty("time",c.getLevel().getGameTime());ReconciliationEvidence.log("t02_cadence","genuine_server_boundary",row);}
+            }
+            c.assertTrue(p.catchup().invocations()==invocations[0]&&p.catchup().appliedTicks()==applied[0],"Genuine live colony earns no aggregate application");
+            if(steps[0]<60)return;
+            var referenceInitial=LiveReferenceDriver.counters(c,q);long last=c.getLevel().getGameTime();
+            for(int offset=1;offset<=60;offset++){LiveReferenceDriver.adults(c,q,last+offset);tickPile(c,p,last+offset);}
+            var referenceFinal=LiveReferenceDriver.counters(c,q);
+            c.assertTrue(p.catchup().invocations()==invocations[0]&&p.catchup().appliedTicks()==applied[0],"Reference calibration colony earns no aggregate application");
+            for(var a:adults(c,q))c.assertTrue(previous.get(a.getUUID())-initial.get(a.getUUID())==60&&boundaries.get(a.getUUID())==3&&referenceFinal.get(a.getUUID().toString()).getAsInt()-referenceInitial.get(a.getUUID().toString()).getAsInt()==60,"Native and explicit reference cadence agree: sixty increments and three twenty-tick boundaries per adult");
+            var row=new JsonObject();row.add("native_initial",new Gson().toJsonTree(initial));row.add("native_final",new Gson().toJsonTree(previous));row.add("native_boundaries",new Gson().toJsonTree(boundaries));row.add("reference_initial",referenceInitial);row.add("reference_final",referenceFinal);row.addProperty("native_steps",60);row.addProperty("reference_steps",60);row.addProperty("aggregate_invocations",p.catchup().invocations()-invocations[0]);row.addProperty("aggregate_applied",p.catchup().appliedTicks()-applied[0]);ReconciliationEvidence.log("t02_cadence","native_server_calibration_passed",row);c.succeed();
+        });
+    }
     private static void log(GameTestHelper c,String scenario,BroodPile p,JsonObject extra){
         extra.addProperty("queen",p.queenId().toString());
         extra.addProperty("scenario",scenario);extra.addProperty("applied_ticks",p.catchup().appliedTicks());extra.addProperty("pending_ticks",p.catchup().pendingTicks());
@@ -77,15 +106,16 @@ public final class AutomaticCatchupGameTest {
             long last=p.lastSimulationGameTime().orElseThrow(),age=q.elapsedAgeTicks();
             var adultTag=ReconciliationGameTest.save(c,q);var pileTag=p.saveWithFullMetadata(c.getLevel().registryAccess());
             // Matched finite live control: same original identities, 12 ordinary ticks, no new supplies.
-            for(int i=1;i<=12;i++){long time=last+i;ReconciliationGameTest.atTime(c,time,q::tick);tickPile(c,p,time);}
+            for(int i=1;i<=12;i++){long time=last+i;LiveReferenceDriver.adults(c,q,time);tickPile(c,p,time);}
             var expected=q.biologySnapshot();var expectedBrood=p.records().stream().map(r->r.id()+":"+r.stage()+":"+r.progress()+":"+r.nourishment()).toList();long reserve=q.bodyReserve();
             var returning=replace(c,q,adultTag);var resumed=BroodGameTest.restorePile(c,p,pileTag);
-            ReconciliationGameTest.atTime(c,last+12,returning::tick);tickPile(c,resumed,last+12);
+            ReconciliationGameTest.atTime(c,last+12,()->LiveReferenceDriver.adult(c,returning,last+12));tickPile(c,resumed,last+12);
             c.assertTrue(returning.biologySnapshot().equals(expected)&&returning.elapsedAgeTicks()==age+12,"Exact survivor age/maintenance/callow, C once");
             c.assertTrue(resumed.records().stream().map(r->r.id()+":"+r.stage()+":"+r.progress()+":"+r.nourishment()).toList().equals(expectedBrood)&&returning.bodyReserve()==reserve,"Exact short brood identities and reserve conservation against ordinary control");
             c.assertTrue(resumed.catchup().appliedTicks()==11&&resumed.catchup().pendingTicks()==0,"Eleven absent ticks plus one ordinary C");
             var before=returning.biologySnapshot();var saved=resumed.saveWithFullMetadata(c.getLevel().registryAccess());long loaded=resumed.loadedTicks();
             var replay=BroodGameTest.restorePile(c,resumed,saved);tickPile(c,replay,last+12);
+            // Deliberate same-time biological hook probe; this is not another ordinary lifecycle step.
             ReconciliationGameTest.atTime(c,last+12,returning::tick);
             c.assertTrue(returning.biologySnapshot().equals(before)&&replay.catchup().appliedTicks()==11&&replay.loadedTicks()==loaded&&replay.saveWithFullMetadata(c.getLevel().registryAccess()).equals(saved),"Normal same-time save/reload does not repeat adult C, nursery C, feeding/age/births or progress");
             var row=new JsonObject();row.add("live",new Gson().toJsonTree(expected));row.add("catchup",new Gson().toJsonTree(before));row.addProperty("brood_equal",true);row.addProperty("reserve",reserve);log(c,"short",resumed,row);c.succeed();
@@ -142,14 +172,14 @@ public final class AutomaticCatchupGameTest {
             absent.remove(Entity.RemovalReason.UNLOADED_TO_CHUNK);tickPile(c,p,last+7);
             c.assertTrue(p.catchup().pendingTicks()==6&&p.loadedTicks()==loaded&&p.lastSimulationGameTime().orElseThrow()==last&&!ColonyMembers.get(c.getLevel()).member(absent.getUUID()).dead(),"Unavailable member remains reserved UNKNOWN; six ticks saved pending");
             var restored=BroodGameTest.restorePile(c,p,p.saveWithFullMetadata(c.getLevel().registryAccess()));
-            for(int i=7;i<=9;i++){long t=last+i;ReconciliationGameTest.atTime(c,t,q::tick);tickPile(c,restored,t);}
+            for(int i=7;i<=9;i++){long t=last+i;LiveReferenceDriver.adults(c,q,t);tickPile(c,restored,t);}
             c.assertTrue(restored.catchup().pendingTicks()==8&&q.elapsedAgeTicks()==age+3,"Waiting ordinary adults run without dropping pending nursery work");
             var wrong=adultTag.copy();wrong.putString("QueenId",UUID.randomUUID().toString());var conflicting=ReconciliationGameTest.load(c,wrong);c.assertTrue(c.getLevel().tryAddFreshEntityWithPassengers(conflicting),"Disclosed contradictory saved body uses the original UUID but foreign lineage");
             tickPile(c,restored,last+10);
             c.assertTrue(restored.catchup().pendingTicks()==9&&restored.catchup().appliedTicks()==0&&q.elapsedAgeTicks()==age+3&&!ColonyMembers.get(c.getLevel()).member(absent.getUUID()).dead(),"Conflicting identity defers before biology/resources and retains original reservation");
             conflicting.remove(Entity.RemovalReason.UNLOADED_TO_CHUNK);
             var returning=ReconciliationGameTest.load(c,adultTag);c.assertTrue(c.getLevel().tryAddFreshEntityWithPassengers(returning),"Original worker restored");
-            ReconciliationGameTest.atTime(c,last+11,returning::tick);tickPile(c,restored,last+11);
+            ReconciliationGameTest.atTime(c,last+11,()->LiveReferenceDriver.adult(c,returning,last+11));tickPile(c,restored,last+11);
             c.assertTrue(restored.catchup().pendingTicks()==0&&restored.catchup().appliedTicks()==10&&q.elapsedAgeTicks()==age+10,"Waiting ordinary adult ticks excluded exactly; pending completed automatically on original return");
             c.assertTrue(returning.getUUID().equals(absent.getUUID())&&restored.consumed().equals(p.consumed()),"Original membership and brood identities conserved");
             log(c,"partial_restoration",restored,new JsonObject());c.succeed();
@@ -254,7 +284,7 @@ public final class AutomaticCatchupGameTest {
             long last=p.lastSimulationGameTime().orElseThrow(),span=p.stageDuration()*3+1;
             c.assertTrue(p.stageDuration()==120&&span==361,"Exact original duration120 and span361, no extra food");
             GrowthObservations.start(c,q,live?"four_unit_live":"four_unit_catchup");AllocationObservations.log(c,q,p,last+1,live?"four_live_baseline":"four_aggregate_baseline");
-            if(live)for(long offset=1;offset<=span+1;offset++){long time=last+offset;ReconciliationGameTest.atTime(c,time,()->adults(c,q).forEach(LasiusNigerEntity::tick));tickPile(c,p,time);GrowthObservations.sample(c,q,time,"ordinary_after_bodies_and_pile");}
+            if(live)for(long offset=1;offset<=span+1;offset++){long time=last+offset;LiveReferenceDriver.adults(c,q,time);tickPile(c,p,time);GrowthObservations.sample(c,q,time,"ordinary_after_bodies_and_pile");}
             else tickPile(c,p,last+span+1);
             GrowthObservations.sample(c,q,last+span+1,"final");GrowthObservations.stop(q);AllocationObservations.log(c,q,p,last+span+1,live?"four_live_final":"four_aggregate_final");
             var disposition=new JsonObject();disposition.addProperty("requested_span",span);disposition.addProperty("stage_duration",p.stageDuration());disposition.add("queen_nutrition",new Gson().toJsonTree(q.nutrition().snapshot()));disposition.add("records",new Gson().toJsonTree(p.records().stream().map(r->Map.of("stage",r.stage(),"progress",r.progress(),"nutrition",r.nutrition().snapshot())).toList()));disposition.add("cache_contents",new Gson().toJsonTree(cache.contents().stream().map(ItemStack::toString).toList()));disposition.add("service_intentions",new Gson().toJsonTree(p.catchup().serviceObservations()));disposition.addProperty("occupied_workers",ColonyMembers.get(c.getLevel()).occupied(q.getUUID()));log(c,"four_unit_existing_egg_before_promotion_verdict",p,disposition);
@@ -293,8 +323,8 @@ public final class AutomaticCatchupGameTest {
             var control=BroodGameTest.restorePile(c,a,at);var returning=BroodGameTest.restorePile(c,b,bt);long span=control.stageDuration()*3+1;
             var original=returning.original();
             for(long i=1;i<=span+1;i++){
-                long time=last+i;var living=adults(c,live);
-                ReconciliationGameTest.atTime(c,time,()->living.forEach(LasiusNigerEntity::tick));tickPile(c,control,time);
+                long time=last+i;
+                LiveReferenceDriver.adults(c,live,time);tickPile(c,control,time);
             }
             tickPile(c,returning,last+span+1);
             int liveWorkers=f.workers(c,live).size(),reloadWorkers=f.workers(c,away).size();
@@ -308,14 +338,14 @@ public final class AutomaticCatchupGameTest {
             // Continue the two finite controls through callow maturation, then compare nonzero physical food service.
             long foodStart=last+span+1+BroodPile.callowTicks()+2;
             for(long t=last+span+2;t<=foodStart;t++){
-                long time=t;ReconciliationGameTest.atTime(c,time,()->{adults(c,live).forEach(LasiusNigerEntity::tick);adults(c,away).forEach(LasiusNigerEntity::tick);});tickPile(c,control,time);tickPile(c,returning,time);
+                long time=t;LiveReferenceDriver.adults(c,live,time);LiveReferenceDriver.adults(c,away,time);tickPile(c,control,time);tickPile(c,returning,time);
             }
             var ca=finiteCache(c,live,List.of(new ItemStack(Items.APPLE),new ItemStack(Items.SWEET_BERRIES),new ItemStack(Items.CHICKEN)));
             var cb=finiteCache(c,away,List.of(new ItemStack(Items.APPLE),new ItemStack(Items.SWEET_BERRIES),new ItemStack(Items.CHICKEN)));
             for(var colony:List.of(live,away)){
                 var hungry=f.workers(c,colony).getFirst();var tag=ReconciliationGameTest.save(c,hungry);tag.getCompound("AdultLife").orElseThrow().putLong("Fasting",hungry.adultLife().grace()/2);replace(c,hungry,tag);
             }
-            for(long i=1;i<=201;i++){long time=foodStart+i;ReconciliationGameTest.atTime(c,time,()->adults(c,live).forEach(LasiusNigerEntity::tick));tickPile(c,control,time);}
+            for(long i=1;i<=201;i++){long time=foodStart+i;LiveReferenceDriver.adults(c,live,time);tickPile(c,control,time);}
             tickPile(c,returning,foodStart+201);
             var food=new JsonObject();var kinds=new JsonArray();
             for(var kind:List.of(Items.APPLE,Items.SWEET_BERRIES,Items.CHICKEN)){

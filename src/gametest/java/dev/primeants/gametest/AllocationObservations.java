@@ -22,6 +22,9 @@ final class AllocationObservations {
             r.addProperty("caregiver",a.form()==AntForm.WORKER&&a.workerTasks().caregiverWithValidatedHabitat(c.getLevel(),q.founding().plan()));
             r.addProperty("cargo",a.getMainHandItem().toString());r.addProperty("feeding_ticks",a.workerTasks().feedingTicks());
             r.addProperty("tick_count",a.tickCount);r.addProperty("phase",a.workerTasks().phase().name());
+            r.addProperty("crop_search_boundary",a.tickCount%20==0);r.addProperty("crop_donor_eligible",CropSharing.aggregateDonorEligible(c.getLevel(),a));
+            r.addProperty("navigation_done",a.getNavigation().isDone());r.addProperty("social_action",a.socialAction());
+            if(a.workerTasks().sharing().target()!=null&&c.getLevel().getEntity(a.workerTasks().sharing().target()) instanceof LasiusNigerEntity target){r.addProperty("donor_reaches_target",WorkerTasks.reaches(c.getLevel(),a,target.position().add(0,.25,0)));r.addProperty("target_reaches_donor",WorkerTasks.reaches(c.getLevel(),target,a.position().add(0,.25,0)));}
             r.addProperty("nursing",a.workerTasks().nursing());r.addProperty("meal_ticks",a.adultLife().mealTicks());
             r.addProperty("saved_worker_task",ReconciliationGameTest.save(c,a).getCompoundOrEmpty("WorkerTask").toString());
             r.add("adult_life",new Gson().toJsonTree(a.adultLife().snapshot()));

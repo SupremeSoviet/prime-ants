@@ -13,7 +13,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 /** Same saved bodies/registry order, brood, cache and controller state in two sequential branches.
- * Ordinary branch uses only each adult's tick and the nursery block ticker at every consecutive time.
+ * Ordinary branch uses native tickNonPassenger and the nursery block ticker at every consecutive time.
  * Rollback is test fixture reconstruction, recorded before any catch-up comparison. */
 final class FiniteCacheLiveControl {
     static Map<String,List<Long>> receipts(JsonObject state){
@@ -33,23 +33,26 @@ final class FiniteCacheLiveControl {
         var inputs=new JsonObject();inputs.add("baseline",baseline);inputs.addProperty("saved_pile",pileTag.toString());inputs.addProperty("saved_cache",cacheTag.toString());inputs.add("saved_adults",new Gson().toJsonTree(tags.stream().map(CompoundTag::toString).toList()));inputs.add("saved_tick_counts",new Gson().toJsonTree(ticks));
         ReconciliationEvidence.log("t01_finite_inputs","matched_saved_input",inputs);
         long invocations=p.catchup().invocations();String previous="";
+        var cadence=new JsonObject();cadence.add("initial",LiveReferenceDriver.counters(c,q));
         for(int offset=1;offset<=400;offset++){
             long now=last+offset;
-            ReconciliationGameTest.atTime(c,now,()->AutomaticCatchupGameTest.adults(c,q).forEach(LasiusNigerEntity::tick));
+            LiveReferenceDriver.adults(c,q,now);
             AutomaticCatchupGameTest.tickPile(c,p,now);
             c.assertTrue(p.catchup().invocations()==invocations&&p.catchup().appliedTicks()==0,"Matched live control never invokes aggregate catch-up");
             var row=AllocationObservations.state(c,q,p,now);
-            String signature=row.get("cache")+":"+row.get("brood")+":"+bodies.stream().map(a->a.getUUID()+":"+a.getMainHandItem()+":"+a.nutrition().consumedUnits()+":"+a.nutrition().receivedSugar()+":"+a.workerTasks().recipientId()).toList();
+            String signature=row.get("cache")+":"+row.get("brood")+":"+AutomaticCatchupGameTest.adults(c,q).stream().map(a->a.getUUID()+":"+a.getMainHandItem()+":"+a.nutrition().consumedUnits()+":"+a.nutrition().receivedSugar()+":"+a.workerTasks().recipientId()+":"+a.workerTasks().sharing().target()+":"+a.workerTasks().sharing().actionTicks()+":"+a.workerTasks().sharing().cooldownRemaining()+":"+a.workerTasks().phase()).toList();
             if(!signature.equals(previous)||Set.of(11,40,80,120,200,300,400).contains(offset)){
                 row.addProperty("offset",offset);row.addProperty("point","finite_matched_live");ReconciliationEvidence.log("t01_finite_live","ordinary_consecutive_ticks",row);previous=signature;
             }
         }
+        cadence.add("final",LiveReferenceDriver.counters(c,q));cadence.addProperty("steps",400);cadence.addProperty("aggregate_invocations",p.catchup().invocations()-invocations);
+        ReconciliationEvidence.log("t02_finite_cadence","native_reference_counters",cadence);
         var live=AllocationObservations.state(c,q,p,last+400);live.addProperty("hungry_worker",hungry.getUUID().toString());
         var finalBodies=AutomaticCatchupGameTest.adults(c,q);live.add("final_members",ColonyMembers.CODEC.encodeStart(JsonOps.INSTANCE,ColonyMembers.get(l)).getOrThrow());
         long units=cache.size()+finalBodies.stream().mapToLong(a->a.nutrition().consumedUnits()+(WorkerTasks.food(a.getMainHandItem())?a.getMainHandItem().getCount():0)).sum()+p.consumedFood();
         c.assertTrue(units==5&&bodies.stream().allMatch(a->a.nutrition().snapshot().valid())&&p.records().stream().allMatch(r->r.nutrition().snapshot().valid()),"Live branch conserves exactly five original units, including two queen receipts, with valid debit equations");
         live.addProperty("accounted_units",units);live.addProperty("aggregate_invocations",p.catchup().invocations()-invocations);ReconciliationEvidence.log("t01_finite_live_final","ordinary_consecutive_ticks",live);
-        // The measured ordinary counterexample is specific by recipient and kind, not just total consumption.
+        // Specific food receipts are revalidated on native cadence; crop receipts have their own exact comparison.
         c.assertTrue(q.nutrition().apples()==1&&q.nutrition().chickens()==1&&q.nutrition().berries()==0&&hungry.nutrition().consumedUnits()==0&&p.consumedApples()==0&&p.consumedBerries()==0&&p.consumedChickens()==1,"Ordinary finite counterexample: funding stays with queen, hungry forager gets no food, larva gets chicken only");
         var nurses=bodies.stream().filter(a->a.form()==AntForm.WORKER&&a!=hungry).toList();
         c.assertTrue(nurses.size()==2&&nurses.get(0).nutrition().apples()==1&&nurses.get(0).nutrition().berries()==0&&nurses.get(1).nutrition().apples()==0&&nurses.get(1).nutrition().berries()==1&&nurses.stream().allMatch(a->a.nutrition().chickens()==0),"Original first and second nurses receive apple and berry respectively, with no protein receipt");
