@@ -151,7 +151,7 @@ public final class ColonyCatchup {
                         span=Math.min(span,Long.MAX_VALUE-a.elapsedAgeTicks());
                     }
                 }
-                if(habitat.verdict()==Findings.Verdict.CLEAR)feeding.plan(level,pile,segments.entrySet().stream().filter(e->e.getValue().missing()).map(Map.Entry::getKey).toList(),cache,cursor);
+                if(habitat.verdict()==Findings.Verdict.CLEAR)feeding.plan(level,pile,adults,segments.entrySet().stream().filter(e->e.getValue().missing()).map(Map.Entry::getKey).toList(),cache,cursor);
                 span=Math.min(span,feeding.nextEvent(cursor));
                 span=Math.min(span,pile.nextBroodEvent(level,habitat.problem()));
                 span=Math.min(span,pile.nextLayingEvent(level,habitat.problem()));
@@ -159,6 +159,7 @@ public final class ColonyCatchup {
                 // Avoid arithmetic overflow in the nursery's speed accounting, even for maximal saved time domains.
                 span=Math.min(span,Long.MAX_VALUE/BroodCapacity.MAX_SLOTS/4);
                 long end=cursor+span-1;
+                feeding.advanceSearch(segments.entrySet().stream().filter(e->e.getValue().missing()).map(Map.Entry::getKey).toList(),span);
                 if(habitat.verdict()==Findings.Verdict.CLEAR)feeding.advanceCooldown(level,segments.entrySet().stream().filter(e->e.getValue().missing()).map(Map.Entry::getKey).toList(),span);
                 for(var entry:segments.entrySet())if(entry.getValue().missing())entry.getKey().advanceMissing(level,cursor,end);
                 int eventsBeforeService=lastEvents;

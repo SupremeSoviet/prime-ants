@@ -1,0 +1,306 @@
+{
+  "name": "captured_1500",
+  "historical_received": 1500,
+  "source_file": "t02-corrected-finite-measurement.observations.json",
+  "source_sha256": "adb29158504ed18c1325c12a3c029ca536d7b6e01609fa3b0222d9af5da6033d",
+  "inputs": {
+    "baseline": {
+      "cursor": 5979,
+      "completion": 9223372036854775807,
+      "next_wake_delay": 9223372036854775807,
+      "saved_service_state": "{AppliedThrough:-1L,AppliedTicks:0L,Cursor:-1L,Invocations:0L,RecoveryBaseline:-1L,ServiceCacheReturned:{},ServiceReady:{},Services:[],Status:\"idle\",Through:-1L,UnknownThrough:-1L,UnknownTicks:0L,Version:1}",
+      "adults": [
+        {
+          "id": "8826b521-8ff9-49fe-9c5b-6d9031016e08",
+          "form": "QUEEN",
+          "nutrition": {
+            "sugar": 3000,
+            "protein": 6000,
+            "apples": 1,
+            "berries": 0,
+            "chickens": 1,
+            "nectar": 0,
+            "nectarV2": 0,
+            "prey": 0,
+            "flesh": 0,
+            "spentSugar": 1000,
+            "spentProtein": 2000,
+            "receivedSugar": 0,
+            "givenSugar": 0
+          },
+          "fasting": 425,
+          "hungry": false,
+          "crop_state": "{ActionTicks:0,ApproachTicks:0,Cooldown:0,LastLoadedTick:5978L}",
+          "position": "(-1.4381682732312266E7, 8.0, -8282164.446986248)",
+          "partial_action": 0,
+          "crop_target": "null",
+          "caregiver": false,
+          "cargo": "0 minecraft:air",
+          "feeding_ticks": 0,
+          "tick_count": 5972,
+          "phase": "NURSERY",
+          "nursing": false,
+          "meal_ticks": 0,
+          "saved_worker_task": "{BiteCooldown:0,BiteTicks:0,Bites:0L,Cooldown:0,CropSharing:{ActionTicks:0,ApproachTicks:0,Cooldown:0,LastLoadedTick:5978L},Defending:0b,DefenseLastTick:-9223372036854775808L,DroppedCursor:0,DroppedQueue:[],FeedingTicks:0,FlowerInspections:0,HarvestingTicks:0,Opened:0,Phase:\"NURSERY\",PhaseTicks:0,Placed:0,Reason:\"nursery_shelter\",SearchTicks:0}",
+          "adult_life": {
+            "lifespan": 144000,
+            "grace": 24000,
+            "fasting": 425,
+            "maintenanceTicks": 0,
+            "activeTicks": 425,
+            "damageTicks": 0,
+            "mealTicks": 0,
+            "coverageRemaining": 0,
+            "coveredTicks": 0,
+            "started": true,
+            "death": ""
+          },
+          "simulation": {
+            "boundary": 6,
+            "origin": "BIRTH",
+            "known_after": 6,
+            "latest": 5978,
+            "invalid_time": false,
+            "runs": [
+              [
+                7,
+                5978
+              ]
+            ]
+          },
+          "eligible_crop_choices_fasting_then_distance": []
+        },
+        {
+          "id": "707100f7-a23b-3408-a934-ab84ab975400",
+          "form": "WORKER",
+          "nutrition": {
+            "sugar": 0,
+            "protein": 0,
+            "apples": 0,
+            "berries": 0,
+            "chickens": 0,
+            "nectar": 0,
+            "nectarV2": 0,
+            "prey": 0,
+            "flesh": 0,
+            "spentSugar": 0,
+            "spentProtein": 0,
+            "receivedSugar": 0,
+            "givenSugar": 0
+          },
+          "fasting": 425,
+          "hungry": false,
+          "crop_state": "{ActionTicks:0,ApproachTicks:0,Cooldown:0,LastLoadedTick:5978L}",
+          "position": "(-1.43816815E7, 8.0, -8282165.5)",
+          "partial_action": 0,
+          "crop_target": "null",
+          "caregiver": false,
+          "cargo": "0 minecraft:air",
+          "feeding_ticks": 0,
+          "tick_count": 425,
+          "phase": "NURSE_CACHE",
+          "nursing": true,
+          "meal_ticks": 0,
+          "saved_worker_task": "{BiteCooldown:0,BiteTicks:0,Bites:0L,Cooldown:0,CropSharing:{ActionTicks:0,ApproachTicks:0,Cooldown:0,LastLoadedTick:5978L},Defending:0b,DefenseLastTick:5978L,Direction:\"east\",DroppedCursor:0,DroppedQueue:[],Entrance:[I;-14381687,10,-8282165],ExteriorStand:[I;-14381689,11,-8282165],FeedingTicks:0,FlowerInspections:0,HarvestingTicks:0,Opened:0,Phase:\"NURSE_CACHE\",PhaseTicks:1,Placed:0,Reason:\"nurse_owned_cache_unavailable\",SearchTicks:0,SurfaceDeposits:[[I;-14381692,11,-8282161],[I;-14381692,11,-8282168],[I;-14381692,11,-8282162],[I;-14381692,11,-8282167],[I;-14381692,11,-8282163],[I;-14381692,11,-8282166],[I;-14381692,11,-8282164],[I;-14381691,11,-8282161],[I;-14381691,11,-8282168],[I;-14381691,11,-8282162],[I;-14381691,11,-8282167],[I;-14381691,11,-8282163],[I;-14381691,11,-8282166],[I;-14381691,11,-8282164],[I;-14381690,11,-8282161],[I;-14381690,11,-8282168],[I;-14381690,11,-8282162],[I;-14381690,11,-8282167],[I;-14381690,11,-8282163],[I;-14381690,11,-8282166],[I;-14381690,11,-8282164],[I;-14381689,11,-8282161],[I;-14381689,11,-8282168],[I;-14381689,11,-8282162],[I;-14381689,11,-8282167],[I;-14381689,11,-8282163],[I;-14381689,11,-8282166],[I;-14381689,11,-8282164],[I;-14381688,11,-8282161],[I;-14381688,11,-8282168],[I;-14381688,11,-8282162],[I;-14381688,11,-8282167],[I;-14381688,11,-8282163],[I;-14381688,11,-8282166],[I;-14381688,11,-8282164]]}",
+          "adult_life": {
+            "lifespan": 144000,
+            "grace": 24000,
+            "fasting": 425,
+            "maintenanceTicks": 0,
+            "activeTicks": 425,
+            "damageTicks": 0,
+            "mealTicks": 0,
+            "coverageRemaining": 0,
+            "coveredTicks": 0,
+            "started": true,
+            "death": ""
+          },
+          "simulation": {
+            "boundary": 5553,
+            "origin": "BIRTH",
+            "known_after": 5553,
+            "latest": 5978,
+            "invalid_time": false,
+            "runs": [
+              [
+                5554,
+                5978
+              ]
+            ]
+          },
+          "eligible_crop_choices_fasting_then_distance": []
+        },
+        {
+          "id": "eeb06ff9-76db-3f9a-8187-02d984411d50",
+          "form": "WORKER",
+          "nutrition": {
+            "sugar": 0,
+            "protein": 0,
+            "apples": 0,
+            "berries": 0,
+            "chickens": 0,
+            "nectar": 0,
+            "nectarV2": 0,
+            "prey": 0,
+            "flesh": 0,
+            "spentSugar": 0,
+            "spentProtein": 0,
+            "receivedSugar": 0,
+            "givenSugar": 0
+          },
+          "fasting": 425,
+          "hungry": false,
+          "crop_state": "{ActionTicks:0,ApproachTicks:0,Cooldown:0,LastLoadedTick:5978L}",
+          "position": "(-1.43816815E7, 8.0, -8282164.5)",
+          "partial_action": 0,
+          "crop_target": "null",
+          "caregiver": false,
+          "cargo": "0 minecraft:air",
+          "feeding_ticks": 0,
+          "tick_count": 425,
+          "phase": "NURSE_CACHE",
+          "nursing": true,
+          "meal_ticks": 0,
+          "saved_worker_task": "{BiteCooldown:0,BiteTicks:0,Bites:0L,Cooldown:0,CropSharing:{ActionTicks:0,ApproachTicks:0,Cooldown:0,LastLoadedTick:5978L},Defending:0b,DefenseLastTick:5978L,Direction:\"east\",DroppedCursor:0,DroppedQueue:[],Entrance:[I;-14381687,10,-8282165],ExteriorStand:[I;-14381689,11,-8282165],FeedingTicks:0,FlowerInspections:0,HarvestingTicks:0,Opened:0,Phase:\"NURSE_CACHE\",PhaseTicks:1,Placed:0,Reason:\"nurse_owned_cache_unavailable\",SearchTicks:0,SurfaceDeposits:[[I;-14381692,11,-8282161],[I;-14381692,11,-8282168],[I;-14381692,11,-8282162],[I;-14381692,11,-8282167],[I;-14381692,11,-8282163],[I;-14381692,11,-8282166],[I;-14381692,11,-8282164],[I;-14381691,11,-8282161],[I;-14381691,11,-8282168],[I;-14381691,11,-8282162],[I;-14381691,11,-8282167],[I;-14381691,11,-8282163],[I;-14381691,11,-8282166],[I;-14381691,11,-8282164],[I;-14381690,11,-8282161],[I;-14381690,11,-8282168],[I;-14381690,11,-8282162],[I;-14381690,11,-8282167],[I;-14381690,11,-8282163],[I;-14381690,11,-8282166],[I;-14381690,11,-8282164],[I;-14381689,11,-8282161],[I;-14381689,11,-8282168],[I;-14381689,11,-8282162],[I;-14381689,11,-8282167],[I;-14381689,11,-8282163],[I;-14381689,11,-8282166],[I;-14381689,11,-8282164],[I;-14381688,11,-8282161],[I;-14381688,11,-8282168],[I;-14381688,11,-8282162],[I;-14381688,11,-8282167],[I;-14381688,11,-8282163],[I;-14381688,11,-8282166],[I;-14381688,11,-8282164]]}",
+          "adult_life": {
+            "lifespan": 144000,
+            "grace": 24000,
+            "fasting": 425,
+            "maintenanceTicks": 0,
+            "activeTicks": 425,
+            "damageTicks": 0,
+            "mealTicks": 0,
+            "coverageRemaining": 0,
+            "coveredTicks": 0,
+            "started": true,
+            "death": ""
+          },
+          "simulation": {
+            "boundary": 5553,
+            "origin": "BIRTH",
+            "known_after": 5553,
+            "latest": 5978,
+            "invalid_time": false,
+            "runs": [
+              [
+                5554,
+                5978
+              ]
+            ]
+          },
+          "eligible_crop_choices_fasting_then_distance": []
+        },
+        {
+          "id": "5884035f-115f-3a4d-bb2b-79f5e75da6d1",
+          "form": "WORKER",
+          "nutrition": {
+            "sugar": 0,
+            "protein": 0,
+            "apples": 0,
+            "berries": 0,
+            "chickens": 0,
+            "nectar": 0,
+            "nectarV2": 0,
+            "prey": 0,
+            "flesh": 0,
+            "spentSugar": 0,
+            "spentProtein": 0,
+            "receivedSugar": 0,
+            "givenSugar": 0
+          },
+          "fasting": 12000,
+          "hungry": true,
+          "crop_state": "{ActionTicks:0,ApproachTicks:0,Cooldown:0,LastLoadedTick:5978L}",
+          "position": "(-1.4381688517483413E7, 11.0, -8282162.8537912825)",
+          "partial_action": 0,
+          "crop_target": "null",
+          "caregiver": false,
+          "cargo": "0 minecraft:air",
+          "feeding_ticks": 0,
+          "tick_count": 0,
+          "phase": "EXIT",
+          "nursing": false,
+          "meal_ticks": 0,
+          "saved_worker_task": "{BiteCooldown:0,BiteTicks:0,Bites:0L,Cooldown:0,CropSharing:{ActionTicks:0,ApproachTicks:0,Cooldown:0,LastLoadedTick:5978L},Defending:0b,DefenseLastTick:5978L,Direction:\"east\",DroppedCursor:0,DroppedQueue:[],Entrance:[I;-14381687,10,-8282165],ExteriorStand:[I;-14381689,11,-8282165],FeedingTicks:0,FlowerInspections:0,HarvestingTicks:0,Opened:2,Phase:\"EXIT\",PhaseTicks:1,Placed:2,Reason:\"authorized_exit_open\",SearchTicks:0,SurfaceDeposits:[[I;-14381692,11,-8282161],[I;-14381692,11,-8282168],[I;-14381692,11,-8282162],[I;-14381692,11,-8282167],[I;-14381692,11,-8282163],[I;-14381692,11,-8282166],[I;-14381692,11,-8282164],[I;-14381691,11,-8282161],[I;-14381691,11,-8282168],[I;-14381691,11,-8282162],[I;-14381691,11,-8282167],[I;-14381691,11,-8282163],[I;-14381691,11,-8282166],[I;-14381691,11,-8282164],[I;-14381690,11,-8282161],[I;-14381690,11,-8282168],[I;-14381690,11,-8282162],[I;-14381690,11,-8282167],[I;-14381690,11,-8282163],[I;-14381690,11,-8282166],[I;-14381690,11,-8282164],[I;-14381689,11,-8282161],[I;-14381689,11,-8282168],[I;-14381689,11,-8282162],[I;-14381689,11,-8282167],[I;-14381689,11,-8282163],[I;-14381689,11,-8282166],[I;-14381689,11,-8282164],[I;-14381688,11,-8282161],[I;-14381688,11,-8282168],[I;-14381688,11,-8282162],[I;-14381688,11,-8282167],[I;-14381688,11,-8282163],[I;-14381688,11,-8282166],[I;-14381688,11,-8282164]]}",
+          "adult_life": {
+            "lifespan": 144000,
+            "grace": 24000,
+            "fasting": 12000,
+            "maintenanceTicks": 0,
+            "activeTicks": 425,
+            "damageTicks": 0,
+            "mealTicks": 0,
+            "coverageRemaining": 0,
+            "coveredTicks": 0,
+            "started": true,
+            "death": ""
+          },
+          "simulation": {
+            "boundary": 5553,
+            "origin": "BIRTH",
+            "known_after": 5553,
+            "latest": 5978,
+            "invalid_time": false,
+            "runs": [
+              [
+                5554,
+                5978
+              ]
+            ]
+          },
+          "eligible_crop_choices_fasting_then_distance": []
+        }
+      ],
+      "adult_order": [
+        "8826b521-8ff9-49fe-9c5b-6d9031016e08",
+        "707100f7-a23b-3408-a934-ab84ab975400",
+        "eeb06ff9-76db-3f9a-8187-02d984411d50",
+        "5884035f-115f-3a4d-bb2b-79f5e75da6d1"
+      ],
+      "brood": [
+        {
+          "stage": "LARVA",
+          "progress": 0,
+          "id": "c1f7d9bd-e0b0-47b9-90ba-c9851eb2128f",
+          "nutrition": {
+            "sugar": 0,
+            "protein": 0,
+            "apples": 0,
+            "berries": 0,
+            "chickens": 0,
+            "nectar": 0,
+            "nectarV2": 0,
+            "prey": 0,
+            "flesh": 0,
+            "spentSugar": 0,
+            "spentProtein": 0,
+            "receivedSugar": 0,
+            "givenSugar": 0
+          }
+        }
+      ],
+      "cache": [
+        "1 minecraft:apple",
+        "1 minecraft:sweet_berries",
+        "1 minecraft:chicken"
+      ]
+    },
+    "saved_pile": "{AdultCapacityBound:120,AdultFastingGrace:24000L,AdultLifespan:144000L,Brood:[{Founding:0b,Id:\"c1f7d9bd-e0b0-47b9-90ba-c9851eb2128f\",NeglectGrace:24000L,NeglectReason:\"\",NeglectTicks:0L,Nourishment:0L,Nutrition:{Apples:0L,Berries:0L,Chickens:0L,Flesh:0L,Nectar:0L,NectarV2:0L,Prey:0L,Protein:0L,SpentProtein:0L,SpentSugar:0L,Sugar:0L,SugarGiven:0L,SugarReceived:0L},Progress:0L,Queen:\"8826b521-8ff9-49fe-9c5b-6d9031016e08\",Slot:0,Stage:\"LARVA\",WaitingBound:24000L,WaitingTicks:0L}],Catchup:{AppliedThrough:-1L,AppliedTicks:0L,Cursor:-1L,Invocations:0L,RecoveryBaseline:-1L,ServiceCacheReturned:{},ServiceReady:{},Services:[],Status:\"idle\",Through:-1L,UnknownThrough:-1L,UnknownTicks:0L,Version:1},Condition:\"income_warmup\",Consumed:[\"70261da1-4145-4b06-8a44-3491a54b3b41\",\"df5cc90e-3751-4616-b91e-17e072299517\",\"f9e3cd35-fb42-4a51-963b-7dd48a8085fb\"],ConsumedApples:0L,ConsumedBerries:0L,ConsumedChickens:0L,ConsumedFlesh:0L,ConsumedNectar:0L,ConsumedNectarV2:0L,ConsumedPrey:0L,DevelopmentCredit:0,Direction:\"east\",Entrance:[I;-14381687,10,-8282165],Expired:{},GrowthFlow:{Clock:785L,Open:0b,Pauses:0L,Protein:[0L,0L,0L,0L],Reason:\"income_warmup\",Resumes:0L,Sugar:[0L,0L,0L,0L],Times:[1L,201L,401L,601L]},LastLayingTick:0L,LastOrdinaryGameTime:5978L,LastSimulationGameTime:5978L,LoadedTicks:785L,NeglectGrace:24000L,Operational:0b,Original:[\"70261da1-4145-4b06-8a44-3491a54b3b41\",\"df5cc90e-3751-4616-b91e-17e072299517\",\"f9e3cd35-fb42-4a51-963b-7dd48a8085fb\"],Queen:\"8826b521-8ff9-49fe-9c5b-6d9031016e08\",StageDuration:120L,WaitingBound:24000L,components:{},id:\"prime_ants:brood_pile\",x:-14381683,y:8,z:-8282164}",
+    "saved_cache": "{Colony:\"8826b521-8ff9-49fe-9c5b-6d9031016e08\",Contents:[{count:1,id:\"minecraft:apple\"},{count:1,id:\"minecraft:sweet_berries\"},{count:1,id:\"minecraft:chicken\"}],Direction:\"east\",Entrance:[I;-14381687,10,-8282165],InventoryFormat:3,ReleaseId:\"1eb53e2d-4e79-4e3c-b979-9c1d5af8cb76\",components:{},id:\"prime_ants:nest_cache\",x:-14381684,y:8,z:-8282166}",
+    "saved_adults": [
+      "{AbsorptionAmount:0.0f,AdultLife:{ActiveTicks:425L,CoverageRemaining:0,CoveredTicks:0L,DamageTicks:0,Death:\"\",Fasting:425L,FastingGrace:24000L,Lifespan:144000L,Maintenance:0L,MealTicks:0,Started:1b},AdultSimulation:{Boundary:6L,InvalidTime:0b,KnownAfter:6L,LastSimulationGameTime:5978L,Origin:\"BIRTH\",Runs:[{first:7L,last:5978L}],Version:1},Air:300s,AntElapsedAgeTicks:5972L,AntForm:\"queen\",Brain:{memories:{}},BroodNeglectGrace:24000L,CanPickUpLoot:0b,CocoonWaitingBound:24000L,ColonyAdultCapacityBound:120,DeathTime:0s,FallFlying:0b,Fire:0s,Founding:{Converted:31,Cooldown:0,Deposited:22,Direction:\"east\",Entrance:[I;-14381687,10,-8282165],Expected:[\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\",\"minecraft:dirt\"],ExteriorStand:[I;-14381689,11,-8282165],Lifecycle:\"OPEN\",LoadedTicks:5187L,Phase:\"SETTLED\",PlantExpected:[],Plants:[],Plugged:2,Progress:24,Reason:\"operational_open\",Released:0,RemovedPlants:[],Stalled:0,SurfaceDeposits:[[I;-14381692,11,-8282161],[I;-14381692,11,-8282168],[I;-14381692,11,-8282162],[I;-14381692,11,-8282167],[I;-14381692,11,-8282163],[I;-14381692,11,-8282166],[I;-14381692,11,-8282164],[I;-14381691,11,-8282161],[I;-14381691,11,-8282168],[I;-14381691,11,-8282162],[I;-14381691,11,-8282167],[I;-14381691,11,-8282163],[I;-14381691,11,-8282166],[I;-14381691,11,-8282164],[I;-14381690,11,-8282161],[I;-14381690,11,-8282168],[I;-14381690,11,-8282162],[I;-14381690,11,-8282167],[I;-14381690,11,-8282163],[I;-14381690,11,-8282166],[I;-14381690,11,-8282164],[I;-14381689,11,-8282161],[I;-14381689,11,-8282168],[I;-14381689,11,-8282162],[I;-14381689,11,-8282167],[I;-14381689,11,-8282163],[I;-14381689,11,-8282166],[I;-14381689,11,-8282164],[I;-14381688,11,-8282161],[I;-14381688,11,-8282168],[I;-14381688,11,-8282162],[I;-14381688,11,-8282167],[I;-14381688,11,-8282163],[I;-14381688,11,-8282166],[I;-14381688,11,-8282164]],Tasks:[[I;-14381687,10,-8282165],[I;-14381686,10,-8282165],[I;-14381686,9,-8282165],[I;-14381685,10,-8282165],[I;-14381685,9,-8282165],[I;-14381685,8,-8282165],[I;-14381684,8,-8282165],[I;-14381684,9,-8282165],[I;-14381683,8,-8282165],[I;-14381683,9,-8282165],[I;-14381682,8,-8282165],[I;-14381682,9,-8282165],[I;-14381684,8,-8282166],[I;-14381684,9,-8282166],[I;-14381683,8,-8282166],[I;-14381683,9,-8282166],[I;-14381682,8,-8282166],[I;-14381682,9,-8282166],[I;-14381684,8,-8282164],[I;-14381684,9,-8282164],[I;-14381683,8,-8282164],[I;-14381683,9,-8282164],[I;-14381682,8,-8282164],[I;-14381682,9,-8282164]],WorkerClaim:\"5884035f-115f-3a4d-bb2b-79f5e75da6d1\"},Health:20.0f,HurtTime:0s,Invulnerable:0b,LeftHanded:0b,Motion:[0.0d,-0.0784000015258789d,0.0d],NurseryClaimed:1b,Nutrition:{Apples:1L,Berries:0L,Chickens:1L,Flesh:0L,Nectar:0L,NectarV2:0L,Prey:0L,Protein:6000L,SpentProtein:2000L,SpentSugar:1000L,Sugar:3000L,SugarGiven:0L,SugarReceived:0L},OnGround:1b,PersistenceRequired:1b,PortalCooldown:0,Pos:[-1.4381682732312266E7d,8.0d,-8282164.446986248d],QueenBodyReserve:0L,Rotation:[259.30954f,0.0f],UUID:[I;-2010729183,-1879488002,-1671729776,822177288],WorkerTask:{BiteCooldown:0,BiteTicks:0,Bites:0L,Cooldown:0,CropSharing:{ActionTicks:0,ApproachTicks:0,Cooldown:0,LastLoadedTick:5978L},Defending:0b,DefenseLastTick:-9223372036854775808L,DroppedCursor:0,DroppedQueue:[],FeedingTicks:0,FlowerInspections:0,HarvestingTicks:0,Opened:0,Phase:\"NURSERY\",PhaseTicks:0,Placed:0,Reason:\"nursery_shelter\",SearchTicks:0},attributes:[{base:12.0d,id:\"minecraft:follow_range\",modifiers:[{amount:-0.06725179435372826d,id:\"minecraft:random_spawn_bonus\",operation:\"add_multiplied_base\"}]},{base:0.12d,id:\"minecraft:movement_speed\"}],current_impulse_context_reset_grace_time:0,fall_distance:0.0d,id:\"prime_ants:lasius_niger_queen\"}",
+      "{AbsorptionAmount:0.0f,AdultLife:{ActiveTicks:425L,CoverageRemaining:0,CoveredTicks:0L,DamageTicks:0,Death:\"\",Fasting:425L,FastingGrace:24000L,Lifespan:144000L,Maintenance:0L,MealTicks:0,Started:1b},AdultSimulation:{Boundary:5553L,InvalidTime:0b,KnownAfter:5553L,LastSimulationGameTime:5978L,Origin:\"BIRTH\",Runs:[{first:5554L,last:5978L}],Version:1},Air:300s,AntElapsedAgeTicks:425L,AntForm:\"worker\",Brain:{memories:{}},BroodId:\"df5cc90e-3751-4616-b91e-17e072299517\",BroodNeglectGrace:24000L,CallowDuration:48L,CallowTicks:48L,CanPickUpLoot:0b,CocoonWaitingBound:24000L,ColonyAdultCapacityBound:120,DeathTime:0s,FallFlying:0b,Fire:0s,Founding:{Converted:0,Cooldown:0,Deposited:0,Lifecycle:\"CLAUSTRAL\",LoadedTicks:0L,Phase:\"NONE\",Plugged:0,Progress:0,Reason:\"not_requested\",Released:0,RemovedPlants:[],Stalled:0},Health:6.0f,HurtTime:0s,Invulnerable:0b,LeftHanded:0b,Motion:[0.0d,-0.0784000015258789d,0.0d],NurseryClaimed:0b,NurseryHome:[I;-14381683,8,-8282165],Nutrition:{Apples:0L,Berries:0L,Chickens:0L,Flesh:0L,Nectar:0L,NectarV2:0L,Prey:0L,Protein:0L,SpentProtein:0L,SpentSugar:0L,Sugar:0L,SugarGiven:0L,SugarReceived:0L},OnGround:1b,PersistenceRequired:1b,PortalCooldown:0,Pos:[-1.43816815E7d,8.0d,-8282165.5d],QueenBodyReserve:0L,QueenId:\"8826b521-8ff9-49fe-9c5b-6d9031016e08\",Rotation:[1.1273018f,0.0f],UUID:[I;1886454007,-1573178360,-1456166012,-1416145920],WorkerTask:{BiteCooldown:0,BiteTicks:0,Bites:0L,Cooldown:0,CropSharing:{ActionTicks:0,ApproachTicks:0,Cooldown:0,LastLoadedTick:5978L},Defending:0b,DefenseLastTick:5978L,Direction:\"east\",DroppedCursor:0,DroppedQueue:[],Entrance:[I;-14381687,10,-8282165],ExteriorStand:[I;-14381689,11,-8282165],FeedingTicks:0,FlowerInspections:0,HarvestingTicks:0,Opened:0,Phase:\"NURSE_CACHE\",PhaseTicks:1,Placed:0,Reason:\"nurse_owned_cache_unavailable\",SearchTicks:0,SurfaceDeposits:[[I;-14381692,11,-8282161],[I;-14381692,11,-8282168],[I;-14381692,11,-8282162],[I;-14381692,11,-8282167],[I;-14381692,11,-8282163],[I;-14381692,11,-8282166],[I;-14381692,11,-8282164],[I;-14381691,11,-8282161],[I;-14381691,11,-8282168],[I;-14381691,11,-8282162],[I;-14381691,11,-8282167],[I;-14381691,11,-8282163],[I;-14381691,11,-8282166],[I;-14381691,11,-8282164],[I;-14381690,11,-8282161],[I;-14381690,11,-8282168],[I;-14381690,11,-8282162],[I;-14381690,11,-8282167],[I;-14381690,11,-8282163],[I;-14381690,11,-8282166],[I;-14381690,11,-8282164],[I;-14381689,11,-8282161],[I;-14381689,11,-8282168],[I;-14381689,11,-8282162],[I;-14381689,11,-8282167],[I;-14381689,11,-8282163],[I;-14381689,11,-8282166],[I;-14381689,11,-8282164],[I;-14381688,11,-8282161],[I;-14381688,11,-8282168],[I;-14381688,11,-8282162],[I;-14381688,11,-8282167],[I;-14381688,11,-8282163],[I;-14381688,11,-8282166],[I;-14381688,11,-8282164]]},attributes:[{base:0.18d,id:\"minecraft:movement_speed\"}],current_impulse_context_reset_grace_time:0,fall_distance:0.0d,id:\"prime_ants:lasius_niger_worker\"}",
+      "{AbsorptionAmount:0.0f,AdultLife:{ActiveTicks:425L,CoverageRemaining:0,CoveredTicks:0L,DamageTicks:0,Death:\"\",Fasting:425L,FastingGrace:24000L,Lifespan:144000L,Maintenance:0L,MealTicks:0,Started:1b},AdultSimulation:{Boundary:5553L,InvalidTime:0b,KnownAfter:5553L,LastSimulationGameTime:5978L,Origin:\"BIRTH\",Runs:[{first:5554L,last:5978L}],Version:1},Air:300s,AntElapsedAgeTicks:425L,AntForm:\"worker\",Brain:{memories:{}},BroodId:\"70261da1-4145-4b06-8a44-3491a54b3b41\",BroodNeglectGrace:24000L,CallowDuration:48L,CallowTicks:48L,CanPickUpLoot:0b,CocoonWaitingBound:24000L,ColonyAdultCapacityBound:120,DeathTime:0s,FallFlying:0b,Fire:0s,Founding:{Converted:0,Cooldown:0,Deposited:0,Lifecycle:\"CLAUSTRAL\",LoadedTicks:0L,Phase:\"NONE\",Plugged:0,Progress:0,Reason:\"not_requested\",Released:0,RemovedPlants:[],Stalled:0},Health:6.0f,HurtTime:0s,Invulnerable:0b,LeftHanded:0b,Motion:[0.0d,-0.0784000015258789d,0.0d],NurseryClaimed:0b,NurseryHome:[I;-14381683,8,-8282165],Nutrition:{Apples:0L,Berries:0L,Chickens:0L,Flesh:0L,Nectar:0L,NectarV2:0L,Prey:0L,Protein:0L,SpentProtein:0L,SpentSugar:0L,Sugar:0L,SugarGiven:0L,SugarReceived:0L},OnGround:1b,PersistenceRequired:1b,PortalCooldown:0,Pos:[-1.43816815E7d,8.0d,-8282164.5d],QueenBodyReserve:0L,QueenId:\"8826b521-8ff9-49fe-9c5b-6d9031016e08\",Rotation:[2.777286f,0.0f],UUID:[I;-290426887,1994080154,-2121858343,-2076107440],WorkerTask:{BiteCooldown:0,BiteTicks:0,Bites:0L,Cooldown:0,CropSharing:{ActionTicks:0,ApproachTicks:0,Cooldown:0,LastLoadedTick:5978L},Defending:0b,DefenseLastTick:5978L,Direction:\"east\",DroppedCursor:0,DroppedQueue:[],Entrance:[I;-14381687,10,-8282165],ExteriorStand:[I;-14381689,11,-8282165],FeedingTicks:0,FlowerInspections:0,HarvestingTicks:0,Opened:0,Phase:\"NURSE_CACHE\",PhaseTicks:1,Placed:0,Reason:\"nurse_owned_cache_unavailable\",SearchTicks:0,SurfaceDeposits:[[I;-14381692,11,-8282161],[I;-14381692,11,-8282168],[I;-14381692,11,-8282162],[I;-14381692,11,-8282167],[I;-14381692,11,-8282163],[I;-14381692,11,-8282166],[I;-14381692,11,-8282164],[I;-14381691,11,-8282161],[I;-14381691,11,-8282168],[I;-14381691,11,-8282162],[I;-14381691,11,-8282167],[I;-14381691,11,-8282163],[I;-14381691,11,-8282166],[I;-14381691,11,-8282164],[I;-14381690,11,-8282161],[I;-14381690,11,-8282168],[I;-14381690,11,-8282162],[I;-14381690,11,-8282167],[I;-14381690,11,-8282163],[I;-14381690,11,-8282166],[I;-14381690,11,-8282164],[I;-14381689,11,-8282161],[I;-14381689,11,-8282168],[I;-14381689,11,-8282162],[I;-14381689,11,-8282167],[I;-14381689,11,-8282163],[I;-14381689,11,-8282166],[I;-14381689,11,-8282164],[I;-14381688,11,-8282161],[I;-14381688,11,-8282168],[I;-14381688,11,-8282162],[I;-14381688,11,-8282167],[I;-14381688,11,-8282163],[I;-14381688,11,-8282166],[I;-14381688,11,-8282164]]},attributes:[{base:0.18d,id:\"minecraft:movement_speed\"}],current_impulse_context_reset_grace_time:0,fall_distance:0.0d,id:\"prime_ants:lasius_niger_worker\"}",
+      "{AbsorptionAmount:0.0f,AdultLife:{ActiveTicks:425L,CoverageRemaining:0,CoveredTicks:0L,DamageTicks:0,Death:\"\",Fasting:12000L,FastingGrace:24000L,Lifespan:144000L,Maintenance:0L,MealTicks:0,Started:1b},AdultSimulation:{Boundary:5553L,InvalidTime:0b,KnownAfter:5553L,LastSimulationGameTime:5978L,Origin:\"BIRTH\",Runs:[{first:5554L,last:5978L}],Version:1},Air:300s,AntElapsedAgeTicks:425L,AntForm:\"worker\",Brain:{memories:{}},BroodId:\"f9e3cd35-fb42-4a51-963b-7dd48a8085fb\",BroodNeglectGrace:24000L,CallowDuration:48L,CallowTicks:48L,CanPickUpLoot:0b,CocoonWaitingBound:24000L,ColonyAdultCapacityBound:120,DeathTime:0s,FallFlying:0b,Fire:0s,Founding:{Converted:0,Cooldown:0,Deposited:0,Lifecycle:\"CLAUSTRAL\",LoadedTicks:0L,Phase:\"NONE\",Plugged:0,Progress:0,Reason:\"not_requested\",Released:0,RemovedPlants:[],Stalled:0},Health:6.0f,HurtTime:0s,Invulnerable:0b,LeftHanded:0b,Motion:[0.0d,-0.0784000015258789d,0.0d],NurseryClaimed:0b,NurseryHome:[I;-14381683,8,-8282165],Nutrition:{Apples:0L,Berries:0L,Chickens:0L,Flesh:0L,Nectar:0L,NectarV2:0L,Prey:0L,Protein:0L,SpentProtein:0L,SpentSugar:0L,Sugar:0L,SugarGiven:0L,SugarReceived:0L},OnGround:1b,PersistenceRequired:1b,PortalCooldown:0,Pos:[-1.4381688517483413E7d,11.0d,-8282162.8537912825d],QueenBodyReserve:0L,QueenId:\"8826b521-8ff9-49fe-9c5b-6d9031016e08\",Rotation:[116.74939f,0.0f],UUID:[I;1485046623,291453517,-1154778635,-413292847],WorkerTask:{BiteCooldown:0,BiteTicks:0,Bites:0L,Cooldown:0,CropSharing:{ActionTicks:0,ApproachTicks:0,Cooldown:0,LastLoadedTick:5978L},Defending:0b,DefenseLastTick:5978L,Direction:\"east\",DroppedCursor:0,DroppedQueue:[],Entrance:[I;-14381687,10,-8282165],ExteriorStand:[I;-14381689,11,-8282165],FeedingTicks:0,FlowerInspections:0,HarvestingTicks:0,Opened:2,Phase:\"EXIT\",PhaseTicks:1,Placed:2,Reason:\"authorized_exit_open\",SearchTicks:0,SurfaceDeposits:[[I;-14381692,11,-8282161],[I;-14381692,11,-8282168],[I;-14381692,11,-8282162],[I;-14381692,11,-8282167],[I;-14381692,11,-8282163],[I;-14381692,11,-8282166],[I;-14381692,11,-8282164],[I;-14381691,11,-8282161],[I;-14381691,11,-8282168],[I;-14381691,11,-8282162],[I;-14381691,11,-8282167],[I;-14381691,11,-8282163],[I;-14381691,11,-8282166],[I;-14381691,11,-8282164],[I;-14381690,11,-8282161],[I;-14381690,11,-8282168],[I;-14381690,11,-8282162],[I;-14381690,11,-8282167],[I;-14381690,11,-8282163],[I;-14381690,11,-8282166],[I;-14381690,11,-8282164],[I;-14381689,11,-8282161],[I;-14381689,11,-8282168],[I;-14381689,11,-8282162],[I;-14381689,11,-8282167],[I;-14381689,11,-8282163],[I;-14381689,11,-8282166],[I;-14381689,11,-8282164],[I;-14381688,11,-8282161],[I;-14381688,11,-8282168],[I;-14381688,11,-8282162],[I;-14381688,11,-8282167],[I;-14381688,11,-8282163],[I;-14381688,11,-8282166],[I;-14381688,11,-8282164]]},attributes:[{base:0.18d,id:\"minecraft:movement_speed\"}],current_impulse_context_reset_grace_time:0,fall_distance:0.0d,id:\"prime_ants:lasius_niger_worker\"}"
+    ],
+    "saved_tick_counts": [
+      5972,
+      425,
+      425,
+      0
+    ],
+    "label": "t01_finite_inputs",
+    "fixture_kind": "matched_saved_input"
+  },
+  "hungry_index": 3
+}

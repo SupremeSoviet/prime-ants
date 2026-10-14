@@ -14,6 +14,8 @@ public final class CropSharing {
     private final LasiusNigerEntity donor;
     private UUID target,receivingFrom;
     private int actionTicks,approachTicks,cooldown;
+    private int savedSearchPhase=-1;
+    private long observedTicks;
     private long lastTick=Long.MIN_VALUE;
     public CropSharing(LasiusNigerEntity ant){donor=ant;}
     public boolean busy(){return target!=null||receivingFrom!=null;}
@@ -21,6 +23,10 @@ public final class CropSharing {
     /** Persisted ordinary controller observation; aggregate biology never stamps it. */
     public long lastLoadedTick(){return lastTick;}
     public int cooldownRemaining(){return cooldown;}
+    public int approachTicks(){return approachTicks;}
+    /** Observed counter only. Aggregate scheduling keeps its missing-step phase in its own ledger. */
+    public int savedSearchPhase(){return savedSearchPhase<0?Math.floorMod(donor.tickCount,20):savedSearchPhase;}
+    public long observedTicks(){return observedTicks;}
     /** Same ordering in ordinary and bounded sharing; path acceptance remains ordinary-owned. */
     public static Comparator<LasiusNigerEntity> recipientOrder(LasiusNigerEntity donor){
         return Comparator.comparingLong((LasiusNigerEntity a)->-a.adultLife().fasting()).thenComparingDouble(donor::distanceToSqr);
@@ -67,6 +73,8 @@ public final class CropSharing {
     public boolean tick(ServerLevel l){
         if(lastTick>=l.getGameTime())return target!=null||receivingFrom!=null;
         lastTick=l.getGameTime();
+        savedSearchPhase=Math.floorMod(donor.tickCount,20);
+        observedTicks=AdultLife.saturatingAdd(observedTicks,1);
         if(receivingFrom!=null){
             if(l.getEntity(receivingFrom) instanceof LasiusNigerEntity a&&live(l,a)&&donor.getUUID().equals(a.workerTasks().sharing().target)
                 &&WorkerTasks.reaches(l,a,donor.position().add(0,.25,0))){
@@ -106,7 +114,9 @@ public final class CropSharing {
             dev.primeants.PrimeAnts.LOGGER.info("Physical crop sharing donor={} recipient={} loadedActionTicks={} quantity={} donorGiven={} recipientReceived={}",donor.getUUID(),a.getUUID(),actionTicks,amount,donor.nutrition().givenSugar(),a.nutrition().receivedSugar());
         clear(l);return true;
     }
-    public void save(ValueOutput o){o.putLong("LastLoadedTick",lastTick);if(target!=null)o.putString("Target",target.toString());o.putInt("ActionTicks",actionTicks);o.putInt("ApproachTicks",approachTicks);o.putInt("Cooldown",cooldown);}
+    public void save(ValueOutput o){o.putLong("LastLoadedTick",lastTick);o.putInt("SearchPhase",savedSearchPhase());o.putLong("ObservedTicks",observedTicks);if(target!=null)o.putString("Target",target.toString());o.putInt("ActionTicks",actionTicks);o.putInt("ApproachTicks",approachTicks);o.putInt("Cooldown",cooldown);}
     public void load(ValueInput i){target=i.getString("Target").map(UUID::fromString).orElse(null);actionTicks=i.getIntOr("ActionTicks",0);approachTicks=i.getIntOr("ApproachTicks",0);cooldown=i.getIntOr("Cooldown",0);receivingFrom=null;lastTick=i.getLongOr("LastLoadedTick",Long.MIN_VALUE);
-        if(actionTicks<0||actionTicks>=ACTION_TICKS||approachTicks<0||approachTicks>APPROACH_BOUND||cooldown<0||target==null&&actionTicks!=0)throw new IllegalArgumentException("Invalid crop action");donor.setSocialAction(false);}
+        savedSearchPhase=i.getIntOr("SearchPhase",-1);
+        observedTicks=i.getLongOr("ObservedTicks",0);
+        if(observedTicks<0||savedSearchPhase< -1||savedSearchPhase>=20||actionTicks<0||actionTicks>=ACTION_TICKS||approachTicks<0||approachTicks>APPROACH_BOUND||cooldown<0||target==null&&actionTicks!=0)throw new IllegalArgumentException("Invalid crop action");donor.setSocialAction(false);}
 }

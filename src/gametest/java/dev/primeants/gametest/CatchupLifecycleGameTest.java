@@ -19,6 +19,67 @@ import net.minecraft.world.level.storage.*;
 
 /** Explicit accepted-history/timestamp controls, separate from the native eviction case. No test calls aggregate application. */
 public final class CatchupLifecycleGameTest {
+    private static void schedulingColony(GameTestHelper c,java.util.function.BiConsumer<LasiusNigerEntity,BroodPile> body){
+        var f=new WorkerForagingGameTest();var q=f.start(c);boolean[] done={false};
+        c.onEachTick(()->{if(done[0])return;var p=new NursingGameTest().pile(c,q);
+            if(p==null||!p.operational()||!p.records().isEmpty()||f.workers(c,q).stream().filter(a->a.workerTasks().caregiver(c.getLevel(),q.founding().plan())).count()<2)return;
+            done[0]=true;body.accept(q,p);});
+    }
+    private static String savedService(UUID actor,UUID recipient,String source,String kind,long start,long due,long back){
+        var row=new JsonObject();row.addProperty("actor",actor.toString());row.addProperty("recipient",recipient.toString());row.addProperty("source",source);row.addProperty("kind",kind);row.addProperty("start",start);row.addProperty("due",due);row.addProperty("return",back);return row.toString();
+    }
+    @GameTest(maxTicks=8000,structure="prime_ants_test:idle_ground")
+    public void pendingCropApproachesContactClaimsAndSearchPhasesReconstructExactly(GameTestHelper c){
+        schedulingColony(c,(q,p)->{
+            var bodies=adults(c,q);var donors=bodies.stream().filter(a->a.form()==AntForm.WORKER&&a.workerTasks().nursing()).toList();
+            var target=bodies.stream().filter(a->a.form()==AntForm.WORKER&&!a.workerTasks().nursing()).findFirst().orElseThrow();
+            for(var donor:donors)c.assertTrue(donor.nutrition().ingest(new ItemStack(Items.APPLE),8000,0),"Each synthetic saved approach has one real donor receipt");
+            var targetTag=ReconciliationGameTest.save(c,target);targetTag.getCompoundOrEmpty("AdultLife").putLong("Fasting",target.adultLife().grace()/2);target=AutomaticCatchupGameTest.replace(c,target,targetTag);
+            long last=c.getLevel().getGameTime();var tag=p.saveWithFullMetadata(c.getLevel().registryAccess());tag.putLong(ColonyClock.FIELD,last);tag.putLong("LastOrdinaryGameTime",last);var serviceTag=tag.getCompoundOrEmpty("Catchup");
+            // Legacy pending format deliberately has no contact/claim/search fields. These are synthetic
+            // accepted scheduling states, not a navigation-equivalence or historical-donor oracle.
+            var out=TagValueOutput.createWithContext(ProblemReporter.DISCARDING,c.getLevel().registryAccess());final UUID recipient=target.getUUID();
+            out.store("Services",com.mojang.serialization.Codec.STRING.listOf(),donors.stream().map(a->savedService(a.getUUID(),recipient,"crop","crop",last+1,last+39,40)).toList());
+            serviceTag.put("Services",out.buildResult().get("Services"));tag.put("Catchup",serviceTag);var restored=BroodGameTest.restorePile(c,p,tag);
+            var positions=bodies.stream().map(a->a.position().toString()).toList();var stamps=donors.stream().map(a->a.workerTasks().sharing().lastLoadedTick()).toList();
+            AutomaticCatchupGameTest.tickPile(c,restored,last+11);
+            var approaches=restored.catchup().serviceObservations().stream().map(s->JsonParser.parseString(s).getAsJsonObject()).toList();
+            var approachRow=new JsonObject();approachRow.add("services",new Gson().toJsonTree(approaches));approachRow.addProperty("received",target.nutrition().receivedSugar());evidence("pending_crop_approaches_before_contact",approachRow);
+            c.assertTrue(approaches.size()==2&&approaches.stream().noneMatch(s->s.get("claimed").getAsBoolean())&&target.nutrition().receivedSugar()==0,"Competing approaches persist without a claim or receipt");
+            replay(c,q,restored,last+11);restored=pile(c,q);AutomaticCatchupGameTest.tickPile(c,restored,last+21);
+            var claims=restored.catchup().serviceObservations().stream().map(s->JsonParser.parseString(s).getAsJsonObject()).toList();var claimRow=new JsonObject();claimRow.add("services",new Gson().toJsonTree(claims));claimRow.addProperty("received",target.nutrition().receivedSugar());evidence("pending_crop_contact_before_action",claimRow);
+            c.assertTrue(claims.size()==1&&claims.getFirst().get("claimed").getAsBoolean()&&claims.getFirst().get("actor").getAsString().equals(donors.getFirst().getUUID().toString())&&target.nutrition().receivedSugar()==0,"Contact tie follows confirmed registry order, cancels losing contact, and earns no early receipt");
+            replay(c,q,restored,last+21);restored=pile(c,q);AutomaticCatchupGameTest.tickPile(c,restored,last+41);replay(c,q,restored,last+41);
+            var finalRow=new JsonObject();finalRow.addProperty("received",target.nutrition().receivedSugar());finalRow.addProperty("given",donors.stream().mapToLong(a->a.nutrition().givenSugar()).sum());finalRow.addProperty("reconstruction_and_older_replay_reached",true);finalRow.addProperty("positions_and_ordinary_stamps_unchanged",positions.equals(bodies.stream().map(a->a.position().toString()).toList())&&stamps.equals(donors.stream().map(a->a.workerTasks().sharing().lastLoadedTick()).toList()));evidence("pending_crop_final_after_replay",finalRow);
+            c.assertTrue(target.nutrition().receivedSugar()==1500&&donors.stream().mapToLong(a->a.nutrition().givenSugar()).sum()==1500&&finalRow.get("positions_and_ordinary_stamps_unchanged").getAsBoolean(),"Exactly one physical portion, unchanged ordinary ownership, and no replayed transfer");
+            var before=pile(c,q).saveWithFullMetadata(c.getLevel().registryAccess()).getCompoundOrEmpty("Catchup");var input=TagValueInput.create(ProblemReporter.DISCARDING,c.getLevel().registryAccess(),before);
+            var oldPhases=input.read("ServiceSearch",com.mojang.serialization.Codec.STRING.listOf()).orElseThrow();
+            LiveReferenceDriver.adults(c,q,last+42);AutomaticCatchupGameTest.tickPile(c,pile(c,q),last+44);
+            var after=pile(c,q).saveWithFullMetadata(c.getLevel().registryAccess()).getCompoundOrEmpty("Catchup");var afterInput=TagValueInput.create(ProblemReporter.DISCARDING,c.getLevel().registryAccess(),after);var newPhases=afterInput.read("ServiceSearch",com.mojang.serialization.Codec.STRING.listOf()).orElseThrow();
+            var phases=new JsonObject();phases.add("before",new Gson().toJsonTree(oldPhases));phases.add("after",new Gson().toJsonTree(newPhases));phases.addProperty("new_ordinary_steps",1);phases.addProperty("new_missing_steps",1);evidence("crop_phase_across_ordinary_and_missing_interval",phases);
+            for(var old:oldPhases){var values=old.split(",");var next=newPhases.stream().filter(s->s.startsWith(values[0]+",")).findFirst().orElseThrow().split(",");c.assertTrue(Integer.parseInt(next[2])==(Integer.parseInt(values[2])+2)%20,"One ordinary and one missing step extend the previous virtual phase, without reset or double count");}
+            replay(c,q,pile(c,q),last+44);c.succeed();
+        });
+    }
+    @GameTest(maxTicks=8000,structure="prime_ants_test:idle_ground")
+    public void endpointFoodFundsOnlyEndpointBroodStepAndReplaysExactly(GameTestHelper c){
+        schedulingColony(c,(q,p)->{
+            c.assertTrue(q.nutrition().ingest(new ItemStack(Items.APPLE),8000,16000)&&q.nutrition().ingest(new ItemStack(Items.CHICKEN),8000,16000),"Two real queen funding receipts");
+            existingLarva(c,q,p,1200,false);p=pile(c,q);var larva=p.records().getFirst();
+            c.assertTrue(larva.nutrition().ingest(new ItemStack(Items.CHICKEN),Nutrition.LARVA_SUGAR,Nutrition.LARVA_PROTEIN),"Declared baseline larval protein, no sugar");
+            var cache=AutomaticCatchupGameTest.finiteCache(c,q,List.of(new ItemStack(Items.APPLE)));var actor=adults(c,q).stream().filter(a->a.form()==AntForm.WORKER&&a.workerTasks().nursing()).findFirst().orElseThrow();
+            long last=p.lastSimulationGameTime().orElseThrow();var tag=p.saveWithFullMetadata(c.getLevel().registryAccess());var out=TagValueOutput.createWithContext(ProblemReporter.DISCARDING,c.getLevel().registryAccess());
+            out.store("Services",com.mojang.serialization.Codec.STRING.listOf(),List.of(savedService(actor.getUUID(),larva.id(),"cache","minecraft:apple",last+1,last+30,20)));tag.getCompoundOrEmpty("Catchup").put("Services",out.buildResult().get("Services"));
+            var restored=BroodGameTest.restorePile(c,p,tag);AutomaticCatchupGameTest.tickPile(c,restored,last+31);var result=restored.records().getFirst();long progress=result.progress();
+            var serviceState=restored.saveWithFullMetadata(c.getLevel().registryAccess()).getCompoundOrEmpty("Catchup");var serviceInput=TagValueInput.create(ProblemReporter.DISCARDING,c.getLevel().registryAccess(),serviceState);var origins=serviceInput.read("ServiceOrigins",com.mojang.serialization.Codec.STRING.listOf()).orElseThrow();
+            var modeled=origins.stream().map(s->JsonParser.parseString(s).getAsJsonObject()).filter(s->s.get("actor").getAsString().equals(actor.getUUID().toString())).findFirst().orElseThrow();var destination=net.minecraft.world.phys.Vec3.atBottomCenterOf(q.founding().plan().at(5,1,-2));
+            boolean endpointOrigin=modeled.get("x").getAsDouble()==destination.x&&modeled.get("y").getAsDouble()==destination.y&&modeled.get("z").getAsDouble()==destination.z;
+            long returnAt=serviceInput.read("ServiceCacheReturned",com.mojang.serialization.Codec.unboundedMap(com.mojang.serialization.Codec.STRING,com.mojang.serialization.Codec.LONG)).orElseThrow().get(actor.getUUID().toString());
+            replay(c,q,restored,last+31);var row=new JsonObject();row.addProperty("service_offset",30);row.addProperty("observed_offset",31);row.addProperty("progress",progress);row.addProperty("eligible_biological_ticks",2);row.addProperty("cache",cache.size());row.addProperty("larval_apples",result.nutrition().apples());row.add("modeled_origin",modeled);row.addProperty("return_at",returnAt);row.addProperty("expected_return_at",last+50);row.addProperty("endpoint_origin_matches",endpointOrigin);row.addProperty("replay_reached",true);evidence("endpoint_food_before_progress_verdict",row);
+            c.assertTrue(endpointOrigin&&returnAt==last+50,"Nurse remains at modeled recipient endpoint until its complete return boundary, surviving reconstruction");
+            c.assertTrue(progress==2&&cache.size()==0&&result.nutrition().apples()==1&&result.nutrition().chickens()==1&&result.nutrition().snapshot().valid(),"Food completed at30 funds only nursery30 and ordinary31; earlier brood steps remain unfunded");c.succeed();
+        });
+    }
     @GameTest(maxTicks=8000,structure="prime_ants_test:idle_ground")
     public void savedCropCooldownCountsOnlyEligibleMissingTimeAndSurvivesReplay(GameTestHelper c){
         new AutomaticCatchupGameTest().colony(c,true,(q,p)->{

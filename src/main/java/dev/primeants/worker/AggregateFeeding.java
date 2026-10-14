@@ -19,12 +19,20 @@ import net.minecraft.world.phys.Vec3;
  * No intention reserves a unit or is a receipt. Physical nurse cargo stays in its saved equipment.
  * The loaded, validated chamber rows approximate travel; this never moves an actor or replays a path. */
 public final class AggregateFeeding {
-    private record Service(UUID actor,UUID recipient,String source,String kind,long start,long due,long returnTicks){
-        String encode(){var o=new JsonObject();o.addProperty("actor",actor.toString());o.addProperty("recipient",recipient.toString());o.addProperty("source",source);o.addProperty("kind",kind);o.addProperty("start",start);o.addProperty("due",due);o.addProperty("return",returnTicks);return o.toString();}
-        static Service decode(String text){var o=JsonParser.parseString(text).getAsJsonObject();var s=new Service(UUID.fromString(o.get("actor").getAsString()),UUID.fromString(o.get("recipient").getAsString()),o.get("source").getAsString(),o.get("kind").getAsString(),o.get("start").getAsLong(),o.get("due").getAsLong(),o.get("return").getAsLong());if(!Set.of("cache","cargo","crop").contains(s.source)||s.kind.isEmpty()||s.start<0||s.due<s.start||s.returnTicks<0||s.returnTicks>CropSharing.APPROACH_BOUND+WorkerTasks.FEEDING_TICKS)throw new IllegalArgumentException("Invalid saved service intention");return s;}
+    private record Service(UUID actor,UUID recipient,String source,String kind,long start,long due,long returnTicks,long contact,boolean claimed){
+        long event(){return source.equals("crop")&&!claimed?contact:due;}
+        String encode(){var o=new JsonObject();o.addProperty("actor",actor.toString());o.addProperty("recipient",recipient.toString());o.addProperty("source",source);o.addProperty("kind",kind);o.addProperty("start",start);o.addProperty("due",due);o.addProperty("return",returnTicks);o.addProperty("contact",contact);o.addProperty("claimed",claimed);return o.toString();}
+        static Service decode(String text){var o=JsonParser.parseString(text).getAsJsonObject();long start=o.get("start").getAsLong(),due=o.get("due").getAsLong();String source=o.get("source").getAsString();var s=new Service(UUID.fromString(o.get("actor").getAsString()),UUID.fromString(o.get("recipient").getAsString()),source,o.get("kind").getAsString(),start,due,o.get("return").getAsLong(),o.has("contact")?o.get("contact").getAsLong():source.equals("crop")?Math.max(start,due-CropSharing.ACTION_TICKS+1):due,o.has("claimed")&&o.get("claimed").getAsBoolean());if(!Set.of("cache","cargo","crop").contains(s.source)||s.kind.isEmpty()||s.start<0||s.contact<s.start||s.contact>s.due||s.due<s.start||s.returnTicks<0||s.returnTicks>CropSharing.APPROACH_BOUND+WorkerTasks.FEEDING_TICKS)throw new IllegalArgumentException("Invalid saved service intention");return s;}
+    }
+    private record Search(long observation,int phase,long ordinarySteps){String encode(UUID id){return id+","+observation+","+phase+","+ordinarySteps;}}
+    private record Origin(long observation,long completed,Vec3 position){
+        String encode(UUID id){var o=new JsonObject();o.addProperty("actor",id.toString());o.addProperty("observation",observation);o.addProperty("completed",completed);o.addProperty("x",position.x);o.addProperty("y",position.y);o.addProperty("z",position.z);return o.toString();}
     }
     private final List<Service> services=new ArrayList<>();
     private final Map<UUID,Long> ready=new LinkedHashMap<>();
+    private final Map<UUID,Long> cropReady=new LinkedHashMap<>();
+    private final Map<UUID,Search> searches=new LinkedHashMap<>();
+    private final Map<UUID,Origin> origins=new LinkedHashMap<>();
     // A completed abstract return is a location for service accounting, never an actor position.
     // Its completion timestamp lets ordinary actor observations revoke this approximation.
     private final Map<UUID,Long> cacheReturned=new LinkedHashMap<>();
@@ -34,7 +42,14 @@ public final class AggregateFeeding {
     public long nextCompletion(){return services.stream().mapToLong(Service::due).min().orElse(Long.MAX_VALUE);}
     private static String kind(ItemStack s){return BuiltInRegistries.ITEM.getKey(s.getItem()).toString();}
     private boolean busy(UUID actor){return services.stream().anyMatch(s->s.actor.equals(actor));}
-    private boolean receiving(UUID recipient){return services.stream().anyMatch(s->s.recipient.equals(recipient)&&s.source.equals("crop"));}
+    private boolean donating(UUID actor){return services.stream().anyMatch(s->s.actor.equals(actor)&&s.source.equals("crop"));}
+    private boolean receiving(UUID recipient){return services.stream().anyMatch(s->s.recipient.equals(recipient)&&s.source.equals("crop")&&s.claimed);}
+    private boolean atCache(UUID actor,long cursor){return cacheReturned.containsKey(actor)&&ready.getOrDefault(actor,Long.MAX_VALUE)<=cursor;}
+    private Vec3 origin(LasiusNigerEntity actor,NestPlan home,long cursor){
+        if(atCache(actor.getUUID(),cursor))return Vec3.atBottomCenterOf(home.at(4,-1,-2));
+        var saved=origins.get(actor.getUUID());return saved==null?actor.position():saved.position;
+    }
+    private void located(LasiusNigerEntity actor,Vec3 position,long now){origins.put(actor.getUUID(),new Origin(actor.workerTasks().sharing().lastLoadedTick(),now,position));}
     private static long route(LasiusNigerEntity worker,Vec3 a,Vec3 b,int legs){
         double distance=Math.abs(a.x-b.x)+Math.abs(a.y-b.y)+Math.abs(a.z-b.z);
         double speed=worker.getAttributeValue(Attributes.MOVEMENT_SPEED);
@@ -44,7 +59,7 @@ public final class AggregateFeeding {
         return Math.min(CropSharing.APPROACH_BOUND,(long)Math.ceil(distance/speed)+(legs>0?WorkerTasks.NAVIGATION_INTERVAL:0));
     }
     private void add(LasiusNigerEntity actor,UUID recipient,String source,String kind,long cursor,long delay,long back){
-        services.add(new Service(actor.getUUID(),recipient,source,kind,cursor,AdultLife.saturatingAdd(cursor,Math.max(1,delay)-1),back));
+        long due=AdultLife.saturatingAdd(cursor,Math.max(1,delay)-1);services.add(new Service(actor.getUUID(),recipient,source,kind,cursor,due,back,due,false));
     }
     private long queued(UUID recipient,boolean protein){
         return services.stream().filter(s->s.recipient.equals(recipient)&&!s.source.equals("crop"))
@@ -62,23 +77,49 @@ public final class AggregateFeeding {
                 &&r.nutrition().gainedProtein()+queued(id,true)+Nutrition.proteinYield(unit)<=Nutrition.LARVA_PROTEIN;
         });
     }
-    public void plan(ServerLevel l,BroodPile pile,List<LasiusNigerEntity> adults,NestCache cache,long cursor){
+    public void plan(ServerLevel l,BroodPile pile,List<LasiusNigerEntity> confirmed,List<LasiusNigerEntity> adults,NestCache cache,long cursor){
         // A live ordinary interval can service or revoke old intentions. It never earns a retrospective receipt.
-        services.removeIf(s->adults.stream().noneMatch(a->a.getUUID().equals(s.actor))||adults.stream().filter(a->a.getUUID().equals(s.actor)).anyMatch(a->a.workerTasks().sharing().lastLoadedTick()>=s.start));
-        ready.keySet().removeIf(id->adults.stream().noneMatch(a->a.getUUID().equals(id)));
-        cacheReturned.entrySet().removeIf(e->{var actor=adults.stream().filter(a->a.getUUID().equals(e.getKey())).findFirst().orElse(null);boolean revoked=actor==null||actor.workerTasks().sharing().lastLoadedTick()>e.getValue();if(revoked)ready.remove(e.getKey());return revoked;});
+        services.removeIf(s->confirmed.stream().noneMatch(a->a.getUUID().equals(s.actor))||confirmed.stream().filter(a->a.getUUID().equals(s.actor)).anyMatch(a->a.workerTasks().sharing().lastLoadedTick()>=s.start));
+        ready.keySet().removeIf(id->confirmed.stream().noneMatch(a->a.getUUID().equals(id)));
+        cropReady.keySet().removeIf(id->confirmed.stream().noneMatch(a->a.getUUID().equals(id)));
+        searches.keySet().removeIf(id->confirmed.stream().noneMatch(a->a.getUUID().equals(id)));
+        origins.entrySet().removeIf(e->{var actor=confirmed.stream().filter(a->a.getUUID().equals(e.getKey())).findFirst().orElse(null);boolean revoked=actor==null||actor.workerTasks().sharing().lastLoadedTick()!=e.getValue().observation;if(revoked){ready.remove(e.getKey());cacheReturned.remove(e.getKey());}return revoked;});
+        cacheReturned.entrySet().removeIf(e->{var actor=confirmed.stream().filter(a->a.getUUID().equals(e.getKey())).findFirst().orElse(null);boolean revoked=actor==null||actor.workerTasks().sharing().lastLoadedTick()>e.getValue();if(revoked)ready.remove(e.getKey());return revoked;});
         var home=pile.catchupPlan();var queen=l.getEntity(pile.queenId()) instanceof LasiusNigerEntity q?q:null;
         // Ordinary crop sharing precedes personal cache eating. Its transfer uses the shared exact reserve/portion.
         cropWake=Long.MAX_VALUE;
+        // Covered ordinary intervals do not delete committed missing-step phase history.
+        for(var donor:confirmed){var sharing=donor.workerTasks().sharing();var search=searches.get(donor.getUUID());
+            if(search==null)search=new Search(sharing.lastLoadedTick(),sharing.savedSearchPhase(),sharing.observedTicks());
+            else if(search.observation!=sharing.lastLoadedTick())search=new Search(sharing.lastLoadedTick(),sharing.observedTicks()>=search.ordinarySteps?(search.phase+(int)((sharing.observedTicks()-search.ordinarySteps)%20))%20:sharing.savedSearchPhase(),sharing.observedTicks());
+            searches.put(donor.getUUID(),search);
+        }
         for(var donor:adults){
+            var sharing=donor.workerTasks().sharing();var search=searches.get(donor.getUUID());
             if(!CropSharing.aggregateDonorEligible(l,donor)||receiving(donor.getUUID()))continue;
             int cooldown=donor.workerTasks().sharing().cooldownRemaining();
             if(cooldown>0){cropWake=Math.min(cropWake,AdultLife.saturatingAdd(cursor,cooldown));continue;}
-            if(busy(donor.getUUID())||ready.getOrDefault(donor.getUUID(),0L)>cursor)continue;
-            var target=adults.stream().filter(a->!receiving(a.getUUID())&&!busy(a.getUUID())&&CropSharing.aggregateEligible(l,donor,a))
+            if(donating(donor.getUUID()))continue;
+            long cropDelay=cropReady.getOrDefault(donor.getUUID(),0L);
+            if(cropDelay>0){cropWake=Math.min(cropWake,AdultLife.saturatingAdd(cursor,cropDelay));continue;}
+            var target=adults.stream().filter(a->!receiving(a.getUUID())&&!donating(a.getUUID())&&CropSharing.aggregateEligible(l,donor,a))
                 .min(CropSharing.recipientOrder(donor)).orElse(null);
-            if(target!=null){boolean near=WorkerTasks.reaches(l,donor,target.position().add(0,.25,0))&&WorkerTasks.reaches(l,target,donor.position().add(0,.25,0));int partial=target.getUUID().equals(donor.workerTasks().sharing().target())&&near?donor.workerTasks().sharing().actionTicks():0;
-                long approach=near?0:route(donor,donor.position(),target.position(),1);add(donor,target.getUUID(),"crop","crop",cursor,CropSharing.ACTION_TICKS-partial+approach,40);}
+            if(target!=null){
+                boolean saved=target.getUUID().equals(sharing.target());int wait=saved?0:Math.floorMod(-search.phase-1,20);
+                if(wait>0){cropWake=Math.min(cropWake,AdultLife.saturatingAdd(cursor,wait));continue;}
+                // Ordinary sharing runs before nursing dispatch, even with food in the mandibles.
+                // Revoking a nonbinding trip neither withdraws its cache unit nor consumes saved cargo.
+                var from=origin(donor,home,cursor);var to=origin(target,home,cursor);
+                services.removeIf(s->s.actor.equals(donor.getUUID())&&!s.source.equals("crop"));
+                boolean modeled=origins.containsKey(donor.getUUID())||origins.containsKey(target.getUUID());
+                boolean near=modeled?from.distanceToSqr(to)<=1.6:WorkerTasks.reaches(l,donor,target.position().add(0,.25,0))&&WorkerTasks.reaches(l,target,donor.position().add(0,.25,0));int partial=saved&&near?sharing.actionTicks():0;
+                long approach=near?0:route(donor,from,to,1);
+                if(approach+CropSharing.ACTION_TICKS-partial>CropSharing.APPROACH_BOUND-(saved?sharing.approachTicks():0)){
+                    long timeout=AdultLife.saturatingAdd(cursor,Math.max(1,CropSharing.APPROACH_BOUND-(saved?sharing.approachTicks():0))-1);
+                    services.add(new Service(donor.getUUID(),target.getUUID(),"crop","timeout",cursor,timeout,40,timeout,false));continue;}
+                ready.remove(donor.getUUID());cacheReturned.remove(donor.getUUID());located(donor,from,cursor);
+                long contact=AdultLife.saturatingAdd(cursor,approach),due=AdultLife.saturatingAdd(contact,CropSharing.ACTION_TICKS-partial-1);
+                services.add(new Service(donor.getUUID(),target.getUUID(),"crop","crop",cursor,due,40,contact,false));}
         }
         if(cache==null||cache.size()==0&&adults.stream().noneMatch(a->WorkerTasks.food(a.getMainHandItem())))return;
         var available=new ArrayList<>(cache.contents());for(var s:services)if(s.source.equals("cache")){int at=-1;for(int i=0;i<available.size();i++)if(kind(available.get(i)).equals(s.kind)){at=i;break;}if(at>=0)available.remove(at);}
@@ -86,13 +127,13 @@ public final class AggregateFeeding {
         // Physical cache access precedes ingestion. A distant actor's future intention must
         // not take the first portion ahead of an eligible body already at the cache.
         var cacheOrder=new ArrayList<>(adults);
-        cacheOrder.sort(Comparator.comparingLong(a->WorkerTasks.food(a.getMainHandItem())||cacheReturned.containsKey(a.getUUID())||WorkerTasks.reaches(l,a,Vec3.atBottomCenterOf(home.cache()).add(0,.15,0))?0:route(a,a.position(),cacheStand,1)));
+        cacheOrder.sort(Comparator.comparingLong(a->WorkerTasks.food(a.getMainHandItem())||atCache(a.getUUID(),cursor)||!origins.containsKey(a.getUUID())&&WorkerTasks.reaches(l,a,Vec3.atBottomCenterOf(home.cache()).add(0,.15,0))?0:route(a,origin(a,home,cursor),cacheStand,1)));
         for(var actor:cacheOrder){
             if(actor.form()!=AntForm.WORKER||actor.isNoAi()||actor.workerTasks().defending()||busy(actor.getUUID())||ready.getOrDefault(actor.getUUID(),0L)>cursor)continue;
             if(actor.workerTasks().mealNeeded(l)&&!receiving(actor.getUUID())){
                 var carried=actor.getMainHandItem();var meal=WorkerTasks.food(carried)&&Nutrition.sugarYield(carried)>0?carried:available.stream().filter(s->Nutrition.sugarYield(s)>0&&actor.nutrition().accepts(s,Nutrition.QUEEN_SUGAR_CAPACITY,0)).findFirst().orElse(null);
                 if(meal!=null&&actor.nutrition().accepts(meal,Nutrition.QUEEN_SUGAR_CAPACITY,0)){
-                    boolean cargo=!carried.isEmpty();long approach=cargo||cacheReturned.containsKey(actor.getUUID())||WorkerTasks.reaches(l,actor,Vec3.atBottomCenterOf(home.cache()).add(0,.15,0))?0:route(actor,actor.position(),cacheStand,1);
+                    boolean cargo=!carried.isEmpty();long approach=cargo||atCache(actor.getUUID(),cursor)||!origins.containsKey(actor.getUUID())&&WorkerTasks.reaches(l,actor,Vec3.atBottomCenterOf(home.cache()).add(0,.15,0))?0:route(actor,origin(actor,home,cursor),cacheStand,1);
                     add(actor,actor.getUUID(),cargo?"cargo":"cache",kind(meal),cursor,AdultLife.MEAL_TICKS-actor.adultLife().mealTicks()+approach,0);if(!cargo)available.remove(meal);continue;
                 }
             }
@@ -105,29 +146,47 @@ public final class AggregateFeeding {
             if(unit==null||to==null)continue;
             boolean toQueen=to.equals(pile.queenId());Vec3 target=toQueen?queen.position().add(0,.25,0):Vec3.atBottomCenterOf(home.nursery()).add(0,.15,0);
             boolean near=WorkerTasks.reaches(l,actor,target);int partial=cargo&&near?actor.workerTasks().feedingTicks():0;
-            long fetch=cargo||cacheReturned.containsKey(actor.getUUID())||WorkerTasks.reaches(l,actor,Vec3.atBottomCenterOf(home.cache()).add(0,.15,0))?0:route(actor,actor.position(),cacheStand,1);
+            long fetch=cargo||atCache(actor.getUUID(),cursor)||!origins.containsKey(actor.getUUID())&&WorkerTasks.reaches(l,actor,Vec3.atBottomCenterOf(home.cache()).add(0,.15,0))?0:route(actor,origin(actor,home,cursor),cacheStand,1);
             Vec3 destination=Vec3.atBottomCenterOf(home.at(toQueen?4:5,toQueen?-1:1,-2));
-            long travel=cargo&&near?0:route(actor,cargo?actor.position():cacheStand,destination,toQueen?1:2);
+            long travel=cargo&&near?0:route(actor,cargo?origin(actor,home,cursor):cacheStand,destination,toQueen?1:2);
             long back=WorkerTasks.FEEDING_COOLDOWN+route(actor,destination,cacheStand,toQueen?1:2);
             add(actor,to,cargo?"cargo":"cache",kind(unit),cursor,fetch+(cargo?0:1)+travel+WorkerTasks.FEEDING_TICKS-partial,back);if(!cargo)available.remove(unit);
         }
     }
-    public long nextEvent(long cursor){long due=Math.min(cropWake,Math.min(nextCompletion(),ready.values().stream().filter(n->n>cursor).mapToLong(Long::longValue).min().orElse(Long.MAX_VALUE)));return due==Long.MAX_VALUE?Long.MAX_VALUE:due<=cursor?1:due-cursor;}
+    public long nextEvent(long cursor){long due=Math.min(cropWake,Math.min(services.stream().mapToLong(Service::event).min().orElse(Long.MAX_VALUE),ready.values().stream().filter(n->n>cursor).mapToLong(Long::longValue).min().orElse(Long.MAX_VALUE)));return due==Long.MAX_VALUE?Long.MAX_VALUE:due<=cursor?1:due-cursor;}
+    /** Only coordinator-confirmed missing steps advance this phase; actual counters/stamps remain ordinary-owned. */
+    public void advanceSearch(List<LasiusNigerEntity> adults,long ticks){for(var a:adults){var s=searches.get(a.getUUID());if(s!=null)searches.put(a.getUUID(),new Search(s.observation,(s.phase+(int)(ticks%20))%20,s.ordinarySteps));}}
     /** Called only for the coordinator's confirmed missing adult segments, before biological debit.
      * Stop cooldown counting at the exact maintenance step that would remove donor eligibility. */
     public void advanceCooldown(ServerLevel l,List<LasiusNigerEntity> adults,long ticks){
         for(var a:adults)if(CropSharing.aggregateDonorEligible(l,a)&&!receiving(a.getUUID())){
             long units=a.nutrition().sugar()-CropSharing.RESERVE-1;
             long eligible=AdultLife.saturatingAdd(a.adultLife().coverageRemaining(),units>Long.MAX_VALUE/AdultLife.maintenancePeriod()?Long.MAX_VALUE:units*AdultLife.maintenancePeriod());
-            a.workerTasks().sharing().advanceAggregateCooldown(Math.min(ticks,eligible));
+            long elapsed=Math.min(ticks,eligible);a.workerTasks().sharing().advanceAggregateCooldown(elapsed);
+            cropReady.computeIfPresent(a.getUUID(),(id,remaining)->Math.max(0,remaining-elapsed));
         }
     }
     public void complete(ServerLevel l,BroodPile pile,NestCache cache,long now){
-        for(var service:List.copyOf(services))if(service.due<=now){
+        var order=new ArrayList<UUID>();order.add(pile.queenId());for(var m:ColonyMembers.get(l).members(pile.queenId()))if(!m.dead())order.add(m.worker());
+        // Simultaneous contact order follows ordinary membership, regardless of approach start order.
+        for(var service:services.stream().sorted(Comparator.comparingLong(Service::event).thenComparingInt(s->order.indexOf(s.actor))).toList())if(service.event()<=now){
+            if(!services.contains(service))continue; // A preceding contact may have revoked this intention.
             var entity=l.getEntity(service.actor);var recipient=l.getEntity(service.recipient);
             if(!(entity instanceof LasiusNigerEntity actor)||!actor.isAlive()||actor.isRemoved()||actor.isNoAi()||actor.workerTasks().defending()){services.remove(service);continue;}
             boolean served=false;
-            if(service.source.equals("crop"))served=recipient instanceof LasiusNigerEntity target&&CropSharing.transferAggregate(l,actor,target);
+            if(service.source.equals("crop")){
+                if(service.kind.equals("timeout")){services.remove(service);cropReady.put(service.actor,40L);continue;}
+                if(!service.claimed){
+                    if(!(recipient instanceof LasiusNigerEntity target)||receiving(service.recipient)||!CropSharing.aggregateEligible(l,actor,target)){services.remove(service);cropReady.put(service.actor,40L);continue;}
+                    var claimed=new Service(service.actor,service.recipient,service.source,service.kind,service.start,service.due,service.returnTicks,service.contact,true);
+                    var contact=origin(target,pile.catchupPlan(),now);located(actor,contact,now);located(target,contact,now);ready.remove(target.getUUID());cacheReturned.remove(target.getUUID());
+                    services.removeIf(s->s.actor.equals(service.recipient)&&!s.source.equals("crop"));
+                    services.set(services.indexOf(service),claimed);pile.setChanged();
+                    if(service.due>now)continue;
+                }
+                served=recipient instanceof LasiusNigerEntity target&&CropSharing.transferAggregate(l,actor,target);
+                cropReady.put(service.actor,40L);
+            }
             else{
                 Nutrition nutrition=null;long sugarCap=Nutrition.QUEEN_SUGAR_CAPACITY,proteinCap=Nutrition.QUEEN_PROTEIN_CAPACITY;
                 java.util.function.Predicate<ItemStack> accepts;
@@ -139,10 +198,23 @@ public final class AggregateFeeding {
                     else if(cache!=null)served=cache.serveAggregate(nutrition,sugarCap,proteinCap,s->kind(s).equals(service.kind)&&accepts.test(s));
                 }
             }
-            if(served){pile.catchup().foodEvent();ready.put(service.actor,AdultLife.saturatingAdd(now,service.returnTicks));if(service.source.equals("cache")||!service.source.equals("crop")&&!service.recipient.equals(service.actor))cacheReturned.put(service.actor,now);else cacheReturned.remove(service.actor);if(service.source.equals("cache"))pile.aggregateFoodChanged();}
-            services.remove(service);pile.setChanged();
+            if(served){pile.catchup().foodEvent();if(!service.source.equals("crop")){
+                var home=pile.catchupPlan();boolean self=service.recipient.equals(service.actor);
+                located(actor,self?service.source.equals("cache")?Vec3.atBottomCenterOf(home.at(4,-1,-2)):origin(actor,home,now):Vec3.atBottomCenterOf(home.at(service.recipient.equals(pile.queenId())?4:5,service.recipient.equals(pile.queenId())?-1:1,-2)),now);
+                ready.put(service.actor,AdultLife.saturatingAdd(now,service.returnTicks));if(service.source.equals("cache")||!self)cacheReturned.put(service.actor,AdultLife.saturatingAdd(now,service.returnTicks));else cacheReturned.remove(service.actor);
+            }if(service.source.equals("cache"))pile.aggregateFoodChanged();}
+            services.removeIf(s->s.actor.equals(service.actor));pile.setChanged();
         }
     }
-    public void save(ValueOutput out){out.store("Services",Codec.STRING.listOf(),services.stream().map(Service::encode).toList());out.store("ServiceReady",Codec.unboundedMap(Codec.STRING,Codec.LONG),ready.entrySet().stream().collect(java.util.stream.Collectors.toMap(e->e.getKey().toString(),Map.Entry::getValue)));out.store("ServiceCacheReturned",Codec.unboundedMap(Codec.STRING,Codec.LONG),cacheReturned.entrySet().stream().collect(java.util.stream.Collectors.toMap(e->e.getKey().toString(),Map.Entry::getValue)));}
-    public void load(ValueInput in){services.clear();ready.clear();cacheReturned.clear();services.addAll(in.read("Services",Codec.STRING.listOf()).orElse(List.of()).stream().map(Service::decode).toList());in.read("ServiceReady",Codec.unboundedMap(Codec.STRING,Codec.LONG)).orElse(Map.of()).forEach((id,time)->ready.put(UUID.fromString(id),time));in.read("ServiceCacheReturned",Codec.unboundedMap(Codec.STRING,Codec.LONG)).orElse(Map.of()).forEach((id,time)->cacheReturned.put(UUID.fromString(id),time));if(services.size()>AdultBound.MAX||ready.size()>AdultBound.MAX||services.stream().map(Service::actor).distinct().count()!=services.size()||ready.values().stream().anyMatch(n->n<0)||!ready.keySet().containsAll(cacheReturned.keySet())||cacheReturned.values().stream().anyMatch(n->n<0))throw new IllegalArgumentException("Invalid bounded aggregate service state");}
+    public void save(ValueOutput out){out.store("ServiceOrigins",Codec.STRING.listOf(),origins.entrySet().stream().map(e->e.getValue().encode(e.getKey())).toList());out.store("ServiceSearch",Codec.STRING.listOf(),searches.entrySet().stream().map(e->e.getValue().encode(e.getKey())).toList());out.store("ServiceCropReady",Codec.unboundedMap(Codec.STRING,Codec.LONG),cropReady.entrySet().stream().collect(java.util.stream.Collectors.toMap(e->e.getKey().toString(),Map.Entry::getValue)));out.store("Services",Codec.STRING.listOf(),services.stream().map(Service::encode).toList());out.store("ServiceReady",Codec.unboundedMap(Codec.STRING,Codec.LONG),ready.entrySet().stream().collect(java.util.stream.Collectors.toMap(e->e.getKey().toString(),Map.Entry::getValue)));out.store("ServiceCacheReturned",Codec.unboundedMap(Codec.STRING,Codec.LONG),cacheReturned.entrySet().stream().collect(java.util.stream.Collectors.toMap(e->e.getKey().toString(),Map.Entry::getValue)));}
+    public void load(ValueInput in){
+        services.clear();ready.clear();cacheReturned.clear();cropReady.clear();searches.clear();origins.clear();
+        services.addAll(in.read("Services",Codec.STRING.listOf()).orElse(List.of()).stream().map(Service::decode).toList());
+        in.read("ServiceSearch",Codec.STRING.listOf()).orElse(List.of()).forEach(text->{var v=text.split(",");if(v.length!=4||searches.put(UUID.fromString(v[0]),new Search(Long.parseLong(v[1]),Integer.parseInt(v[2]),Long.parseLong(v[3])))!=null)throw new IllegalArgumentException("Invalid search phase identity");});
+        in.read("ServiceOrigins",Codec.STRING.listOf()).orElse(List.of()).forEach(text->{var v=JsonParser.parseString(text).getAsJsonObject();var p=new Vec3(v.get("x").getAsDouble(),v.get("y").getAsDouble(),v.get("z").getAsDouble());if(!Double.isFinite(p.x)||!Double.isFinite(p.y)||!Double.isFinite(p.z)||v.get("completed").getAsLong()<0||origins.put(UUID.fromString(v.get("actor").getAsString()),new Origin(v.get("observation").getAsLong(),v.get("completed").getAsLong(),p))!=null)throw new IllegalArgumentException("Invalid service origin");});
+        in.read("ServiceCropReady",Codec.unboundedMap(Codec.STRING,Codec.LONG)).orElse(Map.of()).forEach((id,time)->cropReady.put(UUID.fromString(id),time));
+        in.read("ServiceReady",Codec.unboundedMap(Codec.STRING,Codec.LONG)).orElse(Map.of()).forEach((id,time)->ready.put(UUID.fromString(id),time));
+        in.read("ServiceCacheReturned",Codec.unboundedMap(Codec.STRING,Codec.LONG)).orElse(Map.of()).forEach((id,time)->cacheReturned.put(UUID.fromString(id),time));
+        if(services.size()>AdultBound.MAX||ready.size()>AdultBound.MAX||cropReady.size()>AdultBound.MAX||origins.size()>AdultBound.MAX||searches.size()>AdultBound.MAX||searches.values().stream().anyMatch(s->s.phase<0||s.phase>=20||s.ordinarySteps<0)||cropReady.values().stream().anyMatch(n->n<0||n>40)||services.stream().filter(s->s.source.equals("crop")&&s.claimed).map(Service::recipient).distinct().count()!=services.stream().filter(s->s.source.equals("crop")&&s.claimed).count()||services.stream().map(Service::actor).distinct().count()!=services.size()||ready.values().stream().anyMatch(n->n<0)||!ready.keySet().containsAll(cacheReturned.keySet())||cacheReturned.values().stream().anyMatch(n->n<0))throw new IllegalArgumentException("Invalid bounded aggregate service state");
+    }
 }
