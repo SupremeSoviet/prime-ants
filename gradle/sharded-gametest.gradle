@@ -6,7 +6,7 @@ def launchFile = new File(evidenceRoot, invocation + '-launch.json')
 def longNames = providers.gradleProperty('primeAntsLongNames')
 def shards = providers.gradleProperty('primeAntsGameTestShards').getOrElse('4')
 def concurrency = providers.gradleProperty('primeAntsGameTestConcurrency').getOrElse('4')
-def guards = ['test','verifyAntModel','testClientEvidenceValidator','verifyPublicPaths','testPublicPaths','verifyNestCacheAssets','verifyMaterialStoreAssets','testGameTestHarness','testServerWorldRetention']
+def guards = ['test','verifyAntModel','testClientEvidenceValidator','verifyPublicPaths','testPublicPaths','verifyNestCacheAssets','verifyMaterialStoreAssets','testGameTestHarness','testServerWorldRetention','testPermanentServerReportGuard']
 def fastStart = 0L
 
 tasks.register('testGameTestHarness', Exec) { commandLine 'python', file('scripts/test-gametest-harness.py').absolutePath }

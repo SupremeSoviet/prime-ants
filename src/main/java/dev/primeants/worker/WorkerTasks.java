@@ -400,9 +400,11 @@ public final class WorkerTasks {
         }else if(worker.tickCount%10==0||worker.getNavigation().isDone())worker.getNavigation().moveTo(player.getX(),player.getY(),player.getZ(),0,1.0);
         return true;
     }
+    /** Ordinary personal food also funds an empty crop when a fasting nestmate needs sharing. */
+    public boolean mealNeeded(ServerLevel l){return worker.adultLife().hungry()||sharing.needsCrop(l);}
     private boolean adultMeal(ServerLevel l){
         var life=worker.adultLife();
-        if(!(life.hungry()||sharing.needsCrop(l))||worker.isNoAi()||plan==null||!ColonyMembers.get(l).belongs(worker,worker.queenId(),plan.chamber())
+        if(!mealNeeded(l)||worker.isNoAi()||plan==null||!ColonyMembers.get(l).belongs(worker,worker.queenId(),plan.chamber())
             ||plan.nurseryProblem(l,worker.queenId(),true)!=null){life.resetMeal();return false;}
         if(worker.getMainHandItem().isEmpty()&&l.getBlockEntity(plan.cache()) instanceof NestCache cache&&cache.ownedBy(worker.queenId(),plan)
             &&cache.contents().stream().anyMatch(s->Nutrition.sugarYield(s)>0)){

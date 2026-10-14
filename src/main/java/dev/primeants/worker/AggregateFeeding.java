@@ -83,16 +83,20 @@ public final class AggregateFeeding {
         if(cache==null||cache.size()==0&&adults.stream().noneMatch(a->WorkerTasks.food(a.getMainHandItem())))return;
         var available=new ArrayList<>(cache.contents());for(var s:services)if(s.source.equals("cache")){int at=-1;for(int i=0;i<available.size();i++)if(kind(available.get(i)).equals(s.kind)){at=i;break;}if(at>=0)available.remove(at);}
         var cacheStand=Vec3.atBottomCenterOf(home.at(4,-1,-2));
-        for(var actor:adults){
+        // Physical cache access precedes ingestion. A distant actor's future intention must
+        // not take the first portion ahead of an eligible body already at the cache.
+        var cacheOrder=new ArrayList<>(adults);
+        cacheOrder.sort(Comparator.comparingLong(a->WorkerTasks.food(a.getMainHandItem())||cacheReturned.containsKey(a.getUUID())||WorkerTasks.reaches(l,a,Vec3.atBottomCenterOf(home.cache()).add(0,.15,0))?0:route(a,a.position(),cacheStand,1)));
+        for(var actor:cacheOrder){
             if(actor.form()!=AntForm.WORKER||actor.isNoAi()||actor.workerTasks().defending()||busy(actor.getUUID())||ready.getOrDefault(actor.getUUID(),0L)>cursor)continue;
-            if(actor.adultLife().hungry()&&!receiving(actor.getUUID())){
+            if(actor.workerTasks().mealNeeded(l)&&!receiving(actor.getUUID())){
                 var carried=actor.getMainHandItem();var meal=WorkerTasks.food(carried)&&Nutrition.sugarYield(carried)>0?carried:available.stream().filter(s->Nutrition.sugarYield(s)>0&&actor.nutrition().accepts(s,Nutrition.QUEEN_SUGAR_CAPACITY,0)).findFirst().orElse(null);
                 if(meal!=null&&actor.nutrition().accepts(meal,Nutrition.QUEEN_SUGAR_CAPACITY,0)){
                     boolean cargo=!carried.isEmpty();long approach=cargo||cacheReturned.containsKey(actor.getUUID())||WorkerTasks.reaches(l,actor,Vec3.atBottomCenterOf(home.cache()).add(0,.15,0))?0:route(actor,actor.position(),cacheStand,1);
                     add(actor,actor.getUUID(),cargo?"cargo":"cache",kind(meal),cursor,AdultLife.MEAL_TICKS-actor.adultLife().mealTicks()+approach,0);if(!cargo)available.remove(meal);continue;
                 }
             }
-            if(!actor.workerTasks().caregiverWithValidatedHabitat(l,home)||actor.adultLife().hungry()||receiving(actor.getUUID()))continue;
+            if(!actor.workerTasks().caregiverWithValidatedHabitat(l,home)||actor.workerTasks().mealNeeded(l)||receiving(actor.getUUID()))continue;
             var carried=actor.getMainHandItem();boolean cargo=WorkerTasks.food(carried);
             if(!cargo&&!carried.isEmpty())continue;
             ItemStack unit=null;UUID to=null;
@@ -127,7 +131,7 @@ public final class AggregateFeeding {
             else{
                 Nutrition nutrition=null;long sugarCap=Nutrition.QUEEN_SUGAR_CAPACITY,proteinCap=Nutrition.QUEEN_PROTEIN_CAPACITY;
                 java.util.function.Predicate<ItemStack> accepts;
-                if(service.recipient.equals(actor.getUUID())){nutrition=actor.nutrition();proteinCap=0;accepts=s->Nutrition.sugarYield(s)>0&&actor.adultLife().hungry();}
+                if(service.recipient.equals(actor.getUUID())){nutrition=actor.nutrition();proteinCap=0;accepts=s->Nutrition.sugarYield(s)>0&&actor.workerTasks().mealNeeded(l);}
                 else if(service.recipient.equals(pile.queenId())&&recipient instanceof LasiusNigerEntity queen){nutrition=queen.nutrition();accepts=s->WorkerTasks.queenNeedsFood(queen,s);}
                 else{var brood=pile.records().stream().filter(r->r.id().equals(service.recipient)).findFirst().orElse(null);if(brood==null){services.remove(service);continue;}nutrition=brood.nutrition();sugarCap=Nutrition.LARVA_SUGAR;proteinCap=Nutrition.LARVA_PROTEIN;accepts=s->pile.accepts(brood,s);}
                 if(service.recipient.equals(actor.getUUID())||actor.workerTasks().caregiverWithValidatedHabitat(l,pile.catchupPlan())){
@@ -135,7 +139,7 @@ public final class AggregateFeeding {
                     else if(cache!=null)served=cache.serveAggregate(nutrition,sugarCap,proteinCap,s->kind(s).equals(service.kind)&&accepts.test(s));
                 }
             }
-            if(served){pile.catchup().foodEvent();ready.put(service.actor,AdultLife.saturatingAdd(now,service.returnTicks));if(service.source.equals("cache")||!service.source.equals("crop")&&!service.recipient.equals(service.actor))cacheReturned.put(service.actor,now);else cacheReturned.remove(service.actor);if(!service.source.equals("crop"))pile.aggregateFoodChanged();}
+            if(served){pile.catchup().foodEvent();ready.put(service.actor,AdultLife.saturatingAdd(now,service.returnTicks));if(service.source.equals("cache")||!service.source.equals("crop")&&!service.recipient.equals(service.actor))cacheReturned.put(service.actor,now);else cacheReturned.remove(service.actor);if(service.source.equals("cache"))pile.aggregateFoodChanged();}
             services.remove(service);pile.setChanged();
         }
     }

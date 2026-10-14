@@ -3051,6 +3051,30 @@
       "suite": "long",
       "weight_ticks": 8000,
       "reason": "T08 exact live allocation adjudication or independent scheduling recovery; complete permanent acceptance required"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_matched_finite_cache_live_control_uses_only_ordinary_production_hooks",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 matched finite live control or deterministic retained-failure state reproducer; ordinary production hooks and exact conservation/replay"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_finite_cache_nurses_first_registry_order_matches_identical_live_input",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 matched finite live control or deterministic retained-failure state reproducer; ordinary production hooks and exact conservation/replay"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_unknown_restoration_with_physical_nurse_cargo_keeps_food_clock_at_observation_end",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 matched finite live control or deterministic retained-failure state reproducer; ordinary production hooks and exact conservation/replay"
     }
   ]
 }

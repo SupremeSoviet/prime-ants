@@ -270,7 +270,8 @@ def fast_guards(folder, since):
     result['passed']=not result['issues'];write(folder/'fast-guards.json',result);return result
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['inventory','prepare','run','merge','fast-guards']);p.add_argument('--folder',type=Path);p.add_argument('--launch',type=Path);p.add_argument('--suite',choices=['fast','long','smoke']);p.add_argument('--shards',type=int,default=4);p.add_argument('--concurrency',type=int,default=4);p.add_argument('--names');p.add_argument('--since',type=float);p.add_argument('--defer-failures',action='store_true');a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['inventory','registered-names','prepare','run','merge','fast-guards']);p.add_argument('--folder',type=Path);p.add_argument('--launch',type=Path);p.add_argument('--suite',choices=['fast','long','smoke']);p.add_argument('--shards',type=int,default=4);p.add_argument('--concurrency',type=int,default=4);p.add_argument('--names');p.add_argument('--since',type=float);p.add_argument('--defer-failures',action='store_true');a=p.parse_args()
+    if a.action=='registered-names': print(json.dumps(sorted(discover())),flush=True);return
     if a.action=='inventory': print('Verified exact permanent partition:',len(inventory()),'unit:',len(unit_cases()),'model:',len(model_cases()));return
     if a.action=='prepare': prepare(a.folder,a.launch,a.shards,a.concurrency,a.names);return
     result=run_suite(a.folder,a.suite) if a.action=='run' else fast_guards(a.folder,a.since) if a.action=='fast-guards' else merge_complete(a.folder)

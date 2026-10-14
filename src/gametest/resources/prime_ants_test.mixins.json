@@ -43,7 +43,9 @@
     "ServerShardSelectionMixin",
     "InitialHabitatConnectionMixin",
     "LegacyAdultShadowMixin",
-    "GrowthObservationMixin"
+    "GrowthObservationMixin",
+    "StageClockObservationMixin",
+    "StageFoodObservationMixin"
   ],
   "injectors": {
     "defaultRequire": 1

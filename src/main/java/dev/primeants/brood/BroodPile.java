@@ -485,6 +485,8 @@ public final class BroodPile extends BlockEntity {
             result.pending().stream().filter(p->!deferredInitialShortfalls.contains(p.requirement().key())).toList(),java.util.Map.copyOf(clocks));
         stageEvaluation=new ColonyDevelopment.Evaluation(stageEvaluation.previous(),retained,stageEvaluation.inputs(),stageEvaluation.chambers(),stageEvaluation.cap());
     }
+    /** Only a real cache-stock debit establishes a food-shortfall event inside the interval.
+     * Ingestion from previously carried cargo does not observe or change the store's clock. */
     public void aggregateFoodChanged(){deferredInitialShortfalls.remove("mature:food");}
     /** UNKNOWN clears only requirements whose certainty is broken, through the ordinary StageRules evaluator. */
     public void observeUnknownTerrain(ServerLevel server){

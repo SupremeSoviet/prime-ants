@@ -161,6 +161,11 @@ public final class CatchupLifecycleGameTest {
     }
     @GameTest(maxTicks=8000,structure="prime_ants_test:surface_ground")
     public void stageGraceDeadlineAndClockReloadMatchLiveAndUnknownInterruption(GameTestHelper c){
+        stageClockComparison(c,false);
+    }
+    @GameTest(maxTicks=8000,structure="prime_ants_test:surface_ground")
+    public void unknownRestorationWithPhysicalNurseCargoKeepsFoodClockAtObservationEnd(GameTestHelper c){stageClockComparison(c,true);}
+    private void stageClockComparison(GameTestHelper c,boolean cargoReproducer){
         var live=new TierThreeFixture().start(c,32,false,24,new BlockPos(20,4,26),Direction.EAST,true);
         var away=new TierThreeFixture().start(c,32,false,24,new BlockPos(38,4,26),Direction.EAST,false);boolean[] started={false};
         c.onEachTick(()->{
@@ -181,10 +186,27 @@ public final class CatchupLifecycleGameTest {
             c.assertTrue(pile(c,live).stageEvaluation().stage()==ColonyStage.YOUNG&&pile(c,away).stageEvaluation().stage()==ColonyStage.YOUNG&&Math.abs(pile(c,live).stageEvaluatedAt()-pile(c,away).stageEvaluatedAt())<=ColonyDevelopment.INTERVAL,"Same regression stage and deadline within unchanged 100-tick evaluation interval");
             var row=new JsonObject();row.addProperty("live_evaluated_at",pile(c,live).stageEvaluatedAt());row.addProperty("catchup_evaluated_at",pile(c,away).stageEvaluatedAt());row.addProperty("deadline",StageRules.GRACE);row.addProperty("stage",pile(c,away).stageEvaluation().stage().name());
             for(var q:List.of(live,away)){AutomaticCatchupGameTest.finiteCache(c,q,food(4));tick(c,q,last+360);c.assertTrue(pile(c,q).stageEvaluation().stage()==ColonyStage.MATURE&&ChamberRegistry.get(c.getLevel()).colony(q.getUUID()).unmetSince().isEmpty(),"Restoration promotes and clears deficit clocks through unchanged rules");}
+            if(cargoReproducer){
+                var cache=(NestCache)c.getLevel().getBlockEntity(away.founding().plan().cache());int withdrawals=0;
+                AllocationObservations.log(c,away,pile(c,away),last+360,"clock_cargo_preparation_inputs");
+                long cap=Nutrition.QUEEN_SUGAR_CAPACITY-Nutrition.APPLE_SUGAR;
+                if(away.nutrition().sugar()>cap)c.assertTrue(away.nutrition().spend(away.nutrition().sugar()-cap,0),"Reproducer declares real spent queen receipts to retain the apple eligibility witnessed in T08; no new supplies");
+                for(var a:adults(c,away))if(a.form()==AntForm.WORKER&&a.workerTasks().nursing()&&a.getMainHandItem().isEmpty()){
+                    // Explicit accepted partial-service input: the original physical unit is withdrawn
+                    // by the ordinary cache hook, then its saved recipient/action state is reconstructed.
+                    a.setPos(net.minecraft.world.phys.Vec3.atBottomCenterOf(away.founding().plan().at(4,-1,-2)));
+                    if(!cache.withdraw(a,away.founding().plan()))continue;
+                    var tag=ReconciliationGameTest.save(c,a);var task=tag.getCompoundOrEmpty("WorkerTask");task.putString("Phase","NURSE_FEED");task.putString("Recipient",away.getUUID().toString());task.putInt("FeedingTicks",0);
+                    AutomaticCatchupGameTest.replace(c,a,tag);withdrawals++;break;
+                }
+                AllocationObservations.log(c,away,pile(c,away),last+360,"clock_cargo_prepared");
+                c.assertTrue(withdrawals>0||adults(c,away).stream().anyMatch(a->WorkerTasks.food(a.getMainHandItem())),"Small reproducer retains actual ordinary withdrawals from the original four apple/chicken pairs, no new supply");
+            }
             var p=pile(c,away);AutomaticCatchupGameTest.finiteCache(c,away,List.of());stageFixture(c,away,ColonyStage.MATURE,Map.of("mature:food",p.loadedTicks()-100));
-            try(var hidden=UnavailableCells.hide(c,away.founding().plan().at(2,-2,-3))){AutomaticCatchupGameTest.tickPile(c,p,last+411);c.assertTrue(p.catchup().pendingTicks()==50&&p.catchup().unknownTicks()==0&&ChamberRegistry.get(c.getLevel()).colony(away.getUUID()).unmetSince().isEmpty(),"UNKNOWN breaks certainty without migration rebasing or resource mutation");}
-            AutomaticCatchupGameTest.tickPile(c,p,last+412);long since=ChamberRegistry.get(c.getLevel()).colony(away.getUUID()).unmetSince().get("mature:food");
-            c.assertTrue(p.catchup().pendingTicks()==0&&since>=p.loadedTicks()-1,"Restored certainty starts at observation end, never backdates previously unknown deficit");row.addProperty("unknown_restored_since",since);row.addProperty("restored_loaded",p.loadedTicks());evidence("stage_hysteresis",row);replay(c,away,p,last+412);c.succeed();
+            StageClockObservations.start(away.getUUID());StageClockObservations.sample(c.getLevel(),p,last+360,"immediately_before_unknown");
+            try(var hidden=UnavailableCells.hide(c,away.founding().plan().at(2,-2,-3))){AutomaticCatchupGameTest.tickPile(c,p,last+411);StageClockObservations.sample(c.getLevel(),p,last+411,"during_deferral_before_assertion");c.assertTrue(p.catchup().pendingTicks()==50&&p.catchup().unknownTicks()==0&&ChamberRegistry.get(c.getLevel()).colony(away.getUUID()).unmetSince().isEmpty(),"UNKNOWN breaks certainty without migration rebasing or resource mutation");}
+            AutomaticCatchupGameTest.tickPile(c,p,last+412);StageClockObservations.sample(c.getLevel(),p,last+412,"restored_before_assertion");long since=ChamberRegistry.get(c.getLevel()).colony(away.getUUID()).unmetSince().get("mature:food");
+            c.assertTrue(p.catchup().pendingTicks()==0&&since>=p.loadedTicks()-1,"Restored certainty starts at observation end, never backdates previously unknown deficit");row.addProperty("unknown_restored_since",since);row.addProperty("restored_loaded",p.loadedTicks());evidence("stage_hysteresis",row);replay(c,away,p,last+412);StageClockObservations.stop(away.getUUID());c.succeed();
         });
     }
     private void profile(GameTestHelper c,int workers){
