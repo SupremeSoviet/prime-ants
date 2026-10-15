@@ -23,6 +23,17 @@ final class CatchupItemLedger {
             if(c.getLevel().getEntity(id) instanceof net.minecraft.world.entity.item.ItemEntity item){released.add(item.getItem());var r=new JsonObject();r.addProperty("id",id.toString());r.addProperty("destination","world");r.addProperty("stack",item.getItem().toString());releases.add(r);}
             for(var pending:TransferCustody.get(c.getLevel()).contents())if(pending.id().equals(id)){released.add(pending.stack());var r=new JsonObject();r.addProperty("id",id.toString());r.addProperty("destination","custody");r.addProperty("stack",pending.stack().toString());releases.add(r);}
         }
+        // Keep actual actor custody and recipient receipts, not only a fungible grand total.
+        var carriers=new JsonObject();var adultReceipts=new JsonObject();var broodReceipts=new JsonObject();
+        for(var adult:state.getAsJsonArray("adults")){
+            var a=adult.getAsJsonObject();var actor=new JsonObject();var body=(LasiusNigerEntity)c.getLevel().getEntity(UUID.fromString(a.get("id").getAsString()));
+            var hand=body.getMainHandItem();actor.addProperty("stack",hand.toString());actor.addProperty("count",hand.getCount());
+            if(WorkerTasks.food(hand))actor.addProperty("kind",kind(hand));actor.add("position",a.get("position"));
+            carriers.add(a.get("id").getAsString(),actor);adultReceipts.add(a.get("id").getAsString(),receipts(a.getAsJsonObject("nutrition")));
+        }
+        for(var brood:state.getAsJsonArray("brood")){var b=brood.getAsJsonObject();broodReceipts.add(b.get("id").getAsString(),receipts(b.getAsJsonObject("nutrition")));}
+        row.add("carriers",carriers);row.add("adult_receipts",adultReceipts);row.add("current_brood_receipts",broodReceipts);
+        row.add("brood_receipts_including_archived",state.get("brood_consumption"));
         row.add("actual_releases",releases);var kinds=new JsonObject();
         for(int i=0;i<ITEMS.size();i++){
             var item=ITEMS.get(i);var kind=CatchupOutcomes.KINDS.get(i);var r=new JsonObject();
@@ -33,6 +44,7 @@ final class CatchupItemLedger {
         }
         row.add("kinds",kinds);return row;
     }
+    static JsonObject receipts(JsonObject nutrition){var row=new JsonObject();for(var kind:CatchupOutcomes.KINDS)row.add(kind,nutrition.get(kind));return row;}
     static boolean compare(JsonObject initial,JsonObject end,String branch,JsonObject row){
         var ledger=new JsonObject();ledger.add("initial",initial);ledger.add("final",end);boolean exact=true;var equations=new JsonArray();
         for(var kind:CatchupOutcomes.KINDS){long a=initial.getAsJsonObject("kinds").getAsJsonObject(kind).get("total").getAsLong(),b=end.getAsJsonObject("kinds").getAsJsonObject(kind).get("total").getAsLong();var e=new JsonObject();e.addProperty("kind",kind);e.addProperty("initial",a);e.addProperty("final",b);e.addProperty("exact",a==b);equations.add(e);exact&=a==b;}

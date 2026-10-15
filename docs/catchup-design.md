@@ -1,4 +1,12 @@
-# Current final status (T08)
+# Current acceptance contract (2026-10-15)
+
+The owner approved one growth bound: **300 development steps**, equivalent to **25% of a stage** in the 1200-step finite controls. Other stage durations use 25% in their own tick units. This supersedes the historical 120-primary/240-fallback contract. Stage durations and ordinary gameplay are unchanged.
+
+Both cargo load orders require valid feeding of the original larva from actual physical food, exact per-kind custody/transfer/receipt conservation, and exact actor/controller/reconstruction/replay protections. The selected carrier may retain an unconsumed unit; another actual carrier may supply the meal. The frozen caregiver interval remains 92 ticks. See [the current acceptance report](catchup-report.md) and [owner merge instructions](catchup-merge-note.md) for the tested candidate and readiness decision.
+
+Everything below is **historical checkpoint evidence** from earlier directions, including superseded bounds, implementation descriptions and readiness claims. It does not define current acceptance.
+
+# Historical final status (T08)
 
 Qualified partial delivery. Catch-up runs automatically when an owned colony area reloads: adults age and pay maintenance, confirmed food is served, existing brood develops, affordable eggs may be laid, and StageRules evaluates the resulting colony. Digging, building and mining are excluded from aggregate replay.
 

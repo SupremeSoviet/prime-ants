@@ -1,3 +1,5 @@
+> Historical T06 measurements and contract. The current owner-approved growth bound (2026-10-15) is 300 development steps / 25% of a stage; see [the current report](catchup-report.md). Earlier limits and implementation descriptions below are retained as history.
+
 # Catch-up T06: lifecycle, recovery and acceptance limits
 
 The interrupted T06 changes were preserved and resumed on `catchup` after merge `33b76c1`.

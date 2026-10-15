@@ -1,3 +1,5 @@
+> Historical T07 measurements and contract. The current owner-approved growth bound (2026-10-15) is 300 development steps / 25% of a stage; see [the current report](catchup-report.md). Earlier limits below are retained as history.
+
 # T07 persistence and competing growth
 
 Merged local master `14ef11f` into clean `catchup` at `9db48bf`, producing baseline `5c16a20`.
