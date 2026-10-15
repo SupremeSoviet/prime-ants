@@ -3021,7 +3021,7 @@
       "reason": "T07 frozen physiology, actual nonzero reconstruction and production aggregate refusal/service replay acceptance"
     },
     {
-      "name": "prime_ants_test:catchup_lifecycle_game_test_partial_nurse_service_actor_first_reload_unknown_and_older_replay_keep_exact_custody",
+      "name": "prime_ants_test:catchup_lifecycle_game_test_physical_cargo_actor_first_reload_unknown_and_older_replay_keep_exact_custody",
       "max_ticks": 8000,
       "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
       "suite": "long",
@@ -3029,7 +3029,7 @@
       "reason": "T07 frozen physiology, actual nonzero reconstruction and production aggregate refusal/service replay acceptance"
     },
     {
-      "name": "prime_ants_test:catchup_lifecycle_game_test_partial_nurse_service_nursery_first_reload_unknown_and_older_replay_keep_exact_custody",
+      "name": "prime_ants_test:catchup_lifecycle_game_test_physical_cargo_nursery_first_reload_unknown_and_older_replay_keep_exact_custody",
       "max_ticks": 8000,
       "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
       "suite": "long",
@@ -3045,7 +3045,7 @@
       "reason": "T08 exact live allocation adjudication or independent scheduling recovery; complete permanent acceptance required"
     },
     {
-      "name": "prime_ants_test:catchup_lifecycle_game_test_saved_crop_cooldown_counts_only_eligible_missing_time_and_survives_replay",
+      "name": "prime_ants_test:catchup_lifecycle_game_test_aggregate_distribution_preserves_ordinary_crop_controller_state",
       "max_ticks": 8000,
       "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
       "suite": "long",
@@ -3117,7 +3117,7 @@
       "reason": "Captured T02 portable saved donor configuration; matched native live and aggregate inputs"
     },
     {
-      "name": "prime_ants_test:catchup_lifecycle_game_test_pending_crop_approaches_contact_claims_and_search_phases_reconstruct_exactly",
+      "name": "prime_ants_test:catchup_lifecycle_game_test_legacy_aggregate_intentions_are_dropped_without_receipts",
       "max_ticks": 8000,
       "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
       "suite": "long",
@@ -3125,12 +3125,28 @@
       "reason": "Focused aggregate contact/search persistence and endpoint resource eligibility; synthetic saved scheduling state"
     },
     {
-      "name": "prime_ants_test:catchup_lifecycle_game_test_endpoint_food_funds_only_endpoint_brood_step_and_replays_exactly",
+      "name": "prime_ants_test:catchup_lifecycle_game_test_fixed_distribution_funds_only_confirmed_missing_biology_and_replays_exactly",
       "max_ticks": 8000,
       "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
       "suite": "long",
       "weight_ticks": 8000,
       "reason": "Focused aggregate contact/search persistence and endpoint resource eligibility; synthetic saved scheduling state"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_fixed_distribution_uses_hunger_then_stable_identity_and_larval_protein_priority",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "Fixed aggregate distribution ownership, priorities and compatibility"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_fixed_distribution_defers_unknown_foreign_cache_and_unreachable_cargo",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "Fixed aggregate distribution ownership, priorities and compatibility"
     }
   ]
 }

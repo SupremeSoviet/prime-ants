@@ -21,10 +21,11 @@ public final class ColonyCatchup {
     private long invokedAt=Long.MIN_VALUE;
     private boolean running;
     private final AggregateFeeding feeding=new AggregateFeeding();
-    public int pendingServices(){return feeding.pending();}
-    public long nextServiceCompletion(){return feeding.nextCompletion();}
-    public long nextServiceEvent(long cursor){return feeding.nextEvent(cursor);}
-    public List<String> serviceObservations(){return feeding.observations();}
+    // Compatibility diagnostics for older observers; no retained service state.
+    public int pendingServices(){return 0;}
+    public long nextServiceCompletion(){return Long.MAX_VALUE;}
+    public long nextServiceEvent(long cursor){return Long.MAX_VALUE;}
+    public List<String> serviceObservations(){return List.of();}
     public long pendingTicks(){return cursor<0?0:through-cursor+1;}
     public long appliedTicks(){return appliedTicks;}
     public long appliedThrough(){return appliedThrough;}
@@ -135,9 +136,7 @@ public final class ColonyCatchup {
                 var plan=pile.catchupPlan();
                 NestCache cache=habitat.verdict()==Findings.Verdict.CLEAR&&NestPlan.loaded(level,plan.cache())
                     &&level.getBlockEntity(plan.cache()) instanceof NestCache c&&c.ownedBy(pile.queenId(),plan)?c:null;
-                // One decision batch plus all physical units it could allocate fits before any mutation.
-                int reserve=1+(cache==null?0:cache.size())+feeding.pending()+(int)adults.stream().filter(a->WorkerTasks.food(a.getMainHandItem())).count();
-                if(lastEvents>MAX_EVENTS-reserve){status="pending_event_bound";return false;}
+                if(!foodAvailable()){status="pending_event_bound";return false;}
                 var segments=new LinkedHashMap<LasiusNigerEntity,Segment>();
                 long span=through-cursor+1;
                 for(var a:adults){
@@ -151,20 +150,26 @@ public final class ColonyCatchup {
                         span=Math.min(span,Long.MAX_VALUE-a.elapsedAgeTicks());
                     }
                 }
-                if(habitat.verdict()==Findings.Verdict.CLEAR)feeding.plan(level,pile,adults,segments.entrySet().stream().filter(e->e.getValue().missing()).map(Map.Entry::getKey).toList(),cache,cursor);
-                span=Math.min(span,feeding.nextEvent(cursor));
+                if(habitat.verdict()==Findings.Verdict.CLEAR){
+                    int beforeFood=lastEvents;
+                    if(!feeding.distribute(level,pile,segments.entrySet().stream().filter(e->e.getValue().missing()).map(Map.Entry::getKey).toList(),cache)){
+                        status="pending_event_bound";return false;
+                    }
+                    if(lastEvents!=beforeFood)pile.refreshAggregateStage(level,true);
+                }
+                // Redistribution may shorten a donor's coverage. Recompute its biological bound.
+                for(var entry:segments.entrySet())if(entry.getValue().missing()){
+                    var a=entry.getKey();
+                    var phase=a.form()==AntForm.WORKER||a.adultLife().started()||!a.founding().reserveOnlyFounding(level)?AdultLife.Phase.ACTIVE:AdultLife.Phase.RESERVE_ONLY;
+                    span=Math.min(span,a.adultLife().nextEvent(a,phase));
+                }
                 span=Math.min(span,pile.nextBroodEvent(level,habitat.problem()));
                 span=Math.min(span,pile.nextLayingEvent(level,habitat.problem()));
                 span=Math.min(span,pile.nextStageEvent(level));
                 // Avoid arithmetic overflow in the nursery's speed accounting, even for maximal saved time domains.
                 span=Math.min(span,Long.MAX_VALUE/BroodCapacity.MAX_SLOTS/4);
                 long end=cursor+span-1;
-                feeding.advanceSearch(segments.entrySet().stream().filter(e->e.getValue().missing()).map(Map.Entry::getKey).toList(),span);
-                if(habitat.verdict()==Findings.Verdict.CLEAR)feeding.advanceCooldown(level,segments.entrySet().stream().filter(e->e.getValue().missing()).map(Map.Entry::getKey).toList(),span);
                 for(var entry:segments.entrySet())if(entry.getValue().missing())entry.getKey().advanceMissing(level,cursor,end);
-                int eventsBeforeService=lastEvents;
-                if(habitat.verdict()==Findings.Verdict.CLEAR)feeding.complete(level,pile,cache,end);
-                if(lastEvents!=eventsBeforeService)pile.refreshAggregateStage(level,true);
                 lifecycleNanos+=System.nanoTime()-phaseStart-(stageNanos+commitNanos-workNested);phaseStart=System.nanoTime();long nested=stageNanos+commitNanos;
                 pile.advanceAggregate(level,span,end,habitat.problem());
                 lifecycleNanos+=System.nanoTime()-phaseStart-(stageNanos+commitNanos-nested);phaseStart=System.nanoTime();
@@ -179,9 +184,9 @@ public final class ColonyCatchup {
             lastNanos=System.nanoTime()-start;running=false;pile.setChanged();
         }
     }
-    public void save(ValueOutput out){out.putInt("Version",1);out.putLong("Cursor",cursor);out.putLong("Through",through);out.putLong("AppliedThrough",appliedThrough);out.putLong("AppliedTicks",appliedTicks);out.putLong("Invocations",invocations);out.putString("Status",status);out.putLong("RecoveryBaseline",recoveryBaseline);out.putLong("UnknownTicks",unknownTicks);out.putLong("UnknownThrough",unknownThrough);feeding.save(out);}
+    public void save(ValueOutput out){out.putInt("Version",1);out.putLong("Cursor",cursor);out.putLong("Through",through);out.putLong("AppliedThrough",appliedThrough);out.putLong("AppliedTicks",appliedTicks);out.putLong("Invocations",invocations);out.putString("Status",status);out.putLong("RecoveryBaseline",recoveryBaseline);out.putLong("UnknownTicks",unknownTicks);out.putLong("UnknownThrough",unknownThrough);}
     public void load(ValueInput in){
-        feeding.load(in);
+        // Ignore legacy Service* intentions: they are neither physical stock nor receipts.
         cursor=in.getLongOr("Cursor",-1);through=in.getLongOr("Through",-1);appliedThrough=in.getLongOr("AppliedThrough",-1);
         appliedTicks=in.getLongOr("AppliedTicks",0);invocations=in.getLongOr("Invocations",0);status=in.getStringOr("Status","idle");
         recoveryBaseline=in.getLongOr("RecoveryBaseline",-1);unknownTicks=in.getLongOr("UnknownTicks",0);unknownThrough=in.getLongOr("UnknownThrough",-1);

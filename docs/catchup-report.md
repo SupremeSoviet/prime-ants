@@ -1,3 +1,47 @@
+# Catch-up fixed distribution verdict - catchup3 T01, 2026-10-15
+
+**NOT_READY.** Fixed distribution fails all six frozen scarcity hunger comparisons and both 120-step growth controls. Final affected selection: **21/30 pass**, 9 fail, 0 errors, 0 skipped; missing/duplicate/unexpected identities all zero. `checkFast`: 76/76 fast server, 124 unit, 26 model; Gradle exit 0 in 151.183s. No complete-suite acceptance or master-red exception is claimed.
+
+Merged clean catchup `dddda84311245ba5d3a1761e1cd83bc9e7787ceb` with local master `14ef11f68a4f55c87ad2b8725ebc748f6f5d8573`: already up to date, exit 0, no conflicts. Final commit/tree/source correspondence is in `<turnloop>/directions/prime-ants-catchup3/turns/T01/raw/t01-acceptance.json`.
+
+The implementation distributes only at existing biological/event boundaries and only among missing, confirmed, alive, enabled colony members in the validated connected home/entrance domain. Existing reachable worker crop surplus is redistributed first using the ordinary 1000 reserve and 1500 portion, with fasting descending and UUID ties for hungry recipients. Crop present at the start of a decision batch is the redistributable budget; given/received sugar counters balance exactly. Then hungry adults receive real sugar food. A confirmed ordinary caregiver is required for the remaining nursing distribution; the shared ordinary recipient selector puts accepting larvae before the queen, including protein. Cache order then UUID carrier order make physical-source choice explainable; actual cache and actual hand items are debited once. The single NestCache class also represents upgraded food stores. Material stores never become food. Maintenance, nutrition capacities, larval caps, development, egg costs, ordinary movement/controllers, StageRules and thresholds are unchanged.
+
+Reachability is conservative: CLEAR ordinary habitat findings establish home connectivity; direct ordinary reach/line-of-sight checks admit actors beside validated stands. Supported adjacent entrance stands and verified circulation space are checked without a route, travel cost or future position. Sources outside that confirmed domain remain unavailable. This does not establish loaded-navigation equivalence. The hunger outcome failure is retained; no fixture-specific reach extension is fitted after observing it.
+
+Removed all aggregate Service, Search and Origin records and their queues/maps: approaches, contact claims, route/travel calculations, service/return timestamps, search phase, return scheduling and crop cooldown scheduling. Aggregate code no longer mutates ordinary crop cooldown. Distribution has no persisted or in-flight trip state. The event ceiling remains 512, with food transfers reserving a biology step and bounded pending work retained by the existing catch-up cursor.
+
+Legacy `Services`, `ServiceReady`, `ServiceCropReady`, `ServiceSearch`, `ServiceOrigins` and `ServiceCacheReturned` are ignored on read and omitted on write. They never become receipts. Actual equipment/nutrition and ordinary controller saves retain their owners. The catch-up Version-1 biological ledger remains compatible. Retained compatibility pieces are: four ColonyCatchup service diagnostic accessors (empty/zero/MAX_VALUE), two CropSharing aggregate eligibility predicates used only by existing read-only policy observations, and ordinary CropSharing search/action/target/observation/cooldown save fields. The real ordinary transfer helper and ordinary recipient selector remain ordinary-owned. The test-only food observer now injects into `distribute`; its event timestamp is explicitly the current observation time, not a reconstructed service deadline.
+
+The frozen outcome contract was written before replacement measurements: same adult hunger/starvation classes, real larval protein8000, consumption difference <=1 for every item kind including zeros, exact within-run accounting/reconstruction/same-and-older replay. Both growth controls retain120; supplies, captured configurations, registry orders, horizon400, offsets11/40/80/120/200/300/400, corrected native cadence and393+7 versus400 remain unchanged. The larva's credit is followed through emergence and archive accounting; exact recipient/donor/route/action timing is no longer an oracle.
+
+| Scarcity input/order | Hungry worker sugar live/catchup | Crop live/catchup | Larval protein live/catchup | Result |
+|---|---:|---:|---:|---|
+| generated / saved order | 1434/0 | 1500/0 | 8000/8000 | Hunger FAIL |
+| captured_1500 / saved order | 1434/0 | 1500/0 | 8000/8000 | Hunger FAIL |
+| captured_1500 / nurses-first | 1434/0 | 1500/0 | 8000/8000 | Hunger FAIL |
+| generated / nurses-first | 910/0 | 971/0 | 8000/8000 | Hunger FAIL |
+| captured_971 / saved order | 910/0 | 971/0 | 8000/8000 | Hunger FAIL |
+| captured_971 / nurses-first | 910/0 | 971/0 | 8000/8000 | Hunger FAIL |
+
+All seven kinds have zero consumption difference in every comparison: apple2/2, berry1/1, chicken2/2, nectar-v1 0/0, nectar-v2 0/0, prey0/0, flesh0/0. Every six-case within-run five-unit ledger, nutrition/crop balance and final save/same/older replay passes before the hunger verdict. Other original adults retain their live hunger/starvation classes; the hungry worker remains hungry/non-starving versus non-hungry/non-starving live. Original larvae emerge in catch-up. These are measured allocation failures.
+
+| Growth | Live | Catch-up | Maximum difference | Limit |
+|---|---|---|---:|---:|
+| original | [1200, 2566, 2626] | [1200, 2758, 2767] | 192 | FAIL > 120 |
+| no_initial_adult_demand | [1200, 2554, 2688] | [1200, 2758, 2767] | 204 | FAIL > 120 |
+
+All other existing growth adult/slot/cache/residual nutrition/class/queen-affordability gates and exact item/material/replay checks pass. The final minimum bound needed would be204; a preparatory control needed205. No bound was changed. 205 is only a measured value for owner consideration, with no general validation, and would leave all six scarcity failures.
+
+The ninth failing identity is actor-first physical-cargo reload/UNKNOWN/replay. Its combined final custody assertion fails before its evidence row; the failing conjunct and final replay in that case remain unresolved. Nursery-first passes. Both clock controls, all four unchanged ordinary CropPolicy controls, legacy migration, priorities, source ownership/UNKNOWN and ordinary crop-state preservation pass in final selection. See the full exact identities and vectors in T01 raw; no failure is excluded.
+
+Preparatory failures and recovery: compilation errors fixed; test-only mixin retargeted from removed complete to distribute, then one exact native case passed. Four startup failures produced no XML. A4266-byte progress+missing-identity summary reproduced the inherited Windows pipe hang; console summary was bounded to748 bytes while retaining full JSON. The first change broke the existing fast-summary test (27/28), then preserved fast API and passed28/28. Preparatory03 was launched before resolving that offline assertion, a disclosed process deviation. Six stale larva lookups were corrected without changing outcomes, alongside the retained growth negatives. Only tests/harness changed after first measured growth failure; all238 main inputs remain identical. Every command/exit/duration, rejected freeze and utility/evidence-collector limitation is retained externally.
+
+Final long: exit1, 97.553s, native exits [3, 1, 3, 2], all30 identities exactly once. Fast: 76/76 fast server, 124 unit, 26 model; Gradle exit 0 in 151.183s. Permanent inventory362 retains master's registrations; lifecycle count16->18 accounts only for two new cases and actual guards pass13 offline scenarios. Five removed trip contracts map explicitly to fixed distribution/compatibility identities in T01 raw; ordinary crop coverage stays unchanged. Concurrency <=2 and leases/retention preserved. Runtime byte hashes and normalized Git correspondence are separate recorded checks; no executable changes after final runs.
+
+Stop condition: no further allocation edits or trip modelling. Complete suite/package acceptance remains unperformed, NOT_READY. A later authorized turn must merge current master again, resolve targeted outcomes, then run the unfiltered check/assemble command. Any master-red exception requires master's own matching native evidence; no such exception is claimed here.
+
+---
+
 # Final catch-up verdict - catchup2 T03, 2026-10-14
 
 **NOT_READY.** The three-turn direction is closed. Final affected coverage is **21 passed / 28 executed**, with seven failures and no missing, unexpected, duplicate, error or skipped identities. Required finite food/crop/hunger comparisons and original-demand growth remain rejected. The final `checkFast` passes **76 fast server + 124 unit + 26 model** cases and the guards. The unfiltered `check assemble` graph and fresh packaging were withheld under the readiness gate. No master exception or release acceptance is claimed. Automatic catch-up remains enabled; aggregate digging, building and mining remain excluded.

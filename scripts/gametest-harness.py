@@ -276,7 +276,9 @@ def main():
     if a.action=='prepare': prepare(a.folder,a.launch,a.shards,a.concurrency,a.names);return
     result=run_suite(a.folder,a.suite) if a.action=='run' else fast_guards(a.folder,a.since) if a.action=='fast-guards' else merge_complete(a.folder)
     # Full per-report hashes remain in JSON. A >4 KiB inherited Windows pipe can block Gradle's wait.
-    print(json.dumps({k:v for k,v in result.items() if k not in ('suites','shards','assigned','reports')},indent=2),flush=True)
+    summary={k:v for k,v in result.items() if k not in ('suites','shards','assigned','reports','union_issues')}
+    if 'union_issues' in result: summary['issue_count']=len(result['union_issues'])
+    print(json.dumps(summary,indent=2),flush=True)
     if not result['passed'] and not a.defer_failures: raise SystemExit(1)
 
 if __name__=='__main__': main()

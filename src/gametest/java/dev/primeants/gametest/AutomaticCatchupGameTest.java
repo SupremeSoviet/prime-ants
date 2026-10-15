@@ -247,32 +247,28 @@ public final class AutomaticCatchupGameTest {
             LiveReferenceDriver.adults(c,q,last+11);tickPile(c,resumed,last+11);
             AllocationObservations.log(c,q,resumed,last+11,"finite_eleven");
             var larva=resumed.records().stream().filter(b->b.id().equals(id)).findFirst().orElseThrow();
+            long larvalProteinCredit=larva.nutrition().gainedProtein();
             c.assertTrue(resumed.operational(),"Already opened queen controller effect survives the nursery's stale saved observation in either hook ordering");
-            c.assertTrue(cache.size()==3&&hungry.nutrition().apples()==0&&larva.nutrition().consumedUnits()==0&&resumed.catchup().pendingServices()>0&&larva.progress()==0,"Eleven ticks cannot earn a twenty-tick feeding action: all three real units remain owned, with no premature receipt or larval spending");
-            var pending=resumed.saveWithFullMetadata(c.getLevel().registryAccess());resumed=BroodGameTest.restorePile(c,resumed,pending);tickPile(c,resumed,last+11);c.assertTrue(resumed.saveWithFullMetadata(c.getLevel().registryAccess()).equals(pending),"Normal same-time reconstruction preserves every pending service clock and canonical food unit");
+            c.assertTrue(cache.size()+adults(c,q).stream().mapToLong(a->a.nutrition().consumedUnits()+(WorkerTasks.food(a.getMainHandItem())?a.getMainHandItem().getCount():0)).sum()+resumed.consumedFood()==5&&resumed.catchup().pendingServices()==0,"Fixed distribution conserves all five physical units and retains no trip state");
+            var pending=resumed.saveWithFullMetadata(c.getLevel().registryAccess());resumed=BroodGameTest.restorePile(c,resumed,pending);tickPile(c,resumed,last+11);c.assertTrue(resumed.saveWithFullMetadata(c.getLevel().registryAccess()).equals(pending),"Normal same-time reconstruction preserves distributed receipts and canonical food");
             // Prospectively fixed horizon and sample schedule. An empty queue during return cooldown
             // is observed separately from a missing wake; no implementation deadline chooses our steps.
             long completedAt=last+400;
-            for(long offset:new long[]{40,80,120,200,300,400}){LiveReferenceDriver.adults(c,q,last+offset);tickPile(c,resumed,last+offset);AllocationObservations.log(c,q,resumed,last+offset,"finite_fixed_horizon_"+offset);}
-            larva=resumed.records().stream().filter(b->b.id().equals(id)).findFirst().orElseThrow();
-            var finalState=AllocationObservations.state(c,q,resumed,completedAt);var actualReceipts=FiniteCacheLiveControl.receipts(finalState);var liveReceipts=FiniteCacheLiveControl.receipts(match.live());
-            var verdict=new JsonObject();verdict.add("live_receipts_by_identity_apple_berry_chicken",new Gson().toJsonTree(liveReceipts));verdict.add("catchup_receipts_by_identity_apple_berry_chicken",new Gson().toJsonTree(actualReceipts));verdict.addProperty("exact_recipient_kind_match",actualReceipts.equals(liveReceipts));ReconciliationEvidence.log("t01_finite_recipient_verdict","matched_live_oracle",verdict);
-            boolean directMatch=cache.size()==0&&actualReceipts.equals(liveReceipts);
+            for(long offset:new long[]{40,80,120,200,300,400}){LiveReferenceDriver.adults(c,q,last+offset);tickPile(c,resumed,last+offset);AllocationObservations.log(c,q,resumed,last+offset,"finite_fixed_horizon_"+offset);var existing=resumed.records().stream().filter(b->b.id().equals(id)).findFirst().orElse(null);if(existing!=null)larvalProteinCredit=existing.nutrition().gainedProtein();}
+            var finalState=AllocationObservations.state(c,q,resumed,completedAt);
+            var row=CatchupOutcomes.compare(match.live(),finalState);
             long units=cache.size()+adults(c,q).stream().mapToLong(a->a.nutrition().consumedUnits()+(WorkerTasks.food(a.getMainHandItem())?a.getMainHandItem().getCount():0)).sum()+resumed.consumedFood();
-            boolean larvalMatch=larva.progress()==0&&larva.nourishment()==0&&larva.nutrition().sugar()==0&&larva.nutrition().protein()==8000;
-            c.assertTrue(units==5&&adults(c,q).stream().allMatch(a->a.nutrition().snapshot().valid())&&larva.nutrition().snapshot().valid(),"All five real units and every debit equation remain exact before any allocation verdict");
-            long sugar=larva.nutrition().sugar(),protein=larva.nutrition().protein(),berries=resumed.consumedBerries(),chickens=resumed.consumedChickens();int stock=cache.size();var saved=resumed.saveWithFullMetadata(c.getLevel().registryAccess());var replay=BroodGameTest.restorePile(c,resumed,saved);tickPile(c,replay,completedAt);
-            var replayLarva=replay.records().stream().filter(b->b.id().equals(id)).findFirst().orElseThrow();
-            c.assertTrue(cache.size()==stock&&FiniteCacheLiveControl.receipts(AllocationObservations.state(c,q,replay,completedAt)).equals(actualReceipts)&&replay.consumedBerries()==berries&&replay.consumedChickens()==chickens&&replayLarva.nutrition().sugar()==sugar&&replayLarva.nutrition().protein()==protein&&replayLarva.progress()==larva.progress()&&replay.saveWithFullMetadata(c.getLevel().registryAccess()).equals(saved),"Normal save/reload never replays any recipient's physical ingestion, residual spending or nursery C");
-            JsonObject liveHungry=null;for(var a:match.live().getAsJsonArray("adults"))if(a.getAsJsonObject().get("id").getAsString().equals(hungry.getUUID().toString()))liveHungry=a.getAsJsonObject();
-            c.assertTrue(liveHungry!=null,"Original hungry identity exists in matched live evidence");
-            var row=new JsonObject();row.addProperty("initial_cache_units",3);row.addProperty("final_cache_units",cache.size());row.addProperty("exact_recipient_kind_match",directMatch);row.addProperty("protein_only_larval_match",larvalMatch);row.addProperty("accounted_units_including_queen_funding",units);row.add("receipts_by_identity_apple_berry_chicken",new Gson().toJsonTree(actualReceipts));row.addProperty("brood_sugar_residual",sugar);row.addProperty("brood_protein_residual",protein);row.addProperty("brood_progress",larva.progress());row.addProperty("existing_dependent_fixture",true);row.addProperty("save_reload_and_same_time_replay_passed",true);
-            row.addProperty("live_worker_hungry",liveHungry.get("hungry").getAsBoolean());row.addProperty("catchup_worker_hungry",hungry.adultLife().hungry());row.addProperty("live_worker_received_crop_sugar",liveHungry.getAsJsonObject("nutrition").get("receivedSugar").getAsLong());row.addProperty("catchup_worker_received_crop_sugar",hungry.nutrition().receivedSugar());log(c,"finite_cache_after_replay_before_crop_verdict",resumed,row);
-            // Retain the newly measured negative. Exact direct food receipts alone do not settle
-            // allocation when approximate crop approach changes the original recipient's hunger class.
-            c.assertTrue(directMatch,"Every original recipient's apple/berry/chicken receipts match the identical measured ordinary branch");
-            c.assertTrue(larvalMatch,"Measured protein-only larva cannot spend sugar or develop");
-            c.assertTrue(hungry.adultLife().hungry()==liveHungry.get("hungry").getAsBoolean()&&hungry.nutrition().receivedSugar()==liveHungry.getAsJsonObject("nutrition").get("receivedSugar").getAsLong(),"Matched finite live crop transfer and hungry-worker class remain required after exact food/save/replay accounting");
+            boolean nutrition=adults(c,q).stream().allMatch(a->a.nutrition().snapshot().valid())&&resumed.records().stream().allMatch(child->child.nutrition().snapshot().valid());
+            var saved=resumed.saveWithFullMetadata(c.getLevel().registryAccess());var replay=BroodGameTest.restorePile(c,resumed,saved);tickPile(c,replay,completedAt);tickPile(c,replay,completedAt-1);
+            boolean replayExact=replay.saveWithFullMetadata(c.getLevel().registryAccess()).equals(saved)&&finalState.get("adults").equals(AllocationObservations.state(c,q,replay,completedAt).get("adults"))&&finalState.get("brood").equals(AllocationObservations.state(c,q,replay,completedAt).get("brood"));
+            row.addProperty("configuration",captured==null?"generated":captured);row.addProperty("nurses_first",nursesFirst);row.addProperty("missing_steps",393);row.addProperty("ordinary_steps",7);row.addProperty("live_steps",400);
+            row.addProperty("accounted_units",units);row.addProperty("nutrition_exact",nutrition);row.addProperty("reconstruction_same_and_older_replay_exact",replayExact);
+            row.addProperty("existing_larva",id.toString());row.addProperty("existing_larva_emerged",resumed.consumed().contains(id));row.addProperty("larval_protein_credit",larvalProteinCredit);row.addProperty("larval_protein_required",CatchupOutcomes.LARVAL_PROTEIN);row.addProperty("consumption_tolerance_per_kind",CatchupOutcomes.CONSUMPTION_TOLERANCE);
+            log(c,"t01_frozen_scarcity_outcome",replay,row);
+            c.assertTrue(units==5&&nutrition&&replayExact&&row.get("live_crop_balanced").getAsBoolean()&&row.get("catchup_crop_balanced").getAsBoolean(),"Exact conservation, nutrition, crop balance, reconstruction and same/older replay remain mandatory");
+            c.assertTrue(row.get("adult_classes_match").getAsBoolean(),"Frozen scarcity adult hunger and starvation classes match live");
+            c.assertTrue(larvalProteinCredit==CatchupOutcomes.LARVAL_PROTEIN,"Existing larva receives live's 8000 protein from real food, including when it subsequently emerges");
+            c.assertTrue(row.get("consumption_within_one_per_kind").getAsBoolean(),"Frozen physical consumption differs by at most one unit for every food kind, including zeros");
             c.succeed();
         });
     }

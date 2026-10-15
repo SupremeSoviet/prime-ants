@@ -1,220 +1,98 @@
 package dev.primeants.worker;
 
-import com.google.gson.*;
-import com.mojang.serialization.Codec;
 import dev.primeants.brood.*;
-import dev.primeants.colony.AdultBound;
 import dev.primeants.entity.*;
-import dev.primeants.founding.NestPlan;
+import dev.primeants.founding.*;
 import java.util.*;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.storage.*;
 import net.minecraft.world.phys.Vec3;
 
-/** Nonbinding bounded service intentions. Cache units stay in their canonical owner until completion.
- * No intention reserves a unit or is a receipt. Physical nurse cargo stays in its saved equipment.
- * The loaded, validated chamber rows approximate travel; this never moves an actor or replays a path. */
+/** Fixed distribution at confirmed biological boundaries. No trips, intentions or controller clocks.
+ * Only existing food in the owned cache (including upgraded food storage) and reachable member hands
+ * can become ingestion receipts. Existing crop moves with balanced given/received sugar receipts. */
 public final class AggregateFeeding {
-    private record Service(UUID actor,UUID recipient,String source,String kind,long start,long due,long returnTicks,long contact,boolean claimed){
-        long event(){return source.equals("crop")&&!claimed?contact:due;}
-        String encode(){var o=new JsonObject();o.addProperty("actor",actor.toString());o.addProperty("recipient",recipient.toString());o.addProperty("source",source);o.addProperty("kind",kind);o.addProperty("start",start);o.addProperty("due",due);o.addProperty("return",returnTicks);o.addProperty("contact",contact);o.addProperty("claimed",claimed);return o.toString();}
-        static Service decode(String text){var o=JsonParser.parseString(text).getAsJsonObject();long start=o.get("start").getAsLong(),due=o.get("due").getAsLong();String source=o.get("source").getAsString();var s=new Service(UUID.fromString(o.get("actor").getAsString()),UUID.fromString(o.get("recipient").getAsString()),source,o.get("kind").getAsString(),start,due,o.get("return").getAsLong(),o.has("contact")?o.get("contact").getAsLong():source.equals("crop")?Math.max(start,due-CropSharing.ACTION_TICKS+1):due,o.has("claimed")&&o.get("claimed").getAsBoolean());if(!Set.of("cache","cargo","crop").contains(s.source)||s.kind.isEmpty()||s.start<0||s.contact<s.start||s.contact>s.due||s.due<s.start||s.returnTicks<0||s.returnTicks>CropSharing.APPROACH_BOUND+WorkerTasks.FEEDING_TICKS)throw new IllegalArgumentException("Invalid saved service intention");return s;}
-    }
-    private record Search(long observation,int phase,long ordinarySteps){String encode(UUID id){return id+","+observation+","+phase+","+ordinarySteps;}}
-    private record Origin(long observation,long completed,Vec3 position){
-        String encode(UUID id){var o=new JsonObject();o.addProperty("actor",id.toString());o.addProperty("observation",observation);o.addProperty("completed",completed);o.addProperty("x",position.x);o.addProperty("y",position.y);o.addProperty("z",position.z);return o.toString();}
-    }
-    private final List<Service> services=new ArrayList<>();
-    private final Map<UUID,Long> ready=new LinkedHashMap<>();
-    private final Map<UUID,Long> cropReady=new LinkedHashMap<>();
-    private final Map<UUID,Search> searches=new LinkedHashMap<>();
-    private final Map<UUID,Origin> origins=new LinkedHashMap<>();
-    // A completed abstract return is a location for service accounting, never an actor position.
-    // Its completion timestamp lets ordinary actor observations revoke this approximation.
-    private final Map<UUID,Long> cacheReturned=new LinkedHashMap<>();
-    private long cropWake=Long.MAX_VALUE;
-    public int pending(){return services.size();}
-    public List<String> observations(){return services.stream().map(Service::encode).toList();}
-    public long nextCompletion(){return services.stream().mapToLong(Service::due).min().orElse(Long.MAX_VALUE);}
-    private static String kind(ItemStack s){return BuiltInRegistries.ITEM.getKey(s.getItem()).toString();}
-    private boolean busy(UUID actor){return services.stream().anyMatch(s->s.actor.equals(actor));}
-    private boolean donating(UUID actor){return services.stream().anyMatch(s->s.actor.equals(actor)&&s.source.equals("crop"));}
-    private boolean receiving(UUID recipient){return services.stream().anyMatch(s->s.recipient.equals(recipient)&&s.source.equals("crop")&&s.claimed);}
-    private boolean atCache(UUID actor,long cursor){return cacheReturned.containsKey(actor)&&ready.getOrDefault(actor,Long.MAX_VALUE)<=cursor;}
-    private Vec3 origin(LasiusNigerEntity actor,NestPlan home,long cursor){
-        if(atCache(actor.getUUID(),cursor))return Vec3.atBottomCenterOf(home.at(4,-1,-2));
-        var saved=origins.get(actor.getUUID());return saved==null?actor.position():saved.position;
-    }
-    private void located(LasiusNigerEntity actor,Vec3 position,long now){origins.put(actor.getUUID(),new Origin(actor.workerTasks().sharing().lastLoadedTick(),now,position));}
-    private static long route(LasiusNigerEntity worker,Vec3 a,Vec3 b,int legs){
-        double distance=Math.abs(a.x-b.x)+Math.abs(a.y-b.y)+Math.abs(a.z-b.z);
-        double speed=worker.getAttributeValue(Attributes.MOVEMENT_SPEED);
-        if(!Double.isFinite(speed)||speed<=0)return CropSharing.APPROACH_BOUND;
-        // A current path may wait one refresh interval. A completed leg starts the next immediately
-        // through WorkerTasks' isDone branch; it does not pay another refresh interval per row.
-        return Math.min(CropSharing.APPROACH_BOUND,(long)Math.ceil(distance/speed)+(legs>0?WorkerTasks.NAVIGATION_INTERVAL:0));
-    }
-    private void add(LasiusNigerEntity actor,UUID recipient,String source,String kind,long cursor,long delay,long back){
-        long due=AdultLife.saturatingAdd(cursor,Math.max(1,delay)-1);services.add(new Service(actor.getUUID(),recipient,source,kind,cursor,due,back,due,false));
-    }
-    private long queued(UUID recipient,boolean protein){
-        return services.stream().filter(s->s.recipient.equals(recipient)&&!s.source.equals("crop"))
-            .mapToLong(s->protein?protein(s.kind):sugar(s.kind)).sum();
-    }
-    private static long sugar(String kind){return Nutrition.sugarYield(new ItemStack(BuiltInRegistries.ITEM.getValue(net.minecraft.resources.Identifier.parse(kind))));}
-    private static long protein(String kind){return Nutrition.proteinYield(new ItemStack(BuiltInRegistries.ITEM.getValue(net.minecraft.resources.Identifier.parse(kind))));}
-    private UUID recipient(ServerLevel l,BroodPile pile,LasiusNigerEntity queen,ItemStack unit){
-        return WorkerTasks.selectNursingRecipient(pile,queen,unit,id->{
-            if(id.equals(pile.queenId()))return queen.nutrition().sugar()+queued(id,false)+Nutrition.sugarYield(unit)<=Nutrition.QUEEN_SUGAR_CAPACITY
-                &&queen.nutrition().protein()+queued(id,true)+Nutrition.proteinYield(unit)<=Nutrition.QUEEN_PROTEIN_CAPACITY
-                &&(Nutrition.proteinYield(unit)==0||queen.nutrition().protein()+queued(id,true)<Nutrition.EGG_PROTEIN);
-            var r=pile.records().stream().filter(b->b.id().equals(id)).findFirst().orElseThrow();
-            return r.nutrition().gainedSugar()+queued(id,false)+Nutrition.sugarYield(unit)<=Nutrition.LARVA_SUGAR
-                &&r.nutrition().gainedProtein()+queued(id,true)+Nutrition.proteinYield(unit)<=Nutrition.LARVA_PROTEIN;
-        });
-    }
-    public void plan(ServerLevel l,BroodPile pile,List<LasiusNigerEntity> confirmed,List<LasiusNigerEntity> adults,NestCache cache,long cursor){
-        // A live ordinary interval can service or revoke old intentions. It never earns a retrospective receipt.
-        services.removeIf(s->confirmed.stream().noneMatch(a->a.getUUID().equals(s.actor))||confirmed.stream().filter(a->a.getUUID().equals(s.actor)).anyMatch(a->a.workerTasks().sharing().lastLoadedTick()>=s.start));
-        ready.keySet().removeIf(id->confirmed.stream().noneMatch(a->a.getUUID().equals(id)));
-        cropReady.keySet().removeIf(id->confirmed.stream().noneMatch(a->a.getUUID().equals(id)));
-        searches.keySet().removeIf(id->confirmed.stream().noneMatch(a->a.getUUID().equals(id)));
-        origins.entrySet().removeIf(e->{var actor=confirmed.stream().filter(a->a.getUUID().equals(e.getKey())).findFirst().orElse(null);boolean revoked=actor==null||actor.workerTasks().sharing().lastLoadedTick()!=e.getValue().observation;if(revoked){ready.remove(e.getKey());cacheReturned.remove(e.getKey());}return revoked;});
-        cacheReturned.entrySet().removeIf(e->{var actor=confirmed.stream().filter(a->a.getUUID().equals(e.getKey())).findFirst().orElse(null);boolean revoked=actor==null||actor.workerTasks().sharing().lastLoadedTick()>e.getValue();if(revoked)ready.remove(e.getKey());return revoked;});
-        var home=pile.catchupPlan();var queen=l.getEntity(pile.queenId()) instanceof LasiusNigerEntity q?q:null;
-        // Ordinary crop sharing precedes personal cache eating. Its transfer uses the shared exact reserve/portion.
-        cropWake=Long.MAX_VALUE;
-        // Covered ordinary intervals do not delete committed missing-step phase history.
-        for(var donor:confirmed){var sharing=donor.workerTasks().sharing();var search=searches.get(donor.getUUID());
-            if(search==null)search=new Search(sharing.lastLoadedTick(),sharing.savedSearchPhase(),sharing.observedTicks());
-            else if(search.observation!=sharing.lastLoadedTick())search=new Search(sharing.lastLoadedTick(),sharing.observedTicks()>=search.ordinarySteps?(search.phase+(int)((sharing.observedTicks()-search.ordinarySteps)%20))%20:sharing.savedSearchPhase(),sharing.observedTicks());
-            searches.put(donor.getUUID(),search);
+    private static final Comparator<LasiusNigerEntity> ID=Comparator.comparing(a->a.getUUID().toString());
+    private static final Comparator<LasiusNigerEntity> HUNGER=Comparator
+        .comparingLong((LasiusNigerEntity a)->a.adultLife().fasting()).reversed().thenComparing(ID);
+
+    /** CLEAR findings prove the original connected chamber and entrance steps. Outside that domain
+     * only adjoining loaded supported entrance stands are admitted. This availability check has
+     * no path, distance cost, future location or travel estimate. */
+    private static boolean reachable(ServerLevel l,NestPlan home,LasiusNigerEntity a){
+        var stands=new ArrayList<BlockPos>();
+        for(int f=3;f<=5;f++)for(int s=-1;s<=1;s++)stands.add(home.at(f,s,-2));
+        for(int f=0;f<3;f++)stands.add(home.at(f,0,-f));
+        if(NestPlan.loaded(l,home.entrance().above())&&NestPlan.walkable(l,home.entrance().above())){
+            stands.add(home.entrance().above());
+            for(int f=-1;f>=-2;f--){var p=home.at(f,0,1);if(!NestPlan.loaded(l,p)||!NestPlan.walkable(l,p))break;stands.add(p);}
         }
-        for(var donor:adults){
-            var sharing=donor.workerTasks().sharing();var search=searches.get(donor.getUUID());
-            if(!CropSharing.aggregateDonorEligible(l,donor)||receiving(donor.getUUID()))continue;
-            int cooldown=donor.workerTasks().sharing().cooldownRemaining();
-            if(cooldown>0){cropWake=Math.min(cropWake,AdultLife.saturatingAdd(cursor,cooldown));continue;}
-            if(donating(donor.getUUID()))continue;
-            long cropDelay=cropReady.getOrDefault(donor.getUUID(),0L);
-            if(cropDelay>0){cropWake=Math.min(cropWake,AdultLife.saturatingAdd(cursor,cropDelay));continue;}
-            var target=adults.stream().filter(a->!receiving(a.getUUID())&&!donating(a.getUUID())&&CropSharing.aggregateEligible(l,donor,a))
-                .min(CropSharing.recipientOrder(donor)).orElse(null);
-            if(target!=null){
-                boolean saved=target.getUUID().equals(sharing.target());int wait=saved?0:Math.floorMod(-search.phase-1,20);
-                if(wait>0){cropWake=Math.min(cropWake,AdultLife.saturatingAdd(cursor,wait));continue;}
-                // Ordinary sharing runs before nursing dispatch, even with food in the mandibles.
-                // Revoking a nonbinding trip neither withdraws its cache unit nor consumes saved cargo.
-                var from=origin(donor,home,cursor);var to=origin(target,home,cursor);
-                services.removeIf(s->s.actor.equals(donor.getUUID())&&!s.source.equals("crop"));
-                boolean modeled=origins.containsKey(donor.getUUID())||origins.containsKey(target.getUUID());
-                boolean near=modeled?from.distanceToSqr(to)<=1.6:WorkerTasks.reaches(l,donor,target.position().add(0,.25,0))&&WorkerTasks.reaches(l,target,donor.position().add(0,.25,0));int partial=saved&&near?sharing.actionTicks():0;
-                long approach=near?0:route(donor,from,to,1);
-                if(approach+CropSharing.ACTION_TICKS-partial>CropSharing.APPROACH_BOUND-(saved?sharing.approachTicks():0)){
-                    long timeout=AdultLife.saturatingAdd(cursor,Math.max(1,CropSharing.APPROACH_BOUND-(saved?sharing.approachTicks():0))-1);
-                    services.add(new Service(donor.getUUID(),target.getUUID(),"crop","timeout",cursor,timeout,40,timeout,false));continue;}
-                ready.remove(donor.getUUID());cacheReturned.remove(donor.getUUID());located(donor,from,cursor);
-                long contact=AdultLife.saturatingAdd(cursor,approach),due=AdultLife.saturatingAdd(contact,CropSharing.ACTION_TICKS-partial-1);
-                services.add(new Service(donor.getUUID(),target.getUUID(),"crop","crop",cursor,due,40,contact,false));}
+        stands.addAll(NestExpansion.get(l).circulationSpace(l,a.colonyIdentity()));
+        return stands.stream().anyMatch(p->WorkerTasks.reaches(l,a,Vec3.atBottomCenterOf(p).add(0,.25,0)));
+    }
+    private static boolean eligible(ServerLevel l,BroodPile pile,LasiusNigerEntity a){
+        return l.getEntity(a.getUUID())==a&&a.isAlive()&&!a.isRemoved()&&!a.isNoAi()&&!a.isCallow()
+            &&!a.workerTasks().defending()&&pile.queenId().equals(a.colonyIdentity())
+            &&NestPlan.loaded(l,a.blockPosition())&&l.isPositionEntityTicking(a.blockPosition())
+            &&(a.form()==AntForm.QUEEN||ColonyMembers.get(l).belongs(a,pile.queenId(),pile.catchupPlan().chamber()))
+            &&reachable(l,pile.catchupPlan(),a);
+    }
+    private record Source(NestCache cache,LasiusNigerEntity carrier,ItemStack unit){
+        boolean serve(Nutrition n,long sugarCap,long proteinCap){
+            if(cache!=null)return cache.serveAggregate(n,sugarCap,proteinCap,s->ItemStack.isSameItemSameComponents(s,unit));
+            var hand=carrier.getMainHandItem();
+            if(hand.isEmpty()||!ItemStack.isSameItemSameComponents(hand,unit)||!n.ingest(unit,sugarCap,proteinCap))return false;
+            var remainder=hand.copy();remainder.shrink(1);carrier.setItemSlot(EquipmentSlot.MAINHAND,remainder);return true;
         }
-        if(cache==null||cache.size()==0&&adults.stream().noneMatch(a->WorkerTasks.food(a.getMainHandItem())))return;
-        var available=new ArrayList<>(cache.contents());for(var s:services)if(s.source.equals("cache")){int at=-1;for(int i=0;i<available.size();i++)if(kind(available.get(i)).equals(s.kind)){at=i;break;}if(at>=0)available.remove(at);}
-        var cacheStand=Vec3.atBottomCenterOf(home.at(4,-1,-2));
-        // Physical cache access precedes ingestion. A distant actor's future intention must
-        // not take the first portion ahead of an eligible body already at the cache.
-        var cacheOrder=new ArrayList<>(adults);
-        cacheOrder.sort(Comparator.comparingLong(a->WorkerTasks.food(a.getMainHandItem())||atCache(a.getUUID(),cursor)||!origins.containsKey(a.getUUID())&&WorkerTasks.reaches(l,a,Vec3.atBottomCenterOf(home.cache()).add(0,.15,0))?0:route(a,origin(a,home,cursor),cacheStand,1)));
-        for(var actor:cacheOrder){
-            if(actor.form()!=AntForm.WORKER||actor.isNoAi()||actor.workerTasks().defending()||busy(actor.getUUID())||ready.getOrDefault(actor.getUUID(),0L)>cursor)continue;
-            if(actor.workerTasks().mealNeeded(l)&&!receiving(actor.getUUID())){
-                var carried=actor.getMainHandItem();var meal=WorkerTasks.food(carried)&&Nutrition.sugarYield(carried)>0?carried:available.stream().filter(s->Nutrition.sugarYield(s)>0&&actor.nutrition().accepts(s,Nutrition.QUEEN_SUGAR_CAPACITY,0)).findFirst().orElse(null);
-                if(meal!=null&&actor.nutrition().accepts(meal,Nutrition.QUEEN_SUGAR_CAPACITY,0)){
-                    boolean cargo=!carried.isEmpty();long approach=cargo||atCache(actor.getUUID(),cursor)||!origins.containsKey(actor.getUUID())&&WorkerTasks.reaches(l,actor,Vec3.atBottomCenterOf(home.cache()).add(0,.15,0))?0:route(actor,origin(actor,home,cursor),cacheStand,1);
-                    add(actor,actor.getUUID(),cargo?"cargo":"cache",kind(meal),cursor,AdultLife.MEAL_TICKS-actor.adultLife().mealTicks()+approach,0);if(!cargo)available.remove(meal);continue;
-                }
+    }
+    private static List<Source> sources(NestCache cache,List<LasiusNigerEntity> bodies){
+        var result=new ArrayList<Source>();
+        if(cache!=null)for(var unit:cache.contents())result.add(new Source(cache,null,unit));
+        for(var a:bodies.stream().sorted(ID).toList())if(WorkerTasks.food(a.getMainHandItem()))
+            for(int i=0;i<a.getMainHandItem().getCount();i++)result.add(new Source(null,a,a.getMainHandItem().copyWithCount(1)));
+        return result;
+    }
+    private static boolean ingest(BroodPile pile,Source source,Nutrition n,long s,long p){
+        if(!pile.catchup().foodAvailable())return false;
+        if(!source.serve(n,s,p))throw new IllegalStateException("Confirmed aggregate food changed during distribution");
+        pile.catchup().foodEvent();pile.setChanged();if(source.cache!=null)pile.aggregateFoodChanged();return true;
+    }
+    /** Only missing adults participate. Already observed ordinary intervals earn no extra feeding.
+     * False means that bounded pending work must resume on another invocation. */
+    public boolean distribute(ServerLevel l,BroodPile pile,List<LasiusNigerEntity> missing,NestCache cache){
+        var bodies=missing.stream().filter(a->eligible(l,pile,a)).toList();
+        if(cache!=null&&(!cache.ownedBy(pile.queenId(),pile.catchupPlan())||cache.componentOwner()==null))cache=null;
+        var available=sources(cache,bodies);
+        // Only crop present at this boundary is redistributable in this decision batch.
+        var crop=new HashMap<LasiusNigerEntity,Long>();
+        for(var a:bodies)crop.put(a,Math.max(0,a.nutrition().sugar()-CropSharing.RESERVE));
+        for(var recipient:bodies.stream().filter(a->a.adultLife().hungry()&&a.nutrition().sugar()<CropSharing.PORTION).sorted(HUNGER).toList()){
+            // Ordinary reserve and portion are values, not a saved approach or cooldown.
+            for(var donor:bodies.stream().filter(a->a.form()==AntForm.WORKER&&a!=recipient).sorted(ID).toList()){
+                if(recipient.nutrition().sugar()>=CropSharing.PORTION)break;
+                long amount=Math.min(CropSharing.PORTION,Math.min(crop.get(donor),Math.min(donor.nutrition().sugar()-CropSharing.RESERVE,Nutrition.QUEEN_SUGAR_CAPACITY-recipient.nutrition().sugar())));
+                if(amount<=0)continue;
+                if(!pile.catchup().foodAvailable())return false;
+                if(!donor.nutrition().shareWith(recipient.nutrition(),amount,CropSharing.RESERVE,Nutrition.QUEEN_SUGAR_CAPACITY))throw new IllegalStateException("Unbalanced aggregate crop transfer");
+                crop.put(donor,crop.get(donor)-amount);
+                pile.catchup().foodEvent();pile.setChanged();
             }
-            if(!actor.workerTasks().caregiverWithValidatedHabitat(l,home)||actor.workerTasks().mealNeeded(l)||receiving(actor.getUUID()))continue;
-            var carried=actor.getMainHandItem();boolean cargo=WorkerTasks.food(carried);
-            if(!cargo&&!carried.isEmpty())continue;
-            ItemStack unit=null;UUID to=null;
-            if(cargo){unit=carried;to=actor.workerTasks().recipientId();if(to==null)to=recipient(l,pile,queen,unit);}
-            else for(var candidate:available){var id=recipient(l,pile,queen,candidate);if(id!=null){unit=candidate;to=id;break;}}
-            if(unit==null||to==null)continue;
-            boolean toQueen=to.equals(pile.queenId());Vec3 target=toQueen?queen.position().add(0,.25,0):Vec3.atBottomCenterOf(home.nursery()).add(0,.15,0);
-            boolean near=WorkerTasks.reaches(l,actor,target);int partial=cargo&&near?actor.workerTasks().feedingTicks():0;
-            long fetch=cargo||atCache(actor.getUUID(),cursor)||!origins.containsKey(actor.getUUID())&&WorkerTasks.reaches(l,actor,Vec3.atBottomCenterOf(home.cache()).add(0,.15,0))?0:route(actor,origin(actor,home,cursor),cacheStand,1);
-            Vec3 destination=Vec3.atBottomCenterOf(home.at(toQueen?4:5,toQueen?-1:1,-2));
-            long travel=cargo&&near?0:route(actor,cargo?origin(actor,home,cursor):cacheStand,destination,toQueen?1:2);
-            long back=WorkerTasks.FEEDING_COOLDOWN+route(actor,destination,cacheStand,toQueen?1:2);
-            add(actor,to,cargo?"cargo":"cache",kind(unit),cursor,fetch+(cargo?0:1)+travel+WorkerTasks.FEEDING_TICKS-partial,back);if(!cargo)available.remove(unit);
+            if(recipient.nutrition().sugar()>=CropSharing.PORTION)continue;
+            var source=available.stream().filter(s->Nutrition.sugarYield(s.unit)>0&&recipient.nutrition().accepts(s.unit,Nutrition.QUEEN_SUGAR_CAPACITY,0)).findFirst().orElse(null);
+            if(source!=null){if(!ingest(pile,source,recipient.nutrition(),Nutrition.QUEEN_SUGAR_CAPACITY,0))return false;available.remove(source);}
         }
-    }
-    public long nextEvent(long cursor){long due=Math.min(cropWake,Math.min(services.stream().mapToLong(Service::event).min().orElse(Long.MAX_VALUE),ready.values().stream().filter(n->n>cursor).mapToLong(Long::longValue).min().orElse(Long.MAX_VALUE)));return due==Long.MAX_VALUE?Long.MAX_VALUE:due<=cursor?1:due-cursor;}
-    /** Only coordinator-confirmed missing steps advance this phase; actual counters/stamps remain ordinary-owned. */
-    public void advanceSearch(List<LasiusNigerEntity> adults,long ticks){for(var a:adults){var s=searches.get(a.getUUID());if(s!=null)searches.put(a.getUUID(),new Search(s.observation,(s.phase+(int)(ticks%20))%20,s.ordinarySteps));}}
-    /** Called only for the coordinator's confirmed missing adult segments, before biological debit.
-     * Stop cooldown counting at the exact maintenance step that would remove donor eligibility. */
-    public void advanceCooldown(ServerLevel l,List<LasiusNigerEntity> adults,long ticks){
-        for(var a:adults)if(CropSharing.aggregateDonorEligible(l,a)&&!receiving(a.getUUID())){
-            long units=a.nutrition().sugar()-CropSharing.RESERVE-1;
-            long eligible=AdultLife.saturatingAdd(a.adultLife().coverageRemaining(),units>Long.MAX_VALUE/AdultLife.maintenancePeriod()?Long.MAX_VALUE:units*AdultLife.maintenancePeriod());
-            long elapsed=Math.min(ticks,eligible);a.workerTasks().sharing().advanceAggregateCooldown(elapsed);
-            cropReady.computeIfPresent(a.getUUID(),(id,remaining)->Math.max(0,remaining-elapsed));
+        // Real confirmed care is required. Ordinary ordering gives accepting larvae priority
+        // over the queen, including protein that her ingested stores cannot export.
+        if(bodies.stream().noneMatch(a->a.workerTasks().caregiverWithValidatedHabitat(l,pile.catchupPlan())))return true;
+        var queen=bodies.stream().filter(a->a.form()==AntForm.QUEEN).findFirst().orElse(null);
+        for(var source:available){
+            var id=WorkerTasks.selectNursingRecipient(pile,queen,source.unit,ignored->true);
+            if(id==null)continue;
+            var larva=pile.records().stream().filter(r->r.id().equals(id)).findFirst().orElse(null);
+            if(!ingest(pile,source,larva==null?queen.nutrition():larva.nutrition(),larva==null?Nutrition.QUEEN_SUGAR_CAPACITY:Nutrition.LARVA_SUGAR,larva==null?Nutrition.QUEEN_PROTEIN_CAPACITY:Nutrition.LARVA_PROTEIN))return false;
         }
-    }
-    public void complete(ServerLevel l,BroodPile pile,NestCache cache,long now){
-        var order=new ArrayList<UUID>();order.add(pile.queenId());for(var m:ColonyMembers.get(l).members(pile.queenId()))if(!m.dead())order.add(m.worker());
-        // Simultaneous contact order follows ordinary membership, regardless of approach start order.
-        for(var service:services.stream().sorted(Comparator.comparingLong(Service::event).thenComparingInt(s->order.indexOf(s.actor))).toList())if(service.event()<=now){
-            if(!services.contains(service))continue; // A preceding contact may have revoked this intention.
-            var entity=l.getEntity(service.actor);var recipient=l.getEntity(service.recipient);
-            if(!(entity instanceof LasiusNigerEntity actor)||!actor.isAlive()||actor.isRemoved()||actor.isNoAi()||actor.workerTasks().defending()){services.remove(service);continue;}
-            boolean served=false;
-            if(service.source.equals("crop")){
-                if(service.kind.equals("timeout")){services.remove(service);cropReady.put(service.actor,40L);continue;}
-                if(!service.claimed){
-                    if(!(recipient instanceof LasiusNigerEntity target)||receiving(service.recipient)||!CropSharing.aggregateEligible(l,actor,target)){services.remove(service);cropReady.put(service.actor,40L);continue;}
-                    var claimed=new Service(service.actor,service.recipient,service.source,service.kind,service.start,service.due,service.returnTicks,service.contact,true);
-                    var contact=origin(target,pile.catchupPlan(),now);located(actor,contact,now);located(target,contact,now);ready.remove(target.getUUID());cacheReturned.remove(target.getUUID());
-                    services.removeIf(s->s.actor.equals(service.recipient)&&!s.source.equals("crop"));
-                    services.set(services.indexOf(service),claimed);pile.setChanged();
-                    if(service.due>now)continue;
-                }
-                served=recipient instanceof LasiusNigerEntity target&&CropSharing.transferAggregate(l,actor,target);
-                cropReady.put(service.actor,40L);
-            }
-            else{
-                Nutrition nutrition=null;long sugarCap=Nutrition.QUEEN_SUGAR_CAPACITY,proteinCap=Nutrition.QUEEN_PROTEIN_CAPACITY;
-                java.util.function.Predicate<ItemStack> accepts;
-                if(service.recipient.equals(actor.getUUID())){nutrition=actor.nutrition();proteinCap=0;accepts=s->Nutrition.sugarYield(s)>0&&actor.workerTasks().mealNeeded(l);}
-                else if(service.recipient.equals(pile.queenId())&&recipient instanceof LasiusNigerEntity queen){nutrition=queen.nutrition();accepts=s->WorkerTasks.queenNeedsFood(queen,s);}
-                else{var brood=pile.records().stream().filter(r->r.id().equals(service.recipient)).findFirst().orElse(null);if(brood==null){services.remove(service);continue;}nutrition=brood.nutrition();sugarCap=Nutrition.LARVA_SUGAR;proteinCap=Nutrition.LARVA_PROTEIN;accepts=s->pile.accepts(brood,s);}
-                if(service.recipient.equals(actor.getUUID())||actor.workerTasks().caregiverWithValidatedHabitat(l,pile.catchupPlan())){
-                    if(service.source.equals("cargo")){var unit=actor.getMainHandItem();if(kind(unit).equals(service.kind)&&accepts.test(unit)&&nutrition.ingest(unit,sugarCap,proteinCap)){actor.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);served=true;}}
-                    else if(cache!=null)served=cache.serveAggregate(nutrition,sugarCap,proteinCap,s->kind(s).equals(service.kind)&&accepts.test(s));
-                }
-            }
-            if(served){pile.catchup().foodEvent();if(!service.source.equals("crop")){
-                var home=pile.catchupPlan();boolean self=service.recipient.equals(service.actor);
-                located(actor,self?service.source.equals("cache")?Vec3.atBottomCenterOf(home.at(4,-1,-2)):origin(actor,home,now):Vec3.atBottomCenterOf(home.at(service.recipient.equals(pile.queenId())?4:5,service.recipient.equals(pile.queenId())?-1:1,-2)),now);
-                ready.put(service.actor,AdultLife.saturatingAdd(now,service.returnTicks));if(service.source.equals("cache")||!self)cacheReturned.put(service.actor,AdultLife.saturatingAdd(now,service.returnTicks));else cacheReturned.remove(service.actor);
-            }if(service.source.equals("cache"))pile.aggregateFoodChanged();}
-            services.removeIf(s->s.actor.equals(service.actor));pile.setChanged();
-        }
-    }
-    public void save(ValueOutput out){out.store("ServiceOrigins",Codec.STRING.listOf(),origins.entrySet().stream().map(e->e.getValue().encode(e.getKey())).toList());out.store("ServiceSearch",Codec.STRING.listOf(),searches.entrySet().stream().map(e->e.getValue().encode(e.getKey())).toList());out.store("ServiceCropReady",Codec.unboundedMap(Codec.STRING,Codec.LONG),cropReady.entrySet().stream().collect(java.util.stream.Collectors.toMap(e->e.getKey().toString(),Map.Entry::getValue)));out.store("Services",Codec.STRING.listOf(),services.stream().map(Service::encode).toList());out.store("ServiceReady",Codec.unboundedMap(Codec.STRING,Codec.LONG),ready.entrySet().stream().collect(java.util.stream.Collectors.toMap(e->e.getKey().toString(),Map.Entry::getValue)));out.store("ServiceCacheReturned",Codec.unboundedMap(Codec.STRING,Codec.LONG),cacheReturned.entrySet().stream().collect(java.util.stream.Collectors.toMap(e->e.getKey().toString(),Map.Entry::getValue)));}
-    public void load(ValueInput in){
-        services.clear();ready.clear();cacheReturned.clear();cropReady.clear();searches.clear();origins.clear();
-        services.addAll(in.read("Services",Codec.STRING.listOf()).orElse(List.of()).stream().map(Service::decode).toList());
-        in.read("ServiceSearch",Codec.STRING.listOf()).orElse(List.of()).forEach(text->{var v=text.split(",");if(v.length!=4||searches.put(UUID.fromString(v[0]),new Search(Long.parseLong(v[1]),Integer.parseInt(v[2]),Long.parseLong(v[3])))!=null)throw new IllegalArgumentException("Invalid search phase identity");});
-        in.read("ServiceOrigins",Codec.STRING.listOf()).orElse(List.of()).forEach(text->{var v=JsonParser.parseString(text).getAsJsonObject();var p=new Vec3(v.get("x").getAsDouble(),v.get("y").getAsDouble(),v.get("z").getAsDouble());if(!Double.isFinite(p.x)||!Double.isFinite(p.y)||!Double.isFinite(p.z)||v.get("completed").getAsLong()<0||origins.put(UUID.fromString(v.get("actor").getAsString()),new Origin(v.get("observation").getAsLong(),v.get("completed").getAsLong(),p))!=null)throw new IllegalArgumentException("Invalid service origin");});
-        in.read("ServiceCropReady",Codec.unboundedMap(Codec.STRING,Codec.LONG)).orElse(Map.of()).forEach((id,time)->cropReady.put(UUID.fromString(id),time));
-        in.read("ServiceReady",Codec.unboundedMap(Codec.STRING,Codec.LONG)).orElse(Map.of()).forEach((id,time)->ready.put(UUID.fromString(id),time));
-        in.read("ServiceCacheReturned",Codec.unboundedMap(Codec.STRING,Codec.LONG)).orElse(Map.of()).forEach((id,time)->cacheReturned.put(UUID.fromString(id),time));
-        if(services.size()>AdultBound.MAX||ready.size()>AdultBound.MAX||cropReady.size()>AdultBound.MAX||origins.size()>AdultBound.MAX||searches.size()>AdultBound.MAX||searches.values().stream().anyMatch(s->s.phase<0||s.phase>=20||s.ordinarySteps<0)||cropReady.values().stream().anyMatch(n->n<0||n>40)||services.stream().filter(s->s.source.equals("crop")&&s.claimed).map(Service::recipient).distinct().count()!=services.stream().filter(s->s.source.equals("crop")&&s.claimed).count()||services.stream().map(Service::actor).distinct().count()!=services.size()||ready.values().stream().anyMatch(n->n<0)||!ready.keySet().containsAll(cacheReturned.keySet())||cacheReturned.values().stream().anyMatch(n->n<0))throw new IllegalArgumentException("Invalid bounded aggregate service state");
+        return true;
     }
 }

@@ -24,7 +24,7 @@ public final class CropSharing {
     public long lastLoadedTick(){return lastTick;}
     public int cooldownRemaining(){return cooldown;}
     public int approachTicks(){return approachTicks;}
-    /** Observed counter only. Aggregate scheduling keeps its missing-step phase in its own ledger. */
+    /** Ordinary observed counter, retained in saved controller state for compatibility. */
     public int savedSearchPhase(){return savedSearchPhase<0?Math.floorMod(donor.tickCount,20):savedSearchPhase;}
     public long observedTicks(){return observedTicks;}
     /** Same ordering in ordinary and bounded sharing; path acceptance remains ordinary-owned. */
@@ -32,8 +32,6 @@ public final class CropSharing {
         return Comparator.comparingLong((LasiusNigerEntity a)->-a.adultLife().fasting()).thenComparingDouble(donor::distanceToSqr);
     }
     public static boolean aggregateDonorEligible(ServerLevel l,LasiusNigerEntity a){return live(l,a)&&a.form()==AntForm.WORKER&&a.nutrition().sugar()>RESERVE;}
-    /** Only confirmed missing steps may spend saved cooldown. Never stamp an ordinary observation. */
-    public void advanceAggregateCooldown(long eligibleTicks){if(eligibleTicks<0)throw new IllegalArgumentException("Negative crop elapsed time");cooldown-=(int)Math.min(cooldown,eligibleTicks);}
     private static boolean live(ServerLevel l,LasiusNigerEntity a){
         if(l.getEntity(a.getUUID())!=a||!a.isAlive()||a.isRemoved()||a.isNoAi()||a.isCallow()||a.workerTasks().defending()
             ||!NestPlan.loaded(l,a.blockPosition())||!l.isPositionEntityTicking(a.blockPosition()))return false;
@@ -53,7 +51,6 @@ public final class CropSharing {
         long amount=Math.min(PORTION,Math.min(donor.nutrition().sugar()-RESERVE,Nutrition.QUEEN_SUGAR_CAPACITY-recipient.nutrition().sugar()));
         return donor.nutrition().shareWith(recipient.nutrition(),amount,RESERVE,Nutrition.QUEEN_SUGAR_CAPACITY);
     }
-    public static boolean transferAggregate(ServerLevel l,LasiusNigerEntity donor,LasiusNigerEntity recipient){return aggregateEligible(l,donor,recipient)&&transferNutrition(donor,recipient);}
     public boolean needsCrop(ServerLevel l){
         if(!live(l,donor)||donor.form()!=AntForm.WORKER||donor.nutrition().sugar()>RESERVE)return false;
         for(var m:ColonyMembers.get(l).members(donor.queenId()))if(l.getEntity(m.worker()) instanceof LasiusNigerEntity a&&recipient(l,a)&&donor.distanceToSqr(a)<=256)return true;

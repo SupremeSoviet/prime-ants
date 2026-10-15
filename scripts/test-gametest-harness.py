@@ -17,6 +17,17 @@ spec=importlib.util.spec_from_file_location('harness',Path(__file__).with_name('
 h=importlib.util.module_from_spec(spec);spec.loader.exec_module(h)
 
 class HarnessTests(unittest.TestCase):
+    def test_long_missing_identity_summary_is_bounded_and_full_issues_remain_in_packet(self):
+        result={'passed':False,'suite':'long','union_issues':['missing prime_ants_test:'+('long_identity_'*12)+str(i) for i in range(30)],'shards':[],'assigned':[]}
+        original=json.dumps(result,sort_keys=True)
+        output=io.StringIO()
+        with patch.object(h,'run_suite',return_value=result),patch.object(sys,'argv',['harness','run','--folder','offline','--suite','long']),contextlib.redirect_stdout(output),self.assertRaises(SystemExit) as caught:
+            h.main()
+        self.assertEqual(1,caught.exception.code)
+        self.assertLess(len(output.getvalue().encode()),1024)
+        self.assertEqual(30,json.loads(output.getvalue())['issue_count'])
+        self.assertEqual(original,json.dumps(result,sort_keys=True))
+
     def test_fast_guard_cli_keeps_full_packet_with_bounded_console_summary(self):
         # Regression for a completed guard blocked writing >4 KiB through Gradle's inherited pipe.
         with tempfile.TemporaryDirectory() as temporary:

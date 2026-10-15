@@ -52,10 +52,7 @@ final class FiniteCacheLiveControl {
         long units=cache.size()+finalBodies.stream().mapToLong(a->a.nutrition().consumedUnits()+(WorkerTasks.food(a.getMainHandItem())?a.getMainHandItem().getCount():0)).sum()+p.consumedFood();
         c.assertTrue(units==5&&bodies.stream().allMatch(a->a.nutrition().snapshot().valid())&&p.records().stream().allMatch(r->r.nutrition().snapshot().valid()),"Live branch conserves exactly five original units, including two queen receipts, with valid debit equations");
         live.addProperty("accounted_units",units);live.addProperty("aggregate_invocations",p.catchup().invocations()-invocations);ReconciliationEvidence.log("t01_finite_live_final","ordinary_consecutive_ticks",live);
-        // Specific food receipts are revalidated on native cadence; crop receipts have their own exact comparison.
-        c.assertTrue(q.nutrition().apples()==1&&q.nutrition().chickens()==1&&q.nutrition().berries()==0&&hungry.nutrition().consumedUnits()==0&&p.consumedApples()==0&&p.consumedBerries()==0&&p.consumedChickens()==1,"Ordinary finite counterexample: funding stays with queen, hungry forager gets no food, larva gets chicken only");
-        var nurses=bodies.stream().filter(a->a.form()==AntForm.WORKER&&a!=hungry).toList();
-        c.assertTrue(nurses.size()==2&&nurses.get(0).nutrition().apples()==1&&nurses.get(0).nutrition().berries()==0&&nurses.get(1).nutrition().apples()==0&&nurses.get(1).nutrition().berries()==1&&nurses.stream().allMatch(a->a.nutrition().chickens()==0),"Original first and second nurses receive apple and berry respectively, with no protein receipt");
+        c.assertTrue(p.records().getFirst().nutrition().gainedProtein()==CatchupOutcomes.LARVAL_PROTEIN,"Frozen live larval protein reference is 8000");
         if(liveOnly)return new Result(q,p,hungry,cache,live);
         for(var a:finalBodies)a.remove(Entity.RemovalReason.UNLOADED_TO_CHUNK);
         l.getDataStorage().set(ColonyMembers.TYPE,ColonyMembers.CODEC.parse(JsonOps.INSTANCE,members).getOrThrow());

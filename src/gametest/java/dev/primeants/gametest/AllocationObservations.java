@@ -16,7 +16,7 @@ final class AllocationObservations {
         row.addProperty("saved_service_state",p.saveWithFullMetadata(c.getLevel().registryAccess()).getCompoundOrEmpty("Catchup").toString());
         var adults=AutomaticCatchupGameTest.adults(c,q);var people=new JsonArray();
         for(var a:adults){var r=new JsonObject();r.addProperty("id",a.getUUID().toString());r.addProperty("form",a.form().name());
-            r.add("nutrition",new Gson().toJsonTree(a.nutrition().snapshot()));r.addProperty("fasting",a.adultLife().fasting());r.addProperty("hungry",a.adultLife().hungry());
+            r.add("nutrition",new Gson().toJsonTree(a.nutrition().snapshot()));r.addProperty("fasting",a.adultLife().fasting());r.addProperty("hungry",a.adultLife().hungry());r.addProperty("starving",a.adultLife().fasting()>=a.adultLife().grace());
             r.addProperty("crop_state",ReconciliationGameTest.save(c,a).getCompoundOrEmpty("WorkerTask").getCompoundOrEmpty("CropSharing").toString());
             r.addProperty("position",a.position().toString());r.addProperty("partial_action",a.workerTasks().sharing().actionTicks());r.addProperty("crop_target",String.valueOf(a.workerTasks().sharing().target()));
             r.addProperty("caregiver",a.form()==AntForm.WORKER&&a.workerTasks().caregiverWithValidatedHabitat(c.getLevel(),q.founding().plan()));
@@ -35,6 +35,8 @@ final class AllocationObservations {
             r.add("eligible_crop_choices_fasting_then_distance",choices);people.add(r);
         }
         row.add("adults",people);row.add("adult_order",new Gson().toJsonTree(adults.stream().map(LasiusNigerEntity::getUUID).toList()));row.add("brood",new Gson().toJsonTree(p.records().stream().map(r->Map.of("id",r.id(),"stage",r.stage(),"progress",r.progress(),"nutrition",r.nutrition().snapshot())).toList()));
+        // Includes retired/emerged brood receipts exactly once, separately from current records.
+        var consumption=new JsonObject();consumption.addProperty("apples",p.consumedApples());consumption.addProperty("berries",p.consumedBerries());consumption.addProperty("chickens",p.consumedChickens());consumption.addProperty("nectar",p.consumedNectar()-p.consumedNectarV2());consumption.addProperty("nectarV2",p.consumedNectarV2());consumption.addProperty("prey",p.consumedPrey());consumption.addProperty("flesh",p.consumedFlesh());row.add("brood_consumption",consumption);
         var cache=c.getLevel().getBlockEntity(q.founding().plan().cache());row.add("cache",new Gson().toJsonTree(cache instanceof NestCache n?n.contents().stream().map(Object::toString).toList():List.of()));return row;
     }
     static void log(GameTestHelper c,LasiusNigerEntity q,BroodPile p,long cursor,String point){var row=state(c,q,p,cursor);row.addProperty("point",point);ReconciliationEvidence.log("t08_allocation","ordinary_production_hooks",row);}
