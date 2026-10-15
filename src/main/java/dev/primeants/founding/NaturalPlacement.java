@@ -76,6 +76,7 @@ public final class NaturalPlacement extends SavedData {
     private static UUID identity(ServerLevel l, ChunkPos p) {
         return UUID.nameUUIDFromBytes((AUTHORITY+":"+l.getSeed()+":"+l.dimension().identifier()+":"+p.x()+":"+p.z()).getBytes(StandardCharsets.UTF_8));
     }
+    public static dev.primeants.colony.ColonyStage selectedProfile(ServerLevel l,ChunkPos p){return EstablishedGeneration.select(identity(l,p));}
     public JsonObject decisions() {
         var copy = new JsonObject(); records.forEach((k,v) -> copy.add(k,v.deepCopy())); return copy;
     }
@@ -89,6 +90,8 @@ public final class NaturalPlacement extends SavedData {
         var r = new JsonObject(); r.addProperty("authority",AUTHORITY); r.addProperty("seed",l.getSeed());
         r.addProperty("dimension",l.dimension().identifier().toString()); r.addProperty("x",proto.getPos().x()); r.addProperty("z",proto.getPos().z());
         r.addProperty("queen",identity(l,proto.getPos()).toString()); r.addProperty("status","PENDING");
+        r.addProperty("profile",EstablishedGeneration.select(identity(l,proto.getPos())).serializedName());
+        r.addProperty("profileVersion",EstablishedGeneration.VERSION);
         r.addProperty("reason","awaiting_full_entity_ticking"); r.addProperty("column",0); r.addProperty("attempts",0);
         r.addProperty("searchVersion",2);r.addProperty("searchColumns",COLUMNS);r.addProperty("evaluationLimit",MAX_EVALUATIONS);
         r.addProperty("searchMin",4);r.addProperty("searchMax",11);
@@ -112,7 +115,9 @@ public final class NaturalPlacement extends SavedData {
     private boolean authority(ServerLevel l,JsonObject r,ChunkPos p,String key) {
         return r.has("authority") && AUTHORITY.equals(r.get("authority").getAsString()) && r.has("seed") && r.get("seed").getAsLong()==l.getSeed()
                 && r.has("dimension") && r.get("dimension").getAsString().equals(l.dimension().identifier().toString())
-                && key.equals(Long.toString(p.pack())) && selected(l,p) && identity(l,p).toString().equals(r.get("queen").getAsString());
+                && key.equals(Long.toString(p.pack())) && selected(l,p) && identity(l,p).toString().equals(r.get("queen").getAsString())
+                && (!r.has("profile") || r.has("profileVersion")&&EstablishedGeneration.VERSION.equals(r.get("profileVersion").getAsString())
+                    && EstablishedGeneration.select(identity(l,p)).serializedName().equals(r.get("profile").getAsString()));
     }
     public static boolean ready(ServerLevel l,ChunkPos p) {
         // Search offsets 4..11 may cross the candidate boundary; inspect a FULL halo without acquiring tickets.
@@ -142,9 +147,10 @@ public final class NaturalPlacement extends SavedData {
         var counts=r.getAsJsonObject("rejections"); counts.addProperty(why,counts.has(why)?counts.get(why).getAsInt()+1:1);
         r.addProperty("reason",why); setDirty();
     }
-    private void finish(JsonObject r,String status,String why) { r.addProperty("status",status);r.addProperty("reason",why);setDirty(); }
-    private static void count(JsonObject r,String field) {r.addProperty(field,r.has(field)?r.get(field).getAsInt()+1:1);}
-    private String saveVerified(ServerLevel l,JsonObject r,String... fields) {
+    void finish(JsonObject r,String status,String why) { r.addProperty("status",status);r.addProperty("reason",why);setDirty(); }
+    static void count(JsonObject r,String field) {r.addProperty(field,r.has(field)?r.get(field).getAsInt()+1:1);}
+    void advance(JsonObject r,String why){reject(r,why);int next=r.get("column").getAsInt()+1;r.addProperty("column",next);if(next>=r.get("searchColumns").getAsInt())finish(r,"REJECTED","bounded_search_exhausted");}
+    String saveVerified(ServerLevel l,JsonObject r,String... fields) {
         try {l.getDataStorage().saveAndJoin();return PlacementReservation.verify(l,r,fields);}
         catch(Exception e){return e.toString();}
     }
@@ -171,6 +177,11 @@ public final class NaturalPlacement extends SavedData {
         else if(!l.getFluidState(surface).isEmpty() || !l.getFluidState(surface.above()).isEmpty()) problem="fluid";
         else if(!NaturalSoil.material(l.getBlockState(surface))) problem="unsupported_surface";
         else if(!NaturalSoil.get(l).eligible(l,surface)) problem="unknown_or_revoked_origin";
+        else if(r.has("profile")&&!r.get("profile").getAsString().equals("founding")) {
+            if(!l.getEntitiesOfClass(dev.primeants.entity.LasiusNigerEntity.class,new AABB(surface).inflate(MIN_SPACING),q->q.form()==dev.primeants.entity.AntForm.QUEEN&&q.isAlive()).isEmpty())advance(r,"existing_queen_spacing");
+            else EstablishedGeneration.attempt(l,this,r,p,surface);
+            return;
+        }
         else {
             for(Direction d:Direction.Plane.HORIZONTAL) {count(r,"preliminaryPlans");plan=NestPlan.candidate(l,surface,d);if(plan!=null)break;}
             if(plan==null) problem="protected_footprint_or_support_roof_floor";

@@ -13,9 +13,10 @@ import net.minecraft.world.level.saveddata.*;
 /** Identity registry of real emerged workers, independent of the single forager claim.
  * An absent lookup is unknown, never dead or free capacity. Only actual death records a tombstone. */
 public final class ColonyMembers extends SavedData {
-    public record Member(UUID worker,UUID brood,UUID queen,BlockPos home,boolean dead){
+    public record Member(UUID worker,UUID brood,UUID queen,BlockPos home,boolean dead,String origin){
+        public Member(UUID worker,UUID brood,UUID queen,BlockPos home,boolean dead){this(worker,brood,queen,home,dead,"emerged");}
         static final Codec<UUID> ID=Codec.STRING.xmap(UUID::fromString,UUID::toString);
-        static final Codec<Member> CODEC=RecordCodecBuilder.create(i->i.group(ID.fieldOf("worker").forGetter(Member::worker),ID.fieldOf("brood").forGetter(Member::brood),ID.fieldOf("queen").forGetter(Member::queen),BlockPos.CODEC.fieldOf("home").forGetter(Member::home),Codec.BOOL.fieldOf("dead").forGetter(Member::dead)).apply(i,Member::new));
+        static final Codec<Member> CODEC=RecordCodecBuilder.create(i->i.group(ID.fieldOf("worker").forGetter(Member::worker),ID.fieldOf("brood").forGetter(Member::brood),ID.fieldOf("queen").forGetter(Member::queen),BlockPos.CODEC.fieldOf("home").forGetter(Member::home),Codec.BOOL.fieldOf("dead").forGetter(Member::dead),Codec.STRING.optionalFieldOf("origin","emerged").forGetter(Member::origin)).apply(i,Member::new));
     }
     public static final Codec<ColonyMembers> CODEC=Member.CODEC.listOf().xmap(ColonyMembers::new,m->List.copyOf(m.members.values()));
     public static final SavedDataType<ColonyMembers> TYPE=new SavedDataType<>(Identifier.fromNamespaceAndPath("prime_ants","colony_members"),ColonyMembers::new,CODEC,DataFixTypes.LEVEL);
@@ -35,5 +36,9 @@ public final class ColonyMembers extends SavedData {
         members.put(m.worker(),m);colonies.computeIfAbsent(queen,q->new ArrayList<>()).add(m.worker());revision++;setDirty();
     }
     public boolean belongs(LasiusNigerEntity w,UUID queen,BlockPos home){var m=members.get(w.getUUID());return m!=null&&!m.dead()&&m.brood().equals(w.broodId())&&m.queen().equals(queen)&&m.home().equals(home)&&queen.equals(w.queenId())&&home.equals(w.nurseryHome());}
-    public void died(LasiusNigerEntity w){var m=members.get(w.getUUID());if(m!=null&&belongs(w,m.queen(),m.home())){members.put(w.getUUID(),new Member(m.worker(),m.brood(),m.queen(),m.home(),true));revision++;setDirty();}}
+    public void generated(ServerLevel l,dev.primeants.founding.NestPlan p,UUID lineage,UUID queen){
+        if(!dev.primeants.founding.EstablishedGeneration.initializing(l,queen,p)||members.containsKey(workerId(lineage)))throw new IllegalStateException("Generated membership has no fresh installation authority");
+        record(lineage,queen,p.chamber());var id=workerId(lineage);var m=members.get(id);members.put(id,new Member(m.worker(),m.brood(),m.queen(),m.home(),false,"generated_initial:"+dev.primeants.founding.EstablishedGeneration.VERSION));setDirty();
+    }
+    public void died(LasiusNigerEntity w){var m=members.get(w.getUUID());if(m!=null&&belongs(w,m.queen(),m.home())){members.put(w.getUUID(),new Member(m.worker(),m.brood(),m.queen(),m.home(),true,m.origin()));revision++;setDirty();}}
 }

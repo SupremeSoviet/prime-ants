@@ -75,7 +75,8 @@
       "dev.primeants.gametest.AdultReferenceGameTest",
       "dev.primeants.gametest.AutomaticCatchupGameTest",
       "dev.primeants.gametest.CatchupRecoveryGameTest",
-      "dev.primeants.gametest.CatchupLifecycleGameTest"
+      "dev.primeants.gametest.CatchupLifecycleGameTest",
+      "dev.primeants.gametest.EstablishedGenerationGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

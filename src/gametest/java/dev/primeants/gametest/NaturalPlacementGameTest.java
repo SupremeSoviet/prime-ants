@@ -21,11 +21,16 @@ public final class NaturalPlacementGameTest {
         return c.getLevel().getServer().getLevel(ResourceKey.create(Registries.DIMENSION,Identifier.fromNamespaceAndPath("prime_ants_test",name)));
     }
     static ChunkPos prepare(GameTestHelper c,ServerLevel l,int base) {
+        return prepare(c,l,base,dev.primeants.colony.ColonyStage.FOUNDING);
+    }
+    static ChunkPos prepare(GameTestHelper c,ServerLevel l,int base,dev.primeants.colony.ColonyStage profile) {
         ChunkPos selected=null;
-        for(int x=base;x<base+4;x++)for(int z=base;z<base+4;z++)if(NaturalPlacement.selected(l,new ChunkPos(x,z)))selected=new ChunkPos(x,z);
+        for(int cell=0;cell<16&&selected==null;cell++)for(int x=base+4*cell;x<base+4*cell+4;x++)for(int z=base;z<base+4;z++){
+            var candidate=new ChunkPos(x,z);if(NaturalPlacement.selected(l,candidate)&&NaturalPlacement.selectedProfile(l,candidate)==profile)selected=candidate;
+        }
         c.assertTrue(selected!=null,"Deterministic density selects one candidate in 4x4");
         c.assertTrue(l.getChunkSource().getChunk(selected.x(),selected.z(),ChunkStatus.FULL,false)==null,"Positive chunk must be genuinely new");
-        l.getChunkSource().addTicketWithRadius(PlacementSettings.TICKET,selected,2);
+        l.getChunkSource().addTicketWithRadius(PlacementSettings.TICKET,selected,profile==dev.primeants.colony.ColonyStage.FOUNDING?2:3);
         l.getChunkSource().getChunk(selected.x(),selected.z(),ChunkStatus.FULL,true);
         c.assertTrue(decision(l,selected)!=null,"Generation conversion automatically queues candidate");
         return selected;

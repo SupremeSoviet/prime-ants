@@ -27,6 +27,8 @@ public final class PlacementSettings implements ModInitializer {
         dimensions+=",prime_ants_test:placement_durability_retry,prime_ants_test:placement_durability_history,prime_ants_test:placement_durability_refusal";
         dimensions+=",prime_ants_test:t16_plants,prime_ants_test:t16_protected,prime_ants_test:t16_step,prime_ants_test:t16_thin,prime_ants_test:t16_unsafe,prime_ants_test:t16_legacy";
         dimensions+=",prime_ants_test:t17_nectar,prime_ants_test:t20_food";
+        dimensions+=",prime_ants_test:established_native";
+        dimensions+=",prime_ants_test:established_route";
         if(System.getProperty("prime_ants.placementSeed")!=null) dimensions+=",prime_ants_test:placement_native";
         System.setProperty("prime_ants.developmentPlacementDimensions",dimensions);
         TICKET=Registry.register(BuiltInRegistries.TICKET_TYPE,Identifier.fromNamespaceAndPath("prime_ants_test","placement"),new TicketType(0,14));

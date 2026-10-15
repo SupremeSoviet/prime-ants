@@ -1,3 +1,78 @@
+## Follow-up - 2026-10-15 (stage-1c T09 established generation)
+
+Production new-terrain generation now selects **50% Founding / 25% Young / 25% Mature before fit rejection**, using the
+existing deterministic queen identity. There is no fallback to another profile. The unchanged 4x4 lattice, 56-block
+spacing, 64-column/66-evaluation search and four supported biomes remain. Legacy pending records without a profile
+retain Founding interpretation. Founding insertion still makes **zero block edits**, then ordinary queens excavate.
+
+[EstablishedGeneration](../src/main/java/dev/primeants/founding/EstablishedGeneration.java) installs only a completely
+validated plan footprint: witnessed natural soil, revocable witnessed surface air/short plants, supported dry
+space, loaded and entity-ticking required cells, world border, no block entities, foreign structures or overlapping
+bodies. Unsuitable sites are rejected; no neighbors are acquired and no terrain outside the plan is cleared. Young has
+the founding nursery/food room and eight earth-lobe cells. Mature additionally has `widening_right`, the `left` store,
+`hall_left`, and the complete 19-cell Mature arch/stepped crest: **24/72 underground cells**, **8/27 surface cells**,
+**32/99 unique editable cells**, **34/102 explicit space/surface/marker operations**,
+**35/104 admitted chunk writes including canonical stock projections**, and **5/25 actor insertions**. Workers retain their existing terrain
+authority, including only the two previously authorized founder access moves.
+
+Initial adults are queen plus **4/24 mature workers**, below caps **30/60 including the queen**. Queen age is 24,000;
+workers have initial ages 4,800 + 100 per index. Both caches physically hold four apples/two chickens; Mature's owned
+store physically holds sixteen clay balls. The queen has **8,000 initial ingested sugar**, zero initial protein and
+the existing finite body reserve (0..39,000, default 39,000). Initial brood is zero. These are explicitly **generated initial world state**:
+canonical membership has generated provenance, an empty generated nursery has no observed births/consumed brood, and
+generated voids/surface cells have revocable ownership. Initial sugar is a separately persisted conservation base,
+including in terminal adult history; it is never ingestion, income or consumption history. No excavation, hauling,
+construction payment or surface-payment history is invented. The chamber registry starts Founding and ordinary live
+evaluation derives Young/Mature from actual adults, chambers and stock.
+
+The installation freezes version, profile, orientation, footprint limit and all actor identities before a verified
+SavedData reservation and exclusive insertion fence. Its synchronous attempt is bounded, including every admitted LevelChunk write, and rejects any write outside the frozen cells. Validated canonical exterior heights/deposit routes are retained, not replaced with legacy geometry. The existing operator adult bound must admit the complete initial population; actors remain inert until live completion checks pass. Refusal or interruption is
+terminal uncertainty, never an invitation to restore actors or stock. Focused negatives retain 99 unique edited cells (102 explicit write operations) with
+zero actors, or those same 99 cells plus three inert partial actors; their markers have no initialized inventories or completed
+colony registry. Completed events, unavailable lookups and observed deaths never authorize replacement.
+
+Twelve permanent [generation GameTests](../src/gametest/java/dev/primeants/gametest/EstablishedGenerationGameTest.java)
+cover genuine conversion, every physical component, live stages, ordinary movement/nursing and **200 consecutive
+settled nursery-loaded ticks**. Seed **0**, vanilla Overworld noise/settings/biome source in the separately named
+`prime_ants_test:established_native` diagnostic dimension: Young chunk **(6,5)**; Mature **(18,-3)** after rejecting
+**(-2,13)** and **(2,13)**. Each profile freezes 256 biome queries and up to four sites before generation: **512 query
+executions / 256 distinct queried chunks** per two-profile workload, four actual generated sites in successful complete
+groups. This is one seed and observed plains fits, with no player contributions or terrain preparation; it is not broad
+biome, slope or ecological sustainability coverage. Native Mature's first observer crashed while registering another
+GameTest callback during iteration; its one-body recovery passes after using one persistent observer, with no larger
+timeout or memory limit. Earlier gameplay negatives and the mining-origin fixture relocation remain disclosed. Source review then identified discarded exterior route data: the new genuine raised-route test fails on C8 at tick 4 and passes with retained canonical data. C8 long was intentionally cancelled and remains unaccepted; the owned native/client cancellation exits and partial reports are preserved. C10 proves total write accounting; C11 additionally guards operator adult bounds and activation ordering.
+
+Persistence proof is **actual SavedData disk readback**, normal entity/block-entity reconstruction **in memory**, and
+twice repeated FULL chunk serialization/deserialization. Entity decoding never inserts a replacement. This is not
+chunk/entity disk unloading and reloading, a full-world restart, an atomic entity/block/ledger transaction, or power-loss
+durability. Additive defaults preserve old saves: emerged membership, non-generated nurseries and zero generated sugar.
+The original mining-origin test body is unchanged; its same sixteen-chunk development fixture follows the explicitly
+selected Founding cell. All other T08 gameplay bodies, supplies and bounds remain intact.
+
+**C12 controlled-fixture recovery.** The complete C11 checkpoint executes all 224 long identities and is valid red,
+223/224, only the unchanged source-free scan timing out at its 18,000-tick bound. Explicit Founding selection moved
+its unrelated nectar-control colony one lattice cell while the old one-flower fixture remained fixed. That same bounded
+sixteen-chunk control region now follows the selected Founding cell, preserving the original source-free box, flower,
+relative source position, amounts, assertions and bound. The exact original identity passes before the revised complete
+checkpoint. Production code and all original GameTest bodies are byte-identical between C11 and C12.
+
+Final checkpoint status is recorded in the external T09 settling packet:
+`<turnloop>/directions/prime-ants-stage1c/turns/T09/raw/established-generation-acceptance.json`, with its report and compact
+appendix. **Final C12 acceptance is green: 73 fast / 224 long / 118 unit / 26 model**, with **297 distinct server identities
+exactly once** and no failures, errors or skips. Command wall times are **136.9727086s / 8539.0193074s**, not colony MSPT.
+All **1,094** actual fast/long executable inputs agree. Both client tasks actually guard-SKIP; **373** protected client
+files and **3,037** historical files are unchanged. Native peak is three; retention is newest ten plus active leases,
+all leases release after native exits, and free space stays above 25 GB. No owner integration. No-new-green remains zero.
+Tier three remains delivered; established generation is delivered. Performance/persistence and release acceptance remain open;
+120-adult/multiple-colony performance and persistence, then release **0.2.0**, remain outstanding.
+
+**Dated T08 erratum (2026-10-15).** The frozen `raw/t08-feeding-plan-c8-final-frozen.json` phrase **"Same C6 executable
+test sources"** is stale prose. Its hashes and T08's independent review identify **C8**, including C7/C8 feeding
+revisions. The frozen T08 file and historical failures have not been rewritten.
+
+---
+
+
 ## Follow-up - 2026-10-12 (stage-1c T01 tier-three physical construction; partial effects)
 
 **Worker-built tier-three construction and focused safety are accepted; item 2 is not fully accepted.** Ordinary

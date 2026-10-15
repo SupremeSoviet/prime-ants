@@ -27,6 +27,8 @@ public final class AdultHistory extends SavedData {
         row.addProperty("simulationKnownAfter",simulation.knownAfter());
         row.addProperty("simulationOrigin",simulation.origin().name());
         row.add("simulationRuns",new com.google.gson.Gson().toJsonTree(simulation.runs()));
+        if(ant.nutrition().generatedSugar()>0){row.addProperty("origin","generated_initial:"+dev.primeants.founding.EstablishedGeneration.VERSION);n.addProperty("generatedInitialSugar",ant.nutrition().generatedSugar());}
+
         records.put(ant.getUUID().toString(),row.toString());setDirty();
         dev.primeants.PrimeAnts.LOGGER.info("Adult death uuid={} receipt={}",ant.getUUID(),row);
     }

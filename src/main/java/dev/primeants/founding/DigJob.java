@@ -87,6 +87,7 @@ public abstract class DigJob {
     /** An authorized opening of any of the colony's jobs. */
     public static boolean anyOpening(ServerLevel l,BlockPos p,UUID owner){
         if(owner==null)return false;
+        if(ColonyTerrain.get(l).generatedOpen(l,p,owner))return true;
         var widening=NestExpansion.get(l).job(owner);if(widening!=null&&widening.opening(l,p,owner))return true;
         for(var j:ChamberExcavation.get(l).jobs(owner))if(j.opening(l,p,owner))return true;
         if(Mining.get(l).opening(l,p,owner))return true;

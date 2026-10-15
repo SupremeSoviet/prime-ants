@@ -46,6 +46,10 @@ public final class MaterialStore extends BlockEntity {
     public static boolean material(ItemStack s) { return kind(s) != null; }
     public List<ItemStack> contents() { return contents.stream().map(ItemStack::copy).toList(); }
     public int size() { return contents.size(); }
+    public void initializeGenerated(ServerLevel l,UUID owner,NestPlan p){
+        if(colony!=null||!contents.isEmpty()||!getBlockPos().equals(marker(p,"left"))||!dev.primeants.founding.EstablishedGeneration.initializing(l,owner,p))throw new IllegalStateException("Generated store initialization authority");
+        colony=owner;plan=p.routeGeometry();placement="left";for(int i=0;i<16;i++)contents.add(new ItemStack(net.minecraft.world.item.Items.CLAY_BALL));changed();
+    }
     public int recipeUnits(net.minecraft.world.item.Item item) { return (int)contents.stream().filter(s -> s.is(item)).count(); }
     private List<MaterialUnits.Material> held() { return contents.stream().map(MaterialStore::kind).toList(); }
     /** Held units of one material. */

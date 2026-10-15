@@ -25,10 +25,11 @@ public final class ColonyPlugs extends SavedData {
     public void invalidate(BlockPos p) { if (records.remove(key(p)) != null) setDirty(); }
     public UUID componentOwner(ServerLevel l,BlockPos p){String r=records.get(key(p));if(r==null)return null;UUID id=UUID.fromString(r.substring(0,36));return owned(l,p,id)?id:null;}
     public void placed(BlockPos p, UUID colony) { records.put(key(p), colony + ":plug"); setDirty(); }
+    void generatedOpen(ServerLevel l,BlockPos p,UUID owner){if(!l.getBlockState(p).isAir())throw new IllegalStateException("Generated plug not open");records.put(key(p),owner+":generated_open");setDirty();}
     /** Legacy dirt stays readable; newly compacted plugs use the same nest-soil material as the mound. */
     public static boolean material(net.minecraft.world.level.block.state.BlockState state){return state.is(Blocks.DIRT)||state.is(dev.primeants.brood.NurseryBlocks.NEST_SOIL);}
     public boolean owned(ServerLevel l, BlockPos p, UUID colony) { return NestPlan.loaded(l,p) && material(l.getBlockState(p)) && (colony + ":plug").equals(records.get(key(p))); }
-    public boolean opened(ServerLevel l, BlockPos p, UUID colony) { return NestPlan.loaded(l,p) && l.getBlockState(p).isAir() && (colony + ":open").equals(records.get(key(p))); }
+    public boolean opened(ServerLevel l, BlockPos p, UUID colony) { return NestPlan.loaded(l,p) && l.getBlockState(p).isAir() && ((colony + ":open").equals(records.get(key(p)))||(colony+":generated_open").equals(records.get(key(p)))); }
     public boolean remove(ServerLevel l, BlockPos p, UUID colony) {
         if (!owned(l,p,colony) || SupportSurvival.problem(l,p,Blocks.AIR.defaultBlockState())!=null || !l.setBlock(p,Blocks.AIR.defaultBlockState(),3)) return false;
         records.put(key(p), colony + ":open"); setDirty(); return true;
