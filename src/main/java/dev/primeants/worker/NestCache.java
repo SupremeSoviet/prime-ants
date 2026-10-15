@@ -65,6 +65,10 @@ public final class NestCache extends BlockEntity {
     public NestCache(BlockPos p, BlockState s) { super(NurseryBlocks.CACHE_TYPE,p,s); }
     public List<ItemStack> contents() { return contents.stream().map(ItemStack::copy).toList(); }
     public int size() { return contents.size(); }
+    public void initializeGenerated(ServerLevel l,UUID owner,NestPlan p){
+        if(colony!=null||!contents.isEmpty()||!getBlockPos().equals(p.cache())||!dev.primeants.founding.EstablishedGeneration.initializing(l,owner,p))throw new IllegalStateException("Generated cache initialization authority");
+        colony=owner;plan=p.routeGeometry();for(int i=0;i<4;i++)contents.add(new ItemStack(Items.APPLE));for(int i=0;i<2;i++)contents.add(new ItemStack(Items.CHICKEN));changed();
+    }
     public int capacity() {
         return level instanceof ServerLevel l ? FoodShares.capacity(dev.primeants.colony.ColonyDevelopment.capacityTier(l,colony,plan,dev.primeants.colony.ChamberRegistry.FOUNDING,dev.primeants.colony.ChamberFunction.FOOD_STORE)) : CAPACITY;
     }

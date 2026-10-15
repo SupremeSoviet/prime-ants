@@ -18,6 +18,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 /** Isolated development generation fixtures only; never native experiment or historical loading. */
 @Mixin(ChunkStatusTasks.class)
 public abstract class TerrainGenerationFixtureMixin {
+    /** Each controlled origin/food fixture's unchanged sixteen-chunk region follows its selected Founding cell.
+     * Relocation only: resource rows, layer, counts and the test body's protection assertions are unchanged. */
+    private static boolean foundingRegion(net.minecraft.server.level.ServerLevel level,net.minecraft.world.level.ChunkPos chunk,int base){
+        for(int cell=0;cell<16;cell++)for(int x=base+4*cell;x<base+4+4*cell;x++)for(int z=base;z<base+4;z++){
+            var candidate=new net.minecraft.world.level.ChunkPos(x,z);
+            if(NaturalPlacement.selected(level,candidate)&&NaturalPlacement.selectedProfile(level,candidate)==dev.primeants.colony.ColonyStage.FOUNDING)
+                return Math.floorDiv(chunk.x(),4)==Math.floorDiv(candidate.x(),4)&&Math.floorDiv(chunk.z(),4)==Math.floorDiv(candidate.z(),4);
+        }return false;
+    }
     @Inject(method="generateFeatures",at=@At("RETURN"),cancellable=true)
     private static void fixture(WorldGenContext context, ChunkStep step, StaticCache2D<GenerationChunkHolder> chunks,
             ChunkAccess chunk, CallbackInfoReturnable<CompletableFuture<ChunkAccess>> cir) {
@@ -25,10 +34,11 @@ public abstract class TerrainGenerationFixtureMixin {
         boolean plants=dimension.equals("prime_ants_test:t16_plants") || dimension.equals("prime_ants_test:t16_protected");
         boolean slope=dimension.equals("prime_ants_test:t16_step");
         boolean food=dimension.equals("prime_ants_test:t20_food");
-        boolean mining=dimension.equals("prime_ants_test:t16_thin")&&Math.floorDiv(chunk.getPos().x(),4)==750&&Math.floorDiv(chunk.getPos().z(),4)==750;
+        boolean raisedRoute=dimension.equals("prime_ants_test:established_route");
+        boolean mining=dimension.equals("prime_ants_test:t16_thin")&&foundingRegion(context.level(),chunk.getPos(),3000);
         boolean nectar=dimension.equals("prime_ants_test:t17_nectar") || dimension.equals("prime_ants_test:placement_soil")
-            &&Math.floorDiv(chunk.getPos().x(),4)==1070&&Math.floorDiv(chunk.getPos().z(),4)==1070; // source-free scan's explicit unrelated positive control
-        if(!plants && !slope && !nectar && !food && !mining)return;
+            &&foundingRegion(context.level(),chunk.getPos(),4280); // source-free scan's explicit unrelated positive control
+        if(!plants && !slope && !nectar && !food && !mining && !raisedRoute)return;
         long salt=context.level().getSeed()^UUID.nameUUIDFromBytes(dimension.getBytes(StandardCharsets.UTF_8)).getMostSignificantBits();
         int centerX=Math.floorDiv(chunk.getPos().x(),4)*4+1+(int)(salt&1);
         int centerZ=Math.floorDiv(chunk.getPos().z(),4)*4+1+(int)((salt>>>1)&1);
@@ -37,6 +47,7 @@ public abstract class TerrainGenerationFixtureMixin {
             for(int x=chunk.getPos().getMinBlockX();x<=chunk.getPos().getMaxBlockX();x++)
                 for(int z=chunk.getPos().getMinBlockZ();z<=chunk.getPos().getMaxBlockZ();z++) {
                     int top=generated.getHeight(Heightmap.Types.WORLD_SURFACE,x&15,z&15);
+                    if(raisedRoute && x==ex && z==ez+2)generated.setBlockState(new BlockPos(x,context.level().getMinY()+8,z),Blocks.DIRT.defaultBlockState(),0);
                     if(mining&&(z&15)==1&&(x&15)>=1&&(x&15)<=7){
                         var resources=java.util.List.of(Blocks.STONE,Blocks.CLAY,Blocks.GRAVEL,Blocks.SAND,Blocks.COAL_ORE,Blocks.COPPER_ORE,Blocks.IRON_ORE);
                         generated.setBlockState(new BlockPos(x,context.level().getMinY()+3,z),resources.get((x&15)-1).defaultBlockState(),0);

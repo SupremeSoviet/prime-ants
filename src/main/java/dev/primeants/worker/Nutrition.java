@@ -20,6 +20,13 @@ public final class Nutrition {
             ||givenSugar>Long.MAX_VALUE-amount||recipient.receivedSugar>Long.MAX_VALUE-amount)return false;
         sugar-=amount;givenSugar+=amount;recipient.sugar+=amount;recipient.receivedSugar+=amount;return true;
     }
+    private long generatedSugar;
+    public long generatedSugar(){return generatedSugar;}
+    /** Finite initial ingested stock, without ingestion, income or consumption history. */
+    public void initializeGeneratedQueen(net.minecraft.server.level.ServerLevel l,java.util.UUID owner,dev.primeants.founding.NestPlan p){
+        if(sugar!=0||protein!=0||consumedUnits()!=0||generatedSugar!=0||!dev.primeants.founding.EstablishedGeneration.initializing(l,owner,p))throw new IllegalStateException("Generated nutrition initialization authority");
+        generatedSugar=QUEEN_SUGAR_CAPACITY;sugar=generatedSugar;
+    }
     public long sugar(){return sugar;} public long protein(){return protein;}
     public long apples(){return apples;} public long berries(){return berries;} public long chickens(){return chickens;}
     public long nectar(){return nectar+nectarV2;} public long nectarV2(){return nectarV2;} public long prey(){return prey;} public long flesh(){return flesh;}
@@ -40,14 +47,15 @@ public final class Nutrition {
         return true;
     }
     public boolean spend(long s,long p){if(s<0||p<0||s>sugar||p>protein)return false;sugar-=s;protein-=p;spentSugar+=s;spentProtein+=p;return true;}
-    public void save(ValueOutput o){o.putLong("Sugar",sugar);o.putLong("Protein",protein);o.putLong("Apples",apples);o.putLong("Berries",berries);o.putLong("Chickens",chickens);o.putLong("Nectar",nectar);o.putLong("NectarV2",nectarV2);o.putLong("Prey",prey);o.putLong("Flesh",flesh);o.putLong("SpentSugar",spentSugar);o.putLong("SpentProtein",spentProtein);o.putLong("SugarReceived",receivedSugar);o.putLong("SugarGiven",givenSugar);}
+    public void save(ValueOutput o){o.putLong("GeneratedInitialSugar",generatedSugar);o.putLong("Sugar",sugar);o.putLong("Protein",protein);o.putLong("Apples",apples);o.putLong("Berries",berries);o.putLong("Chickens",chickens);o.putLong("Nectar",nectar);o.putLong("NectarV2",nectarV2);o.putLong("Prey",prey);o.putLong("Flesh",flesh);o.putLong("SpentSugar",spentSugar);o.putLong("SpentProtein",spentProtein);o.putLong("SugarReceived",receivedSugar);o.putLong("SugarGiven",givenSugar);}
     public void load(ValueInput i,long sCap,long pCap){
+        generatedSugar=i.getLongOr("GeneratedInitialSugar",0);if(generatedSugar!=0&&generatedSugar!=QUEEN_SUGAR_CAPACITY)throw new IllegalArgumentException("Invalid finite generated sugar");
         sugar=i.getLongOr("Sugar",0);protein=i.getLongOr("Protein",0);apples=i.getLongOr("Apples",0);berries=i.getLongOr("Berries",0);chickens=i.getLongOr("Chickens",0);spentSugar=i.getLongOr("SpentSugar",0);spentProtein=i.getLongOr("SpentProtein",0);
         flesh=i.getLongOr("Flesh",0);if(flesh<0||flesh>Long.MAX_VALUE/FLESH_PROTEIN/4)throw new IllegalArgumentException("Invalid flesh receipts");
         nectarV2=i.getLongOr("NectarV2",0);prey=i.getLongOr("Prey",0);if(nectarV2<0||prey<0||nectarV2>Long.MAX_VALUE/NECTAR_V2_SUGAR/8||prey>Long.MAX_VALUE/PREY_PROTEIN/8)throw new IllegalArgumentException("Invalid versioned food receipts");
         nectar=i.getLongOr("Nectar",0);if(nectar<0||nectar>Long.MAX_VALUE/NECTAR_SUGAR/4)throw new IllegalArgumentException("Invalid nectar receipts");
         receivedSugar=i.getLongOr("SugarReceived",0);givenSugar=i.getLongOr("SugarGiven",0);
         if(sugar<0||protein<0||sugar>sCap||protein>pCap||apples<0||berries<0||chickens<0||spentSugar<0||spentProtein<0||receivedSugar<0||givenSugar<0||apples>Long.MAX_VALUE/APPLE_SUGAR/4||berries>Long.MAX_VALUE/BERRY_SUGAR/4||chickens>Long.MAX_VALUE/CHICKEN_PROTEIN/4)throw new IllegalArgumentException("Invalid finite ingested nutrition");
-        try{if(Math.addExact(sugar,Math.addExact(spentSugar,givenSugar))!=Math.addExact(gainedSugar(),receivedSugar)||Math.addExact(protein,spentProtein)!=gainedProtein())throw new IllegalArgumentException("Unbalanced ingested nutrition");}catch(ArithmeticException e){throw new IllegalArgumentException("Overflowed nutrition",e);}
+        try{if(Math.addExact(sugar,Math.addExact(spentSugar,givenSugar))!=Math.addExact(Math.addExact(gainedSugar(),receivedSugar),generatedSugar)||Math.addExact(protein,spentProtein)!=gainedProtein())throw new IllegalArgumentException("Unbalanced ingested nutrition");}catch(ArithmeticException e){throw new IllegalArgumentException("Overflowed nutrition",e);}
     }
 }

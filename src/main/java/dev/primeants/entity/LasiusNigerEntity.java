@@ -110,6 +110,12 @@ public final class LasiusNigerEntity extends PathfinderMob {
     public void initializeCallow(UUID brood,UUID queen,BlockPos home,long lifespan,long grace){
         adultLife.selectAtEmergence(this,lifespan,grace);initializeCallow(brood,queen,home);
     }
+    /** Generated age and lineage are initial state, not an observed emergence or consumption history. */
+    public void initializeGenerated(NestPlan home,UUID owner,int index){
+        if(!(level() instanceof ServerLevel l)||elapsedAgeTicks!=0||!dev.primeants.founding.EstablishedGeneration.initializing(l,owner,home))throw new IllegalStateException("Generated adult initialization authority");
+        if(form==AntForm.QUEEN){if(index!=-1||!getUUID().equals(owner))throw new IllegalArgumentException("Generated queen identity");nurseryClaimed=true;elapsedAgeTicks=24000;nutrition.initializeGeneratedQueen(l,owner,home);}
+        else{initializeCallow(dev.primeants.founding.EstablishedGeneration.lineage(owner,index),owner,home.chamber());callowAgeTicks=callowDuration;entityData.set(CALLOW,1000);elapsedAgeTicks=4800+100L*index;workerTasks.assignNurse(home);}
+    }
     public void prepareNursery(ServerLevel level, NestPlan plan) {
         if (nurseryClaimed || !founding.sealed() || position().distanceToSqr(Vec3.atBottomCenterOf(plan.nursery())) > BroodPile.CARE_REACH_SQUARED
                 || bodyReserve < BroodPile.CAPACITY * BroodPile.EGG_COST || !NestPlan.walkable(level, plan.nursery())

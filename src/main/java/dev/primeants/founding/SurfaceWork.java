@@ -62,7 +62,7 @@ public final class SurfaceWork extends SavedData {
             int relocationReceipts=0;
             for(int i=0;i<receipts.size();i++){
                 var parts=receipts.get(i).split(":",3);
-                if(parts.length!=3||!parts[2].equals(plan.cells().get(i).key())||!Set.of("inherited","retained_paid_foundation","paid_gate_conversion","relocated").contains(parts[0]))throw new IllegalArgumentException("Invalid surface receipt prefix");
+                if(parts.length!=3||!parts[2].equals(plan.cells().get(i).key())||!Set.of("generated_initial","inherited","retained_paid_foundation","paid_gate_conversion","relocated").contains(parts[0]))throw new IllegalArgumentException("Invalid surface receipt prefix");
                 if(parts[0].equals("inherited")){if(!parts[1].equals("previous_paid_surface"))throw new IllegalArgumentException("Invalid inherited surface receipt");}
                 else UUID.fromString(parts[1]);if(parts[0].equals("relocated"))relocationReceipts++;
             }
@@ -168,7 +168,10 @@ public final class SurfaceWork extends SavedData {
             var paidProblem=trial.paidProblem(l,owner);if(paidProblem!=null){trial.reason=(paidProblem.startsWith("unknown")?"waiting_":"stopped_")+paidProblem;setDirty();return;}
             if(trial.stopped())return;
             // A higher plan can inherit only an owned physically paid surface cell with its actual previous receipt.
-            while(!trial.complete()&&ColonyTerrain.get(l).surface(l,trial.next(),owner)&&l.getBlockState(trial.next()).is(trial.block()))trial.receipt(l,"inherited",null);
+            while(!trial.complete()&&ColonyTerrain.get(l).surface(l,trial.next(),owner)&&l.getBlockState(trial.next()).is(trial.block())){
+                if(ColonyTerrain.get(l).generatedSurface(l,trial.next(),owner)){trial.receipts.add("generated_initial:"+owner+":"+trial.nextKey());setDirty();}
+                else trial.receipt(l,"inherited",null);
+            }
             if(!trial.complete()){j=trial;break;}
         }
         if(j==null)return;String problem=targetProblem(l,owner,j);if(problem!=null){

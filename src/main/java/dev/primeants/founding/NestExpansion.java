@@ -72,17 +72,18 @@ public final class NestExpansion extends SavedData {
     public NestExpansion(){this(Map.of());}private NestExpansion(Map<String,Job> j){jobs=new HashMap<>(j);}
     public static NestExpansion get(ServerLevel l){return l.getDataStorage().computeIfAbsent(TYPE);}
     public Job job(UUID owner){return owner==null?null:jobs.get(owner.toString());}
-    private static List<BlockPos> targets(NestPlan p,int side){
+    static List<BlockPos> targets(NestPlan p,int side){
         var out=new ArrayList<BlockPos>();for(int s:new int[]{2,3})for(int f:(s==2?new int[]{5,4,3}:new int[]{3,4,5}))for(int y=-2;y<=-1;y++)out.add(p.at(f,s*side,y));return List.copyOf(out);
     }
     public boolean opening(ServerLevel l,BlockPos p,UUID owner){var j=job(owner);return j!=null&&j.opening(l,p,owner);}
     public String problem(ServerLevel l,UUID owner){var j=job(owner);return j==null?null:j.problem(l,owner);}
     public void findings(ServerLevel l,UUID owner,Findings r){var j=job(owner);if(j!=null)j.findings(l,owner,r);}
     public List<BlockPos> usable(ServerLevel l,UUID owner){var j=job(owner);return j==null?List.of():j.usable(l,owner);}
-    public List<BlockPos> operationalSpace(ServerLevel l,UUID owner){var j=job(owner);return j!=null&&j.removed()==j.tasks.size()?j.usable(l,owner):List.of();}
+    public List<BlockPos> operationalSpace(ServerLevel l,UUID owner){var generated=EstablishedNest.get(l).floors(l,owner);if(!generated.isEmpty())return generated;var j=job(owner);return j!=null&&j.removed()==j.tasks.size()?j.usable(l,owner):List.of();}
     /** Idle/feeding circulation may use already verified two-high floors during a job, while
      * reserving the next removal and its adjacent work faces. Births still await complete excavation. */
     public List<BlockPos> circulationSpace(ServerLevel l,UUID owner){
+        var generated=EstablishedNest.get(l).floors(l,owner);if(!generated.isEmpty())return generated;
         var j=job(owner);if(j==null)return List.of();if(j.removed()==j.tasks.size())return j.usable(l,owner);
         var target=j.tasks.get(j.removed());return j.usable(l,owner).stream().filter(p->Math.abs(p.getX()-target.getX())+Math.abs(p.getZ()-target.getZ())>1).toList();
     }
@@ -113,6 +114,7 @@ public final class NestExpansion extends SavedData {
         return capacity>=REMOVALS&&j.problem(l,owner)==null;
     }
     public void consider(ServerLevel l,LasiusNigerEntity q,List<LasiusNigerEntity> workers){
+        var initial=EstablishedNest.get(l).initial(q.getUUID());if(initial!=null&&initial.profile()==dev.primeants.colony.ColonyStage.MATURE)return;
         var p=q.founding().plan();if(p==null||q.founding().lifecycle()!=QueenFounding.Lifecycle.OPEN||!q.founding().ready())return;
         var j=job(q.getUUID());
         if(j!=null&&j.reason.startsWith("quarantined_"))return;

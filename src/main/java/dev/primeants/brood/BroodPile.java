@@ -57,6 +57,12 @@ public final class BroodPile extends BlockEntity {
     public boolean firstClutchViable(ServerLevel server){return records.stream().anyMatch(r->original.contains(r.id())&&!expired.containsKey(r.id())&&BroodHistory.get(server).terminal(r.id())==null);}
     private boolean originalTerminal(){return original.stream().allMatch(id->consumed.contains(id)||expired.containsKey(id));}
     private boolean operational;
+    private boolean generatedInitial;
+    public void initializeGenerated(LasiusNigerEntity queen,NestPlan p){
+        if(!(level instanceof ServerLevel l)||queenId!=null||!getBlockPos().equals(p.nursery())||!dev.primeants.founding.EstablishedGeneration.initializing(l,queen.getUUID(),p))throw new IllegalStateException("Generated nursery initialization authority");
+        queenId=queen.getUUID();plan=p.routeGeometry();operational=true;generatedInitial=true;
+        neglectGrace=queen.broodNeglectGrace();waitingBound=queen.cocoonWaitingBound();adultLifespan=queen.adultLife().lifespan();fastingGrace=queen.adultLife().grace();adultCapacity=queen.colonyAdultCapacity();condition="generated_initial_empty_nursery";changed();
+    }
     private long adultLifespan=dev.primeants.entity.AdultLife.DEFAULT_LIFESPAN,fastingGrace=dev.primeants.entity.AdultLife.DEFAULT_FASTING;
     private int adultCapacity=AdultBound.MAX;
     /** Birth-selected upper bound only. The colony stage cap owns the adult limit (queen + workers + brood). */
@@ -312,6 +318,7 @@ public final class BroodPile extends BlockEntity {
         condition = "emergence_space_blocked"; return false;
     }
     @Override protected void saveAdditional(ValueOutput out) {
+        out.putBoolean("GeneratedInitial",generatedInitial);
         growth.save(out.child("GrowthFlow"));
         super.saveAdditional(out);
         if (queenId == null || plan == null) return;
@@ -327,6 +334,7 @@ public final class BroodPile extends BlockEntity {
         out.store("Consumed", com.mojang.serialization.Codec.STRING.listOf(), consumed.stream().map(UUID::toString).sorted().toList());
     }
     @Override protected void loadAdditional(ValueInput in) {
+        generatedInitial=in.getBooleanOr("GeneratedInitial",false);
         growth.load(in.childOrEmpty("GrowthFlow"));
         super.loadAdditional(in); records.clear(); consumed.clear();original.clear();expired.clear(); queenId = null; plan = null; stageEvaluation = null;
         adultLifespan=in.getLongOr("AdultLifespan",dev.primeants.entity.AdultLife.DEFAULT_LIFESPAN);fastingGrace=in.getLongOr("AdultFastingGrace",dev.primeants.entity.AdultLife.DEFAULT_FASTING);
@@ -353,7 +361,7 @@ public final class BroodPile extends BlockEntity {
         }
         for (String s : in.read("Consumed", com.mojang.serialization.Codec.STRING.listOf()).orElse(List.of())) consumed.add(UUID.fromString(s));
         original.addAll(in.read("Original",com.mojang.serialization.Codec.STRING.listOf()).orElseGet(()->java.util.stream.Stream.concat(java.util.stream.Stream.concat(consumed.stream(),expired.keySet().stream()),records.stream().filter(BroodRecord::founding).map(BroodRecord::id)).map(UUID::toString).toList()).stream().map(UUID::fromString).toList());
-        if (records.size() > BroodCapacity.MAX_SLOTS || ids.stream().anyMatch(consumed::contains)||original.size()!=CAPACITY||expired.keySet().stream().anyMatch(consumed::contains)||!java.util.stream.Stream.concat(java.util.stream.Stream.concat(ids.stream(),consumed.stream()),expired.keySet().stream()).toList().containsAll(original)) throw new IllegalArgumentException("Invalid reusable nursery ownership");
+        if (records.size() > BroodCapacity.MAX_SLOTS || ids.stream().anyMatch(consumed::contains)||original.size()!=(generatedInitial?0:CAPACITY)||expired.keySet().stream().anyMatch(consumed::contains)||!java.util.stream.Stream.concat(java.util.stream.Stream.concat(ids.stream(),consumed.stream()),expired.keySet().stream()).toList().containsAll(original)) throw new IllegalArgumentException("Invalid reusable nursery ownership");
         operational=in.getBooleanOr("Operational",false);lastLayingTick=in.getLongOr("LastLayingTick",0);archivedApples=in.getLongOr("ConsumedApples",0);archivedBerries=in.getLongOr("ConsumedBerries",0);archivedChickens=in.getLongOr("ConsumedChickens",0);archivedNectar=in.getLongOr("ConsumedNectar",0);archivedNectarV2=in.getLongOr("ConsumedNectarV2",0);archivedPrey=in.getLongOr("ConsumedPrey",0);archivedFlesh=in.getLongOr("ConsumedFlesh",0);
         if(lastLayingTick<0||lastLayingTick>in.getLongOr("LoadedTicks",0)||archivedApples<0||archivedBerries<0||archivedChickens<0||archivedNectar<0||archivedNectarV2<0||archivedNectarV2>archivedNectar||archivedPrey<0||archivedFlesh<0)throw new IllegalArgumentException("Invalid nutrition history");
         queenId = id; plan = p; loadedTicks = Math.max(0, in.getLongOr("LoadedTicks", 0)); condition = in.getStringOr("Condition", "restored");

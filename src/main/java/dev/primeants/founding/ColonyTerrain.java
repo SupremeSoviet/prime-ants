@@ -44,7 +44,7 @@ public final class ColonyTerrain extends SavedData {
     public boolean accessMound(ServerLevel l,BlockPos p,UUID owner,UUID unit){return matches(l,p,owner,"access_mound:"+unit,NurseryBlocks.NEST_SOIL.defaultBlockState());}
     /** Surface locations own one paid soil unit, including an in-place gate conversion. */
     public boolean surface(ServerLevel l,BlockPos p,UUID owner){
-        if(!NestPlan.loaded(l,p))return false;var block=l.getBlockState(p).getBlock();return (block==NurseryBlocks.NEST_SOIL||block==NurseryBlocks.MOUND_GATE)&&matches(l,p,owner,"surface:"+id(block),block.defaultBlockState());
+        if(!NestPlan.loaded(l,p))return false;var block=l.getBlockState(p).getBlock();return (block==NurseryBlocks.NEST_SOIL||block==NurseryBlocks.MOUND_GATE)&&matches(l,p,owner,"surface:"+id(block),block.defaultBlockState())||generatedSurface(l,p,owner);
     }
     public void surfaceBuilt(BlockPos p,UUID owner,net.minecraft.world.level.block.Block block){
         if(block!=NurseryBlocks.NEST_SOIL&&block!=NurseryBlocks.MOUND_GATE)throw new IllegalArgumentException("Surface palette");record(p,owner,"surface:"+id(block));
@@ -54,7 +54,10 @@ public final class ColonyTerrain extends SavedData {
         record(p,owner,"surface_target:"+l.getBlockState(p));
     }
     public boolean surfacePermission(ServerLevel l,BlockPos p,UUID owner){return NestPlan.loaded(l,p)&&(owner+":surface_target:"+l.getBlockState(p)).equals(records.get(key(p)));}
-    public boolean opened(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"worker_open:air",Blocks.AIR.defaultBlockState());}
+    public boolean opened(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"worker_open:air",Blocks.AIR.defaultBlockState())||generatedOpen(l,p,owner);}
+    public boolean generatedOpen(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"generated:open",Blocks.AIR.defaultBlockState());}
+    public boolean generatedSurface(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"generated:surface",NurseryBlocks.NEST_SOIL.defaultBlockState());}
+    void generated(BlockPos p,UUID owner,String kind){record(p,owner,"generated:"+kind);}
     private static String id(net.minecraft.world.level.block.Block b){return net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(b).toString();}
     /** A wall cell the colony itself rebuilt in place with this wall block (NestWalls), still exactly as it left it. */
     public boolean built(ServerLevel l,BlockPos p,UUID owner,net.minecraft.world.level.block.Block block){return NestWalls.TIERS.containsKey(id(block))&&matches(l,p,owner,"built:"+id(block),block.defaultBlockState()) || block==NurseryBlocks.NEST_CUT_STONE && matches(l,p,owner,"faced:packed_clay:"+id(block),block.defaultBlockState());}

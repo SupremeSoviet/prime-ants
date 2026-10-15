@@ -541,6 +541,43 @@
           ]
         }
       }
+    },
+    "prime_ants_test:established_native": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:noise",
+        "settings": "minecraft:overworld",
+        "biome_source": {
+          "type": "minecraft:multi_noise",
+          "preset": "minecraft:overworld"
+        }
+      }
+    },
+    "prime_ants_test:established_route": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:flat",
+        "settings": {
+          "biome": "minecraft:plains",
+          "features": false,
+          "lakes": false,
+          "structure_overrides": [],
+          "layers": [
+            {
+              "block": "minecraft:bedrock",
+              "height": 1
+            },
+            {
+              "block": "minecraft:dirt",
+              "height": 6
+            },
+            {
+              "block": "minecraft:grass_block",
+              "height": 1
+            }
+          ]
+        }
+      }
     }
   }
 }

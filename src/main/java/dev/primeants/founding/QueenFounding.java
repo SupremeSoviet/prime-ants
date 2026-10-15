@@ -77,6 +77,10 @@ public final class QueenFounding {
                 && plan.plugs().stream().allMatch(p -> ColonyPlugs.get(level).opened(level,p,queen.getUUID()))) lifecycle = Lifecycle.OPEN;
     }
     public QueenFounding(LasiusNigerEntity queen) { this.queen = queen; }
+    public void initializeGenerated(ServerLevel l,NestPlan home){
+        if(!EstablishedGeneration.initializing(l,queen.getUUID(),home)||phase!=Phase.NONE)throw new IllegalStateException("Generated queen initialization authority");
+        plan=new NestPlan(home.entrance(),home.direction(),home.tasks(),home.tasks().stream().map(p->Blocks.AIR.defaultBlockState()).toList(),List.of(),List.of(),home.surfaceDeposits(),home.exteriorStand());phase=Phase.SETTLED;lifecycle=Lifecycle.OPEN;reason="generated_initial:"+EstablishedGeneration.VERSION;
+    }
     public static double multiplier() { return Double.parseDouble(System.getProperty("prime_ants.foundingWorkMultiplier", "1")); }
     public static int cadence() { return (int)Math.max(1, Math.min(Integer.MAX_VALUE, new SimulationTimeScale(multiplier()).ticksForGameDays(BASE_WORK_TICKS / 24000.0))); }
     public Phase phase() { return phase; }
