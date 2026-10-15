@@ -16,7 +16,7 @@ public final class TierTwoGameTest {
     @GameTest(maxTicks=60000,structure="prime_ants_test:idle_ground")
     public void naturalMatureColonyUpgradesEveryFunctionAndShowsExpandedBroodAndUnknownEntranceStability(GameTestHelper c){longPath(c);}
     private void longPath(GameTestHelper c){
-        var player=new TierTwoFixture(64,true);var q=player.fx.start(c);var scope=StageEvaluations.watch(c,q.getUUID());
+        var player=new TierTwoFixture(64,true,TierTwoFixture.FeedingProfile.NATURAL_HALL_AFTER_CONSTRUCTION);var q=player.fx.start(c);var scope=StageEvaluations.watch(c,q.getUUID());
         FoodServiceProbe.watch(c,q,60000,"tier_two_natural");
         var tiers=new LinkedHashMap<String,Long>();ColonyDevelopment.Evaluation[] seen={null};
         long[] lastEgg={0},reloadedAt={-1},eggProgress={-1},hiddenAt={-1};UUID[] egg={null};
@@ -34,7 +34,7 @@ public final class TierTwoGameTest {
             String prerequisites="tiers="+tiers.keySet()+" food="+foodEffect[0]+" material="+materialEffect[0]+" hall="+hallEffect[0]+" naturalDisplay="+naturalDisplay[0]+" reload="+reloadStep[0]+" unknownStarted="+(hiddenAt[0]>=0)+" restored="+restored[0]+" gate="+p.growth().reason();
             if(!prerequisites.equals(diagnostic[0])||c.getTick()%200==0&&(supply.foodSugar()!=receipts[0]||supply.foodProtein()!=receipts[1])||c.getTick()%1000==0){
                 diagnostic[0]=prerequisites;receipts[0]=supply.foodSugar();receipts[1]=supply.foodProtein();
-                PrimeAnts.LOGGER.info("T11 TIER TWO PHASE DIAGNOSIS queen={} tick={} loaded={} {} brood={} credit={} recentIncome={}/{} observedIncomeTicks={} intakeReceipts={}/{} supply={} groundApple={} groundChicken={} lastApple={} eligibleHallWave={}",q.getUUID(),c.getTick(),p.loadedTicks(),prerequisites,p.records().size(),saved(c,p).getIntOr("DevelopmentCredit",-1),p.growth().recentSugar(),p.growth().recentProtein(),p.growth().observedTicks(),supply.foodSugar(),supply.foodProtein(),supply,NurseryUpgradeGameTest.ground(c,net.minecraft.world.item.Items.APPLE),NurseryUpgradeGameTest.ground(c,net.minecraft.world.item.Items.CHICKEN),player.lastApple,player.feeding&&e!=null&&e.inputs().tier(ChamberFunction.QUEENS_HALL).known()==2&&NurseryUpgradeGameTest.ground(c,net.minecraft.world.item.Items.APPLE)==0&&supply.storedSugar()<24000&&c.getTick()-player.lastApple>=2000);
+                PrimeAnts.LOGGER.info("T11 TIER TWO PHASE DIAGNOSIS queen={} tick={} loaded={} {} brood={} credit={} recentIncome={}/{} observedIncomeTicks={} intakeReceipts={}/{} supply={} groundApple={} groundChicken={} lastApple={} legacyHallWavePredicate={}",q.getUUID(),c.getTick(),p.loadedTicks(),prerequisites,p.records().size(),saved(c,p).getIntOr("DevelopmentCredit",-1),p.growth().recentSugar(),p.growth().recentProtein(),p.growth().observedTicks(),supply.foodSugar(),supply.foodProtein(),supply,NurseryUpgradeGameTest.ground(c,net.minecraft.world.item.Items.APPLE),NurseryUpgradeGameTest.ground(c,net.minecraft.world.item.Items.CHICKEN),player.lastApple,player.feeding&&e!=null&&e.inputs().tier(ChamberFunction.QUEENS_HALL).known()==2&&NurseryUpgradeGameTest.ground(c,net.minecraft.world.item.Items.APPLE)==0&&supply.storedSugar()<24000&&c.getTick()-player.lastApple>=2000);
             }
             c.assertTrue(q.isAlive()&&l.getEntity(q.getUUID())==q,"The living queen remains observed throughout");
             c.assertTrue(scope.loss==null,"Mature at EVERY production evaluation after promotion: "+scope.loss);

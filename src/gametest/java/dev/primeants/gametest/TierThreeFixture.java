@@ -32,11 +32,14 @@ final class TierThreeFixture {
     long apples=54,chickens=5,stone,clay,cobble;
     long lastFood=-200;
     boolean constructionWave, hungryInitialAdults;
+    boolean postConstructionHall;
+    int postApples,postChickens;
     final Set<BlockPos> initialWalls=new LinkedHashSet<>();
     private final Map<String,Integer> observedTaken=new HashMap<>(),observedBuilt=new HashMap<>();
     private final Set<UUID> observedCargo=new HashSet<>();
     int withdrawals,conversions;
     LasiusNigerEntity start(GameTestHelper c,int stoneUnits){return start(c,stoneUnits,false);}
+    LasiusNigerEntity hallStart(GameTestHelper c){postConstructionHall=true;apples=64;chickens=5;return start(c,32,false);}
     LasiusNigerEntity start(GameTestHelper c,int stoneUnits,boolean hungry){
         hungryInitialAdults=hungry;
         SurfaceFixture.terrain(c);var l=c.getLevel();var home=NestPlan.geometry(c.absolutePos(new BlockPos(32,4,32)),Direction.EAST);
@@ -61,6 +64,7 @@ final class TierThreeFixture {
         pileTag.put("Consumed",com.mojang.serialization.Codec.STRING.listOf().encodeStart(NbtOps.INSTANCE,originals).getOrThrow());SurfaceFixture.loadBlock(c,pile,pileTag);
         l.setBlock(home.cache(),NurseryBlocks.NEST_CACHE.defaultBlockState(),3);var cache=(NestCache)l.getBlockEntity(home.cache());var cacheTag=cache.saveWithFullMetadata(l.registryAccess());SurfaceFixture.identity(cacheTag,home,"Colony",queen.getUUID());cacheTag.putInt("InventoryFormat",2);
         var food=new ArrayList<ItemStack>();for(int n=0;n<4;n++){food.add(new ItemStack(Items.APPLE));food.add(new ItemStack(Items.CHICKEN));}
+        if(postConstructionHall)for(int n=0;n<4;n++)food.add(new ItemStack(Items.APPLE));
         cacheTag.put("Contents",ItemStack.CODEC.listOf().encodeStart(NbtOps.INSTANCE,food).getOrThrow());SurfaceFixture.loadBlock(c,cache,cacheTag);
         l.setBlock(store.marker(),NurseryBlocks.MATERIAL_STORE.defaultBlockState(),3);var material=(MaterialStore)l.getBlockEntity(store.marker());var materialTag=material.saveWithFullMetadata(l.registryAccess());SurfaceFixture.identity(materialTag,home,"Colony",queen.getUUID());materialTag.putString("Placement","right");materialTag.putInt("InventoryFormat",2);
         var stone=new ArrayList<ItemStack>();for(int n=0;n<stoneUnits;n++)stone.add(new ItemStack(Items.STONE));if(stoneUnits==1){for(int n=0;n<31;n++)stone.add(new ItemStack(Items.COBBLESTONE));cobble=31;}materialTag.put("Contents",ItemStack.CODEC.listOf().encodeStart(NbtOps.INSTANCE,stone).getOrThrow());SurfaceFixture.loadBlock(c,material,materialTag);
@@ -75,6 +79,15 @@ final class TierThreeFixture {
             UUID brood=broodIds.get(n);var w=AntEntities.WORKER.create(l,EntitySpawnReason.COMMAND);c.assertTrue(w!=null,"Real controlled worker");w.setUUID(ColonyMembers.workerId(brood));w.initializeCallow(brood,queen.getUUID(),home.chamber());
             w.setPos(Vec3.atBottomCenterOf(home.at(3+n%3,n%2==0?-1:0,-2)));c.assertTrue(l.addFreshEntity(w),"Insert real registered worker");ColonyMembers.get(l).record(brood,queen.getUUID(),home.chamber());
             c.assertTrue(w.nutrition().ingest(new ItemStack(Items.APPLE),Nutrition.QUEEN_SUGAR_CAPACITY,Nutrition.QUEEN_PROTEIN_CAPACITY),"Declared initial ingested apple");
+            if(postConstructionHall){
+                if(n>=44)c.assertTrue(w.nutrition().ingest(new ItemStack(Items.APPLE),Nutrition.QUEEN_SUGAR_CAPACITY,Nutrition.QUEEN_PROTEIN_CAPACITY),"Five declared pre-boundary reserve adults consume a second apple");
+                c.assertTrue(w.nutrition().spend(3000,0),"Declared pre-boundary twelve-thousand covered ticks");
+                var saved=TagValueOutput.createWithContext(ProblemReporter.DISCARDING,l.registryAccess());c.assertTrue(w.save(saved),"Declared existing adult history");
+                var tag=saved.buildResult();tag.putLong("AntElapsedAgeTicks",12000);tag.putLong("CallowTicks",BroodPile.callowTicks());
+                var life=tag.getCompound("AdultLife").orElseThrow();life.putBoolean("Started",true);life.putLong("Fasting",0);life.putLong("Maintenance",3000);life.putLong("CoveredTicks",12000);life.putLong("ActiveTicks",12000);life.putInt("CoverageRemaining",0);
+                w.load(TagValueInput.create(ProblemReporter.DISCARDING,l.registryAccess(),tag));
+                c.assertTrue(!w.isCallow()&&!w.adultLife().hungry()&&w.nutrition().sugar()==(n>=44?5000:1000)&&w.elapsedAgeTicks()==12000,"Coherent pre-boundary adult:3000 maintenance; one apple or a declared second reserve apple");
+            }
             if(hungry){
                 // Controlled PRE-BOUNDARY history only: one prior meal has been fully spent on maintenance.
                 // Default life/food gates remain; all subsequent meals and eggs need real workers.
@@ -87,17 +100,19 @@ final class TierThreeFixture {
             }
         }
         c.assertTrue(queen.nutrition().ingest(new ItemStack(Items.APPLE),Nutrition.QUEEN_SUGAR_CAPACITY,Nutrition.QUEEN_PROTEIN_CAPACITY)&&queen.nutrition().ingest(new ItemStack(Items.CHICKEN),Nutrition.QUEEN_SUGAR_CAPACITY,Nutrition.QUEEN_PROTEIN_CAPACITY),"Declared queen's existing ingested apple/chicken");
+        if(postConstructionHall)c.assertTrue(queen.nutrition().ingest(new ItemStack(Items.APPLE),Nutrition.QUEEN_SUGAR_CAPACITY,Nutrition.QUEEN_PROTEIN_CAPACITY),"Declared second pre-boundary queen apple; one chicken funds four eggs without another protein portion");
         c.assertTrue(ChamberExcavation.get(l).jobs(queen.getUUID()).isEmpty()&&ChamberUpgrade.get(l).jobs(queen.getUUID()).isEmpty()&&queen.founding().removed()==0,"Initial habitat manufactures no excavation or upgrade work receipts");
 
         initialWalls.addAll(NurseryUpgradeGameTest.allWalls(c,queen));this.stone=stoneUnits;
         c.assertTrue(initialWalls.stream().allMatch(at->ColonyTerrain.get(l).retainedClay(l,at,queen.getUUID())),"Every initial wall is explicitly pre-existing paid tier two");
         c.assertTrue(initialWalls.stream().noneMatch(at->l.getBlockState(at).is(NurseryBlocks.NEST_CUT_STONE)),"No initial tier-three walls");
         c.assertTrue(MoundSoil.cells(l,home,queen.getUUID()).stream().noneMatch(at->ColonyTerrain.get(l).mound(l,at,queen.getUUID())||ColonyTerrain.get(l).surface(l,at,queen.getUUID())),"No recoverable surface construction supplies in this chamber fixture");
-        PrimeAnts.LOGGER.info("T3 ACCEPTANCE BOUNDARY queen={} workers=49 initialClayCores={} initialStone={} initialCache=8 initialIngestedApples=50 initialIngestedChicken=1 tierThreeCells=0 upgradeReceipts=0 hungryAdults={} historicalSpentSugarPerWorker={}",queen.getUUID(),initialWalls.size(),stoneUnits,hungry,hungry?4000:0);
+        if(!postConstructionHall)PrimeAnts.LOGGER.info("T3 ACCEPTANCE BOUNDARY queen={} workers=49 initialClayCores={} initialStone={} initialCache=8 initialIngestedApples=50 initialIngestedChicken=1 tierThreeCells=0 upgradeReceipts=0 hungryAdults={} historicalSpentSugarPerWorker={}",queen.getUUID(),initialWalls.size(),stoneUnits,hungry,hungry?4000:0);
+        if(postConstructionHall)PrimeAnts.LOGGER.info("T08 HALL FEEDING BOUNDARY queen={} profile=POST_CONSTRUCTION_HALL initialApples=64 initialChickens=5 workerAge=12000 workers=49 workerSugar=44x1000+5x5000 historicalSpentPerWorker=3000 initialCache=8/4 queenNutrition=8000/8000 postBudget=120/72 existingOversizeWave=18/18 foodSource=4,-1,-2 proteinRefillAfterFourRealEggs=true",queen.getUUID());
         return queen;
     }
     void drop(GameTestHelper c,LasiusNigerEntity q,Item item,int n){
-        var at=q.founding().plan().at(-4,0,1);c.assertTrue(NestPlan.walkable(c.getLevel(),at),"Existing supported contribution point");
+        var at=postConstructionHall&&WorkerTasks.food(new ItemStack(item))?q.founding().plan().at(4,-1,-2):q.founding().plan().at(-4,0,1);c.assertTrue(NestPlan.walkable(c.getLevel(),at),"Supported contribution point for declared profile");
         int remaining=n;
         while(remaining>0){int count=Math.min(remaining,new ItemStack(item).getMaxStackSize());fx.drop(c,at,new ItemStack(item,count));remaining-=count;}
         if(item==Items.APPLE)apples+=n;else if(item==Items.CHICKEN)chickens+=n;else if(item==Items.STONE)stone+=n;else if(item==Items.CLAY_BALL)clay+=n;else if(item==Items.COBBLESTONE)cobble+=n;
@@ -105,6 +120,15 @@ final class TierThreeFixture {
     void feed(GameTestHelper c,LasiusNigerEntity q){
         var paid=ChamberUpgrade.get(c.getLevel()).jobs(q.getUUID()).stream().filter(j->j.tier==3).mapToInt(j->j.built().size()).sum();
         if(!constructionWave&&stone==32&&paid==32&&loose(c,q,Items.STONE)==0){constructionWave=true;drop(c,q,Items.STONE,12);}
+        if(postConstructionHall){
+            if(!complete(c,q))return;var cache=fx.f.cache(c,q);boolean observed=false;
+            if(c.getTick()-lastFood>=200){lastFood=c.getTick();observed=true;
+                if(NurseryUpgradeGameTest.ground(c,Items.APPLE)==0&&(postApples==0||cache.contents().stream().filter(s->s.is(Items.APPLE)).count()<=6)&&postApples<120){int n=Math.min(16,120-postApples);postApples+=n;drop(c,q,Items.APPLE,n);}
+            }
+            long physicalChicken=TierTwoFixture.physicalFood(c,q,fx,Items.CHICKEN);
+            if(q.nutrition().spentProtein()>=8000&&physicalChicken<4&&postChickens<72){int n=(int)Math.min(Math.min(2,4-physicalChicken),72-postChickens);postChickens+=n;drop(c,q,Items.CHICKEN,n);observed=true;}
+            if(observed)PrimeAnts.LOGGER.info("T08 HALL SUPPLY DECISION queen={} tick={} added={}/{} totals={}/{} current={} income={}/{} ground={}/{} physicalChicken={} realEggPayments={}",q.getUUID(),c.getTick(),postApples,postChickens,apples,chickens,NestPlanFixture.pile(c,q).supply(c.getLevel()),NestPlanFixture.pile(c,q).growth().recentSugar(),NestPlanFixture.pile(c,q).growth().recentProtein(),NurseryUpgradeGameTest.ground(c,Items.APPLE),NurseryUpgradeGameTest.ground(c,Items.CHICKEN),physicalChicken,q.nutrition().spentProtein()/2000);return;
+        }
         if(!hungryInitialAdults)return; // Well-fed safety bodies need no additional food before their bounded endpoints.
         if(c.getTick()-lastFood<200)return;lastFood=c.getTick();var cache=fx.f.cache(c,q);
         if(cache==null)return;
@@ -119,6 +143,10 @@ final class TierThreeFixture {
             +TransferCustody.get(l).contents().stream().filter(t->t.stack().is(item)&&box.contains(t.position())).mapToInt(t->t.stack().getCount()).sum();
     }
     void ledger(GameTestHelper c,LasiusNigerEntity q){
+        if(postConstructionHall){
+            c.assertTrue(TierTwoFixture.foodUnits(c,q,fx,Items.APPLE)==apples&&TierTwoFixture.foodUnits(c,q,fx,Items.CHICKEN)==chickens,"Independent hall apple/chicken unit conservation including declared initial consumption and every wave");fx.food.yields(c,q);
+            for(var w:workers(c,q)){var n=w.nutrition();c.assertTrue(n.gainedSugar()==n.apples()*4000&&n.gainedSugar()+n.receivedSugar()==n.sugar()+n.spentSugar()+n.givenSugar()&&n.gainedProtein()==n.protein()+n.spentProtein(),"Independent worker yields, historical maintenance and physical transfers balance");}
+        }
         var l=c.getLevel();var terrain=ColonyTerrain.get(l);var jobs=ChamberUpgrade.get(l).jobs(q.getUUID());
         long paid=jobs.stream().filter(j->j.tier==3).mapToLong(j->j.built().size()).sum();
         c.assertTrue(loose(c,q,Items.STONE)+paid==stone,"Every facing stone is ground, cargo, store, paid cell or pending custody: "+loose(c,q,Items.STONE)+"+"+paid+"="+stone);
