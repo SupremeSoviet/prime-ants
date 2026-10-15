@@ -102,6 +102,7 @@ loom.runs.named('gameTest') {
 }
 apply from: 'gradle/client-evidence.gradle'
 apply from: 'gradle/restart-evidence.gradle'
+apply from: 'gradle/scale-evidence.gradle'
 apply from: 'gradle/placement-diagnostic.gradle'
 apply from: 'gradle/fresh-player-validation.gradle'
 def capturePrefix = providers.gradleProperty('primeAntsCapturePrefix').getOrElse('t05-' + java.util.UUID.randomUUID().toString())
