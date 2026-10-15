@@ -18,20 +18,44 @@ public final class ColonyTerrain extends SavedData {
     public static final Codec<ColonyTerrain> CODEC=Codec.unboundedMap(Codec.STRING,Codec.STRING).xmap(ColonyTerrain::new,d->Map.copyOf(d.records));
     public static final SavedDataType<ColonyTerrain> TYPE=new SavedDataType<>(Identifier.fromNamespaceAndPath("prime_ants","colony_terrain"),ColonyTerrain::new,CODEC,DataFixTypes.LEVEL);
     private final Map<String,String> records;
+    /** Derived lookup only. The serialized strings retain their exact legacy representation. Each replacement/read
+     * builds its own index; writes and same-state revocations update both maps synchronously. */
+    private record Ownership(UUID owner,String kind) { }
+    private final it.unimi.dsi.fastutil.longs.Long2ObjectMap<Ownership> ownership=new it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<>();
     public ColonyTerrain(){this(Map.of());}
-    private ColonyTerrain(Map<String,String> r){records=new HashMap<>(r);}
+    private ColonyTerrain(Map<String,String> r){
+        records=new HashMap<>(r);
+        r.forEach((key,value)->{
+            try{long pos=Long.parseLong(key);if(key.equals(Long.toString(pos)))index(pos,value);}
+            catch(IllegalArgumentException ignored){/* Unreachable/noncanonical old keys stay serialized, never gain authority. */}
+        });
+    }
+    private void index(long pos,String value){
+        ownership.remove(pos);
+        int colon=value.indexOf(':');if(colon<0)return;
+        String name=value.substring(0,colon);UUID owner;
+        try{owner=name.equals("null")?null:UUID.fromString(name);}catch(IllegalArgumentException ignored){return;}
+        if(!name.equals(String.valueOf(owner)))return;
+        ownership.put(pos,new Ownership(owner,value.substring(colon+1)));
+    }
+    private boolean owns(BlockPos p,UUID owner,String kind){var o=ownership.get(p.asLong());return o!=null&&java.util.Objects.equals(owner,o.owner())&&kind.equals(o.kind());}
     public static ColonyTerrain get(ServerLevel l){return l.getDataStorage().computeIfAbsent(TYPE);}
     private static String key(BlockPos p){return Long.toString(p.asLong());}
-    public void invalidate(BlockPos p){if(records.remove(key(p))!=null)setDirty();}
+    public void invalidate(BlockPos p){ownership.remove(p.asLong());if(records.remove(key(p))!=null)setDirty();}
     public UUID componentOwner(ServerLevel l,BlockPos p){
         String r=records.get(key(p));if(r==null)return null;UUID owner=UUID.fromString(r.substring(0,36));
         return prepared(l,p,owner)||mound(l,p,owner)||surface(l,p,owner)||built(l,p,owner,l.getBlockState(p).getBlock())?owner:null;
     }
-    private void record(BlockPos p,UUID owner,String kind){records.put(key(p),owner+":"+kind);setDirty();}
-    private boolean matches(ServerLevel l,BlockPos p,UUID owner,String kind,BlockState expected){return NestPlan.loaded(l,p)&&l.getBlockState(p).equals(expected)&&(owner+":"+kind).equals(records.get(key(p)));}
+    private void record(BlockPos p,UUID owner,String kind){records.put(key(p),owner+":"+kind);ownership.put(p.asLong(),new Ownership(owner,kind));setDirty();}
+    private boolean matches(ServerLevel l,BlockPos p,UUID owner,String kind,BlockState expected){
+        // Negative authority avoids unnecessary world reads. Positive authority must still be current after them:
+        // a world read can cross a write/revocation boundary, including replacement of this SavedData instance.
+        return owns(p,owner,kind)&&NestPlan.loaded(l,p)&&l.getBlockState(p).equals(expected)&&get(l).owns(p,owner,kind);
+    }
     public boolean prepared(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"prepared:nest_soil",NurseryBlocks.NEST_SOIL.defaultBlockState());}
     public boolean mound(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"mound:nest_soil",NurseryBlocks.NEST_SOIL.defaultBlockState())
-        ||NestPlan.loaded(l,p)&&l.getBlockState(p).equals(NurseryBlocks.NEST_SOIL.defaultBlockState())&&records.getOrDefault(key(p),"").startsWith(owner+":access_mound:");}
+        ||accessMoundKind(p,owner)&&NestPlan.loaded(l,p)&&l.getBlockState(p).equals(NurseryBlocks.NEST_SOIL.defaultBlockState())&&get(l).accessMoundKind(p,owner);}
+    private boolean accessMoundKind(BlockPos p,UUID owner){var o=ownership.get(p.asLong());return o!=null&&java.util.Objects.equals(owner,o.owner())&&o.kind().startsWith("access_mound:");}
     boolean reserveAccess(ServerLevel l,BlockPos p,UUID owner,UUID unit){
         if(!canReserveAccess(l,p))return false;
         record(p,owner,"access_destination:"+unit);return true;

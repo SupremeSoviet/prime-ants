@@ -13,7 +13,10 @@ public final class UnavailableCells implements AutoCloseable {
     private final ServerLevel level;private final BlockPos cell;
     private UnavailableCells(ServerLevel l,BlockPos p){level=l;cell=p.immutable();registrations.put(token,this);}
     public static UnavailableCells hide(GameTestHelper c,BlockPos p){
-        var scope=new UnavailableCells(c.getLevel(),p);
+        return hide(c,c.getLevel(),p);
+    }
+    public static UnavailableCells hide(GameTestHelper c,ServerLevel level,BlockPos p){
+        var scope=new UnavailableCells(level,p);
         ((GameTestHelperAccessor)c).primeAntsTestInfo().addListener(new GameTestListener(){
             public void testStructureLoaded(GameTestInfo i){}
             public void testPassed(GameTestInfo i,GameTestRunner r){scope.close();}

@@ -41,8 +41,10 @@ public final class EstablishedNest extends SavedData {
     }
     public void findings(ServerLevel l,UUID owner,Findings r){
         var n=initial(owner);if(n==null)return;var t=ColonyTerrain.get(l);
-        for(var p:n.space())if(r.cell(NestPlan.loaded(l,p),"generated_space_unavailable")&&!p.equals(n.home().nursery())&&!p.equals(n.home().cache())
-                &&!(n.profile()==ColonyStage.MATURE&&p.equals(dev.primeants.worker.MaterialStore.marker(n.home(),"left")))&&!t.generatedOpen(l,p,owner))r.fault("generated_space_revoked_or_obstructed");
+        var nursery=n.home().nursery();var cache=n.home().cache();
+        var store=n.profile()==ColonyStage.MATURE?dev.primeants.worker.MaterialStore.marker(n.home(),"left"):null;
+        for(var p:n.space())if(r.cell(NestPlan.loaded(l,p),"generated_space_unavailable")&&!p.equals(nursery)&&!p.equals(cache)
+                &&!p.equals(store)&&!t.generatedOpen(l,p,owner))r.fault("generated_space_revoked_or_obstructed");
         for(var p:n.shell())if(r.cell(NestPlan.loaded(l,p),"generated_shell_unavailable")&&(!l.getBlockState(p).isSolidRender()||!l.getFluidState(p).isEmpty())&&!DigJob.anyOpening(l,p,owner))r.fault("generated_shell_open");
     }
 }

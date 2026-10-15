@@ -3,6 +3,12 @@
   "package": "dev.primeants.gametest.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
+    "LifecyclePreparationProbeMixin",
+    "ScalePlanProbeMixin",
+    "ScaleTerrainProbeMixin",
+    "ScaleRoomProbeMixin",
+    "ScaleOpeningProbeMixin",
+    "ScaleEstablishedProbeMixin",
     "ScaleBlockLoadMixin",
     "FounderAccessAdmissionMixin",
     "FounderAccessWorkerMixin",

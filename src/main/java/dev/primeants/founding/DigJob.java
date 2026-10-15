@@ -16,6 +16,7 @@ public abstract class DigJob {
     public final List<BlockPos> tasks;
     public final List<BlockState> expected;
     protected final List<BlockPos> completed;
+    private final Set<BlockPos> completedCells;
     public UUID claim;
     public int deposited,released;
     public long ticks;
@@ -25,6 +26,7 @@ public abstract class DigJob {
         this.claim=claim.isEmpty()?null:UUID.fromString(claim);this.deposited=deposited;this.released=released;this.ticks=ticks;this.reason=reason;
         if(expected.size()!=tasks.size()||completed.size()>tasks.size()||!tasks.subList(0,completed.size()).equals(completed)||deposited<0||released<0||deposited+released>completed.size()||ticks<0)
             throw new IllegalArgumentException("Invalid saved "+label()+" edits/balance");
+        completedCells=new HashSet<>(completed);
     }
     /** Names this job in reasons: "extension" for the 0.1.0 widening. */
     public abstract String label();
@@ -57,11 +59,11 @@ public abstract class DigJob {
     public List<BlockPos> floors(){return tasks.stream().filter(p->p.getY()==home.entrance().getY()-2).toList();}
     public String problem(ServerLevel l,UUID owner){var r=new Findings();findings(l,owner,r);return r.problem();}
     /** A completed cell still opened by this colony's own worker: an authorized opening in a neighbouring shell. */
-    public boolean opening(ServerLevel l,BlockPos p,UUID owner){return completed.contains(p)&&ColonyTerrain.get(l).opened(l,p,owner);}
+    public boolean opening(ServerLevel l,BlockPos p,UUID owner){return completedCells.contains(p)&&ColonyTerrain.get(l).opened(l,p,owner);}
     /** Records one successful worker removal, in plan order and below the cap. */
     public void removed(ServerLevel l,BlockPos p){
         if(removed()>=cap()||!tasks.get(removed()).equals(p))throw new IllegalStateException(label()+" order/cap");
-        completed.add(p);changed(l);
+        completed.add(p);completedCells.add(p);changed(l);
     }
     /** A dead builder's carried soil went to transfer custody; the job waits for another real worker. */
     public void release(ServerLevel l,LasiusNigerEntity w,int soil){

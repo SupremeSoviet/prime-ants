@@ -93,6 +93,7 @@ loom.runs.named('gameTest') {
     systemProperties.put('prime_ants.naturalPlacement','false') // Ordinary fixtures explicitly opt out; separate test checks unconfigured production default.
     systemProperties.put('prime_ants.broodMultiplier', providers.gradleProperty('primeAntsBroodMultiplier').getOrElse('100'))
     systemProperties.put('prime_ants.foundingWorkMultiplier', providers.gradleProperty('primeAntsFoundingMultiplier').getOrElse('20'))
+    if (providers.gradleProperty('primeAntsLifecycleProbe').isPresent()) systemProperties.put('prime_ants.lifecycleProbe', providers.gradleProperty('primeAntsLifecycleProbe').get())
     if (providers.gradleProperty('primeAntsOriginDiagnostics').isPresent()) systemProperties.put('prime_ants.originDiagnostics', 'true')
     systemProperties.put('fabric-api.gametest.report-file', gameTestReport.get().asFile.absolutePath)
     def groupClass = serverDiagnosticGroup.isPresent() ? serverDiagnosticGroups[serverDiagnosticGroup.get()] : null
