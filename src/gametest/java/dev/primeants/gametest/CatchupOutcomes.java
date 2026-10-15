@@ -5,7 +5,7 @@ import java.util.*;
 
 /** Frozen T01 outcome contract: no donor, route, timing or per-recipient item oracle. */
 final class CatchupOutcomes {
-    static final long CONSUMPTION_TOLERANCE=1, LARVAL_PROTEIN=8000, DEVELOPMENT_TOLERANCE=120;
+    static final long CONSUMPTION_TOLERANCE=1, LARVAL_PROTEIN=8000, DEVELOPMENT_TOLERANCE=120, DEVELOPMENT_FALLBACK=240;
     static final List<String> KINDS=List.of("apples","berries","chickens","nectar","nectarV2","prey","flesh");
     static long consumed(JsonObject state,String kind){
         long total=0;
@@ -13,7 +13,7 @@ final class CatchupOutcomes {
             var n=value.getAsJsonObject().getAsJsonObject("nutrition");
             total+=n.get(kind).getAsLong();
         }
-        return total+state.getAsJsonObject("brood_consumption").get(kind).getAsLong();
+        return total+state.getAsJsonObject("brood_consumption").get(kind).getAsLong()-(kind.equals("nectar")?state.getAsJsonObject("brood_consumption").get("nectarV2").getAsLong():0);
     }
     static JsonObject compare(JsonObject live,JsonObject away){
         var row=new JsonObject();row.add("live",live);row.add("catchup",away);

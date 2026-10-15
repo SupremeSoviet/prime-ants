@@ -11,14 +11,14 @@ import net.minecraft.gametest.framework.GameTestHelper;
 final class LiveReferenceDriver {
     static void adults(GameTestHelper c,LasiusNigerEntity q,long now){
         var bodies=AutomaticCatchupGameTest.adults(c,q).stream().filter(a->a!=null&&a.isAlive()&&!a.isRemoved()).toList();
-        c.assertTrue(bodies.stream().map(LasiusNigerEntity::getUUID).distinct().count()==bodies.size(),"Reference adult membership has no duplicate identity");
+        c.assertTrue(ComparisonEvidence.longs(bodies.stream().map(LasiusNigerEntity::getUUID).distinct().count(),bodies.size(),"==","bodies.stream().map(LasiusNigerEntity::getUUID).distinct().count()==bodies.size()"),"Reference adult membership has no duplicate identity");
         ReconciliationGameTest.atTime(c,now,()->bodies.forEach(a->adult(c,a,now)));
     }
     static void adult(GameTestHelper c,LasiusNigerEntity a,long now){
         int before=a.tickCount;
-        c.assertTrue(!a.isPassenger(),"Ordinary reference adult is a non-passenger");
+        c.assertTrue(!ComparisonEvidence.flag(a.isPassenger(),"a.isPassenger()"),"Ordinary reference adult is a non-passenger");
         c.getLevel().tickNonPassenger(a);
-        c.assertTrue(!a.isAlive()||a.isRemoved()||a.tickCount==before+1,"Every surviving reference adult advances exactly once through native lifecycle");
+        c.assertTrue(!ComparisonEvidence.flag(a.isAlive(),"a.isAlive()")||ComparisonEvidence.flag(a.isRemoved(),"a.isRemoved()")||ComparisonEvidence.longs(a.tickCount,before+1,"==","a.tickCount==before+1"),"Every surviving reference adult advances exactly once through native lifecycle");
         if(a.tickCount%20==0){
             var row=new JsonObject();row.addProperty("time",now);row.addProperty("id",a.getUUID().toString());
             row.addProperty("before",before);row.addProperty("after",a.tickCount);row.addProperty("search_boundary",true);

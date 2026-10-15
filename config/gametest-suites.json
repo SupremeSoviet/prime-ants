@@ -3147,6 +3147,54 @@
       "suite": "long",
       "weight_ticks": 8000,
       "reason": "Fixed aggregate distribution ownership, priorities and compatibility"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_native_caregiver_complete_cycle_calibration_with_adult_demand",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T04 native caregiver calibration and aggregate acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_native_caregiver_complete_cycle_calibration_without_adult_demand",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T04 native caregiver calibration and aggregate acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_zero_caregivers_earn_no_brood_service",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T04 home-domain and measured service capacity acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_one_caregiver_earns_one_service_after_measured_interval_across_reload",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T04 home-domain and measured service capacity acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_two_caregivers_earn_two_services_after_measured_interval_across_reload",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T04 home-domain and measured service capacity acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_home_domain_feeds_callow_defender_beyond_contact_and_excludes_outside_foreign_disabled",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T04 home-domain and measured service capacity acceptance"
     }
   ]
 }

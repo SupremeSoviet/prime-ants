@@ -544,7 +544,7 @@ ext.verifyPermanentServerReport = { File reportFile ->
         }.sum()
         def automaticNames=(file('src/gametest/java/dev/primeants/gametest/AutomaticCatchupGameTest.java').text =~ /@GameTest(?:\([^)]*\))?\s+public void (\w+)\(GameTestHelper \w+\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
         automaticNames.each{n->if(!cases.any{it.@name.text()=='prime_ants_test:automatic_catchup_game_test_'+n})throw new GradleException('Missing enabled automatic catchup test '+n)}
-        def recoveryLifecycleNames=['CatchupRecoveryGameTest':4,'CatchupLifecycleGameTest':18].collect { className,count ->
+        def recoveryLifecycleNames=['CatchupRecoveryGameTest':4,'CatchupLifecycleGameTest':24].collect { className,count ->
             def names=(file("src/gametest/java/dev/primeants/gametest/${className}.java").text =~ /@GameTest(?:\([^)]*\))?\s+public void (\w+)\(GameTestHelper \w+\)/).collect {it[1].replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)}
             if(names.size()!=count)throw new GradleException('Catchup T06 discovery incomplete: '+className)
             def prefix=className.replaceAll(/([a-z])([A-Z])/,'$1_$2').toLowerCase(java.util.Locale.ROOT)
