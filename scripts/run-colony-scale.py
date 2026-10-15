@@ -10,7 +10,7 @@ def inputs():
     files += [ROOT/x for x in ('build.gradle','gradle.properties','settings.gradle')]
     return {p.relative_to(ROOT).as_posix():sha(p) for p in files}
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--attempt',required=True);p.add_argument('--phase',required=True,choices=['probe','empty','one','three','prepare','reopen1','reopen2']);p.add_argument('--declaration',required=True,type=Path);p.add_argument('--evidence',required=True,type=Path);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--attempt',required=True);p.add_argument('--phase',required=True,choices=['probe','profile','control','empty','one','three','prepare','reopen1','reopen2']);p.add_argument('--declaration',required=True,type=Path);p.add_argument('--evidence',required=True,type=Path);a=p.parse_args()
     assert re.fullmatch('[a-z0-9][a-z0-9-]*',a.attempt)
     assert shutil.disk_usage(ROOT).free>=25_000_000_000
     evidence=a.evidence.resolve();evidence.mkdir(parents=True,exist_ok=True);run=ROOT/'build/run/t10-colony-scale'/a.attempt

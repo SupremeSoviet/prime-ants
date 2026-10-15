@@ -36,10 +36,13 @@ public final class NestExpansion extends SavedData {
             Codec.STRING.fieldOf("use").forGetter(j->j.use)
         ).apply(i,Job::new));
         public final int side,triggerWorkers;
+        private final List<BlockPos> shell;
         public String usedBy,use;
         private Job(BlockPos entrance,String direction,int side,List<BlockState> expected,List<BlockPos> completed,String claim,int deposited,int released,long ticks,String reason,int triggerWorkers,String usedBy,String use){
             super(home(entrance,direction,side),targets(home(entrance,direction,side),side),expected,completed,claim,deposited,released,ticks,reason);
             this.side=side;this.triggerWorkers=triggerWorkers;this.usedBy=usedBy;this.use=use;
+            var out=new LinkedHashSet<BlockPos>();var cells=new HashSet<>(tasks);var founding=new HashSet<>(home.tasks());
+            for(var p:tasks)for(var d:Direction.values()){var n=p.relative(d);if(!cells.contains(n)&&!founding.contains(n))out.add(n);}shell=List.copyOf(out);
         }
         private static NestPlan home(BlockPos entrance,String direction,int side){
             Direction d=Direction.byName(direction);if(d==null||d.getAxis().isVertical()||Math.abs(side)!=1)throw new IllegalArgumentException("Invalid extension home");
@@ -49,7 +52,7 @@ public final class NestExpansion extends SavedData {
         @Override public int cap(){return HARD_CAP;}
         @Override public void changed(ServerLevel l){NestExpansion.get(l).changed();}
         @Override public List<BlockPos> surfaces(){
-            var out=new LinkedHashSet<BlockPos>();for(var p:tasks)for(var d:Direction.values()){var n=p.relative(d);if(!tasks.contains(n)&&!home.tasks().contains(n))out.add(n);}return List.copyOf(out);
+            return shell;
         }
         public List<BlockPos> usable(ServerLevel l,UUID owner){
             if(problem(l,owner)!=null)return List.of();

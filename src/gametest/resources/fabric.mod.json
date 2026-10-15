@@ -68,7 +68,8 @@
       "dev.primeants.gametest.SurfaceAccessSafetyGameTest",
       "dev.primeants.gametest.TierThreeGameTest",
       "dev.primeants.gametest.HallFundingGameTest",
-      "dev.primeants.gametest.EstablishedGenerationGameTest"
+      "dev.primeants.gametest.EstablishedGenerationGameTest",
+      "dev.primeants.gametest.ValidationIndexGameTest"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",

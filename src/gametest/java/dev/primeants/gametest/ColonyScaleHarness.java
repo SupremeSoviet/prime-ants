@@ -49,6 +49,11 @@ public final class ColonyScaleHarness implements ModInitializer {
     private boolean initialized,done;
     private int ticks,loaded;
     private long loadStarted;
+    private long allocationStart;
+    private long[] profileStart;
+    private UUID controlBrood;
+    private long controlProgress=-1,controlObserved;
+    private boolean controlLateSupply;
     private ChunkPos youngSite;private UUID youngOwner;private boolean youngRegistered;
     private static final List<String> TABLES=List.of("founding.NaturalPlacement","founding.EstablishedNest","founding.NaturalSoil","founding.GenerationAir","founding.ColonyTerrain","founding.ColonyPlugs","founding.ChamberExcavation","worker.ColonyMembers","colony.ChamberRegistry","worker.AdultHistory","brood.BroodHistory","worker.TransferCustody","founding.NestExpansion","founding.ChamberUpgrade","founding.SurfaceWork","founding.Mining","worker.ColonyAlarm");
     @Override public void onInitialize(){
@@ -58,6 +63,7 @@ public final class ColonyScaleHarness implements ModInitializer {
         ServerEntityEvents.ENTITY_LOAD.register((a,l)->{if(reopen()&&a instanceof LasiusNigerEntity)firstActors.add(a.getUUID().toString(),actor(a,l));});
         ServerLifecycleEvents.SERVER_STARTED.register(s->{try{start(s);}catch(Throwable ex){fail(s,ex);}});
         ServerTickEvents.END_SERVER_TICK.register(s->{if(done)return;try{observe(s);}catch(Throwable ex){fail(s,ex);}});
+        ServerTickEvents.START_SERVER_TICK.register(s->{if(phase.equals("profile"))allocationStart=ScaleValidationProbe.allocated();});
         ServerLifecycleEvents.SERVER_STOPPED.register(s->write(phase+"-stopped",process(s)));
     }
     private boolean reopen(){return phase.startsWith("reopen");}
@@ -76,9 +82,12 @@ public final class ColonyScaleHarness implements ModInitializer {
             var manifest=read("cohort");manifest.getAsJsonArray("owners").forEach(x->owners.add(UUID.fromString(x.getAsString())));manifest.getAsJsonArray("sites").forEach(x->{var a=x.getAsJsonArray();sites.add(new ChunkPos(a.get(0).getAsInt(),a.get(1).getAsInt()));});manifest.getAsJsonArray("expected").forEach(x->expected.add(UUID.fromString(x.getAsString())));
             write(phase+"-first-tables",tables());for(var p:sites)hold(p);
             if(phase.equals("prepare")){youngSite=select(6300,ColonyStage.YOUNG);sites.add(youngSite);hold(youngSite);}
+        }else if(phase.equals("profile")||phase.equals("control")){
+            sites.add(select(6300,ColonyStage.YOUNG));hold(sites.getFirst());
         }else{
-            int colonies=phase.equals("one")||phase.equals("probe")?1:3;
+            int colonies=phase.equals("empty")&&declaration.has("regions")?declaration.get("regions").getAsInt():phase.equals("one")||phase.equals("probe")?1:3;
             for(int i=0;i<colonies;i++){
+                if(phase.equals("empty")&&declaration.has("sites")){var a=declaration.getAsJsonArray("sites").get(i).getAsJsonArray();var cp=new ChunkPos(a.get(0).getAsInt(),a.get(1).getAsInt());sites.add(cp);hold(cp);continue;}
                 int base=declaration.has("bases")?declaration.getAsJsonArray("bases").get(i).getAsInt():6000+100*i;ChunkPos selected=null;
                 for(int cell=0;cell<16&&selected==null;cell++)for(int x=base+4*cell;x<base+4*cell+4;x++)for(int z=base;z<base+4;z++){var p=new ChunkPos(x,z);if(NaturalPlacement.selected(level,p)&&NaturalPlacement.selectedProfile(level,p)==ColonyStage.MATURE)selected=p;}
                 require(selected!=null,"Declared deterministic Mature candidate");sites.add(selected);hold(selected);
@@ -101,6 +110,19 @@ public final class ColonyScaleHarness implements ModInitializer {
         var encoded=ColonyMembers.CODEC.encodeStart(JsonOps.INSTANCE,ColonyMembers.get(level)).getOrThrow().getAsJsonArray();for(var row:encoded){var m=row.getAsJsonObject();if(supplied.contains(UUID.fromString(m.get("worker").getAsString())))m.addProperty("origin","controlled_supplied:t10");}level.getDataStorage().set(ColonyMembers.TYPE,ColonyMembers.CODEC.parse(JsonOps.INSTANCE,encoded).getOrThrow());
         owners.add(q.getUUID());expected.add(q.getUUID());for(var m:ColonyMembers.get(level).members(q.getUUID())){expected.add(m.worker());var w=(LasiusNigerEntity)level.getEntity(m.worker());require(w!=null&&ColonyMembers.get(level).belongs(w,q.getUUID(),p.chamber()),"Canonical cohort membership");}
         supply(q);
+        if(declaration.has("controlledGreat")&&declaration.get("controlledGreat").getAsBoolean())controlledGreat(q);
+    }
+    /** Explicit controlled initial physical habitat. No stage/cap setter, job payment, birth or growth receipt.
+     * These supplied walls and stock are initial benchmark conditions, never evidence of worker construction. */
+    private void controlledGreat(LasiusNigerEntity q){
+        var p=q.founding().plan();var owner=q.getUUID();var terrain=ColonyTerrain.get(level);var walls=new LinkedHashSet<BlockPos>();
+        for(var chamber:ChamberRegistry.get(level).colony(owner).chambers())walls.addAll(ChamberUpgrade.walls(p,chamber));
+        for(var cell:walls){require(NestPlan.loaded(level,cell)&&level.getBlockState(cell).isSolidRender(),"Controlled initial wall must already be loaded solid shell");require(level.setBlock(cell,NurseryBlocks.PACKED_CLAY.defaultBlockState(),3),"Controlled initial physical wall");terrain.built(cell,owner,NurseryBlocks.PACKED_CLAY);}
+        var store=MaterialStore.owned(level,owner,p);require(store!=null,"Controlled Great owned initial store");var tag=store.saveWithFullMetadata(level.registryAccess());var contents=new ArrayList<>(store.contents());for(int i=0;i<32;i++)contents.add(new ItemStack(Items.COBBLESTONE));
+        var out=TagValueOutput.createWithContext(ProblemReporter.DISCARDING,level.registryAccess());out.store("Contents",ItemStack.CODEC.listOf(),contents);tag.put("Contents",out.buildResult().get("Contents"));
+        var replaced=(MaterialStore)BlockEntity.loadStatic(store.getBlockPos(),store.getBlockState(),tag,level.registryAccess());require(replaced!=null,"Controlled initial physical inventory");level.setBlockEntity(replaced);replaced.setChanged();replaced.refreshDisplay();
+        var pile=(BroodPile)level.getBlockEntity(p.nursery());var e=ColonyDevelopment.evaluate(level,owner,p,true,q.colonyAdultCapacity(),pile.loadedTicks());require(e.stage()==ColonyStage.GREAT&&e.cap()==120&&e.inputs().adults().known()==120,"Great must derive from actual physical chambers, stocks and population");
+        var j=new JsonObject();j.addProperty("initialCondition","controlled_supplied_physical_Great_not_natural_growth_or_observed_construction");j.addProperty("owner",owner.toString());j.addProperty("walls",walls.size());j.addProperty("suppliedCobblestone",32);j.addProperty("actualAdults",120);j.addProperty("derivedStage",e.stage().serializedName());j.addProperty("derivedCap",e.cap());j.addProperty("stageAssigned",false);write("controlled-great-"+owner,j);
     }
     private List<LasiusNigerEntity> ants(){var result=new ArrayList<LasiusNigerEntity>();for(var a:level.getAllEntities())if(a instanceof LasiusNigerEntity ant&&ant.isAlive())result.add(ant);result.sort(Comparator.comparing(Entity::getUUID));return result;}
     private JsonObject snapshot(MinecraftServer s){var j=process(s);j.add("tables",tables());var actors=new JsonObject();var blocks=new JsonObject();var terrain=new JsonObject();var items=new JsonObject();
@@ -118,7 +140,7 @@ public final class ColonyScaleHarness implements ModInitializer {
             if(!reopen()&&!phase.equals("prepare")){
                 if(!phase.equals("empty")){
                     for(var cp:sites){var d=NaturalPlacementGameTest.decision(level,cp);require(d!=null&&!Set.of("REJECTED","INDETERMINATE").contains(d.get("status").getAsString()),"Generated base refused: "+d);if(!d.get("status").getAsString().equals("PLACED"))return;}
-                    for(var cp:sites)cohort((LasiusNigerEntity)level.getEntity(NaturalPlacementGameTest.uuid(level,cp)));
+                    for(var cp:sites){var q=(LasiusNigerEntity)level.getEntity(NaturalPlacementGameTest.uuid(level,cp));if(phase.equals("profile")||phase.equals("control")){owners.add(q.getUUID());expected.add(q.getUUID());ColonyMembers.get(level).members(q.getUUID()).forEach(m->expected.add(m.worker()));if(phase.equals("profile"))supply(q);}else cohort(q);}
                 }
                 manifest();
             }
@@ -131,11 +153,29 @@ public final class ColonyScaleHarness implements ModInitializer {
         if(loaded==1)write(phase+"-loaded",snapshot(s));
         if(reopen()){if(loaded>=200)finish(s);return;}
         if(phase.equals("prepare")){prepare(s);return;}
+        if(phase.equals("control")){control(s);return;}
         if(phase.equals("probe")){if(loaded>=20)finish(s);return;}
+        if(phase.equals("profile")){
+            if(loaded==50)profileStart=ScaleValidationProbe.snapshot();
+            if(loaded>50){var c=ScaleValidationProbe.snapshot();var row=new long[c.length+3];row[0]=s.getTickCount();row[1]=s.getTickTimesNanos()[s.getTickCount()%100];row[2]=ScaleValidationProbe.allocated()-allocationStart;for(int i=0;i<c.length;i++)row[i+3]=c[i]-profileStart[i];profileStart=c;rows.add(row);}
+            if(rows.size()==200){var j=runtime(s);j.add("counts",JSON.toJsonTree(ScaleValidationProbe.NAMES));j.add("rows",JSON.toJsonTree(rows));j.addProperty("columnsPrefix","serverTick,nativeNs,serverTickAllocatedBytes");j.addProperty("warmupLoadedTicks",50);j.addProperty("measuredLoadedTicks",200);write("profile-repetition",j);finish(s);}return;
+        }
         if(loaded<=600)return;
-        long entities=0;for(var a:level.getAllEntities())entities++;int refused=0;for(var id:owners){var q=(LasiusNigerEntity)level.getEntity(id);var pile=(BroodPile)level.getBlockEntity(q.founding().plan().nursery());if(pile.condition().contains("capacity"))refused++;}
+        long entities=0;for(var a:level.getAllEntities())entities++;int refused=0;for(var id:owners){var q=(LasiusNigerEntity)level.getEntity(id);var pile=(BroodPile)level.getBlockEntity(q.founding().plan().nursery());if(pile.condition().contains("capacity"))refused++;if(declaration.has("controlledGreat")&&declaration.get("controlledGreat").getAsBoolean())require(pile.stageEvaluation()!=null&&pile.stageEvaluation().stage()==ColonyStage.GREAT&&pile.stageEvaluation().cap()==120,"Every measured row requires the real live Great cap120");}
         long nativeNs=s.getTickTimesNanos()[s.getTickCount()%100];long end=System.nanoTime();rows.add(new long[]{s.getTickCount(),level.getGameTime(),nativeNs,end,end-observer,ants.size(),level.getChunkSource().getLoadedChunksCount(),entities,moved,search,hauling,nursing,consumed,refused});ages.add(age);
         if(rows.size()==2400){var j=runtime(s);j.add("columns",JSON.toJsonTree(List.of("tick","gameTime","nativeNs","endNs","observerNs","adults","loadedChunks","entities","moving","searching","carrying","nursing","consumed","capRefusingColonies")));j.add("rows",JSON.toJsonTree(rows));j.add("ages",JSON.toJsonTree(ages));j.add("ageIdentityOrder",JSON.toJsonTree(expected));write(phase+"-samples",j);finish(s);}
+    }
+    private void control(MinecraftServer s){
+        var q=(LasiusNigerEntity)level.getEntity(owners.getFirst());var pile=(BroodPile)level.getBlockEntity(q.founding().plan().nursery());
+        require(declaration.has("controlBound"),"Prospective small-control bound required");
+        if(loaded==5800){require(!controlLateSupply,"One finite scheduled physical food wave only");drop(q.founding().plan().outside(),Items.APPLE,8,"T11 finite control apples");drop(q.founding().plan().outside(),Items.CHICKEN,4,"T11 finite control chickens");controlLateSupply=true;}
+        for(var b:pile.records())if(!b.founding()){
+            if(controlBrood==null){controlBrood=b.id();controlProgress=b.progress();controlObserved=0;}
+            if(b.id().equals(controlBrood)){if(b.progress()==controlProgress+1)controlObserved++;else controlObserved=0;controlProgress=b.progress();}
+        }
+        if(loaded%200==0||controlObserved>=200){var j=process(s);j.addProperty("loaded",loaded);j.addProperty("nurseryLoaded",pile.loadedTicks());j.addProperty("condition",pile.condition());j.add("supply",JSON.toJsonTree(pile.supply(level)));j.addProperty("observedBrood",controlBrood==null?null:controlBrood.toString());j.addProperty("successiveProgressTicks",controlObserved);j.addProperty("progress",controlProgress);var clocks=new JsonArray();for(var a:ants()){var v=new JsonObject();v.addProperty("id",a.getUUID().toString());v.addProperty("fasting",a.adultLife().fasting());v.addProperty("age",a.elapsedAgeTicks());v.addProperty("callow",a.callowAgeTicks());v.addProperty("receipts",a.nutrition().consumedUnits());v.addProperty("sugar",a.nutrition().sugar());v.addProperty("protein",a.nutrition().protein());clocks.add(v);}j.add("actors",clocks);write("control-observation-"+loaded,j);}
+        if(controlObserved>=200){require(pile.supply(level).foodSugar()>0&&q.nutrition().consumedUnits()>0,"Real ingestion income and queen physical meal");var j=process(s);j.addProperty("naturallyLaidBrood",controlBrood.toString());j.addProperty("successiveLoadedProgressTicks",controlObserved);j.addProperty("loaded",loaded);j.addProperty("latePhysicalSupplies",controlLateSupply);write("control-accepted",j);finish(s);return;}
+        require(loaded<declaration.get("controlBound").getAsInt(),"Small default-speed preparation prerequisite not demonstrated within its declared bound");
     }
     private void prepare(MinecraftServer s){
         require(loaded<=6000,"Bounded persistence nonempty preparation failed");var q=(LasiusNigerEntity)level.getEntity(youngOwner);var pile=(BroodPile)level.getBlockEntity(q.founding().plan().nursery());

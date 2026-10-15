@@ -16,7 +16,7 @@ loom.runs.register('colonyScaleServer') {
 tasks.named('runColonyScaleServer') {
     ignoreExitValue = true
     doFirst {
-        if(!(scaleAttempt ==~ /[a-z0-9][a-z0-9-]*/) || scaleAttempt=='unset' || !(scalePhase in ['empty','one','three','prepare','reopen1','reopen2','probe']))throw new GradleException('Explicit owned scale attempt/phase required')
+        if(!(scaleAttempt ==~ /[a-z0-9][a-z0-9-]*/) || scaleAttempt=='unset' || !(scalePhase in ['empty','one','three','prepare','reopen1','reopen2','probe','profile','control']))throw new GradleException('Explicit owned scale attempt/phase required')
         if(!providers.gradleProperty('primeAntsScaleDeclaration').isPresent())throw new GradleException('Frozen scale declaration required')
         if(scalePhase in ['prepare','reopen1','reopen2'] && !file("build/run/t10-colony-scale/${scaleAttempt}/world/level.dat").exists())throw new GradleException('Reopen requires same already-saved world')
     }

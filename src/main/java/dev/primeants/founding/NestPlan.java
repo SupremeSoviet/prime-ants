@@ -11,6 +11,32 @@ import net.minecraft.world.level.block.state.BlockState;
 /** Describes actual work targets, never places geometry. Coordinates are bounded relative to the entrance. */
 public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> tasks, List<BlockState> expected,
         List<BlockPos> plants, List<BlockState> plantExpected, List<BlockPos> surfaceDeposits, BlockPos exteriorStand) {
+    public NestPlan {
+        entrance=entrance.immutable();
+        tasks=tasks.stream().map(BlockPos::immutable).toList();expected=List.copyOf(expected);
+        plants=plants.stream().map(BlockPos::immutable).toList();plantExpected=List.copyOf(plantExpected);
+        surfaceDeposits=surfaceDeposits.stream().map(BlockPos::immutable).toList();
+        exteriorStand=exteriorStand==null?null:exteriorStand.immutable();
+    }
+    /** Coordinates only: never stores loadedness, blocks, ownership, jobs or a Findings result. Bounded across homes.
+     * The complete immutable plan key also separates custom task sets and retained exterior adaptations. */
+    private record Shape(List<BlockPos> shell,List<BlockPos> chamberShell) { }
+    private static final java.util.Map<NestPlan,Shape> SHAPES=new java.util.LinkedHashMap<>(64,.75F,true);
+    private Shape shape() {
+        synchronized(SHAPES){
+            var found=SHAPES.get(this);if(found!=null)return found;
+            var membership=new java.util.HashSet<>(tasks);var shell=new LinkedHashSet<BlockPos>();
+            for(var p:tasks)for(var d:Direction.values()){
+                var n=p.relative(d);if(n.getY()<entrance.getY()&&!membership.contains(n))shell.add(n);
+            }
+            var chamber=new ArrayList<BlockPos>();
+            for(int f=3;f<=5;f++)for(int side=-1;side<=1;side++)for(int dy=-2;dy<=-1;dy++)
+                for(var d:Direction.values()){var n=at(f,side,dy).relative(d);if(!membership.contains(n))chamber.add(n);}
+            found=new Shape(List.copyOf(shell),List.copyOf(chamber));SHAPES.put(this,found);
+            if(SHAPES.size()>256)SHAPES.remove(SHAPES.keySet().iterator().next());
+            return found;
+        }
+    }
     public NestPlan(BlockPos entrance, Direction direction, List<BlockPos> tasks, List<BlockState> expected) {
         this(entrance,direction,tasks,expected,List.of(),List.of(),List.of(),null);
     }
@@ -40,12 +66,7 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
                 net.minecraft.world.level.chunk.status.ChunkStatus.FULL, false) != null;
     }
     public List<BlockPos> undergroundSurfaces() {
-        LinkedHashSet<BlockPos> result = new LinkedHashSet<>();
-        for (BlockPos p : tasks) for (Direction d : Direction.values()) {
-            BlockPos n = p.relative(d);
-            if (n.getY() < entrance.getY() && !tasks.contains(n)) result.add(n);
-        }
-        return List.copyOf(result);
+        return shape().shell();
     }
     public List<BlockPos> plugs() { return List.of(at(2, 0, -2), at(2, 0, -1)); }
     /** WORLD_SURFACE includes short plants. Descend at most two cells, never through trees/crops. */
@@ -162,13 +183,9 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
     }
     /** The chamber shell: every face is planned space, an authorized opening of the colony's own dig jobs, or solid. */
     private void enclosedChamber(ServerLevel level,java.util.UUID owner,Findings r,boolean footprint) {
-        for (int f=3; f<=5; f++) for (int side=-1;side<=1;side++) for(int dy=-2;dy<=-1;dy++) {
-            BlockPos p=at(f,side,dy);
-            for(Direction d:Direction.values()) {
-                BlockPos n=p.relative(d);
-                if (tasks.contains(n) || !inside(level,n,footprint,r) || DigJob.anyOpening(level,n,owner)) continue;
-                if (!level.getBlockState(n).isSolidRender()) r.fault("enclosure_shell_open");
-            }
+        for(var n:shape().chamberShell()) {
+            if (!inside(level,n,footprint,r) || DigJob.anyOpening(level,n,owner)) continue;
+            if (!level.getBlockState(n).isSolidRender()) r.fault("enclosure_shell_open");
         }
     }
     public boolean openWalkable(ServerLevel level) {
