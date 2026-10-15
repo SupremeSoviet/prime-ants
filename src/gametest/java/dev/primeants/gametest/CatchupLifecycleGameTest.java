@@ -19,6 +19,17 @@ import net.minecraft.world.level.storage.*;
 
 /** Explicit accepted-history/timestamp controls, separate from the native eviction case. No test calls aggregate application. */
 public final class CatchupLifecycleGameTest {
+    @GameTest(maxTicks=20,structure="prime_ants_test:surface_ground")
+    public void noAbsenceObservationPreservesOrdinaryOpeningAndNurseAuthorization(GameTestHelper c){
+        var f=new TierThreeFixture();var q=f.start(c,32,true,4,new BlockPos(32,4,32),Direction.EAST,true);var l=c.getLevel();var p=NestPlanFixture.pile(c,q);var w=f.workers(c,q).getFirst();
+        long now=l.getGameTime(),loaded=p.loadedTicks(),invocations=p.catchup().invocations();boolean before=p.operational(),authorized=w.workerTasks().nursingAuthorized(l);var supply=p.supply(l);
+        c.assertTrue(!before&&!authorized&&p.missedIntervalBefore(l).ticks()==0,"Fresh open owner has not yet received its ordinary nursery opening observation; no absence is owed");
+        boolean complete=p.resumeCatchup(l);var row=new JsonObject();row.addProperty("missed_ticks",p.missedIntervalBefore(l).ticks());row.addProperty("operational_before",before);row.addProperty("operational_after",p.operational());row.addProperty("worker_phase",w.workerTasks().phase().name());row.addProperty("worker_callow",w.isCallow());row.addProperty("queen_ready",q.founding().ready());row.addProperty("nurse_authorized_before",authorized);row.addProperty("nurse_authorized_after",w.workerTasks().nursingAuthorized(l));row.addProperty("catchup_invocations",p.catchup().invocations()-invocations);row.addProperty("loaded_before",loaded);row.addProperty("loaded_after",p.loadedTicks());evidence("no_absence_ordinary_opening_order",row);
+        c.assertTrue(complete&&p.operational()==before&&w.workerTasks().nursingAuthorized(l)==authorized&&p.loadedTicks()==loaded&&p.catchup().invocations()==invocations,"Zero-absence catch-up observation does not advance ordinary opening or nurse authorization");
+        AutomaticCatchupGameTest.tickPile(c,p,now+1);
+        var saved=p.saveWithFullMetadata(l.registryAccess());int samples=saved.getCompoundOrEmpty("GrowthFlow").getListOrEmpty("Times").size();
+        c.assertTrue(p.operational()&&p.loadedTicks()==loaded+1&&samples==(supply.complete()?1:0),"Ordinary nursery step observes growth before opening exactly once");c.succeed();
+    }
     @GameTest(maxTicks=20,structure="prime_ants_test:idle_ground")
     public void generatedInitialSugarSnapshotsAdvanceAndReloadWithoutInventingReceipts(GameTestHelper c){
         var tag=new CompoundTag();tag.putLong("GeneratedInitialSugar",Nutrition.QUEEN_SUGAR_CAPACITY);tag.putLong("Sugar",Nutrition.QUEEN_SUGAR_CAPACITY);

@@ -52,10 +52,10 @@ public final class BroodPile extends BlockEntity {
     /** Both ordinary lifecycle entry points capture this boundary before any nursery stamp. */
     public boolean resumeCatchup(ServerLevel server){
         long start=System.nanoTime(),invocations=catchup.invocations();
-        // Reuse the ordinary owner observation before either reload ordering evaluates habitat or nursing.
-        // The queen may already have opened the nest after this nursery's last saved step.
-        if(server.getEntity(queenId) instanceof LasiusNigerEntity q&&q.founding().lifecycle()!=dev.primeants.founding.QueenFounding.Lifecycle.CLAUSTRAL)operational=true;
         var interval=clock.before(server.getGameTime());
+        // An actual owed interval needs the current owner observation before aggregate habitat/nursing.
+        // With no debt, ordinary opening remains after growth.observe in the normal nursery step.
+        if((interval.ticks()>0||catchup.pendingTicks()>0)&&server.getEntity(queenId) instanceof LasiusNigerEntity q&&q.founding().lifecycle()!=dev.primeants.founding.QueenFounding.Lifecycle.CLAUSTRAL)operational=true;
         if(reloadBoundaryPending||interval.ticks()>0&&(reloadObservation==null||!reloadObservation.interval().afterGameTime().equals(interval.afterGameTime()))){reloadObservation=dev.primeants.time.ReloadObservation.capture(server,queenId,getBlockPos(),plan.chamber(),interval);reloadBoundaryPending=false;}
         long preNanos=System.nanoTime()-start;
         boolean completed=catchup.resume(server,this,interval);
@@ -282,6 +282,7 @@ public final class BroodPile extends BlockEntity {
         loadedTicks=dev.primeants.entity.AdultLife.saturatingAdd(loadedTicks,1);
         growth.observe(loadedTicks,supply(server));
         var owner = server.getEntity(queenId);
+        if(owner instanceof LasiusNigerEntity q&&q.founding().lifecycle()!=dev.primeants.founding.QueenFounding.Lifecycle.CLAUSTRAL)operational=true;
         if(stageEvaluation==null||loadedTicks-stageEvaluatedAt>=ColonyDevelopment.INTERVAL)development(server); // slow cadence, never per tick
         for(UUID id:consumed)ColonyMembers.get(server).record(id,queenId,plan.chamber());
         expired.replaceAll((id,row)->BroodHistory.get(server).retain(id,row));

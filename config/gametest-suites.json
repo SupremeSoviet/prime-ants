@@ -3307,6 +3307,14 @@
       "suite": "long",
       "weight_ticks": 20,
       "reason": "Catchup-specific immutable generated-stock preview/spending/reconstruction regression; no physical receipt fabrication"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_no_absence_observation_preserves_ordinary_opening_and_nurse_authorization",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 20,
+      "reason": "Catchup zero-debt observation must preserve master ordinary opening order, growth observation and nurse authorization"
     }
   ]
 }
