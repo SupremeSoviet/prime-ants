@@ -19,6 +19,22 @@ import net.minecraft.world.level.storage.*;
 
 /** Explicit accepted-history/timestamp controls, separate from the native eviction case. No test calls aggregate application. */
 public final class CatchupLifecycleGameTest {
+    @GameTest(maxTicks=20,structure="prime_ants_test:idle_ground")
+    public void generatedInitialSugarSnapshotsAdvanceAndReloadWithoutInventingReceipts(GameTestHelper c){
+        var tag=new CompoundTag();tag.putLong("GeneratedInitialSugar",Nutrition.QUEEN_SUGAR_CAPACITY);tag.putLong("Sugar",Nutrition.QUEEN_SUGAR_CAPACITY);
+        var nutrition=new Nutrition();nutrition.load(TagValueInput.create(ProblemReporter.DISCARDING,c.getLevel().registryAccess(),tag),Nutrition.QUEEN_SUGAR_CAPACITY,Nutrition.QUEEN_PROTEIN_CAPACITY);
+        var original=nutrition.snapshot();var life=new AdultLife.State(AdultLife.DEFAULT_LIFESPAN,AdultLife.DEFAULT_FASTING,0,0,0,0,0,0,0,true,"");
+        var input=new LasiusNigerEntity.Biology(AntForm.QUEEN,24000,false,0,0,life,original);
+        var advanced=LasiusNigerEntity.advanceAdult(input,AdultLife.Phase.ACTIVE,400);
+        var row=new JsonObject();row.addProperty("generated_initial_sugar",nutrition.generatedSugar());row.addProperty("physical_receipts",nutrition.consumedUnits());row.addProperty("snapshot_valid",original.valid());row.add("input",new Gson().toJsonTree(input));row.addProperty("advance_status",advanced.status());row.addProperty("completed",advanced.completed());row.addProperty("remaining",advanced.remaining());row.addProperty("event_tick",advanced.eventTick().orElse(-1));row.add("advance_state",new Gson().toJsonTree(advanced.state()));evidence("generated_initial_sugar_snapshot",row);
+        c.assertTrue(advanced.status().equals("COMPLETED")&&advanced.completed()==400,"Catch-up preview accepts finite generated initial stock without inventing food receipts");
+        c.assertTrue(nutrition.snapshot().equals(original)&&nutrition.sugar()==8000&&nutrition.consumedUnits()==0,"Pure preview preserves the original separate stock and zero receipts");
+        c.assertTrue(advanced.state().nutrition().valid()&&advanced.state().nutrition().sugar()==7900&&advanced.state().nutrition().spentSugar()==100,"Four hundred active steps spend exactly one hundred finite sugar");
+        c.assertTrue(nutrition.spend(100,0)&&nutrition.snapshot().equals(advanced.state().nutrition()),"Master's ordinary spending and catch-up immutable spending agree exactly");
+        var out=TagValueOutput.createWithContext(ProblemReporter.DISCARDING,c.getLevel().registryAccess());nutrition.save(out);var restored=new Nutrition();restored.load(TagValueInput.create(ProblemReporter.DISCARDING,c.getLevel().registryAccess(),out.buildResult()),8000,16000);
+        c.assertTrue(restored.snapshot().equals(nutrition.snapshot())&&restored.generatedSugar()==8000&&restored.gainedSugar()==0&&restored.consumedUnits()==0,"Normal nutrition reconstruction preserves generated stock separately from consumption");
+        c.assertFalse(new Nutrition.State(8000,0,0,0,0,0,0,0,0,0,0,0,0).valid(),"Unattributed non-generated stock remains invalid");c.succeed();
+    }
     @GameTest(maxTicks=8000,structure="prime_ants_test:idle_ground")
     public void broodNectarV2ObserverOutcomeCountsOneV2AndZeroV1(GameTestHelper c){
         schedulingColony(c,(q,p)->{

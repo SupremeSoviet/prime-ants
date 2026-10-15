@@ -57,12 +57,22 @@ final class CapturedFiniteControl {
                 // Legacy captures predate the optional phase observation. Its fallback is the saved counter.
                 expected.getCompoundOrEmpty("WorkerTask").getCompoundOrEmpty("CropSharing").putInt("SearchPhase",Math.floorMod(a.tickCount,20));
                 expected.getCompoundOrEmpty("WorkerTask").getCompoundOrEmpty("CropSharing").putLong("ObservedTicks",0);
-                for(var key:List.of("Nutrition","AdultLife","WorkerTask","AdultSimulation","Pos"))c.assertTrue(saved.get(key).equals(expected.get(key)),"Captured "+key+" survives ordinary reconstruction exactly");restored.add(a);}
+                // Master loads an absent generated-stock field as zero and now saves it explicitly.
+                // Only this post-load expectation copy gains that default; captured inputs stay unchanged.
+                var nutritionExpected=expected.getCompoundOrEmpty("Nutrition");
+                if(!nutritionExpected.contains("GeneratedInitialSugar")){
+                    var schema=new JsonObject();schema.addProperty("configuration",name);schema.addProperty("nurses_first",nursesFirst);schema.addProperty("actor_index",i);schema.addProperty("legacy_expected",nutritionExpected.toString());schema.addProperty("actual",saved.getCompoundOrEmpty("Nutrition").toString());
+                    nutritionExpected.putLong("GeneratedInitialSugar",0);schema.addProperty("expected_with_master_default",nutritionExpected.toString());schema.addProperty("exact",nutritionExpected.equals(saved.get("Nutrition")));ReconciliationEvidence.log("t03_captured_schema_default","explicit_master_zero_default",schema);
+                }
+                for(var key:List.of("Nutrition","AdultLife","WorkerTask","AdultSimulation","Pos")){
+                    if(!Objects.equals(saved.get(key),expected.get(key))){var mismatch=new JsonObject();mismatch.addProperty("configuration",name);mismatch.addProperty("nurses_first",nursesFirst);mismatch.addProperty("actor_index",i);mismatch.addProperty("actor_uuid",a.getUUID().toString());mismatch.addProperty("field",key);mismatch.addProperty("expected",Objects.toString(expected.get(key),"<absent>"));mismatch.addProperty("actual",Objects.toString(saved.get(key),"<absent>"));ReconciliationEvidence.log("t03_captured_field_mismatch","read_only",mismatch);}
+                    c.assertTrue(saved.get(key).equals(expected.get(key)),"Captured "+key+" survives ordinary reconstruction exactly");
+                }restored.add(a);}
             var back=BroodGameTest.restorePile(c,pile,(CompoundTag)translate(oldPile,"",delta,ids));
             var cacheTag=(CompoundTag)translate(TagParser.parseCompoundFully(input.get("saved_cache").getAsString()),"",delta,ids);var pos=cache.getBlockPos();var block=cache.getBlockState();c.getLevel().removeBlockEntity(pos);
             var stock=(NestCache)BlockEntity.loadStatic(pos,block,cacheTag,c.getLevel().registryAccess());c.assertTrue(stock!=null,"Captured finite stock normally reconstructed");c.getLevel().setBlockEntity(stock);stock.refreshDisplay();
             var row=new JsonObject();row.addProperty("configuration",name);row.addProperty("nurses_first",nursesFirst);row.addProperty("historical_crop_provenance",config.get("historical_received").getAsLong());row.addProperty("navigation_limit","Unsaved native path/move-control internals reconstructed in both branches");row.add("state",AllocationObservations.state(c,restored.getFirst(),back,back.lastSimulationGameTime().orElseThrow()+1));ReconciliationEvidence.log("t03_captured_control","portable_saved_reconstruction",row);
             return new Result(restored.getFirst(),back,restored.get(hungryIndex),stock);
-        }catch(Exception e){throw new IllegalStateException("Captured finite control reconstruction failed",e);}
+        }catch(Exception e){dev.primeants.PrimeAnts.LOGGER.error("Captured finite reconstruction failed configuration={} nursesFirst={}",name,nursesFirst,e);throw new IllegalStateException("Captured finite control reconstruction failed",e);}
     }
 }

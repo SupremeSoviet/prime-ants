@@ -3299,6 +3299,14 @@
       "suite": "long",
       "weight_ticks": 6000,
       "reason": "Genuine generated raised exterior must retain canonical validated route through installation, normal decoding and ordinary service plus settlement"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_generated_initial_sugar_snapshots_advance_and_reload_without_inventing_receipts",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 20,
+      "reason": "Catchup-specific immutable generated-stock preview/spending/reconstruction regression; no physical receipt fabrication"
     }
   ]
 }

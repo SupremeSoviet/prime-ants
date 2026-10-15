@@ -95,7 +95,7 @@ public final class BroodPile extends BlockEntity {
     public void initializeGenerated(LasiusNigerEntity queen,NestPlan p){
         if(!(level instanceof ServerLevel l)||queenId!=null||!getBlockPos().equals(p.nursery())||!dev.primeants.founding.EstablishedGeneration.initializing(l,queen.getUUID(),p))throw new IllegalStateException("Generated nursery initialization authority");
         queenId=queen.getUUID();plan=p.routeGeometry();operational=true;generatedInitial=true;
-        neglectGrace=queen.broodNeglectGrace();waitingBound=queen.cocoonWaitingBound();adultLifespan=queen.adultLife().lifespan();fastingGrace=queen.adultLife().grace();adultCapacity=queen.colonyAdultCapacity();condition="generated_initial_empty_nursery";changed();
+        neglectGrace=queen.broodNeglectGrace();waitingBound=queen.cocoonWaitingBound();adultLifespan=queen.adultLife().lifespan();fastingGrace=queen.adultLife().grace();adultCapacity=queen.colonyAdultCapacity();condition="generated_initial_empty_nursery";initializeClock();changed();
     }
     private long adultLifespan=dev.primeants.entity.AdultLife.DEFAULT_LIFESPAN,fastingGrace=dev.primeants.entity.AdultLife.DEFAULT_FASTING;
     private int adultCapacity=AdultBound.MAX;
