@@ -1,0 +1,30 @@
+// Explicit development-only T10 runner. Historical restartServer settings are untouched.
+def scaleAttempt=providers.gradleProperty('primeAntsScaleAttempt').getOrElse('unset')
+def scalePhase=providers.gradleProperty('primeAntsScalePhase').getOrElse('probe')
+loom.runs.register('colonyScaleServer') {
+    server()
+    sourceSet.set('gametest')
+    runDirectory.set(layout.buildDirectory.dir('run/t10-colony-scale/'+scaleAttempt))
+    programArguments.addAll('--nogui','--world','world')
+    vmArgs '-Xms1G','-Xmx3G'
+    systemProperties.put('prime_ants.scalePhase',scalePhase)
+    systemProperties.put('prime_ants.scaleEvidence',providers.gradleProperty('primeAntsScaleEvidence').getOrElse(file('build/scale-evidence').absolutePath))
+    systemProperties.put('prime_ants.scaleDeclaration',providers.gradleProperty('primeAntsScaleDeclaration').getOrElse('missing'))
+    systemProperties.put('prime_ants.broodMultiplier','1')
+    systemProperties.put('prime_ants.foundingWorkMultiplier','1')
+}
+tasks.named('runColonyScaleServer') {
+    ignoreExitValue = true
+    doFirst {
+        if(!(scaleAttempt ==~ /[a-z0-9][a-z0-9-]*/) || scaleAttempt=='unset' || !(scalePhase in ['empty','one','three','prepare','reopen1','reopen2','probe']))throw new GradleException('Explicit owned scale attempt/phase required')
+        if(!providers.gradleProperty('primeAntsScaleDeclaration').isPresent())throw new GradleException('Frozen scale declaration required')
+        if(scalePhase in ['prepare','reopen1','reopen2'] && !file("build/run/t10-colony-scale/${scaleAttempt}/world/level.dat").exists())throw new GradleException('Reopen requires same already-saved world')
+    }
+    doLast {
+        def nativeExit=executionResult.get().exitValue
+        def directory=file(providers.gradleProperty('primeAntsScaleEvidence').get())
+        directory.mkdirs()
+        new File(directory,scalePhase+'-native-exit.json').setText(groovy.json.JsonOutput.toJson([phase:scalePhase,exit_code:nativeExit,ended:java.time.Instant.now().toString()]),'UTF-8')
+        if(nativeExit!=0)throw new GradleException('Scale native server exit '+nativeExit)
+    }
+}

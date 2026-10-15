@@ -62,12 +62,23 @@ public final class EstablishedGenerationGameTest {
     }
     static final class Observation {
         final boolean[] inspected={false},outside={false},inside={false},readback={false};final long[] settled={-1};final Map<UUID,net.minecraft.world.phys.Vec3> start=new HashMap<>();
+        final Map<UUID,JsonArray> routes=new LinkedHashMap<>();UUID exteriorWorker;
+        void route(ServerLevel l,LasiusNigerEntity w,NestPlan p,BroodPile pile){
+            if(exteriorWorker!=null)return;
+            var points=routes.get(w.getUUID());if(points==null)return;
+            var point=new JsonObject();point.addProperty("gameTime",l.getGameTime());point.addProperty("nurseryLoadedTicks",pile.loadedTicks());point.addProperty("age",w.elapsedAgeTicks());
+            point.add("position",net.minecraft.world.phys.Vec3.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE,w.position()).getOrThrow());point.addProperty("feet",w.blockPosition().toShortString());point.addProperty("phase",w.workerTasks().phase().name());point.addProperty("onGround",w.onGround());points.add(point);
+            if(!w.blockPosition().equals(p.outside())||!w.onGround()||!NestPlan.walkable(l,p.outside()))return;
+            exteriorWorker=w.getUUID();outside[0]=true;
+            var d=new JsonObject();d.addProperty("worker",exteriorWorker.toString());d.addProperty("lineage",w.broodId().toString());d.addProperty("queen",w.queenId().toString());d.addProperty("initialUnderground",start.get(exteriorWorker).y<p.entrance().getY()-1);d.addProperty("validatedOutsideFeet",p.outside().toShortString());d.addProperty("entrance",p.entrance().toShortString());d.addProperty("outsideHeightAdaptation",p.outside().getY()-p.entrance().getY()-1);d.addProperty("supportedFeetHeadClear",NestPlan.walkable(l,p.outside()));d.addProperty("support",l.getBlockState(p.outside().below()).toString());d.addProperty("feetState",l.getBlockState(p.outside()).toString());d.addProperty("headState",l.getBlockState(p.outside().above()).toString());d.addProperty("ordinaryNavigation",!w.isNoAi());d.add("orderedPositions",points);evidence("named_exterior_crossing",l,observedChunk,d);
+        }
+        ChunkPos observedChunk;
         void tick(GameTestHelper c,ServerLevel l,ChunkPos cp,ColonyStage stage){
             var status=NaturalPlacementGameTest.status(l,cp);c.assertTrue(!Set.of("REJECTED","INDETERMINATE").contains(status),"Positive production installation must complete: "+NaturalPlacementGameTest.decision(l,cp));if(!status.equals("PLACED"))return;
             var q=queen(l,cp);var p=q.founding().plan();var pile=(BroodPile)l.getBlockEntity(p.nursery());
-            if(!inspected[0]){physical(c,l,cp,stage);for(var m:ColonyMembers.get(l).members(q.getUUID()))start.put(m.worker(),l.getEntity(m.worker()).position());inspected[0]=true;}
+            if(!inspected[0]){physical(c,l,cp,stage);observedChunk=cp;for(var m:ColonyMembers.get(l).members(q.getUUID())){var w=(LasiusNigerEntity)l.getEntity(m.worker());start.put(m.worker(),w.position());c.assertTrue(w.getY()<p.entrance().getY()-1,"Named canonical exterior candidates start underground");routes.put(m.worker(),new JsonArray());}inspected[0]=true;}
             for(var m:ColonyMembers.get(l).members(q.getUUID()))if(l.getEntity(m.worker()) instanceof LasiusNigerEntity w){
-                if(w.position().distanceToSqr(start.get(m.worker()))>.25&&w.getY()>=p.entrance().getY())outside[0]=true;
+                route(l,w,p,pile);
                 if(w.position().distanceToSqr(start.get(m.worker()))>.25&&w.getY()<p.entrance().getY()-1)inside[0]=true;
             }
             boolean service=q.nutrition().consumedUnits()>0||ColonyMembers.get(l).members(q.getUUID()).stream().anyMatch(m->l.getEntity(m.worker()) instanceof LasiusNigerEntity w&&w.nutrition().consumedUnits()>0);
@@ -78,7 +89,7 @@ public final class EstablishedGenerationGameTest {
             c.assertTrue(q.founding().ready()&&ChamberRegistry.get(l).colony(q.getUUID()).stage()==stage,"Live stage and readiness persist through settlement");
             c.assertTrue(ColonyMembers.get(l).occupied(q.getUUID())==EstablishedGeneration.workers(stage),"No duplicate or lost generated population");
             for(var at:EstablishedGeneration.surface(p,stage).keySet())c.assertTrue(ColonyTerrain.get(l).generatedSurface(l,at,q.getUUID()),"All generated surface components survive the consecutive settled interval");
-            var d=new JsonObject();d.addProperty("settledNurseryTicks",pile.loadedTicks()-settled[0]);d.addProperty("queenConsumed",q.nutrition().consumedUnits());d.addProperty("outsideMovement",outside[0]);d.addProperty("insideMovement",inside[0]);d.addProperty("contributions",0);evidence("accepted",l,cp,d);c.succeed();
+            var d=new JsonObject();d.addProperty("settledNurseryTicks",pile.loadedTicks()-settled[0]);d.addProperty("queenConsumed",q.nutrition().consumedUnits());d.addProperty("outsideMovement",outside[0]);d.addProperty("exteriorWorker",exteriorWorker.toString());d.addProperty("insideMovement",inside[0]);d.addProperty("contributions",0);evidence("accepted",l,cp,d);c.succeed();
         }
     }
     static void readback(GameTestHelper c,ServerLevel l,ChunkPos cp){

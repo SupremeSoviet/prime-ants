@@ -13,6 +13,7 @@
   ],
   "entrypoints": {
     "main": [
+      "dev.primeants.gametest.ColonyScaleHarness",
       "dev.primeants.gametest.RestartHarness",
       "dev.primeants.gametest.PlacementSettings",
       "dev.primeants.gametest.PlacementDiagnosticHarness",
