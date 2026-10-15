@@ -29,9 +29,9 @@ public final class TierThreeGameTest {
         effects(c,EffectWitness.HALL);
     }
     private enum EffectWitness { COMBINED, INVENTORIES, HALL }
-    /** All three bodies use the final T01 actors, supplies, triggers, placement and deadline unchanged. */
+    /** Owner-authorized hall feeding applies only to COMBINED/HALL; inventory-only retains its accepted profile. */
     private void effects(GameTestHelper c,EffectWitness witness){
-        var fixture=new TierThreeFixture();var q=fixture.start(c,32,true);
+        var fixture=new TierThreeFixture();var q=witness==EffectWitness.INVENTORIES?fixture.start(c,32,true):fixture.hallStart(c);
         FoodServiceProbe.watch(c,q,20000,"tier_three_"+witness);
         var probe=TierThreeEffectsProbe.watch(c,q,fixture);
         probe.emit("effect_witness",Map.of("kind",witness,"deadline",20000));

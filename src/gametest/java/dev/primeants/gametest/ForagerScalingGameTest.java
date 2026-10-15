@@ -54,7 +54,7 @@ public final class ForagerScalingGameTest {
             var p = NestPlanFixture.pile(c, q[0]); var store = NestPlanFixture.store(c, q[0]);
             boolean clayWaits = clay[0] && NurseryUpgradeGameTest.ground(c, Items.CLAY_BALL) > 0 && store != null && store.room(new ItemStack(Items.CLAY_BALL));
             boolean preparingClay=!clay[0]&&q[0].founding().foragers().size()>=2&&NestPlanFixture.storeConfirmed(p==null?null:p.stageEvaluation())&&store!=null;
-            if (!clayWaits&&!preparingClay) dropped[0] += onDemand(c, q[0], last);
+            if (!clayWaits) dropped[0] += onDemand(c, q[0], last); // Continue ordinary meals while preparing the finite clay window.
             fx.soil(c, q[0]);
             c.assertTrue(fx.food.total(c, q[0]) == dropped[0], "Every food unit dropped is on the ground, carried, cached, in custody or eaten: " + fx.food.total(c, q[0]) + " of " + dropped[0]);
             if (clay[0]) c.assertTrue(NurseryUpgradeGameTest.clay(c, fx, q[0]) == 8, "All 8 dropped clay balls are on the ground, carried, stored, in the colony's walls or in custody: " + NurseryUpgradeGameTest.clay(c, fx, q[0]));
@@ -70,7 +70,16 @@ public final class ForagerScalingGameTest {
             }
             claims.clear(); claims.addAll(all);
             var carriers = ws.stream().filter(w -> !w.getMainHandItem().isEmpty()).toList(); most[0] = Math.max(most[0], carriers.size());
-            if (preparingClay && ws.size()==all.size() && ws.stream().allMatch(w->w.getMainHandItem().isEmpty()&&w.workerTasks().phase()==WorkerTasks.Phase.SEARCH)
+            // Readiness reserves existing brood and the next ordinary loaded income window; ground food is not stock.
+            var bufferedSupply=p==null?null:p.supply(l);
+            long projected=bufferedSupply==null?0:bufferedSupply.adults()+bufferedSupply.brood()+1L;
+            long maintenance=(projected*FoodLimitedGrowth.WINDOW*5+4L*dev.primeants.entity.AdultLife.maintenancePeriod()-1)/(4L*dev.primeants.entity.AdultLife.maintenancePeriod());
+            long queenProtein=q[0].nutrition().protein(),queenPortion=queenProtein<Nutrition.EGG_PROTEIN?Nutrition.proteinYield(new ItemStack(Items.CHICKEN)):0;
+            boolean buffered=bufferedSupply!=null&&bufferedSupply.complete()&&!bufferedSupply.hungry()
+                &&bufferedSupply.storedSugar()>=bufferedSupply.committedSugar()+maintenance
+                &&bufferedSupply.storedProtein()-queenProtein>=bufferedSupply.committedProtein()+queenPortion;
+            if(c.getTick()%200==0)PrimeAnts.LOGGER.info("T08 F2 BUFFER queen={} tick={} preparing={} clayWaits={} buffered={} maintenance={} current={} recentIncome={}/{} foodBudget={} cache={} foragers={}",q[0].getUUID(),c.getTick(),preparingClay,clayWaits,buffered,maintenance,bufferedSupply,p==null?0:p.growth().recentSugar(),p==null?0:p.growth().recentProtein(),dropped[0],fx.f.cache(c,q[0])==null?null:fx.f.cache(c,q[0]).contents(),ws.stream().map(w->w.getUUID()+":"+w.workerTasks().phase()+":"+w.workerTasks().reason()+":cargo="+w.getMainHandItem()+":sugar="+w.nutrition().sugar()+":fasting="+w.adultLife().fasting()+":nativeInspections="+w.workerTasks().flowerInspections()+":position="+w.position()).toList());
+            if (preparingClay && buffered && ws.size()==all.size() && ws.stream().allMatch(w->w.getMainHandItem().isEmpty()&&w.workerTasks().phase()==WorkerTasks.Phase.SEARCH)
                 && NurseryUpgradeGameTest.ground(c,Items.APPLE)==0 && NurseryUpgradeGameTest.ground(c,Items.CHICKEN)==0) {
                 var plan = q[0].founding().plan();
                 // A declared supported L route, wholly inside this fixture and the unchanged search box. Three steps

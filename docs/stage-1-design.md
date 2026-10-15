@@ -785,3 +785,110 @@ with linked report/appendix and primary native evidence. No-new-green resets1->0
 Original integrated hall acceptance and founder reliability remain open; recurrent tier-two/hauling, food10,323,
 mining-death and historical Great47/57 uncertainties persist. UNKNOWN nursing and loaded-damage mining bounds,
 established generation, performance/broad persistence and release0.2.0 remain unchanged/open.
+
+### Stage-1c T08 (2026-10-15): owner delivery decision and test-only feeding
+
+The owner's 2026-10-14 decision accepts tier three as delivered through physical construction and its
+independent effects, including T07's funded four eggs and thirty actual protein refusals. T08 restores
+regression acceptance under that decision. Historical reports and failed experiments remain intact;
+generation, 120-adult/multiple-colony performance and persistence, and release 0.2.0 follow this checkpoint.
+
+The supplied founder uses an explicit `EARLY_PHYSICAL_DEVELOPMENT` player-supply profile. The initial
+12 apples/10 chicken remain; small refills count current ground, cache, canonical worker cargo and named
+custody together, with targets 2/4 before nursery tier two and 4/8 afterward, at most two units per kind
+per 200 ticks. Finite total caps are 1,212 apples/610 chicken. The first sixteen clay arrive when the
+physical owned store exists, with the remaining forty after nursery tier two: the original 56-clay budget,
+recipes, real founding, stages, geometry, two authorized relocations, walking and 200-tick settlement remain.
+This avoids adding food behind already carried units when the six-unit cache is full. Milestones, actual
+drops and compact silent no-drop reasons separate population, food, clay, worker counts and unfinished jobs.
+
+Natural tier two has its own `NATURAL_HALL_AFTER_CONSTRUCTION` profile and the unchanged eighty clay.
+New chicken is withheld from actual Mature until physical Hall tier two; existing food and brood remain.
+After Hall confirmation, the twelve-unit physical food target becomes eight apples/four chicken. Ordinary
+meals produce income and natural expanded brood; stock itself supplies no income. Its paid geometry uses
+8/22/14 clay cells, whereas the supplied founder uses 8/22/10; earlier generic planning wording conflated
+these. Recipes and actual quantities never change. Other `TierTwoFixture` callers retain identical legacy
+feeding. UNKNOWN nursing authorization, loaded-damage miner cargo/claims, 6,000 nursery-loaded recovery
+within 60,000 total, and the 600/200 windows are preserved.
+
+Only the two original integrated hall bodies use `POST_CONSTRUCTION_HALL`. Their 49 existing adults have
+coherent pre-boundary 12,000 covered/active ticks and 3,000 maintenance each. Forty-four retain 1,000 sugar
+from one apple; five retain 5,000 from two. Queen nutrition starts at two apples/one chicken; cache holds
+eight apples/four chicken. Initial totals are 64/5, including every consumed unit. After all 44 real paid
+stone conversions, ordinary physical waves add at most 120 apples/72 chicken; the original oversized-stock
+wave remains 18/18. Total finite maxima are 202/95. Food drops use the supported ordinary meal approach
+(4,-1,-2); materials and the accepted inventory/safety profiles retain their sources and supplies. Initial
+history is excluded from rolling income. Four real eggs require actual recent receipts, current reserves,
+queen nutrition, free slots and all intermediate gates. All construction, exact ledgers, natural brood,
+development measurements, current oversized reconstruction/loss boundaries and bounds remain unchanged.
+
+C1-C5 negatives, plans, exact diffs, commands, exits and executable archives remain in T08 evidence.
+The C5 forecast understated additional maintenance for three reserve adults (4,500, not 1,500 combined);
+its first three eggs and fourth-gate shortfall remain explicit. The revised five-adult reserve calculation
+accounts for 7,500 additional maintenance and keeps stock separate from ingestion receipts. No history,
+nutrition, hunger, brood or gate is manipulated after the boundary. Source comparison proves every original
+body assertion/bound and legacy feeding unchanged; production, client behavior, assets, versions and save
+schemas match baseline `14ef11f`.
+
+Procedural follow-up: T07's external correspondence at 11:12:50.079 UTC followed wrapper startup at
+11:12:40.340. T08 preserves that deviation and checks externally before durable supervisor startup,
+then internally before Gradle/native execution. The delayed smoke returns actual 42. Fresh complete
+fast/long acceptance, exact rediscovered coverage, native exits/shutdown, frozen archives, actual client
+guard-SKIPs, protected clients, newest-ten plus active leases, the 25 GB floor and peak direction concurrency
+are settled in `<turnloop>/directions/prime-ants-stage1c/turns/T08/raw/t08-green-checkpoint.json` and its
+linked report/appendix; selected positives alone cannot establish the complete checkpoint.
+
+### T08 complete-suite follow-up (2026-10-15): prepared carrier feeding window
+
+The first fresh complete workload is preserved as **211/212 long**, exit1/native[0,1,0],6949.597s.
+It passes the original founder at44,144 (15,856 ticks remain), both original integrated halls, natural
+tier two, Great and inventory. Its sole new negative is the existing forager-scaling simultaneous-clay
+witness at the unchanged30,000 deadline. Both foragers physically deliver all eight clay units, but never
+hold two clay units simultaneously; the eventual mixed apple/clay reload is not that required witness.
+
+Only that witness's test feeding preparation now continues the existing on-demand refills while waiting
+for its two actual empty SEARCH foragers. Before the same finite eight-clay drop, a read-only readiness
+check requires complete/nonhungry live supply, current sugar covering existing brood plus the unchanged
+2,400-loaded-tick maintenance safety calculation, and non-queen protein covering existing brood and a
+needed queen portion. Ground food supplies no income or investment stock. Shared onDemand/F3 behavior,
+3/2 opening food, five-unit physical target,200-tick kind intervals, seven-by-seven supported L route,
+eight-clay budget, claims/caregivers, real simultaneous-clay/reload/service assertions and30,000 bound
+are unchanged. No actor, nutrition, hunger, history, phase, progress or gate is assigned/reset.
+
+The frozen matched F2/F3 targeted workload passes2/2, exit0/native[0,0],145.512s. F2 stages the funded
+clay drop22,699 and records two actual clay carriers23,103; F3 reaches31 adults32,226. The saved reload
+uses its actual cargo types (two apples), with the separate later two-clay witness still mandatory.
+Read-only buffer/phase/cargo traces retain the distinction. This is a test-only response to the new
+complete-suite negative; older hauling failures are not retrospectively explained. Original negative
+XML/logs/assignments/executable archives remain. A new fresh fast and complete long workload follows the
+executable change; an unchanged complete workload is never repeated for a preferred result. Current
+settlement remains `<turnloop>/directions/prime-ants-stage1c/turns/T08/raw/t08-green-checkpoint.json`.
+
+### T08 natural feeding follow-up (2026-10-15): ingestion during real development
+
+The second complete workload is preserved as 211/212 long. The repaired F2, original
+founder, integrated halls and inventory bodies pass. Natural tier two times out at
+60,000, Young with 24 adults and no brood: current protein remains 40,000 while
+recent sugar receipts of 8,000--16,000 miss the next investment's 18,750 maintenance
+requirement. Earlier green checkpoints do not explain or cancel this negative.
+
+Only the explicit natural tier-two feeding profile changes. Before real Mature,
+opening food is three apples/two chicken and physical refills maintain the same
+five-unit 3/2 mix, one unit at a time, apples first, with existing 200-tick kind
+intervals and all incoming cargo/custody counted. This uses the unchanged F3
+control's real-growth feeding conditions; integrated completion is still required.
+At real Mature, four physical apples support maintenance and stage evidence.
+Until physical Hall2, chicken deliveries cover unfed existing brood plus a needed
+queen portion; after Hall2 the previous 8/4 physical target resumes for expanded
+brood and reload acceptance. Current stock is never credited as rolling income.
+Finite caps remain 1,212 apples/610 chicken; actual unit/yield ledgers cover every
+wave. All 80 clay, recipes, physical hauling and original assertions/windows/bounds
+remain. The founder's 12/10 opening and feeding profile remain unchanged. No
+nutrition, hunger, receipts, progress, slots, adults, rooms or stage are assigned.
+
+The matched frozen natural/founder target passes before the new fresh fast and
+complete long workload. Both complete negatives, their frozen inputs, logs, XML and
+exits remain under `<turnloop>/directions/prime-ants-stage1c/turns/T08`. No unchanged
+complete workload is repeated for a preferred result. The owner decision that tier
+three is delivered remains authoritative; regression acceptance is settled only by
+`<turnloop>/directions/prime-ants-stage1c/turns/T08/raw/t08-green-checkpoint.json`.

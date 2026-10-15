@@ -16,17 +16,24 @@ final class TierTwoFixture {
     final NestPlanFixture fx=new NestPlanFixture();
     final int extraClay;
     final boolean hallSugarWaves;
+    enum FeedingProfile { LEGACY, EARLY_PHYSICAL_DEVELOPMENT, NATURAL_HALL_AFTER_CONSTRUCTION }
+    final FeedingProfile profile;
+    private String supplyReason="";
+    private final Set<String> milestones=new HashSet<>();
     long apples,chickens,clay,lastApple,lastChicken,lastWorkMeal,lastWorkProtein,materialEnd=-1;
     boolean opened,feeding;
     TierTwoFixture(int extra){this(extra,false);}
-    TierTwoFixture(int extra,boolean hallSugarWaves){extraClay=extra;this.hallSugarWaves=hallSugarWaves;}
+    TierTwoFixture(int extra,boolean hallSugarWaves){this(extra,hallSugarWaves,FeedingProfile.LEGACY);}
+    TierTwoFixture(int extra,boolean hallSugarWaves,FeedingProfile profile){extraClay=extra;this.hallSugarWaves=hallSugarWaves;this.profile=profile;}
     void supply(GameTestHelper c,LasiusNigerEntity q,int sugar,int protein){fx.food.supply(c,q,sugar,protein);apples+=sugar;chickens+=protein;}
     void material(GameTestHelper c,LasiusNigerEntity q,int units){
         var at=q.founding().plan().at(-4,0,1);
         c.assertTrue(NestPlan.walkable(c.getLevel(),at),"A supported player clay drop: "+at);
         fx.drop(c,at,new ItemStack(Items.CLAY_BALL,units));clay+=units;
+        if(profile!=FeedingProfile.LEGACY)PrimeAnts.LOGGER.info("T08 DEVELOPMENT CLAY DROP queen={} tick={} units={} total={} source={} firstStoreOrNurseryTierTwo=true",q.getUUID(),c.getTick(),units,clay,at);
     }
     void feed(GameTestHelper c,LasiusNigerEntity q){
+        if(profile!=FeedingProfile.LEGACY){earlyFeed(c,q);return;}
         if(!opened){if(q.founding().lifecycle()!=QueenFounding.Lifecycle.OPEN)return;opened=true;supply(c,q,12,10);}
         var p=NestPlanFixture.pile(c,q);var store=NestPlanFixture.store(c,q);var e=p==null?null:p.stageEvaluation();
         var cache=fx.f.cache(c,q);long tick=c.getTick();
@@ -75,6 +82,67 @@ final class TierTwoFixture {
         if(NurseryUpgradeGameTest.ground(c,Items.CHICKEN)==0&&heldChicken<proteinShare&&tick-lastChicken>=200){lastChicken=tick;supply(c,q,0,(int)Math.min(2,proteinShare-heldChicken));}
     }
     private long incomingChicken(GameTestHelper c,LasiusNigerEntity q){return fx.f.workers(c,q).stream().filter(w->q.founding().claimedBy(w)&&w.getMainHandItem().is(Items.CHICKEN)).mapToInt(w->w.getMainHandItem().getCount()).sum();}
+    /** Finite ordinary player deliveries; no nutrition, history, progress or roles are changed. */
+    private void earlyFeed(GameTestHelper c,LasiusNigerEntity q){
+        milestones(c,q);
+        if(!opened){if(q.founding().lifecycle()!=QueenFounding.Lifecycle.OPEN){decision(c,q,"opening_not_ready",0,0);return;}opened=true;if(profile==FeedingProfile.NATURAL_HALL_AFTER_CONSTRUCTION)supply(c,q,3,2);else supply(c,q,12,10);}
+        var p=NestPlanFixture.pile(c,q);var store=NestPlanFixture.store(c,q);var cache=fx.f.cache(c,q);var e=p==null?null:p.stageEvaluation();long tick=c.getTick();
+        if(clay==0&&store!=null)material(c,q,16);
+        if(clay==16&&e!=null&&e.inputs().tier(ChamberFunction.NURSERY).known()==2)material(c,q,extraClay);
+        feeding=e!=null&&e.inputs().tier(ChamberFunction.NURSERY).known()==2;
+        if(materialEnd<0&&clay>16&&NurseryUpgradeGameTest.ground(c,Items.CLAY_BALL)==0)materialEnd=tick;
+        long heldApple=physicalFood(c,q,fx,Items.APPLE),heldChicken=physicalFood(c,q,fx,Items.CHICKEN);
+        boolean natural=profile==FeedingProfile.NATURAL_HALL_AFTER_CONSTRUCTION;
+        if(natural&&(e==null||e.stage()!=ColonyStage.MATURE)){balancedNatural(c,q,heldApple,heldChicken,tick);return;}
+        int targetApple=feeding?4:2,targetChicken=feeding&&cache!=null?FoodShares.share(cache.capacity()):4;
+        boolean proteinHold=natural&&e!=null&&e.inputs().tier(ChamberFunction.QUEENS_HALL).known()<2;
+        if(natural){
+            targetApple=4; // Real Mature evaluations still need four physical food units before Nursery2.
+            if(!proteinHold){targetApple=8;targetChicken=4;}
+            else{
+                long portion=Nutrition.proteinYield(new ItemStack(Items.CHICKEN));
+                long needed=p.records().stream().filter(r->!r.founding()&&r.stage()!=dev.primeants.brood.BroodStage.COCOON)
+                    .mapToLong(r->Math.max(0,Nutrition.LARVA_PROTEIN-r.nutrition().gainedProtein())).sum();
+                if(q.nutrition().protein()<Nutrition.EGG_PROTEIN)needed+=portion;
+                targetChicken=(int)((needed+portion-1)/portion); // Current brood/queen only; no new-growth protein wave.
+            }
+        }
+        int a=0,b=0;
+        String ar=tick-lastApple<200?"apple_interval":heldApple>=targetApple?"apple_physical_target_including_cargo":"apple_drop";
+        String pr=proteinHold&&targetChicken==0?"protein_construction_hold_current_brood_funded":tick-lastChicken<200?"protein_interval":heldChicken>=targetChicken?"protein_physical_target_including_cargo":"protein_drop";
+        if(ar.equals("apple_drop")&&apples<1212){a=(int)Math.min(Math.min(2,targetApple-heldApple),1212-apples);lastApple=tick;supply(c,q,a,0);}
+        if(pr.equals("protein_drop")&&chickens<610){b=(int)Math.min(Math.min(2,targetChicken-heldChicken),610-chickens);lastChicken=tick;supply(c,q,0,b);}
+        decision(c,q,ar+"/"+pr+(natural?"/targets="+targetApple+","+targetChicken:"")+(apples>=1212||chickens>=610?"/finite_budget_reached":""),a,b);
+    }
+    /** Same finite early 3/2 physical mix and apple-first single refills as the verified real-growth F3 control. */
+    private void balancedNatural(GameTestHelper c,LasiusNigerEntity q,long heldApple,long heldChicken,long tick){
+        int a=0,b=0;String reason="balanced_early_physical_target_including_cargo";
+        if(heldApple+heldChicken<5){
+            if(heldApple<3&&tick-lastApple>=200&&apples<1212){lastApple=tick;supply(c,q,1,0);a=1;reason="balanced_early_apple_drop";}
+            else if(heldChicken<2&&tick-lastChicken>=200&&chickens<610){lastChicken=tick;supply(c,q,0,1);b=1;reason="balanced_early_protein_drop";}
+            else reason="balanced_early_kind_interval_or_budget";
+        }
+        decision(c,q,reason,a,b);
+    }
+    static long physicalFood(GameTestHelper c,LasiusNigerEntity q,NestPlanFixture fx,Item item){
+        var cache=fx.f.cache(c,q);var box=c.getBounds().inflate(8);
+        return NurseryUpgradeGameTest.ground(c,item)+(cache==null?0:cache.contents().stream().filter(s->s.is(item)).count())
+            +fx.f.workers(c,q).stream().filter(w->w.getMainHandItem().is(item)).mapToInt(w->w.getMainHandItem().getCount()).sum()
+            +TransferCustody.get(c.getLevel()).contents().stream().filter(t->t.stack().is(item)&&box.contains(t.position())).mapToInt(t->t.stack().getCount()).sum();
+    }
+    private void milestones(GameTestHelper c,LasiusNigerEntity q){
+        var p=NestPlanFixture.pile(c,q);var e=p==null?null:p.stageEvaluation();
+        if(q.founding().phase()==QueenFounding.Phase.SETTLED&&milestones.add("settled"))PrimeAnts.LOGGER.info("T08 DEVELOPMENT MILESTONE queen={} tick={} loaded={} milestone=settled",q.getUUID(),c.getTick(),p==null?-1:p.loadedTicks());
+        if(e!=null&&milestones.add("stage_"+e.stage()))PrimeAnts.LOGGER.info("T08 DEVELOPMENT MILESTONE queen={} tick={} loaded={} milestone=stage_{} inputs={}",q.getUUID(),c.getTick(),p.loadedTicks(),e.stage(),e.inputs());
+        for(var j:ChamberUpgrade.get(c.getLevel()).jobs(q.getUUID()))if(j.complete()&&j.claim==null&&j.carried()==0&&milestones.add(j.chamber+":"+j.tier))PrimeAnts.LOGGER.info("T08 DEVELOPMENT MILESTONE queen={} tick={} loaded={} milestone=upgrade_{}_{} ledger={}",q.getUUID(),c.getTick(),p==null?-1:p.loadedTicks(),j.chamber,j.tier,j.ledger());
+        var surface=SurfaceWork.get(c.getLevel()).job(q.getUUID(),ColonyStage.MATURE);
+        if(surface!=null&&surface.complete()&&surface.claim==null&&milestones.add("surface_physical_complete"))PrimeAnts.LOGGER.info("T08 DEVELOPMENT MILESTONE queen={} tick={} loaded={} milestone=surface_physical_complete paid={} placed={} recovered={}",q.getUUID(),c.getTick(),p==null?-1:p.loadedTicks(),surface.completed(),surface.placed(),surface.recovered());
+    }
+    private void decision(GameTestHelper c,LasiusNigerEntity q,String reason,int a,int b){
+        if(a==0&&b==0&&reason.equals(supplyReason)&&c.getTick()%1000!=0)return;supplyReason=reason;
+        var p=NestPlanFixture.pile(c,q);var store=NestPlanFixture.store(c,q);var ws=fx.f.workers(c,q);var jobs=ChamberUpgrade.get(c.getLevel()).jobs(q.getUUID());
+        PrimeAnts.LOGGER.info("T08 DEVELOPMENT SUPPLY queen={} tick={} profile={} reason={} drop={}/{} totals={}/{}/{} population={} availableWorkers={} caregivers={} food={} income={}/{} clayGround={} clayStored={} upgrades={}",q.getUUID(),c.getTick(),profile,reason,a,b,apples,chickens,clay,ws.size()+1,ws.stream().filter(w->!w.isCallow()&&!w.workerTasks().construction()&&!q.founding().claimedBy(w)).count(),q.founding().plan()==null?0:caregivers(c,q),p==null?null:p.supply(c.getLevel()),p==null?0:p.growth().recentSugar(),p==null?0:p.growth().recentProtein(),NurseryUpgradeGameTest.ground(c,Items.CLAY_BALL),store==null?null:store.contents(),jobs.stream().map(j->j.chamber+":"+j.built().size()+"/"+j.cells.size()+":"+j.reason).toList());
+    }
     /** Owner decision, 2026-10-09 15:25: an unknown habitat pauses work, but valid retained nurse roles count.
      * Every qualification except habitat authorization remains physical; DAMAGED keeps the ordinary active predicate. */
     static boolean retainedNurse(GameTestHelper c,LasiusNigerEntity q,LasiusNigerEntity w){
@@ -93,6 +161,9 @@ final class TierTwoFixture {
         return new WorkerForagingGameTest().workers(c,q).stream().filter(w->unknown?retainedNurse(c,q,w):w.workerTasks().caregiver(c.getLevel(),home)).count();
     }
     private long foodUnits(GameTestHelper c,LasiusNigerEntity q,Item item){
+        return foodUnits(c,q,fx,item);
+    }
+    static long foodUnits(GameTestHelper c,LasiusNigerEntity q,NestPlanFixture fx,Item item){
         var l=c.getLevel();var box=c.getBounds().inflate(8);var cache=fx.f.cache(c,q);var pile=NestPlanFixture.pile(c,q);
         long total=l.getEntitiesOfClass(ItemEntity.class,box,i->i.isAlive()&&i.getItem().is(item)).stream().mapToInt(i->i.getItem().getCount()).sum();
         total+=fx.f.workers(c,q).stream().filter(w->w.getMainHandItem().is(item)).mapToInt(w->w.getMainHandItem().getCount()).sum();
