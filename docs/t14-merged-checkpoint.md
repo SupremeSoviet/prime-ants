@@ -46,3 +46,10 @@ the identity contract; stable identities do not prove whole-world replay.
 
 The prospective rule, residual entropy, four-case comparison criteria and exact
 commands are frozen before launch in external `raw/t14-determinism-plan.json`.
+
+A subsequent read-only audit found one additional unordered test choice: the
+representative mound cell used for chunk read-back. It now chooses the minimum
+X/Y/Z cell. This changes no world cell; the existing checks still compare every
+mound cell, every planned cell and the player block. The prospective declaration
+is external `raw/t14-mound-order-declaration.json`. The four rotating fixtures,
+their creation/selection paths and the namespace remain unchanged.
