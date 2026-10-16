@@ -221,7 +221,7 @@ public final class AntEntityGameTest {
     }
 
     private Player player(GameTestHelper c, GameType mode, PermissionSet permissions) {
-        return new Player(c.getLevel(), new GameProfile(UUID.randomUUID(), "ant-test-player")) {
+        return new Player(c.getLevel(), new GameProfile(dev.primeants.gametest.TestIdentities.next(), "ant-test-player")) {
             @Override public GameType gameMode() { return mode; }
             @Override public boolean isClientAuthoritative() { return false; }
             @Override public PermissionSet permissions() { return permissions; }

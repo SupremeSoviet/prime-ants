@@ -9,7 +9,7 @@ import dev.primeants.gametest.mixin.GameTestHelperAccessor;
  * reads are untouched. Each test owns a removable token, released when it passes or fails. */
 public final class UnavailableCells implements AutoCloseable {
     private static final Map<UUID,UnavailableCells> registrations=new HashMap<>();
-    private final UUID token=UUID.randomUUID();
+    private final UUID token=dev.primeants.gametest.TestIdentities.next();
     private final ServerLevel level;private final BlockPos cell;
     private UnavailableCells(ServerLevel l,BlockPos p){level=l;cell=p.immutable();registrations.put(token,this);}
     public static UnavailableCells hide(GameTestHelper c,BlockPos p){

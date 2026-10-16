@@ -46,7 +46,7 @@ final class SurfaceFixture {
         }l.getDataStorage().set(NaturalSoil.TYPE,NaturalSoil.CODEC.parse(JsonOps.INSTANCE,records).getOrThrow());
     }
     LasiusNigerEntity founder(GameTestHelper c){
-        terrain(c);Player player=new Player(c.getLevel(),new GameProfile(UUID.randomUUID(),"surface-fixture")){
+        terrain(c);Player player=new Player(c.getLevel(),new GameProfile(dev.primeants.gametest.TestIdentities.next(),"surface-fixture")){
             public GameType gameMode(){return GameType.CREATIVE;}public boolean isClientAuthoritative(){return false;}public PermissionSet permissions(){return PermissionSet.ALL_PERMISSIONS;}
         };
         var egg=new ItemStack(AntItems.DEBUG_QUEEN_EGG);player.setItemInHand(InteractionHand.MAIN_HAND,egg);var at=c.absolutePos(new BlockPos(32,4,32));
@@ -69,7 +69,7 @@ final class SurfaceFixture {
     /** Declared 72-unit habitat with the witnessed positive-side spoil, two existing foundations, and no labor receipts. */
     private LasiusNigerEntity habitat(GameTestHelper c,boolean great,boolean diagonalSource,boolean access){
         terrain(c);var l=c.getLevel();var home=NestPlan.geometry(c.absolutePos(new BlockPos(32,4,32)),Direction.EAST);
-        int count=great?49:29;var broodIds=new ArrayList<UUID>();for(int n=0;n<count;n++)broodIds.add(UUID.randomUUID());
+        int count=great?49:29;var broodIds=new ArrayList<UUID>();for(int n=0;n<count;n++)broodIds.add(dev.primeants.gametest.TestIdentities.next());
         var queen=AntEntities.QUEEN.create(l,EntitySpawnReason.COMMAND);c.assertTrue(queen!=null,"Real initial habitat queen");queen.setPos(Vec3.atBottomCenterOf(home.chamber()));
         var state=new CompoundTag();state.putString("Phase","SETTLED");state.putString("Lifecycle","OPEN");identity(state,home,"FixtureOwner",queen.getUUID());
         state.put("Tasks",BlockPos.CODEC.listOf().encodeStart(NbtOps.INSTANCE,home.tasks()).getOrThrow());

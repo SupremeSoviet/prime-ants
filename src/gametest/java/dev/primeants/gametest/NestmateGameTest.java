@@ -17,14 +17,14 @@ public final class NestmateGameTest {
         var q=(form==AntForm.QUEEN?AntEntities.QUEEN:AntEntities.WORKER).create(c.getLevel(),EntitySpawnReason.EVENT);
         c.assertTrue(q!=null,"Physics actor factory");q.setNoAi(true);
         var p=c.absolutePos(new BlockPos((int)x,2,(int)z));q.setPos(p.getX()+x-(int)x,p.getY(),p.getZ()+z-(int)z);
-        if(lineage!=null)q.initializeCallow(UUID.randomUUID(),lineage,p);
+        if(lineage!=null)q.initializeCallow(dev.primeants.gametest.TestIdentities.next(),lineage,p);
         c.assertTrue(c.getLevel().addFreshEntity(q),"Physics actor insertion");return q;
     }
     @GameTest(maxTicks=200,structure="prime_ants_test:idle_ground")
     public void nestmatesMoveAndPushInBothDirectionsWithForeignAndUnknownControls(GameTestHelper c) {
         ground(c);var queen=actor(c,AntForm.QUEEN,null,3.5,4.5);var worker=actor(c,AntForm.WORKER,queen.getUUID(),6.5,4.5);
         var peer=actor(c,AntForm.WORKER,queen.getUUID(),6.5,6.5);var unknown=actor(c,AntForm.WORKER,null,3.5,9.5);
-        var foreign=actor(c,AntForm.WORKER,UUID.randomUUID(),3.8,9.5);
+        var foreign=actor(c,AntForm.WORKER,dev.primeants.gametest.TestIdentities.next(),3.8,9.5);
         c.assertTrue(Nestmates.matching(queen,worker) && Nestmates.matching(worker,queen) && Nestmates.matching(worker,peer),"Queen UUID and persisted worker lineage match pairwise");
         c.assertTrue(!Nestmates.matching(unknown,foreign) && !Nestmates.matching(unknown,actor(c,AntForm.WORKER,null,4.2,9.5)),"Missing identity is never a shared colony");
         queen.push(worker);worker.push(queen);worker.push(peer);peer.push(worker);
@@ -75,7 +75,7 @@ public final class NestmateGameTest {
                     crowded[kind]=true;
                     for(var b:kind==0?p.deposits():java.util.List.of(p.plugs().getFirst())) {
                         var body=AntEntities.WORKER.create(l,EntitySpawnReason.EVENT);c.assertTrue(body!=null,"Negative occupied-body factory");
-                        body.initializeCallow(UUID.randomUUID(),q.getUUID(),p.chamber());body.setNoAi(true);body.setPos(Vec3.atBottomCenterOf(b));
+                        body.initializeCallow(dev.primeants.gametest.TestIdentities.next(),q.getUUID(),p.chamber());body.setNoAi(true);body.setPos(Vec3.atBottomCenterOf(b));
                         c.assertTrue(l.addFreshEntity(body) && Nestmates.matching(q,body),"Real verified nestmate body occupies the placement cell");
                     }
                 }

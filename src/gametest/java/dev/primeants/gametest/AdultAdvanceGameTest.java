@@ -36,7 +36,7 @@ public final class AdultAdvanceGameTest {
         var factory=(s.form()==AntForm.WORKER?AntEntities.WORKER:AntEntities.QUEEN).create(c.getLevel(),EntitySpawnReason.BREEDING);
         c.assertTrue(factory!=null,"Adult factory");factory.setNoAi(true);factory.setNoGravity(true);
         var pos=net.minecraft.world.phys.Vec3.atCenterOf(c.absolutePos(new BlockPos(1,6,1)));factory.setPos(pos.x,pos.y,pos.z);
-        if(s.form()==AntForm.WORKER)factory.initializeCallow(UUID.randomUUID(),UUID.randomUUID(),c.absolutePos(BlockPos.ZERO),s.lifespan(),s.grace());
+        if(s.form()==AntForm.WORKER)factory.initializeCallow(dev.primeants.gametest.TestIdentities.next(),dev.primeants.gametest.TestIdentities.next(),c.absolutePos(BlockPos.ZERO),s.lifespan(),s.grace());
         c.assertTrue(factory.nutrition().ingest(new ItemStack(Items.APPLE),8000,16000)
             &&factory.nutrition().ingest(new ItemStack(Items.CHICKEN),8000,16000)&&factory.nutrition().spend(4000-s.sugar(),0),"Declared finite ingested fixture with physical item receipts");
         factory.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(Items.DIRT));

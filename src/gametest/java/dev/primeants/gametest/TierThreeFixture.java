@@ -47,7 +47,7 @@ final class TierThreeFixture {
     LasiusNigerEntity start(GameTestHelper c,int stoneUnits,boolean hungry,int count,BlockPos entrance,Direction facing,boolean initializeTerrain){
         hungryInitialAdults=hungry;
         if(initializeTerrain)SurfaceFixture.terrain(c);var l=c.getLevel();var home=NestPlan.geometry(c.absolutePos(entrance),facing);
-        if(!postConstructionHall)apples=count+5;var broodIds=new ArrayList<UUID>();for(int n=0;n<count;n++)broodIds.add(UUID.randomUUID());
+        if(!postConstructionHall)apples=count+5;var broodIds=new ArrayList<UUID>();for(int n=0;n<count;n++)broodIds.add(dev.primeants.gametest.TestIdentities.next());
         var queen=AntEntities.QUEEN.create(l,EntitySpawnReason.COMMAND);c.assertTrue(queen!=null,"Real initial habitat queen");queen.setPos(Vec3.atBottomCenterOf(home.chamber()));
         var state=new CompoundTag();state.putString("Phase","SETTLED");state.putString("Lifecycle","OPEN");SurfaceFixture.identity(state,home,"FixtureOwner",queen.getUUID());
         state.put("Tasks",BlockPos.CODEC.listOf().encodeStart(NbtOps.INSTANCE,home.tasks()).getOrThrow());

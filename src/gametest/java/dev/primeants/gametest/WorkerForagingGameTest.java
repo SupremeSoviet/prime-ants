@@ -49,7 +49,7 @@ public final class WorkerForagingGameTest {
         });
     }
     LasiusNigerEntity pairEgg(GameTestHelper c,BlockPos relative) {
-        var player=new net.minecraft.world.entity.player.Player(c.getLevel(),new com.mojang.authlib.GameProfile(UUID.randomUUID(),"foraging-fixture")) {
+        var player=new net.minecraft.world.entity.player.Player(c.getLevel(),new com.mojang.authlib.GameProfile(dev.primeants.gametest.TestIdentities.next(),"foraging-fixture")) {
             public net.minecraft.world.level.GameType gameMode(){return net.minecraft.world.level.GameType.CREATIVE;}
             public boolean isClientAuthoritative(){return false;}
             public net.minecraft.server.permissions.PermissionSet permissions(){return net.minecraft.server.permissions.PermissionSet.ALL_PERMISSIONS;}
@@ -59,7 +59,7 @@ public final class WorkerForagingGameTest {
         return c.getLevel().getEntitiesOfClass(LasiusNigerEntity.class,new AABB(p).inflate(1),a->a.form()==AntForm.QUEEN).getFirst();
     }
     LasiusNigerEntity start(GameTestHelper c) { var f=new QueenFoundingGameTest();f.terrain(c,Blocks.DIRT.defaultBlockState(),true,true);return f.egg(c); }
-    List<LasiusNigerEntity> workers(GameTestHelper c,LasiusNigerEntity q) { return c.getLevel().getEntitiesOfClass(LasiusNigerEntity.class,c.getBounds().inflate(8),w->w.isAlive()&&q.getUUID().equals(w.queenId())); }
+    List<LasiusNigerEntity> workers(GameTestHelper c,LasiusNigerEntity q) { return c.getLevel().getEntitiesOfClass(LasiusNigerEntity.class,c.getBounds().inflate(8),w->w.isAlive()&&q.getUUID().equals(w.queenId())).stream().sorted(java.util.Comparator.comparing(w->w.getUUID().toString())).toList(); }
     /** Negative fixtures only: keep a disabled real body/cargo on an existing supported
      * exterior cell, leaving every nursery feeding, emergence and construction stand free. */
     void shelterDisabled(GameTestHelper c,LasiusNigerEntity q,LasiusNigerEntity w){

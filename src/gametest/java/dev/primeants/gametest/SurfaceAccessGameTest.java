@@ -95,7 +95,7 @@ public final class SurfaceAccessGameTest {
             if(revokedStage&&!j.access.stopped)c.assertTrue(pile.loadedTicks()-since[0]<=100,"Existing loaded controller must stop finite access promptly after actual regression");
             if(hidden[0]==null&&evaluation!=null&&evaluation!=seen[0]){seen[0]=evaluation;if(step[0]>=2&&evaluation.stage()==ColonyStage.MATURE)confirmations[0]++;}
             if(mode==Mode.FOREIGN&&step[0]==0&&j.completed()==4&&j.access==null){
-                intervention[0]=q.founding().plan().at(-9,8,1);l.setBlock(intervention[0],dev.primeants.brood.NurseryBlocks.NEST_SOIL.defaultBlockState(),3);ColonyTerrain.get(l).deposited(intervention[0],UUID.randomUUID());
+                intervention[0]=q.founding().plan().at(-9,8,1);l.setBlock(intervention[0],dev.primeants.brood.NurseryBlocks.NEST_SOIL.defaultBlockState(),3);ColonyTerrain.get(l).deposited(intervention[0],dev.primeants.gametest.TestIdentities.next());
                 since[0]=pile.loadedTicks();step[0]=1;disk(c);PrimeAnts.LOGGER.info("T16 ACCESS FOREIGN START tick={} sourceUnits=72 destination={} originalSnapshotPreserved=true",c.getTick(),intervention[0]);return;
             }
             if(mode==Mode.FOREIGN&&step[0]>0){

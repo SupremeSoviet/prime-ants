@@ -58,7 +58,13 @@
     "LegacyAdultShadowMixin",
     "GrowthObservationMixin",
     "StageClockObservationMixin",
-    "StageFoodObservationMixin"
+    "StageFoodObservationMixin",
+    "TestIdentityContextMixin",
+    "TestEntityIdentityMixin",
+    "TestAntIdentityContextMixin",
+    "TestBroodIdentityMixin",
+    "TestStoreIdentityMixin",
+    "TestSelectionInputsMixin"
   ],
   "injectors": {
     "defaultRequire": 1

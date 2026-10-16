@@ -18,7 +18,7 @@ public final class AdultReferenceGameTest {
         var ant=AntEntities.WORKER.create(c.getLevel(),EntitySpawnReason.BREEDING);
         c.assertTrue(ant!=null,"Worker factory");ant.setNoAi(true);ant.setNoGravity(true);
         var pos=Vec3.atCenterOf(c.absolutePos(new BlockPos(1,6,1)));ant.setPos(pos.x,pos.y,pos.z);
-        ant.initializeCallow(UUID.randomUUID(),colony,c.absolutePos(BlockPos.ZERO),lifespan,grace);
+        ant.initializeCallow(dev.primeants.gametest.TestIdentities.next(),colony,c.absolutePos(BlockPos.ZERO),lifespan,grace);
         c.assertTrue(ant.nutrition().ingest(new ItemStack(Items.APPLE),8000,16000)
             &&ant.nutrition().ingest(new ItemStack(Items.CHICKEN),8000,16000)
             &&ant.nutrition().spend(4000-sugar,0),"Finite ingested item receipts");
@@ -38,7 +38,7 @@ public final class AdultReferenceGameTest {
     }
     @GameTest(maxTicks=1000)
     public void maintenanceExhaustionAndIncomingMealsMatchIndependentLegacy(GameTestHelper c){
-        var colony=UUID.randomUUID();var ant=worker(c,colony,10,1000,50,2,3,7,17,35);
+        var colony=dev.primeants.gametest.TestIdentities.next();var ant=worker(c,colony,10,1000,50,2,3,7,17,35);
         var shadow=LegacyAdultShadow.watch(c,colony,"detached_actual_ordinary_steps_with_incoming_meals");
         long now=c.getLevel().getGameTime();
         for(int tick=1;tick<=40;tick++){
@@ -66,7 +66,7 @@ public final class AdultReferenceGameTest {
     }
     @GameTest(maxTicks=1000)
     public void terminalAgeAndStarvationStepsMatchIndependentLegacy(GameTestHelper c){
-        var colony=UUID.randomUUID();var shadow=LegacyAdultShadow.watch(c,colony,"detached_actual_terminal_steps");
+        var colony=dev.primeants.gametest.TestIdentities.next();var shadow=LegacyAdultShadow.watch(c,colony,"detached_actual_terminal_steps");
         var aged=worker(c,colony,19,20,5,0,0,5,19,35);
         var starving=worker(c,colony,10,1000,5,0,0,5,19,35);
         aged.setHealth(1);starving.setHealth(1);long now=c.getLevel().getGameTime();
@@ -82,7 +82,7 @@ public final class AdultReferenceGameTest {
     }
     @GameTest(maxTicks=1000)
     public void fastingSaturationAgeBoundaryAndZeroPrefixesMatchIndependentLegacy(GameTestHelper c){
-        var colony=UUID.randomUUID();var shadow=LegacyAdultShadow.watch(c,colony,"detached_actual_saturating_boundaries");
+        var colony=dev.primeants.gametest.TestIdentities.next();var shadow=LegacyAdultShadow.watch(c,colony,"detached_actual_saturating_boundaries");
         var ant=worker(c,colony,Long.MAX_VALUE-1,Long.MAX_VALUE,Long.MAX_VALUE,0,0,Long.MAX_VALUE-1,0,35);
         long now=c.getLevel().getGameTime();ordinary(c,ant,shadow,now+1);
         c.assertTrue(ant.elapsedAgeTicks()==Long.MAX_VALUE&&ant.adultLife().fasting()==Long.MAX_VALUE
@@ -104,7 +104,7 @@ public final class AdultReferenceGameTest {
     }
     @GameTest(maxTicks=1000)
     public void loadedActiveCounterMaximumMatchesIndependentLegacy(GameTestHelper c){
-        var colony=UUID.randomUUID();var ant=worker(c,colony,10,1000,50,2,0,0,0,Long.MAX_VALUE);
+        var colony=dev.primeants.gametest.TestIdentities.next();var ant=worker(c,colony,10,1000,50,2,0,0,0,Long.MAX_VALUE);
         c.assertTrue(ant.adultLife().snapshot().valid()&&ant.nutrition().snapshot().valid(),"Existing owners accept the boundary save input");
         ReconciliationGameTest.atTime(c,c.getLevel().getGameTime()+1,ant::tick);
         c.assertTrue(ant.adultLife().activeTicks()==Long.MAX_VALUE,"Owner-authorized saturation replaces the historical wrap/exception discrepancy");

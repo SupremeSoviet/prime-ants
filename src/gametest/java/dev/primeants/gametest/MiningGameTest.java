@@ -151,7 +151,7 @@ public final class MiningGameTest {
                     if(evals[0]<2||j.deposited<baseline[0]||w==null||w.getMainHandItem().isEmpty())return;
                     damagePause[0]=TierTwoFixture.DamagePause.begin(c,q,w);
                     var s=NestPlanFixture.store(c,q);kept[0]=w.getMainHandItem().copy();baseline[0]=j.removed();since[0]=p.loadedTicks();originalStore[0]=s.saveWithFullMetadata(l.registryAccess());
-                    var foreign=originalStore[0].copy();foreign.putString("Colony",UUID.randomUUID().toString());restoreStore(c,s,foreign);step[0]=5;
+                    var foreign=originalStore[0].copy();foreign.putString("Colony",dev.primeants.gametest.TestIdentities.next().toString());restoreStore(c,s,foreign);step[0]=5;
                     PrimeAnts.LOGGER.info("T10 FOREIGN STORE START queen={} tick={} worker={} claim={} cargo={} removed={} deposited={} released={} nurses={} restoredStoreEvaluations={}",q.getUUID(),c.getTick(),w.getUUID(),j.claim,kept[0],j.removed(),j.deposited,j.released,damagePause[0].nurses(),evals[0]);
                 }
                 case 5->{

@@ -19,7 +19,7 @@ final class PaidLegacyBrood {
         c.assertTrue(q.nutrition().spend(count*Nutrition.EGG_SUGAR,count*Nutrition.EGG_PROTEIN),"Each restored old egg debits actual physically ingested queen stock exactly once");
         var tag=pile.saveWithFullMetadata(c.getLevel().registryAccess());var records=new ListTag();
         for(int slot=0;slot<count;slot++){
-            var r=new CompoundTag();r.putString("Id",UUID.randomUUID().toString());r.putString("Queen",q.getUUID().toString());r.putInt("Slot",slot);r.putString("Stage","EGG");r.putLong("Progress",0);r.putLong("Nourishment",0);r.putBoolean("Founding",false);r.putLong("NeglectGrace",q.broodNeglectGrace());r.putLong("WaitingBound",q.cocoonWaitingBound());records.add(r);
+            var r=new CompoundTag();r.putString("Id",dev.primeants.gametest.TestIdentities.next().toString());r.putString("Queen",q.getUUID().toString());r.putInt("Slot",slot);r.putString("Stage","EGG");r.putLong("Progress",0);r.putLong("Nourishment",0);r.putBoolean("Founding",false);r.putLong("NeglectGrace",q.broodNeglectGrace());r.putLong("WaitingBound",q.cocoonWaitingBound());records.add(r);
         }
         tag.put("Brood",records);tag.putLong("LastLayingTick",pile.loadedTicks());
         pile.loadCustomOnly(TagValueInput.create(ProblemReporter.DISCARDING,c.getLevel().registryAccess(),tag));pile.setChanged();

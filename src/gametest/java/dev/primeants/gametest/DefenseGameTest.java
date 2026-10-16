@@ -48,7 +48,7 @@ public final class DefenseGameTest {
         });
     }
     static ServerPlayer player(GameTestHelper c,Vec3 pos,GameType mode){
-        var profile=new com.mojang.authlib.GameProfile(UUID.randomUUID(),"defense-fixture");
+        var profile=new com.mojang.authlib.GameProfile(dev.primeants.gametest.TestIdentities.next(),"defense-fixture");
         var p=new ServerPlayer(c.getLevel().getServer(),c.getLevel(),profile,net.minecraft.server.level.ClientInformation.createDefault()){
             @Override public boolean hurtServer(net.minecraft.server.level.ServerLevel l,net.minecraft.world.damagesource.DamageSource source,float amount){
                 var ant=source.getEntity() instanceof LasiusNigerEntity a?a:null;

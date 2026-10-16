@@ -92,7 +92,7 @@ public final class RestartHarness implements ModInitializer {
     private JsonArray pos(BlockPos p) {var a=new JsonArray();a.add(p.getX());a.add(p.getY());a.add(p.getZ());return a;}
     private BlockPos pos(JsonArray a) {return new BlockPos(a.get(0).getAsInt(),a.get(1).getAsInt(),a.get(2).getAsInt());}
     private JsonObject audit(ServerLevel l) {
-        var j=process(l.getServer());j.addProperty("checkpoint",UUID.randomUUID().toString());j.addProperty("queen",queen.getUUID().toString());
+        var j=process(l.getServer());j.addProperty("checkpoint",dev.primeants.gametest.TestIdentities.next().toString());j.addProperty("queen",queen.getUUID().toString());
         j.addProperty("queen_reserve",queen.bodyReserve());j.addProperty("lifecycle",queen.founding().lifecycle().name());j.addProperty("ready",queen.founding().ready());j.addProperty("claim",String.valueOf(queen.founding().workerClaim()));
         var ants=new JsonArray();for(var w:workers(l)) {
             var a=new JsonObject();a.addProperty("uuid",w.getUUID().toString());a.addProperty("brood",w.broodId().toString());a.addProperty("queen",w.queenId().toString());a.add("home",pos(w.nurseryHome()));a.addProperty("phase",w.workerTasks().phase().name());a.addProperty("opened",w.workerTasks().opened());a.addProperty("placed",w.workerTasks().placed());a.addProperty("elapsed_age_ticks",w.elapsedAgeTicks());a.addProperty("callow_ticks",w.callowAgeTicks());a.addProperty("callow_duration",w.callowDuration());a.add("cargo",stack(l,w.getMainHandItem()));a.add("position",Vec3.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE,w.position()).getOrThrow());ants.add(a);
@@ -145,7 +145,7 @@ public final class RestartHarness implements ModInitializer {
             if(ticks<50||workers(l).size()!=3)return;
             require(queen.founding().ready()&&cache(l)!=null&&cache(l).size()==2&&pile(l).consumed().size()==3,"Accepted A4 colony failed live startup audit");
             var initial=audit(l);write("A-start",initial);
-            name="T09-restart-"+UUID.randomUUID();
+            name="T09-restart-"+dev.primeants.gametest.TestIdentities.next();
             // Native same-state replacement revokes one real positive observation; never edits saved NBT.
             var allowed=new ArrayList<BlockPos>();for(int x=50;x<=62;x++)for(int z=-47;z<=-34;z++)for(int y=75;y<=77;y++){var p=new BlockPos(x,y,z);if(l.getBlockState(p).is(Blocks.DIRT)&&NaturalSoil.get(l).eligible(l,p))allowed.add(p);}
             require(allowed.size()>=2,"Two positive soil samples required");positive=allowed.getFirst();revoked=allowed.getLast();l.setBlock(revoked,l.getBlockState(revoked),3);
@@ -242,7 +242,7 @@ public final class RestartHarness implements ModInitializer {
     private void active(MinecraftServer s,ServerLevel l){
         require(ticks<6000,"Bounded active-home carrier loading test stage="+stage);
         if(stage==0&&ticks>=100&&queen.founding().ready()&&workers(l).size()==3){
-            name="T10-active-carrier-"+UUID.randomUUID();drop(l,plan.at(-3,0,1),TransferGameTest.stock(name,1));stage=1;return;
+            name="T10-active-carrier-"+dev.primeants.gametest.TestIdentities.next();drop(l,plan.at(-3,0,1),TransferGameTest.stock(name,1));stage=1;return;
         }
         if(stage==1){
             var w=workers(l).stream().filter(a->queen.founding().claimedBy(a)&&WorkerTasks.food(a.getMainHandItem())).findFirst();if(w.isEmpty())return;
@@ -282,7 +282,7 @@ public final class RestartHarness implements ModInitializer {
         require(NestPlan.walkable(l,p.above())&&NestPlan.candidate(l,p,Direction.WEST)!=null,"Audited native companion site failed live revalidation");return p;
     }
     private void egg(ServerLevel l,BlockPos p) {
-        var player=new net.minecraft.world.entity.player.Player(l,new com.mojang.authlib.GameProfile(UUID.randomUUID(),"restart-operator")) {
+        var player=new net.minecraft.world.entity.player.Player(l,new com.mojang.authlib.GameProfile(dev.primeants.gametest.TestIdentities.next(),"restart-operator")) {
             public GameType gameMode(){return GameType.CREATIVE;}public boolean isClientAuthoritative(){return false;}public net.minecraft.server.permissions.PermissionSet permissions(){return net.minecraft.server.permissions.PermissionSet.ALL_PERMISSIONS;}
         };
         var egg=new ItemStack(dev.primeants.item.AntItems.DEBUG_QUEEN_EGG);player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,egg);

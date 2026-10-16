@@ -82,7 +82,7 @@ public final class LifecycleGameTest {
     public void carrierReleaseAccountingIgnoresForeignFixtureDrop(GameTestHelper c){carrier(c,true);}
     private void carrier(GameTestHelper c,boolean overlap){
         var q=start(c,10000,6000,30);boolean[] supplied={false},filled={false},saved={false},dead={false},ready={false},finished={false};UUID[] id={null};
-        var food=new ItemStack(Items.CHICKEN,7);food.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("T21 carrier "+UUID.randomUUID()));
+        var food=new ItemStack(Items.CHICKEN,7);food.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("T21 carrier "+dev.primeants.gametest.TestIdentities.next()));
         java.util.function.Predicate<ItemStack> own=s2->ItemStack.isSameItemSameComponents(food,s2);
         c.onEachTick(()->{
             if(finished[0])return;

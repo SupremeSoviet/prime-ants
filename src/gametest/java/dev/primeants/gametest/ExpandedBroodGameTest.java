@@ -50,8 +50,8 @@ public final class ExpandedBroodGameTest {
         var data = TagValueOutput.createWithContext(ProblemReporter.DISCARDING,l.registryAccess());
         data.putString("Queen",q.getUUID().toString()); data.store("Entrance",BlockPos.CODEC,plan.entrance()); data.putString("Direction","south");
         data.putLong("LoadedTicks",100); data.putLong("LastLayingTick",17); data.putLong("StageDuration",120); data.putInt("DevelopmentCredit",1);
-        var ids = java.util.stream.IntStream.range(0,5).mapToObj(i -> UUID.randomUUID()).toList();
-        var original=java.util.stream.IntStream.range(0,3).mapToObj(i->UUID.randomUUID().toString()).toList();
+        var ids = java.util.stream.IntStream.range(0,5).mapToObj(i -> dev.primeants.gametest.TestIdentities.next()).toList();
+        var original=java.util.stream.IntStream.range(0,3).mapToObj(i->dev.primeants.gametest.TestIdentities.next().toString()).toList();
         data.store("Original",Codec.STRING.listOf(),original);data.store("Consumed",Codec.STRING.listOf(),original);
         var rows = data.childrenList("Brood"); int[] slots = {0,1,2,3,5}; long[] progress = {10,10,119,20,40};
         for (int i=0;i<5;i++) {

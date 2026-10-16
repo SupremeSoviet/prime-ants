@@ -224,7 +224,7 @@ public final class TerminalBroodGameTest {
 
     @GameTest(maxTicks=100,structure="prime_ants_test:idle_ground")
     public void replayClosureUsesFrozenSnapshotAfterChunkIoCloses(GameTestHelper c){
-        var destination=java.nio.file.Path.of(System.getProperty("fabric-api.gametest.report-file")).toAbsolutePath().getParent().resolve("t19-closure-probe-"+UUID.randomUUID());
+        var destination=java.nio.file.Path.of(System.getProperty("fabric-api.gametest.report-file")).toAbsolutePath().getParent().resolve("t19-closure-probe-"+dev.primeants.gametest.TestIdentities.next());
         new PlacementReplayExperiment().installClosureProbe(c.getLevel(),destination);
         dev.primeants.PrimeAnts.LOGGER.info("T19 CLOSURE PROBE destination={}",destination);
         c.runAfterDelay(2,c::succeed); // Actual SERVER_STOPPING then SERVER_STOPPED execute when this server exits.

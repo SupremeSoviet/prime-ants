@@ -7,7 +7,7 @@ import dev.primeants.gametest.mixin.GameTestHelperAccessor;
 /** Each test owns a removable token; overlapping registrations cannot clear one another. */
 public final class BambooStageFixture implements AutoCloseable {
     private static final Map<UUID,BambooStageFixture> registrations=new HashMap<>();
-    private final UUID token=UUID.randomUUID();
+    private final UUID token=dev.primeants.gametest.TestIdentities.next();
     private final ServerLevel level;private final BlockPos plant;
     private BambooStageFixture(ServerLevel l,BlockPos p){level=l;plant=p.immutable();registrations.put(token,this);}
     public static BambooStageFixture watch(GameTestHelper c,ServerLevel l,BlockPos p){

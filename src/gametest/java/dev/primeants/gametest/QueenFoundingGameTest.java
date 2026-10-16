@@ -77,7 +77,7 @@ public final class QueenFoundingGameTest {
         if (observed) c.getLevel().getDataStorage().set(NaturalSoil.TYPE, NaturalSoil.CODEC.parse(JsonOps.INSTANCE, records).getOrThrow());
     }
     private Player player(GameTestHelper c) {
-        return new Player(c.getLevel(), new GameProfile(UUID.randomUUID(), "founding-fixture")) {
+        return new Player(c.getLevel(), new GameProfile(dev.primeants.gametest.TestIdentities.next(), "founding-fixture")) {
             public GameType gameMode() { return GameType.CREATIVE; }
             public boolean isClientAuthoritative() { return false; }
             public PermissionSet permissions() { return PermissionSet.ALL_PERMISSIONS; }

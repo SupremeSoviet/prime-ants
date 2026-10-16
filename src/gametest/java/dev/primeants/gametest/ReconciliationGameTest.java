@@ -280,7 +280,7 @@ public final class ReconciliationGameTest {
         // Detached fixture must not suffocate at the factory's default world origin before biology begins.
         var safe=net.minecraft.world.phys.Vec3.atCenterOf(c.absolutePos(new net.minecraft.core.BlockPos(1,3,1)));
         worker.setPos(safe.x,safe.y,safe.z);worker.setNoGravity(true);
-        worker.initializeCallow(UUID.randomUUID(), UUID.randomUUID(), c.absolutePos(net.minecraft.core.BlockPos.ZERO), 1, 1);
+        worker.initializeCallow(dev.primeants.gametest.TestIdentities.next(), dev.primeants.gametest.TestIdentities.next(), c.absolutePos(net.minecraft.core.BlockPos.ZERO), 1, 1);
         worker.setNoAi(true); worker.setHealth(1);
         long start = c.getLevel().getGameTime();
         var baseline = worker.simulationEvidence(); var tag = save(c, worker);

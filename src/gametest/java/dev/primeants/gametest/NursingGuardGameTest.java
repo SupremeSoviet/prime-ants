@@ -46,7 +46,7 @@ public final class NursingGuardGameTest {
                 c.assertTrue(n.size()==2&&audit.total(c,q)==2&&audit.consumed(c,q)==0&&p.records().isEmpty(),"Real home ticks leave food untouched without an eligible nurse");
                 nurse.setNoAi(false);nurse.workerTasks().assignNurse(q.founding().plan());var v=net.minecraft.world.phys.Vec3.atBottomCenterOf(q.founding().plan().outside());nurse.teleportTo(v.x,v.y,v.z);
                 c.assertTrue(!n.withdraw(nurse,q.founding().plan())&&n.size()==2,"Out-of-reach caregiver cannot withdraw");
-                var o=net.minecraft.world.level.storage.TagValueOutput.createWithContext(net.minecraft.util.ProblemReporter.DISCARDING,c.getLevel().registryAccess());nurse.save(o);var tag=o.buildResult();tag.putString("QueenId",UUID.randomUUID().toString());nurse.discard();
+                var o=net.minecraft.world.level.storage.TagValueOutput.createWithContext(net.minecraft.util.ProblemReporter.DISCARDING,c.getLevel().registryAccess());nurse.save(o);var tag=o.buildResult();tag.putString("QueenId",dev.primeants.gametest.TestIdentities.next().toString());nurse.discard();
                 var wrong=(LasiusNigerEntity)net.minecraft.world.entity.EntityType.loadEntityRecursive(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING,c.getLevel().registryAccess(),tag),c.getLevel(),net.minecraft.world.entity.EntitySpawnReason.LOAD,e->e);c.assertTrue(c.getLevel().tryAddFreshEntityWithPassengers(wrong),"Negative wrong-colony save fixture restores original body");
                 v=net.minecraft.world.phys.Vec3.atBottomCenterOf(q.founding().plan().at(4,-1,-2));wrong.teleportTo(v.x,v.y,v.z);wrong.setOnGround(true);
                 c.assertTrue(!n.withdraw(wrong,q.founding().plan())&&!q.feedBy(wrong,q.founding().plan())&&n.size()==2&&audit.consumed(c,q)==0,"Wrong-colony nurse at cache cannot transfer nutrition");c.succeed();
@@ -106,7 +106,7 @@ public final class NursingGuardGameTest {
     }
     @GameTest(maxTicks=18000,structure="prime_ants_test:idle_ground")
     public void nurseDeathRefusalUsesPersistedCustodyWithoutNutritionCredit(GameTestHelper c){
-        var q=f.start(c);String name="T10-nurse-death-"+UUID.randomUUID();boolean[] supplied={false},killed={false};
+        var q=f.start(c);String name="T10-nurse-death-"+dev.primeants.gametest.TestIdentities.next();boolean[] supplied={false},killed={false};
         c.onEachTick(()->{
             if(killed[0])return;var p=audit.pile(c,q);if(p==null)return;
             if(!supplied[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){supplied[0]=true;f.drop(c,q.founding().plan().at(-3,0,1),TransferGameTest.stock(name,1));}

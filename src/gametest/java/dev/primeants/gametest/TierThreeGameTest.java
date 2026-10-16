@@ -219,7 +219,7 @@ public final class TierThreeGameTest {
             if(changed[0]==null){
                 if(j.built().size()<2||j.carried()!=1||w==null)return;
                 changed[0]=j.next();paid[0]=j.built().size();l.setBlock(changed[0],l.getBlockState(changed[0]),3);
-                if(foreign)ColonyTerrain.get(l).built(changed[0],UUID.randomUUID(),NurseryBlocks.PACKED_CLAY);
+                if(foreign)ColonyTerrain.get(l).built(changed[0],dev.primeants.gametest.TestIdentities.next(),NurseryBlocks.PACKED_CLAY);
                 PrimeAnts.LOGGER.info("T3 TARGET REVOCATION queen={} tick={} foreign={} target={} paid={} cargo={}",q.getUUID(),c.getTick(),foreign,changed[0],paid[0],w.getMainHandItem());return;
             }
             c.assertTrue(l.getBlockState(changed[0]).is(NurseryBlocks.PACKED_CLAY)&&!ColonyTerrain.get(l).built(l,changed[0],q.getUUID(),NurseryBlocks.PACKED_CLAY)&&j.built().size()==paid[0],"Player/foreign target refuses conversion, including same-state write");

@@ -38,7 +38,7 @@ public final class TransferGameTest {
     }
     @GameTest(maxTicks=200)
     public void dyingWorkerRefusalSurvivesNormalCleanup(GameTestHelper c) {
-        String name="T09-worker-"+UUID.randomUUID();var s=stock(name,3);
+        String name="T09-worker-"+dev.primeants.gametest.TestIdentities.next();var s=stock(name,3);
         var w=c.spawn(AntEntities.WORKER,2,2,2);w.setItemSlot(EquipmentSlot.MAINHAND,s);TransferFault.block(name,0);
         w.hurtServer(c.getLevel(),w.damageSources().generic(),1000);w.die(w.damageSources().generic());
         c.runAfterDelay(40,()->{
@@ -55,7 +55,7 @@ public final class TransferGameTest {
     @GameTest(maxTicks=18000,structure="prime_ants_test:idle_ground")
     public void cacheRemovalCompleteRefusalConservesPhysicalStacks(GameTestHelper c) { cache(c,0); }
     private void cache(GameTestHelper c,int successes) {
-        var f=new WorkerForagingGameTest();var q=f.start(c);String name="T09-cache-"+UUID.randomUUID();boolean[] dropped={false},removed={false};
+        var f=new WorkerForagingGameTest();var q=f.start(c);String name="T09-cache-"+dev.primeants.gametest.TestIdentities.next();boolean[] dropped={false},removed={false};
         c.onEachTick(()->{
             if(removed[0])return;f.absentCaregivers(c,q);var p=q.founding().plan();if(p==null)return;
             if(!dropped[0]&&q.founding().sealed()){dropped[0]=true;f.drop(c,p.at(-3,0,1),stock(name,2));}
@@ -74,7 +74,7 @@ public final class TransferGameTest {
     }
     @GameTest(maxTicks=18000,structure="prime_ants_test:idle_ground")
     public void foundingQueenSoilRefusalPreservesComponentsAfterDeath(GameTestHelper c) {
-        var f=new WorkerForagingGameTest();var q=f.start(c);String name="T09-soil-"+UUID.randomUUID();boolean[] killed={false};
+        var f=new WorkerForagingGameTest();var q=f.start(c);String name="T09-soil-"+dev.primeants.gametest.TestIdentities.next();boolean[] killed={false};
         c.onEachTick(()->{
             if(killed[0]||q.founding().carried()==0)return;killed[0]=true;
             var actual=q.getMainHandItem().copy();int count=actual.getCount();actual.set(DataComponents.CUSTOM_NAME,Component.literal(name));q.setItemSlot(EquipmentSlot.MAINHAND,actual);TransferFault.block(name,0);

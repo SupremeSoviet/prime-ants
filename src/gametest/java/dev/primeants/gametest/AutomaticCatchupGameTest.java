@@ -86,7 +86,7 @@ public final class AutomaticCatchupGameTest {
     }
     private static void boundary(GameTestHelper c,String field){
         var ant=AntEntities.WORKER.create(c.getLevel(),EntitySpawnReason.BREEDING);c.assertTrue(ComparisonEvidence.objects(ant,null,"!=","ant!=null"),"Worker factory");
-        ant.initializeCallow(UUID.randomUUID(),UUID.randomUUID(),c.absolutePos(net.minecraft.core.BlockPos.ZERO),1000,1000);
+        ant.initializeCallow(dev.primeants.gametest.TestIdentities.next(),dev.primeants.gametest.TestIdentities.next(),c.absolutePos(net.minecraft.core.BlockPos.ZERO),1000,1000);
         ant.setNoAi(true);ant.setNoGravity(true);ant.setPos(Vec3.atCenterOf(c.absolutePos(new net.minecraft.core.BlockPos(1,6,1))));
         c.assertTrue(ComparisonEvidence.flag(ant.nutrition().ingest(new ItemStack(Items.APPLE),8000,16000),"ant.nutrition().ingest(new ItemStack(Items.APPLE),8000,16000)"),"One accounted initial apple");
         var tag=ReconciliationGameTest.save(c,ant);var life=tag.getCompound("AdultLife").orElseThrow();life.putLong(field,Long.MAX_VALUE);life.putBoolean("Started",true);
@@ -174,7 +174,7 @@ public final class AutomaticCatchupGameTest {
             var restored=BroodGameTest.restorePile(c,p,p.saveWithFullMetadata(c.getLevel().registryAccess()));
             for(int i=7;i<=9;i++){long t=last+i;LiveReferenceDriver.adults(c,q,t);tickPile(c,restored,t);}
             c.assertTrue(ComparisonEvidence.longs(restored.catchup().pendingTicks(),8,"==","restored.catchup().pendingTicks()==8")&&ComparisonEvidence.longs(q.elapsedAgeTicks(),age+3,"==","q.elapsedAgeTicks()==age+3"),"Waiting ordinary adults run without dropping pending nursery work");
-            var wrong=adultTag.copy();wrong.putString("QueenId",UUID.randomUUID().toString());var conflicting=ReconciliationGameTest.load(c,wrong);c.assertTrue(ComparisonEvidence.flag(c.getLevel().tryAddFreshEntityWithPassengers(conflicting),"c.getLevel().tryAddFreshEntityWithPassengers(conflicting)"),"Disclosed contradictory saved body uses the original UUID but foreign lineage");
+            var wrong=adultTag.copy();wrong.putString("QueenId",dev.primeants.gametest.TestIdentities.next().toString());var conflicting=ReconciliationGameTest.load(c,wrong);c.assertTrue(ComparisonEvidence.flag(c.getLevel().tryAddFreshEntityWithPassengers(conflicting),"c.getLevel().tryAddFreshEntityWithPassengers(conflicting)"),"Disclosed contradictory saved body uses the original UUID but foreign lineage");
             tickPile(c,restored,last+10);
             c.assertTrue(ComparisonEvidence.longs(restored.catchup().pendingTicks(),9,"==","restored.catchup().pendingTicks()==9")&&ComparisonEvidence.longs(restored.catchup().appliedTicks(),0,"==","restored.catchup().appliedTicks()==0")&&ComparisonEvidence.longs(q.elapsedAgeTicks(),age+3,"==","q.elapsedAgeTicks()==age+3")&&!ComparisonEvidence.flag(ColonyMembers.get(c.getLevel()).member(absent.getUUID()).dead(),"ColonyMembers.get(c.getLevel()).member(absent.getUUID()).dead()"),"Conflicting identity defers before biology/resources and retains original reservation");
             conflicting.remove(Entity.RemovalReason.UNLOADED_TO_CHUNK);
@@ -225,7 +225,7 @@ public final class AutomaticCatchupGameTest {
             done[0]=true;
             // Disclosed accepted-save fixture: two finite ingested egg-funding units, one paid existing dependent.
             c.assertTrue(ComparisonEvidence.flag(q.nutrition().ingest(new ItemStack(Items.APPLE),8000,16000),"q.nutrition().ingest(new ItemStack(Items.APPLE),8000,16000)")&&ComparisonEvidence.flag(q.nutrition().ingest(new ItemStack(Items.CHICKEN),8000,16000),"q.nutrition().ingest(new ItemStack(Items.CHICKEN),8000,16000)")&&ComparisonEvidence.flag(q.nutrition().spend(Nutrition.EGG_SUGAR,Nutrition.EGG_PROTEIN),"q.nutrition().spend(Nutrition.EGG_SUGAR,Nutrition.EGG_PROTEIN)"),"Existing dependent egg costs debited from real finite receipts");
-            var id=UUID.randomUUID();var r=new CompoundTag();r.putString("Id",id.toString());r.putString("Queen",q.getUUID().toString());r.putInt("Slot",0);r.putString("Stage","LARVA");r.putLong("Progress",0);r.putLong("Nourishment",0);r.putBoolean("Founding",false);
+            var id=dev.primeants.gametest.TestIdentities.next();var r=new CompoundTag();r.putString("Id",id.toString());r.putString("Queen",q.getUUID().toString());r.putInt("Slot",0);r.putString("Stage","LARVA");r.putLong("Progress",0);r.putLong("Nourishment",0);r.putBoolean("Founding",false);
             var list=new net.minecraft.nbt.ListTag();list.add(r);var tag=p.saveWithFullMetadata(c.getLevel().registryAccess());tag.put("Brood",list);tag.putBoolean("Operational",false);
             var resumed=BroodGameTest.restorePile(c,p,tag);
             var hungry=ws.stream().filter(w->!w.workerTasks().nursing()).findFirst().orElse(ws.getFirst());var adultTag=ReconciliationGameTest.save(c,hungry);adultTag.getCompound("AdultLife").orElseThrow().putLong("Fasting",hungry.adultLife().grace()/2);

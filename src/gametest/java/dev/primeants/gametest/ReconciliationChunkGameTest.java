@@ -76,7 +76,7 @@ public final class ReconciliationChunkGameTest implements ModInitializer {
         l.getDataStorage().set(NaturalSoil.TYPE,NaturalSoil.CODEC.parse(JsonOps.INSTANCE,origin).getOrThrow());
         var p=new BlockPos(x0+7,y0+4,z0+4);
         c.assertTrue(!c.getBounds().inflate(128).contains(Vec3.atCenterOf(p)),"Remote colony lies outside helper retained area");
-        var player=new net.minecraft.world.entity.player.Player(l,new com.mojang.authlib.GameProfile(UUID.randomUUID(),"reconciliation-fixture")){
+        var player=new net.minecraft.world.entity.player.Player(l,new com.mojang.authlib.GameProfile(dev.primeants.gametest.TestIdentities.next(),"reconciliation-fixture")){
             public GameType gameMode(){return GameType.CREATIVE;}public boolean isClientAuthoritative(){return false;}
             public net.minecraft.server.permissions.PermissionSet permissions(){return net.minecraft.server.permissions.PermissionSet.ALL_PERMISSIONS;}
         };
