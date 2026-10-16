@@ -135,7 +135,7 @@ public final class MoundGameTest {
             var w=store.claim==null?null:fx.f.workers(c,q[0]).stream().filter(a->a.getUUID().equals(store.claim)).findFirst().orElse(null);
             if(!reloaded[0]&&w!=null&&store.deposited>=6&&w.getMainHandItem().is(Items.DIRT)&&w.workerTasks().phase()==WorkerTasks.Phase.DIG_OUT){
                 // Mid-deposit save and reload: saved data from disk, then the builder and the queen as saved entities.
-                var cargo=w.getMainHandItem().copy();int removed=store.removed(),deposited=store.deposited;var claim=store.claim;var mound=mound(c,q[0]);var laid=mound.stream().min(Comparator.comparingInt(BlockPos::getX).thenComparingInt(BlockPos::getY).thenComparingInt(BlockPos::getZ)).orElseThrow();
+                var cargo=w.getMainHandItem().copy();int removed=store.removed(),deposited=store.deposited;var claim=store.claim;var mound=mound(c,q[0]);var laid=mound.stream().min(Comparator.<BlockPos>comparingInt(BlockPos::getX).thenComparingInt(BlockPos::getY).thenComparingInt(BlockPos::getZ)).orElseThrow();
                 PrimeAnts.LOGGER.info("T14 FIXTURE ORDER representativeRelative={} candidates={} tick={}",laid.subtract(plan.entrance()),mound.size(),c.getTick());
                 l.getDataStorage().saveAndJoin();
                 try(var disk=new net.minecraft.world.level.storage.SavedDataStorage(net.minecraft.world.level.dimension.DimensionType.getStorageFolder(l.dimension(),l.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT)).resolve("data"),net.minecraft.util.datafix.DataFixers.getDataFixer(),l.registryAccess())){
