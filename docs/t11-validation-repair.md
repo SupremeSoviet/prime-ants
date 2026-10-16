@@ -114,3 +114,49 @@ The settling result, complete regression coverage, retained negatives and any
 unmet persistence gates are recorded in external
 `raw/t11-scale-persistence-acceptance.json`. Item4 remains open until both its
 performance and nonempty two-reopen obligations pass.
+
+## T12 bounded F2 diagnosis (2026-10-16)
+
+T12 starts from clean `master` at `18a875d`. The prospective diagnostic contract
+is external `raw/t12-f2-plan.json`; its settling packet is
+`raw/t12-repair-acceptance.json` in turn T12. No production or fixture correction
+was demonstrated. Complete repair acceptance remains withheld.
+
+Two separately frozen, single-server observations retain F2's original fixture,
+finite eight-clay supply, food priority, caregiver protection, exact queen/carrier
+reload assertions and 30,000-tick deadline. Passive test-only hooks observe real
+controller calls/returns, paths, admission, meals/sharing and mainhand writes.
+The first execution picks up clay at 22,767 and 22,887 and witnesses both claimed
+carriers at 22,888. The second picks up at 22,783 and 22,858 and witnesses both at
+22,859. Both native/Gradle/root exits are zero. These are unrepaired passes,
+not causal recovery or complete acceptance.
+
+At clay-window entry the first pair has 9,216 versus zero native-food inspections;
+its material-search calls are 120 ticks apart. The second pair has 6,144 versus
+zero inspections, with material-search calls 80 ticks apart and pickups 75 ticks
+apart. Both observed paths reach the source; actual authorization and material
+admission succeed, dropped-food preemption returns no source, and actual meal and
+sharing returns are false during these finite windows. This distinguishes phase
+names from search readiness in these passing executions. It does not establish
+the first cause of T11's missing overlap or attribute it to production or fixture.
+Fresh identities differ; no matched pre-T11 comparison or exact failing checkpoint
+is claimed. Original success ends both traces before clay deposit, so both carry
+interval endpoints are right-censored. All original per-tick conservation checks
+pass through success; later eight-unit settlement is not observed in these runs.
+
+The observer and actual compiled inputs are retained in external executable ZIPs.
+After both children and wrappers exit, the temporary hooks are removed and the
+baseline executable sources restored. No unsupported fixture adjustment, policy
+concession or optimization withdrawal is committed. The canonical ownership
+recheck and its adversarial test remain unchanged. Additional safety targets,
+the cargo-reconstruction pair and complete fast/long acceptance are not launched:
+the required demonstrated targeted correction was not obtained. Previous T11
+safety positives remain historical coverage only.
+
+T11's lifecycle 26,000-tick timeout and miner-preparation 60,000-tick timeout remain
+separate unexplained negatives; later isolated or full-suite passes do not explain
+them. T10 cap-budget failures remain in force. The five-adult 43.5% allocation
+reduction is not cap acceptance. Cap timing, default-speed brood preparation,
+enforced material-cargo preparation and both persistence reopens remain gated.
+Item 3 stays closed; item 4 and 0.2.0 remain open. No-new-green advances from 1 to 2;
+the direction stops for the owner's decision on any further bounded diagnosis.
