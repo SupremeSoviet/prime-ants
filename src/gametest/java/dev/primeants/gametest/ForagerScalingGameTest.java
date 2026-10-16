@@ -48,6 +48,7 @@ public final class ForagerScalingGameTest {
     private void simultaneousCarriers(GameTestHelper c) {
         LasiusNigerEntity[] q = {fx.start(c)}; boolean[] opened = {false}; long[] dropped = {0}, last = {0, 0}, claimedAt = {-1}; int[] step = {0}, most = {0};
         List<UUID> claims = new ArrayList<>(); Map<UUID, ItemStack> carried = new HashMap<>(); Set<UUID> delivered = new HashSet<>(); boolean[] clay = {false}, simultaneousClay = {false};
+        F2CarryProbe.attach(c,q[0].getUUID());
         c.onEachTick(() -> {
             var l = c.getLevel();
             if (!opened[0]) { if(q[0].founding().lifecycle()==dev.primeants.founding.QueenFounding.Lifecycle.OPEN){opened[0]=true;fx.food.supply(c,q[0],3,2);dropped[0]+=5;} return; }
@@ -90,6 +91,7 @@ public final class ForagerScalingGameTest {
                 for(int z=1;z<=7;z++)runway(c,q[0],outside.offset(7,2,z));
                 var drop=outside.offset(7,3,7);
                 c.assertTrue(c.getBounds().contains(net.minecraft.world.phys.Vec3.atCenterOf(drop))&&ws.stream().allMatch(w->w.workerTasks().withinSearch(drop)),"The supported supply remains inside this fixture and both foragers' existing search box");
+                F2CarryProbe.begin();
                 clay[0] = true; fx.drop(c, drop, new ItemStack(Items.CLAY_BALL, 8));
                 PrimeAnts.LOGGER.info("T07 F2 CLAY DROPPED queen={} tick={} foragers={} workers={}", q[0].getUUID(), c.getTick(), all, workers);
             }

@@ -160,3 +160,81 @@ reduction is not cap acceptance. Cap timing, default-speed brood preparation,
 enforced material-cargo preparation and both persistence reopens remain gated.
 Item 3 stays closed; item 4 and 0.2.0 remain open. No-new-green advances from 1 to 2;
 the direction stops for the owner's decision on any further bounded diagnosis.
+
+## T13 owner-exception complete attempts (2026-10-16)
+
+The owner's dated one-turn exception overrides the T12 causal-F2 prerequisite.
+T13 starts from clean `master` at `bd191a0`; T12's only change from `18a875d` is
+documentation. The production optimization remains unchanged throughout T13.
+The prospective contract and settling packet are external
+`raw/t13-plan.json` and `raw/t13-optimization-acceptance.json` in turn T13.
+
+Passive development-only F2 observers are retained with the tested tree. They
+record actual controller/path/movement/admission/meal/sharing/hand returns and
+state, without additional decisions, paths, mutating gate calls or actor control.
+The fixture has only passive attach/begin additions; its original route, supply,
+reload/claim/cargo assertions, same-tick two-carrier witness, eight-clay accounting
+and 30,000-tick bound remain intact. Actual seed/dimension/location/rotation and
+identities are recorded; internal RNG and UUID-generation inputs remain UNKNOWN.
+No deterministic replay is claimed.
+
+Initial fast acceptance passes 74 server, 118 unit and 26 model cases, exit 0,
+in 162.716 seconds. The first complete unfiltered long run passes 225/226 in
+5,934.902 seconds, native exits [0,0,1], Gradle/root 1. F2 passes at helper 22,612.
+The sole failure is the separate mining mid-haul reload/death case at 60,000.
+Its last regular trace at 59,000 is Young, 28 adults, food 0/4 and clay 9/16;
+no protected reload/death/recovery milestone is reached. Earlier traces retain
+a prolonged 17-adult plateau with inadequate recent receipts despite stock.
+Exact state in the final unsampled interval is UNKNOWN.
+
+Only that failed mining case now selects the existing finite natural physical
+feeding profile. This changes its preparation inputs, retaining ordinary food
+priority and physical hauling. Production, the shared helper, every assertion,
+geology, cargo/claim obligation and 60,000 total / 6,000 nursery-loaded recovery /
+600 custody / 200 settled limits remain unchanged. No nutrition, adults, stage,
+roles, cargo or biological progress is assigned.
+
+The corrected case and the cargo-reload/missing-supply pair pass together on one
+server: 3/3, native/Gradle/root 0, in 601.718 seconds. Two actual active-job
+reconstruction overlaps retain exact all-colony data and nonempty claimed-actor
+equipment/task state. Mining success occurs at helper 46,871. Its real named-unit
+pickup/deposit are 44,993/45,144, before the gallery milestone 46,671; the reported
+zero forward recovery counter does not mean instant transport. The revised full
+suite also passes this corrected case at helper 46,057.
+
+Revised fast acceptance passes 74/118/26, exit 0, in 131.368 seconds. Revised
+complete long acceptance passes 224/226 in 5,420.671 seconds, native [0,1,1],
+Gradle/root 1. F2 passes again at helper 22,575. Its historical failure remains
+unrepaired with cause UNKNOWN; those passes do not establish attribution.
+No isolated F2 retry or causal repair is claimed. Complete green has not been
+earned, so the optimization's complete correctness checkpoint is unaccepted.
+
+The revised failures are the unchanged MatureColony clay-ledger/builder-death
+case and the supplied-founding-to-Mature surface case, both at 60,000 ticks.
+The first has no builder-death marker. Read-only saved shutdown state is Young,
+with no upgrade job and 19 nearby same-queen workers. Its availability and
+route-stall reasons do not establish the first cause or exact deadline state.
+The surface case's existing passive helper-59,999 snapshot is Young, adults
+23/25, food 6, clay 16 and all four base functions confirmed, before any Mature
+surface construction. Both bodies and their assertions/bounds are unchanged.
+No speculative broader fixture rewrite or unchanged third full replay is made.
+
+Current-canonical read-boundary validation and its adversarial regression remain
+unchanged; no live authority cache or save change is introduced. T11's lifecycle
+26,000 timeout and owner loaded-damage miner 60,000 preparation timeout remain
+separate unexplained negatives. The later 46,274 pass and fresh scoped/full-suite
+positives prove their executions only. The supported small five-adult 43.5%
+allocation reduction does not accept cap timing. T10's timing negatives remain.
+
+Both complete inventories are exact once: 300 server = 74 fast + 226 long,
+118 unit / 26 model. All negatives, unit/model XML, native/merged reports,
+source/class inputs, dependency hashes, assignments, actual exits and shutdowns
+are preserved externally before subsequent Gradle invocations. No frozen inputs
+are changed while servers run. The retained source corresponds to the tested
+corrected tree, which remains a red complete checkpoint.
+
+No-new-green advances 2 to 3; the one-turn exception ends with owner stop.
+True cap120/multiple-colony timing, the isolated default-speed brood prerequisite,
+enforced food/material cargo preparation, two real process reopens and 0.2.0 stay
+outstanding. Item 3 remains closed; item 4 remains open. A further bounded
+investigation of the new failure sequences requires the next owner decision.

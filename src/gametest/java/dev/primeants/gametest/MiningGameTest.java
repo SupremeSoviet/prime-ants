@@ -300,7 +300,7 @@ public final class MiningGameTest {
 
     @GameTest(maxTicks=60000,structure="prime_ants_test:idle_ground")
     public void midHaulDiskReloadResumesThenMinerDeathReleasesOneUnitExactlyOnce(GameTestHelper c){
-        var player=new TierTwoFixture(40,true);LasiusNigerEntity[] queen={player.fx.start(c)};boolean[] seeded={false},resumed={false};int[] step={0},baseline={0},evals={0};long[] since={-1},settled={-1},gallery={-1};UUID[] worker={null},transfer={null};UnavailableCells[] hidden={null};ColonyDevelopment.Evaluation[] seen={null};
+        var player=new TierTwoFixture(40,true,TierTwoFixture.FeedingProfile.NATURAL_HALL_AFTER_CONSTRUCTION);LasiusNigerEntity[] queen={player.fx.start(c)};boolean[] seeded={false},resumed={false};int[] step={0},baseline={0},evals={0};long[] since={-1},settled={-1},gallery={-1};UUID[] worker={null},transfer={null};UnavailableCells[] hidden={null};ColonyDevelopment.Evaluation[] seen={null};
         String[] custodyTransition={""};UUID[] recoveryCarrier={null};
         var recovery=NamedMaterialRecovery.watch(c,queen[0].getUUID());
         c.onEachTick(()->{
