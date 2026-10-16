@@ -56,6 +56,14 @@ order and invokes it once. Vanilla RNG,
 item velocity, navigation, chunk availability and server scheduling remain outside
 the identity contract; stable identities do not prove whole-world replay.
 
+The first linked-map scheduler exposed an actual nested-callback loss in the
+unchanged 80-tick food lifecycle smoke. The old red and exact-jar reproducer are
+retained. Structural new-key registrations during iteration now flush in order at
+tick end; existing-key deadline updates stay immediate. No supplied callback time
+or test bound changes. This also makes newly registered zero-delay callbacks
+available on the next tick. No literal zero-delay schedules were found in the
+authored fixtures. See external `raw/t14-callback-correction-declaration.json`.
+
 The prospective rule, residual entropy, four-case comparison criteria and exact
 commands are frozen before launch in external `raw/t14-determinism-plan.json`.
 
