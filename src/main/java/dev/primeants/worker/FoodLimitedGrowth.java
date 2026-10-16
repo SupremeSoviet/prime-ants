@@ -20,6 +20,8 @@ public final class FoodLimitedGrowth {
     public void observe(long loadedTick,Supply s){
         clock=loadedTick;
         if(!s.complete()){times.clear();sugar.clear();protein.clear();set(false,"income_data_unavailable");return;}
+        // Aggregate time is not a stream of observed income. A discontinuous sample starts a fresh live window.
+        if(!times.isEmpty()&&clock-times.getLast()>SAMPLE){times.clear();sugar.clear();protein.clear();set(false,"income_observation_gap");}
         if(!sugar.isEmpty()&&(s.foodSugar()<sugar.getLast()||s.foodProtein()<protein.getLast())){times.clear();sugar.clear();protein.clear();set(false,"income_receipts_regressed");}
         if(times.isEmpty()||clock-times.getLast()>=SAMPLE){
             times.add(clock);sugar.add(s.foodSugar());protein.add(s.foodProtein());
@@ -42,6 +44,16 @@ public final class FoodLimitedGrowth {
             ||s.storedProtein()<s.committedProtein()+Nutrition.EGG_PROTEIN+Nutrition.LARVA_PROTEIN)why="stores_below_brood_and_safety_commitments";
         else why="funded_growth";
         set(why.equals("funded_growth"),why);return open;
+    }
+    /** Absence has no rolling income observations. This explicit finite-stock admission keeps the same
+     * brood commitments, 25% maintenance reserve and hungry-adult gate, without claiming an income rate.
+     * It never changes the ordinary rolling window or its open/paused state. */
+    public boolean allowsAggregate(Supply s){
+        long projected=s.adults()+s.brood()+1;
+        long maintenance=(projected*WINDOW*5+4L*dev.primeants.entity.AdultLife.maintenancePeriod()-1)/(4L*dev.primeants.entity.AdultLife.maintenancePeriod());
+        return s.complete()&&!s.hungry()
+            &&s.storedSugar()>=s.committedSugar()+Nutrition.EGG_SUGAR+Nutrition.LARVA_SUGAR+maintenance
+            &&s.storedProtein()>=s.committedProtein()+Nutrition.EGG_PROTEIN+Nutrition.LARVA_PROTEIN;
     }
     public void save(ValueOutput o){o.store("Times",Codec.LONG.listOf(),times);o.store("Sugar",Codec.LONG.listOf(),sugar);o.store("Protein",Codec.LONG.listOf(),protein);o.putLong("Clock",clock);o.putLong("Pauses",pauses);o.putLong("Resumes",resumes);o.putBoolean("Open",open);o.putString("Reason",reason);}
     public void load(ValueInput i){times.clear();sugar.clear();protein.clear();times.addAll(i.read("Times",Codec.LONG.listOf()).orElse(List.of()));sugar.addAll(i.read("Sugar",Codec.LONG.listOf()).orElse(List.of()));protein.addAll(i.read("Protein",Codec.LONG.listOf()).orElse(List.of()));clock=i.getLongOr("Clock",0);pauses=i.getLongOr("Pauses",0);resumes=i.getLongOr("Resumes",0);open=i.getBooleanOr("Open",false);reason=i.getStringOr("Reason","income_warmup");

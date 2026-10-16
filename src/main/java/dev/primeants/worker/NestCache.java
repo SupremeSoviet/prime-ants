@@ -128,6 +128,17 @@ public final class NestCache extends BlockEntity {
     public void refreshDisplay() {
         if (level!=null && !level.isClientSide() && !NestCacheBlock.showing(getBlockState(),contents).equals(getBlockState())) changed();
     }
+    /** Server-thread atomic allocation from this confirmed physical cache into an existing recipient receipt. */
+    public boolean serveAggregate(Nutrition recipient,long sugarCap,long proteinCap,java.util.function.Predicate<ItemStack> accepts){
+        if(!(level instanceof ServerLevel l)||componentOwner()==null||plan.nurseryProblem(l,colony,true)!=null)return false;
+        for(int i=0;i<contents.size();i++){
+            var unit=contents.get(i);
+            if(!accepts.test(unit)||!recipient.accepts(unit,sugarCap,proteinCap))continue;
+            if(!recipient.ingest(unit,sugarCap,proteinCap))throw new IllegalStateException("Resolved ingestion refused");
+            contents.remove(i);changed();return true;
+        }
+        return false;
+    }
     private void changed() {
         setChanged(); if (level==null || level.isClientSide()) return;
         BlockState before=getBlockState(), next=NestCacheBlock.showing(before,contents);

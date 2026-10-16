@@ -130,8 +130,10 @@ public final class SurfaceGameTest {
     public void suppliedFoundingToMatureRetainsItsSmallMoundAndWorkersBuildLargerCrestsAndAnOpenArch(GameTestHelper c){
         var fixture=new SurfaceFixture();var player=new TierTwoFixture(40,true,TierTwoFixture.FeedingProfile.EARLY_PHYSICAL_DEVELOPMENT);var q=fixture.founder(c);
         FounderAccessProbe.watch(c,q,60000);
+        var legacy=LegacyAdultShadow.watch(c,q.getUUID(),"original_supplied_surface_60000_tick_bound");
         long[] settled={-1},mature={-1};int[] youngPeak={-1};boolean[] snapshot={false};BlockPos[] protectedPlayer={null};var walking=new Walking();
         c.onEachTick(()->{
+            legacy.assertAgreement(c);
             var l=c.getLevel();player.feed(c,q);player.ledgers(c,q);var home=q.founding().plan();if(home==null)return;
             if(protectedPlayer[0]==null){protectedPlayer[0]=home.at(-8,7,1);l.setBlock(protectedPlayer[0],Blocks.GLASS.defaultBlockState(),3);}
             c.assertTrue(l.getBlockState(protectedPlayer[0]).is(Blocks.GLASS),"Player glass outside structural components is preserved");

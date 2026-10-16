@@ -49,7 +49,11 @@ public final class SurfaceAccessGameTest {
     }
     static void reload(GameTestHelper c,SurfaceFixture fixture,SurfaceWork.Job j,LasiusNigerEntity w,String phase){
         var l=c.getLevel();var before=SurfaceWork.CODEC.encodeStart(JsonOps.INSTANCE,SurfaceWork.get(l)).getOrThrow();var reservation=ColonyTerrain.CODEC.encodeStart(JsonOps.INSTANCE,ColonyTerrain.get(l)).getOrThrow();var clock=w==null?0:w.workerTasks().harvestingTicks();
-        disk(c);if(w!=null)w=fixture.fx.f.restore(c,w);
+        var baseline=PersistenceDiagnostics.state(c,w);PersistenceDiagnostics.observe(c,phase+":before_save",null,baseline);
+        disk(c);PersistenceDiagnostics.observe(c,phase+":disk_decoded",baseline,PersistenceDiagnostics.state(c,w));
+        if(w!=null)w=fixture.fx.f.restore(c,w);
+        PersistenceDiagnostics.observe(c,phase+":actor_reconstructed",baseline,PersistenceDiagnostics.state(c,w));
+        var actor=w;c.runAfterDelay(1,()->PersistenceDiagnostics.observe(c,phase+":next_ordinary_step",baseline,PersistenceDiagnostics.state(c,actor)));
         c.assertTrue(before.equals(SurfaceWork.CODEC.encodeStart(JsonOps.INSTANCE,SurfaceWork.get(l)).getOrThrow())&&reservation.equals(ColonyTerrain.CODEC.encodeStart(JsonOps.INSTANCE,ColonyTerrain.get(l)).getOrThrow()),"Actual disk data reload preserves exact bound attempt, locations, reservations, claim, partial clock and history");
         if(w!=null)c.assertTrue(w.workerTasks().harvestingTicks()==clock,"Canonical actor reload preserves its validated partial action clock");
         PrimeAnts.LOGGER.info("T16 ACCESS RELOAD phase={} tick={} state={} actor={} actorAction={}",phase,c.getTick(),j.access.encode(),w==null?null:w.getUUID(),clock);

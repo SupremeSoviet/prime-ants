@@ -68,7 +68,7 @@ public final class WorkerTasks {
     public boolean withinSearch(BlockPos p){return plan!=null&&Math.abs(p.getX()-plan.outside().getX())<=SEARCH_RADIUS&&Math.abs(p.getZ()-plan.outside().getZ())<=SEARCH_RADIUS&&Math.abs(p.getY()-plan.outside().getY())<=3;}
     private UUID recipient;
     private int feedingTicks;
-    public static final int FEEDING_TICKS=20;
+    public static final int FEEDING_TICKS=20, FEEDING_COOLDOWN=20, NAVIGATION_INTERVAL=20;
     public UUID recipientId(){return recipient;}
     public int feedingTicks(){return feedingTicks;}
     public boolean nursing(){return phase==Phase.NURSE_CACHE||phase==Phase.NURSE_FEED||phase==Phase.NURSE_RETURN;}
@@ -94,13 +94,13 @@ public final class WorkerTasks {
                 && q!=null && q.isAlive() && q.founding().claimedBy(worker) && q.founding().plan()!=null
                 && q.founding().plan().entrance().equals(plan.entrance()) && q.founding().plan().direction()==plan.direction() && q.founding().ready();
     }
-    public boolean nursingAuthorized(ServerLevel l){
+    private boolean nursingIdentityAuthorized(ServerLevel l){
         return nursing()&&!worker.isCallow()&&!worker.isNoAi()&&worker.isAlive()&&!worker.isRemoved()&&plan!=null
                 &&!constructionClaim(l)&&!surfaceClaim(l)&&!foragerClaim(l)&&!upgradeClaim(l)
                 &&ColonyMembers.get(l).belongs(worker,worker.queenId(),plan.chamber())
-                &&l.getBlockEntity(plan.nursery()) instanceof dev.primeants.brood.BroodPile p&&p.ownedBy(worker.queenId(),plan)&&p.operational()
-                &&plan.nurseryProblem(l,worker.queenId(),true)==null;
+                &&l.getBlockEntity(plan.nursery()) instanceof dev.primeants.brood.BroodPile p&&p.ownedBy(worker.queenId(),plan)&&p.operational();
     }
+    public boolean nursingAuthorized(ServerLevel l){return nursingIdentityAuthorized(l)&&plan.nurseryProblem(l,worker.queenId(),true)==null;}
     public boolean freeForConstruction(){return !defending&&!sharing.busy()&&(phase==Phase.NURSERY||phase==Phase.NURSE_CACHE);}
     private boolean constructionClaim(ServerLevel l){return DigJob.claimedBy(l,worker)!=null;}
     private boolean surfaceClaim(ServerLevel l){return SurfaceWork.get(l).claimedBy(worker)!=null;}
@@ -120,6 +120,9 @@ public final class WorkerTasks {
         &&!DigJob.anyClaim(l,worker.queenId());}
     public boolean caregiver(ServerLevel l,NestPlan p){return l.getEntity(worker.getUUID())==worker&&NestPlan.loaded(l,worker.blockPosition())&&l.isPositionEntityTicking(worker.blockPosition())
         &&eligible(l,p)&&nursingAuthorized(l)&&plan.entrance().equals(p.entrance())&&plan.direction()==p.direction();}
+    /** Only the synchronous aggregate invocation, after the ordinary nursery Findings is CLEAR. */
+    public boolean caregiverWithValidatedHabitat(ServerLevel l,NestPlan p){return l.getEntity(worker.getUUID())==worker&&NestPlan.loaded(l,worker.blockPosition())&&l.isPositionEntityTicking(worker.blockPosition())
+        &&eligible(l,p)&&nursingIdentityAuthorized(l)&&plan.entrance().equals(p.entrance())&&plan.direction()==p.direction();}
     public boolean assignConstruction(NestPlan p){return assignConstruction(p,"assigned_bounded_extension");}
     public boolean assignConstruction(NestPlan p,String why){
         if(!canConstruct(p)||NestExpansion.remainingCaregivers((ServerLevel)worker.level(),worker.queenId(),p,worker)<2)return false;
@@ -263,7 +266,7 @@ public final class WorkerTasks {
         double distance=worker.position().distanceToSqr(dest);
         if(distance<0.01 && worker.onGround()) {worker.getNavigation().stop();return true;}
         if(distance<0.8 && Math.abs(worker.getY()-dest.y)<0.3 && worker.onGround()) {worker.getNavigation().stop();worker.getMoveControl().setWantedPosition(dest.x,dest.y,dest.z,1.0);}
-        else if(worker.tickCount%20==0 || worker.getNavigation().isDone())worker.getNavigation().moveTo(dest.x,dest.y,dest.z,0,1.0);
+        else if(worker.tickCount%NAVIGATION_INTERVAL==0 || worker.getNavigation().isDone())worker.getNavigation().moveTo(dest.x,dest.y,dest.z,0,1.0);
         return false;
     }
     private boolean insideWorkStand() {
@@ -397,9 +400,11 @@ public final class WorkerTasks {
         }else if(worker.tickCount%10==0||worker.getNavigation().isDone())worker.getNavigation().moveTo(player.getX(),player.getY(),player.getZ(),0,1.0);
         return true;
     }
+    /** Ordinary personal food also funds an empty crop when a fasting nestmate needs sharing. */
+    public boolean mealNeeded(ServerLevel l){return worker.adultLife().hungry()||sharing.needsCrop(l);}
     private boolean adultMeal(ServerLevel l){
         var life=worker.adultLife();
-        if(!(life.hungry()||sharing.needsCrop(l))||worker.isNoAi()||plan==null||!ColonyMembers.get(l).belongs(worker,worker.queenId(),plan.chamber())
+        if(!mealNeeded(l)||worker.isNoAi()||plan==null||!ColonyMembers.get(l).belongs(worker,worker.queenId(),plan.chamber())
             ||plan.nurseryProblem(l,worker.queenId(),true)!=null){life.resetMeal();return false;}
         if(worker.getMainHandItem().isEmpty()&&l.getBlockEntity(plan.cache()) instanceof NestCache cache&&cache.ownedBy(worker.queenId(),plan)
             &&cache.contents().stream().anyMatch(s->Nutrition.sugarYield(s)>0)){
@@ -422,10 +427,13 @@ public final class WorkerTasks {
         return q.acceptsFood(food)&&(Nutrition.proteinYield(food)==0||q.nutrition().protein()<Nutrition.EGG_PROTEIN);
     }
     private UUID chooseRecipient(ServerLevel l,ItemStack s){
-        if(l.getBlockEntity(plan.nursery()) instanceof dev.primeants.brood.BroodPile p){
-            var larva=p.records().stream().filter(r->p.accepts(r,s)).findFirst();if(larva.isPresent())return larva.get().id();
-        }
-        var q=queen(l);return q!=null&&q.isAlive()&&!q.isNoAi()&&q.founding().ready()&&queenNeedsFood(q,s)?q.getUUID():null;
+        var p=l.getBlockEntity(plan.nursery()) instanceof dev.primeants.brood.BroodPile pile?pile:null;
+        return selectNursingRecipient(p,queen(l),s,id->true);
+    }
+    /** Ordered ordinary recipient policy. Aggregate intentions also exclude already planned capacity. */
+    public static UUID selectNursingRecipient(dev.primeants.brood.BroodPile p,LasiusNigerEntity q,ItemStack s,java.util.function.Predicate<UUID> eligible){
+        if(p!=null){var larva=p.records().stream().filter(r->p.accepts(r,s)&&eligible.test(r.id())).findFirst();if(larva.isPresent())return larva.get().id();}
+        return q!=null&&q.isAlive()&&!q.isNoAi()&&q.founding().ready()&&queenNeedsFood(q,s)&&eligible.test(q.getUUID())?q.getUUID():null;
     }
     public boolean hasRecipient(ServerLevel l,ItemStack s){return nursingAuthorized(l)&&chooseRecipient(l,s)!=null;}
     private void nurseCache(ServerLevel l){
@@ -485,7 +493,7 @@ public final class WorkerTasks {
         worker.getNavigation().stop();worker.getLookControl().setLookAt(target.x,target.y,target.z);reason="physical_feeding";
         if(++feedingTicks<FEEDING_TICKS)return;
         boolean accepted=toQueen?q.feedBy(worker,plan):p.feedBy(worker,recipient);
-        feedingTicks=0;if(accepted){recipient=null;next(Phase.NURSE_CACHE,"carried_food_consumed_once");cooldown=20;}else next(Phase.NURSE_RETURN,"feeding_action_refused_cargo_retained");
+        feedingTicks=0;if(accepted){recipient=null;next(Phase.NURSE_CACHE,"carried_food_consumed_once");cooldown=FEEDING_COOLDOWN;}else next(Phase.NURSE_RETURN,"feeding_action_refused_cargo_retained");
     }
     private void nurseReturn(ServerLevel l){
         if(worker.getMainHandItem().isEmpty()){recipient=null;next(Phase.NURSE_CACHE,"nurse_empty");return;}

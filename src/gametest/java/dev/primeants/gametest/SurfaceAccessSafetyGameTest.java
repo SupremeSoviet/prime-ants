@@ -66,8 +66,14 @@ public final class SurfaceAccessSafetyGameTest {
         PrimeAnts.LOGGER.info("T17 EMPTY DEATH DISK LOADABLE tick={} dead={} state={}",c.getTick(),id,restored.access.encode());
     }
     private static void reconcileSurvivors(GameTestHelper c,SurfaceFixture f,LasiusNigerEntity q){
+        var job=SurfaceWork.get(c.getLevel()).job(q.getUUID(),ColonyStage.MATURE);
+        var observedActor=job!=null&&job.claim!=null&&c.getLevel().getEntity(job.claim) instanceof LasiusNigerEntity w?w:null;
+        var baseline=observedActor==null?null:PersistenceDiagnostics.state(c,observedActor);
+        if(baseline!=null)PersistenceDiagnostics.observe(c,"T17_survivors:before_reconcile",null,baseline);
         for(var actor:new ArrayList<>(f.fx.f.workers(c,q)))f.fx.f.restore(c,actor);
+        if(baseline!=null)PersistenceDiagnostics.observe(c,"T17_survivors:actors_reconstructed",baseline,PersistenceDiagnostics.state(c,observedActor));
         SurfaceWork.get(c.getLevel()).reconcile(c.getLevel(),q);
+        if(baseline!=null)PersistenceDiagnostics.observe(c,"T17_survivors:ordinary_reconciled",baseline,PersistenceDiagnostics.state(c,observedActor));
         PrimeAnts.LOGGER.info("T17 SURVIVING ACTORS RECONCILED tick={} queen={} living={} claim={}",c.getTick(),q.getUUID(),f.fx.f.workers(c,q).size(),SurfaceWork.get(c.getLevel()).job(q.getUUID(),ColonyStage.MATURE).claim);
     }
     private void run(GameTestHelper c,Mode mode){

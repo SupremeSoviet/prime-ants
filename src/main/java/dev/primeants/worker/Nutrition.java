@@ -13,6 +13,33 @@ public final class Nutrition {
     public static final long EGG_SUGAR=1000, EGG_PROTEIN=2000;
     public static final long LARVA_SUGAR=4000, LARVA_PROTEIN=8000;
     private long sugar,protein,apples,berries,chickens,nectar,nectarV2,prey,flesh,spentSugar,spentProtein,receivedSugar,givenSugar;
+    /** Immutable stores, separate generated initial stock and every physical receipt; never cargo or a cache allocation. */
+    public record State(long sugar,long protein,long apples,long berries,long chickens,long nectar,long nectarV2,
+                        long prey,long flesh,long spentSugar,long spentProtein,long receivedSugar,long givenSugar,long generatedSugar) {
+        public State(long sugar,long protein,long apples,long berries,long chickens,long nectar,long nectarV2,
+                     long prey,long flesh,long spentSugar,long spentProtein,long receivedSugar,long givenSugar){
+            this(sugar,protein,apples,berries,chickens,nectar,nectarV2,prey,flesh,spentSugar,spentProtein,receivedSugar,givenSugar,0);
+        }
+        public boolean valid() {
+            if(sugar<0||sugar>QUEEN_SUGAR_CAPACITY||protein<0||protein>QUEEN_PROTEIN_CAPACITY||apples<0||berries<0
+                ||chickens<0||nectar<0||nectarV2<0||prey<0||flesh<0||spentSugar<0||spentProtein<0||receivedSugar<0||givenSugar<0
+                ||generatedSugar!=0&&generatedSugar!=QUEEN_SUGAR_CAPACITY)return false;
+            try {
+                long gainedS=Math.addExact(Math.addExact(Math.multiplyExact(apples,APPLE_SUGAR),Math.multiplyExact(berries,BERRY_SUGAR)),
+                    Math.addExact(Math.multiplyExact(nectar,NECTAR_SUGAR),Math.multiplyExact(nectarV2,NECTAR_V2_SUGAR)));
+                long gainedP=Math.addExact(Math.addExact(Math.multiplyExact(chickens,CHICKEN_PROTEIN),Math.multiplyExact(prey,PREY_PROTEIN)),Math.multiplyExact(flesh,FLESH_PROTEIN));
+                return Math.addExact(sugar,Math.addExact(spentSugar,givenSugar))==Math.addExact(Math.addExact(gainedS,receivedSugar),generatedSugar)
+                    &&Math.addExact(protein,spentProtein)==gainedP;
+            }catch(ArithmeticException e){return false;}
+        }
+        public State spend(long s,long p) {
+            if(s<0||p<0||s>sugar||p>protein)return null;
+            return new State(sugar-s,protein-p,apples,berries,chickens,nectar,nectarV2,prey,flesh,
+                Math.addExact(spentSugar,s),Math.addExact(spentProtein,p),receivedSugar,givenSugar,generatedSugar);
+        }
+    }
+    public State snapshot(){return new State(sugar,protein,apples,berries,chickens,nectar,nectarV2,prey,flesh,spentSugar,spentProtein,receivedSugar,givenSugar,generatedSugar);}
+    private void restore(State s){sugar=s.sugar();protein=s.protein();spentSugar=s.spentSugar();spentProtein=s.spentProtein();}
     public long receivedSugar(){return receivedSugar;} public long givenSugar(){return givenSugar;}
     /** Only the controller's revalidated mouth action calls this. No ingestion or income receipt. */
     boolean shareWith(Nutrition recipient,long amount,long reserve,long capacity){
@@ -48,6 +75,7 @@ public final class Nutrition {
     }
     public boolean spend(long s,long p){if(s<0||p<0||s>sugar||p>protein)return false;sugar-=s;protein-=p;spentSugar+=s;spentProtein+=p;return true;}
     public void save(ValueOutput o){o.putLong("GeneratedInitialSugar",generatedSugar);o.putLong("Sugar",sugar);o.putLong("Protein",protein);o.putLong("Apples",apples);o.putLong("Berries",berries);o.putLong("Chickens",chickens);o.putLong("Nectar",nectar);o.putLong("NectarV2",nectarV2);o.putLong("Prey",prey);o.putLong("Flesh",flesh);o.putLong("SpentSugar",spentSugar);o.putLong("SpentProtein",spentProtein);o.putLong("SugarReceived",receivedSugar);o.putLong("SugarGiven",givenSugar);}
+
     public void load(ValueInput i,long sCap,long pCap){
         generatedSugar=i.getLongOr("GeneratedInitialSugar",0);if(generatedSugar!=0&&generatedSugar!=QUEEN_SUGAR_CAPACITY)throw new IllegalArgumentException("Invalid finite generated sugar");
         sugar=i.getLongOr("Sugar",0);protein=i.getLongOr("Protein",0);apples=i.getLongOr("Apples",0);berries=i.getLongOr("Berries",0);chickens=i.getLongOr("Chickens",0);spentSugar=i.getLongOr("SpentSugar",0);spentProtein=i.getLongOr("SpentProtein",0);

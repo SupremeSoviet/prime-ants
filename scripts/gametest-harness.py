@@ -270,11 +270,15 @@ def fast_guards(folder, since):
     result['passed']=not result['issues'];write(folder/'fast-guards.json',result);return result
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['inventory','prepare','run','merge','fast-guards']);p.add_argument('--folder',type=Path);p.add_argument('--launch',type=Path);p.add_argument('--suite',choices=['fast','long','smoke']);p.add_argument('--shards',type=int,default=4);p.add_argument('--concurrency',type=int,default=4);p.add_argument('--names');p.add_argument('--since',type=float);p.add_argument('--defer-failures',action='store_true');a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['inventory','registered-names','prepare','run','merge','fast-guards']);p.add_argument('--folder',type=Path);p.add_argument('--launch',type=Path);p.add_argument('--suite',choices=['fast','long','smoke']);p.add_argument('--shards',type=int,default=4);p.add_argument('--concurrency',type=int,default=4);p.add_argument('--names');p.add_argument('--since',type=float);p.add_argument('--defer-failures',action='store_true');a=p.parse_args()
+    if a.action=='registered-names': print(json.dumps(sorted(discover())),flush=True);return
     if a.action=='inventory': print('Verified exact permanent partition:',len(inventory()),'unit:',len(unit_cases()),'model:',len(model_cases()));return
     if a.action=='prepare': prepare(a.folder,a.launch,a.shards,a.concurrency,a.names);return
     result=run_suite(a.folder,a.suite) if a.action=='run' else fast_guards(a.folder,a.since) if a.action=='fast-guards' else merge_complete(a.folder)
-    print(json.dumps({k:v for k,v in result.items() if k not in ('suites','shards','assigned')},indent=2),flush=True)
+    # Full per-report hashes remain in JSON. A >4 KiB inherited Windows pipe can block Gradle's wait.
+    summary={k:v for k,v in result.items() if k not in ('suites','shards','assigned','reports','union_issues')}
+    if 'union_issues' in result: summary['issue_count']=len(result['union_issues'])
+    print(json.dumps(summary,indent=2),flush=True)
     if not result['passed'] and not a.defer_failures: raise SystemExit(1)
 
 if __name__=='__main__': main()

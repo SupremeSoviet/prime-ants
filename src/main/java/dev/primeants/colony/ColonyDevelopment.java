@@ -34,6 +34,31 @@ public final class ColonyDevelopment {
         public ColonyStage stage() { return result.stage(); }
     }
     private ColonyDevelopment() { }
+    /** Unreconstructable history breaks continuity, like an UNKNOWN observation; biology/stage remain held. */
+    public static void recoverUnknownHistory(ServerLevel l,UUID queen){
+        var registry=ChamberRegistry.get(l);var colony=registry.colony(queen);
+        if(colony!=null)registry.stage(queen,colony.stage(),Map.of());
+    }
+    /** Keep only clocks backed by observation in this virtual interval; registry mutation stays with the rule owner. */
+    public static void retainObservedClocks(ServerLevel l,UUID queen,Map<String,Long> clocks){
+        var registry=ChamberRegistry.get(l);var colony=registry.colony(queen);
+        if(colony!=null)registry.stage(queen,colony.stage(),clocks);
+    }
+    /** During one aggregate invocation terrain/materials do not tick. Refresh physical food and the
+     * unchanged rule clocks from the validated chamber observation; membership changes use a full evaluation. */
+    public static Evaluation refreshFoodAndClocks(ServerLevel l,UUID queen,int bound,long now,Evaluation observed){
+        int food=0;
+        var colony=ChamberRegistry.get(l).colony(queen);
+        for(var state:observed.chambers())if(state.functions().get(ChamberFunction.FOOD_STORE)==Presence.CONFIRMED){
+            var chamber=colony.chamber(state.id());
+            if(l.getBlockEntity(chamber.markers().get(ChamberFunction.FOOD_STORE)) instanceof NestCache cache)food+=cache.size();
+        }
+        var old=observed.inputs();
+        var inputs=new StageRules.Inputs(old.adults(),old.tiers(),new StageRules.Bound(food,food+old.food().possible()-old.food().known()),old.clay(),old.stone(),old.queenDead());
+        var result=StageRules.evaluate(colony.stage(),inputs,colony.unmetSince(),now);
+        if(result.stage()!=colony.stage()||!result.unmetSince().equals(colony.unmetSince()))ChamberRegistry.get(l).stage(queen,result.stage(),result.unmetSince());
+        return new Evaluation(colony.stage(),result,inputs,observed.chambers(),AdultBound.effectiveCap(result.stage(),bound));
+    }
     /** now is the colony's clock for the owner's hysteresis (StageRules): its nursery's loaded ticks. */
     public static Evaluation evaluate(ServerLevel l, UUID queen, NestPlan plan, boolean operational, int bound, long now) {
         var registry = ChamberRegistry.get(l);

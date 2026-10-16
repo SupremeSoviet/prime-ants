@@ -17,7 +17,12 @@
       "dev.primeants.gametest.RestartHarness",
       "dev.primeants.gametest.PlacementSettings",
       "dev.primeants.gametest.PlacementDiagnosticHarness",
-      "dev.primeants.gametest.T27ReleaseHarness"
+      "dev.primeants.gametest.T27ReleaseHarness",
+      "dev.primeants.gametest.ReconciliationChunkGameTest"
+    ],
+    "fabric-client-gametest": [
+      "dev.primeants.gametest.AntModelGameTest",
+      "dev.primeants.gametest.AntCaptureTest"
     ],
     "fabric-gametest": [
       "dev.primeants.gametest.FounderAccessPriorityGameTest",
@@ -68,12 +73,16 @@
       "dev.primeants.gametest.SurfaceAccessSafetyGameTest",
       "dev.primeants.gametest.TierThreeGameTest",
       "dev.primeants.gametest.HallFundingGameTest",
+      "dev.primeants.gametest.ColonyClockGameTest",
+      "dev.primeants.gametest.ReconciliationGameTest",
+      "dev.primeants.gametest.ReconciliationChunkGameTest",
+      "dev.primeants.gametest.AdultAdvanceGameTest",
+      "dev.primeants.gametest.AdultReferenceGameTest",
+      "dev.primeants.gametest.AutomaticCatchupGameTest",
+      "dev.primeants.gametest.CatchupRecoveryGameTest",
+      "dev.primeants.gametest.CatchupLifecycleGameTest",
       "dev.primeants.gametest.EstablishedGenerationGameTest",
       "dev.primeants.gametest.ValidationIndexGameTest"
-    ],
-    "fabric-client-gametest": [
-      "dev.primeants.gametest.AntModelGameTest",
-      "dev.primeants.gametest.AntCaptureTest"
     ]
   },
   "depends": {

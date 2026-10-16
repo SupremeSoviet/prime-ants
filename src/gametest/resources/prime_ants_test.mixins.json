@@ -54,7 +54,11 @@
     "GreatWorkerProbeMixin",
     "SurfaceChamberPaymentMixin",
     "ServerShardSelectionMixin",
-    "InitialHabitatConnectionMixin"
+    "InitialHabitatConnectionMixin",
+    "LegacyAdultShadowMixin",
+    "GrowthObservationMixin",
+    "StageClockObservationMixin",
+    "StageFoodObservationMixin"
   ],
   "injectors": {
     "defaultRequire": 1

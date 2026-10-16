@@ -2495,6 +2495,470 @@
       "reason": "T04 exact foreign non-food nursing cargo and recipient retained with no food or nutrition credit for 200 real ticks"
     },
     {
+      "name": "prime_ants_test:colony_clock_game_test_consecutive_ordinary_ticks_have_no_missed_interval",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyClockGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 real egg founding, production nursery save/reconstruction/ticker clock contract; timestamp/detached absence fixture, not actual chunk unload"
+    },
+    {
+      "name": "prime_ants_test:colony_clock_game_test_short_detached_absence_keeps_brood_while_live_control_advances",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyClockGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 real egg founding, production nursery save/reconstruction/ticker clock contract; timestamp/detached absence fixture, not actual chunk unload"
+    },
+    {
+      "name": "prime_ants_test:colony_clock_game_test_long_timestamp_absence_resumes_only_one_ordinary_step",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyClockGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 real egg founding, production nursery save/reconstruction/ticker clock contract; timestamp/detached absence fixture, not actual chunk unload"
+    },
+    {
+      "name": "prime_ants_test:colony_clock_game_test_disk_serialization_preserves_exact_interval_before_resumed_tick",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyClockGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 real egg founding, production nursery save/reconstruction/ticker clock contract; timestamp/detached absence fixture, not actual chunk unload"
+    },
+    {
+      "name": "prime_ants_test:colony_clock_game_test_legacy_baseline_starts_at_level_access_before_operational_and_before_step",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyClockGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 real egg founding, production nursery save/reconstruction/ticker clock contract; timestamp/detached absence fixture, not actual chunk unload"
+    },
+    {
+      "name": "prime_ants_test:colony_clock_game_test_repeated_inspection_and_same_time_reload_never_fabricate_time",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyClockGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 real egg founding, production nursery save/reconstruction/ticker clock contract; timestamp/detached absence fixture, not actual chunk unload"
+    },
+    {
+      "name": "prime_ants_test:colony_clock_game_test_daylight_backward_and_arithmetic_boundaries_do_not_invent_absence",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyClockGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 real egg founding, production nursery save/reconstruction/ticker clock contract; timestamp/detached absence fixture, not actual chunk unload"
+    },
+    {
+      "name": "prime_ants_test:colony_clock_game_test_partial_loading_observation_preserves_unknown_and_all_lifecycle_state",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ColonyClockGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 real egg founding, production nursery save/reconstruction/ticker clock contract; timestamp/detached absence fixture, not actual chunk unload"
+    },
+    {
+      "name": "prime_ants_test:colony_clock_game_test_unowned_ordinary_ticker_does_not_stamp_or_establish_clock",
+      "max_ticks": 20,
+      "source": "src/gametest/java/dev/primeants/gametest/ColonyClockGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "T01 local production ownership guard: an unowned nursery ticker does not complete or stamp a simulation step"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_game_test_nursery_snapshot_excludes_independently_ticking_queen_and_workers",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_game_test_distinct_adult_absence_and_both_current_tick_orderings_stay_exact",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_game_test_intermittent_production_steps_retain_holes_and_overflow_is_unresolved",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_game_test_unavailable_worker_keeps_reservation_and_later_return_keeps_identity",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_game_test_entity_reconstruction_legacy_migration_birth_and_duplicate_boundaries_preserve_biology",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_game_test_partial_terrain_capture_preserves_unknown_nursing_and_loaded_damage_precedence",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_game_test_completed_death_step_and_early_returns_are_observed_but_saving_is_not",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_game_test_duplicate_and_reversed_production_observation_never_fabricates_ticks",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 20,
+      "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_chunk_game_test_genuine_remote_chunk_disappears_and_reloads_original_colony_while_live_control_ticks",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationChunkGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T02 completed adult observation/reconciliation metadata; native remote chunk case is separate from disclosed timestamp/removal fixtures"
+    },
+    {
+      "name": "prime_ants_test:reconciliation_game_test_captured_return_before_nursery_and_earlier_resumption_never_reuse_stale_boundary",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ReconciliationGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T03 direct captured return ordering and retained evidence assertions"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_prepaid_coverage_matches_ordinary_ticks",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_coverage_exhaustion_matches_ordinary_ticks",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_finite_sugar_exhaustion_matches_ordinary_ticks",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_nonzero_fasting_matches_ordinary_ticks",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_callow_saturation_matches_ordinary_ticks",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_worker_age_boundary_stops_before_ordinary_damage",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_maximum_long_request_stops_before_ordinary_starvation_damage",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_started_queen_matches_ordinary_ticks",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_reserve_only_queen_exemption_matches_ordinary_ticks",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_unsupported_phase_and_overflow_leave_explicit_input_unchanged",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_pending_starvation_damage_stops_before_next_ordinary_event",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_advance_game_test_prepaid_coverage_resets_pending_starvation_damage",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultAdvanceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T03 bounded adult calculation versus ordinary server-ticked no-incoming-meal controls; exact integer/event tolerance"
+    },
+    {
+      "name": "prime_ants_test:adult_reference_game_test_maintenance_exhaustion_and_incoming_meals_match_independent_legacy",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultReferenceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T04 independent pre-extraction ordinary adult reference including arithmetic boundaries; finite comparisons, no application"
+    },
+    {
+      "name": "prime_ants_test:adult_reference_game_test_queen_founding_exemption_and_activation_match_independent_legacy",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultReferenceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T04 independent pre-extraction ordinary adult reference including arithmetic boundaries; finite comparisons, no application"
+    },
+    {
+      "name": "prime_ants_test:adult_reference_game_test_terminal_age_and_starvation_steps_match_independent_legacy",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultReferenceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T04 independent pre-extraction ordinary adult reference including arithmetic boundaries; finite comparisons, no application"
+    },
+    {
+      "name": "prime_ants_test:adult_reference_game_test_fasting_saturation_age_boundary_and_zero_prefixes_match_independent_legacy",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultReferenceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T04 independent pre-extraction ordinary adult reference including arithmetic boundaries; finite comparisons, no application"
+    },
+    {
+      "name": "prime_ants_test:adult_reference_game_test_loaded_active_counter_maximum_matches_independent_legacy",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AdultReferenceGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T04 independent pre-extraction ordinary adult reference including arithmetic boundaries; finite comparisons, no application"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_accepted_maintenance_maximum_saturates_ordinary_and_reconstructs",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_accepted_covered_ticks_maximum_saturates_ordinary_and_reconstructs",
+      "max_ticks": 1000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 1000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_short_reload_matches_live_ticks_and_does_not_repeat_after_save",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_long_no_food_return_kills_real_workers_releases_cargo_once_and_regresses_stage",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_partial_member_loading_persists_pending_and_excludes_waiting_ordinary_ticks",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_unknown_terrain_defers_biology_and_restoration_resumes_automatically",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_existing_original_brood_emerges_as_real_workers_from_aggregate_spans",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_confirmed_finite_cache_feeds_adults_and_existing_food_fed_larva_exactly_once",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_food_fed_existing_brood_promotes_young_and_long_return_regresses_through_stage_rules",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_paired_finite_live_control_and_reload_agree_on_original_brood_growth",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_fixed_event_bound_persists_applied_and_pending_work_until_next_automatic_invocation",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T05 enabled automatic reload and focused saturation acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_recovery_game_test_ordinary_fed_larva_successful_first_substep_retains_identity_at_grace_one",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupRecoveryGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T06 focused production recovery and lifecycle acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_recovery_game_test_legacy_floor101recovers_after_ordinary_adult_ticks_and_reconstruction",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupRecoveryGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T06 focused production recovery and lifecycle acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_recovery_game_test_staggered_legacy_members_recover_only_after_all_original_identities_return",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupRecoveryGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T06 focused production recovery and lifecycle acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_recovery_game_test_retained_history_compaction_rebases_unknown_prefix_and_keeps_ordinary_receipts",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupRecoveryGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T06 focused production recovery and lifecycle acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_competing_finite_resources_laying_and_virtual_births_match_live_control",
+      "suite": "long",
+      "max_ticks": 8000,
+      "weight_ticks": 8000,
+      "source": "src/gametest/java/dev/primeants/gametest/CatchupLifecycleGameTest.java",
+      "reason": "T06 production lifecycle, bounded completion, frozen matched control or prospective cost sampling."
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_stage_grace_deadline_and_clock_reload_match_live_and_unknown_interruption",
+      "suite": "long",
+      "max_ticks": 8000,
+      "weight_ticks": 8000,
+      "source": "src/gametest/java/dev/primeants/gametest/CatchupLifecycleGameTest.java",
+      "reason": "T06 production lifecycle, bounded completion, frozen matched control or prospective cost sampling."
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_eight_prospective_small_colony_cold_and_warm_samples",
+      "suite": "long",
+      "max_ticks": 8000,
+      "weight_ticks": 8000,
+      "source": "src/gametest/java/dev/primeants/gametest/CatchupLifecycleGameTest.java",
+      "reason": "T06 production lifecycle, bounded completion, frozen matched control or prospective cost sampling."
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_eight_prospective120adult_cold_and_warm_samples",
+      "suite": "long",
+      "max_ticks": 8000,
+      "weight_ticks": 8000,
+      "source": "src/gametest/java/dev/primeants/gametest/CatchupLifecycleGameTest.java",
+      "reason": "T06 production lifecycle, bounded completion, frozen matched control or prospective cost sampling."
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_ordinary_damage_and_temporary_cooldown_remain_on_existing_damage_path",
+      "suite": "long",
+      "max_ticks": 8000,
+      "weight_ticks": 8000,
+      "source": "src/gametest/java/dev/primeants/gametest/CatchupLifecycleGameTest.java",
+      "reason": "T06 production lifecycle, bounded completion, frozen matched control or prospective cost sampling."
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_laying_identity_refusal_preserves_exact_queen_and_food_receipts",
+      "suite": "long",
+      "max_ticks": 8000,
+      "weight_ticks": 8000,
+      "source": "src/gametest/java/dev/primeants/gametest/CatchupLifecycleGameTest.java",
+      "reason": "T06 production lifecycle, bounded completion, frozen matched control or prospective cost sampling."
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_newly_laid_brood_emerges_at_virtual_birth_and_ages_through_remaining_interval",
+      "suite": "long",
+      "max_ticks": 8000,
+      "weight_ticks": 8000,
+      "source": "src/gametest/java/dev/primeants/gametest/CatchupLifecycleGameTest.java",
+      "reason": "T06 production lifecycle, bounded completion, frozen matched control or prospective cost sampling."
+    },
+    {
       "name": "prime_ants_test:founder_access_priority_game_test_physical_clay_delivery_before_hall_upgrade_cannot_terminally_lose_the_finite_access_pair",
       "max_ticks": 12000,
       "source": "src\\gametest\\java\\dev\\primeants\\gametest\\FounderAccessPriorityGameTest.java",
@@ -2531,6 +2995,214 @@
       "suite": "long",
       "weight_ticks": 5400,
       "reason": "Independent T06 physically funded hall witness / matched protein availability control; original hall acceptance separate"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_finite_resources_without_initial_adult_demand_match_frozen_live_control",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T07 frozen physiology, actual nonzero reconstruction and production aggregate refusal/service replay acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_automatic_aggregate_laying_conflict_refuses_before_investment_and_replays_exactly",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T07 frozen physiology, actual nonzero reconstruction and production aggregate refusal/service replay acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_owned_nonzero_material_store_deserializes_before_automatic_catchup_and_capacity_loss",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T07 frozen physiology, actual nonzero reconstruction and production aggregate refusal/service replay acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_physical_cargo_actor_first_reload_unknown_and_older_replay_keep_exact_custody",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T07 frozen physiology, actual nonzero reconstruction and production aggregate refusal/service replay acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_physical_cargo_nursery_first_reload_unknown_and_older_replay_keep_exact_custody",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T07 frozen physiology, actual nonzero reconstruction and production aggregate refusal/service replay acceptance"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_exact_four_unit_live_control_settles_existing_egg_emergence",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T08 exact live allocation adjudication or independent scheduling recovery; complete permanent acceptance required"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_aggregate_distribution_preserves_ordinary_crop_controller_state",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T08 exact live allocation adjudication or independent scheduling recovery; complete permanent acceptance required"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_matched_finite_cache_live_control_uses_only_ordinary_production_hooks",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 matched finite live control or deterministic retained-failure state reproducer; ordinary production hooks and exact conservation/replay"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_finite_cache_nurses_first_registry_order_matches_identical_live_input",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 matched finite live control or deterministic retained-failure state reproducer; ordinary production hooks and exact conservation/replay"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_unknown_restoration_with_physical_nurse_cargo_keeps_food_clock_at_observation_end",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T01 matched finite live control or deterministic retained-failure state reproducer; ordinary production hooks and exact conservation/replay"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_native_server_cadence_agrees_with_ordinary_reference_across_search_boundaries",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T02 genuine server cadence calibration against the native ordinary reference lifecycle across three search boundaries"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_captured971finite_configuration_matches_live",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "Captured T02 portable saved donor configuration; matched native live and aggregate inputs"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_captured971nurses_first_configuration_matches_live",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "Captured T02 portable saved donor configuration; matched native live and aggregate inputs"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_captured1500finite_configuration_matches_live",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "Captured T02 portable saved donor configuration; matched native live and aggregate inputs"
+    },
+    {
+      "name": "prime_ants_test:automatic_catchup_game_test_captured1500nurses_first_configuration_matches_live",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\AutomaticCatchupGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "Captured T02 portable saved donor configuration; matched native live and aggregate inputs"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_legacy_aggregate_intentions_are_dropped_without_receipts",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "Focused aggregate contact/search persistence and endpoint resource eligibility; synthetic saved scheduling state"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_fixed_distribution_funds_only_confirmed_missing_biology_and_replays_exactly",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "Focused aggregate contact/search persistence and endpoint resource eligibility; synthetic saved scheduling state"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_fixed_distribution_uses_hunger_then_stable_identity_and_larval_protein_priority",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "Fixed aggregate distribution ownership, priorities and compatibility"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_fixed_distribution_defers_unknown_foreign_cache_and_unreachable_cargo",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "Fixed aggregate distribution ownership, priorities and compatibility"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_native_caregiver_complete_cycle_calibration_with_adult_demand",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T04 native caregiver calibration and aggregate acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_native_caregiver_complete_cycle_calibration_without_adult_demand",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T04 native caregiver calibration and aggregate acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_zero_caregivers_earn_no_brood_service",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T04 home-domain and measured service capacity acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_one_caregiver_earns_one_service_after_measured_interval_across_reload",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T04 home-domain and measured service capacity acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_two_caregivers_earn_two_services_after_measured_interval_across_reload",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T04 home-domain and measured service capacity acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_home_domain_feeds_callow_defender_beyond_contact_and_excludes_outside_foreign_disabled",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "T04 home-domain and measured service capacity acceptance"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_brood_nectar_v2observer_outcome_counts_one_v2and_zero_v1",
+      "max_ticks": 8000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 8000,
+      "reason": "Catchup5 observer-to-outcome nectar attribution regression with one real brood v2 receipt and zero v1 receipts"
     },
     {
       "name": "prime_ants_test:established_generation_game_test_young_generation_has_live_nest_movement_service_and_settled_readback",
@@ -2627,6 +3299,22 @@
       "suite": "long",
       "weight_ticks": 6000,
       "reason": "Genuine generated raised exterior must retain canonical validated route through installation, normal decoding and ordinary service plus settlement"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_generated_initial_sugar_snapshots_advance_and_reload_without_inventing_receipts",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 20,
+      "reason": "Catchup-specific immutable generated-stock preview/spending/reconstruction regression; no physical receipt fabrication"
+    },
+    {
+      "name": "prime_ants_test:catchup_lifecycle_game_test_no_absence_observation_preserves_ordinary_opening_and_nurse_authorization",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\CatchupLifecycleGameTest.java",
+      "suite": "long",
+      "weight_ticks": 20,
+      "reason": "Catchup zero-debt observation must preserve master ordinary opening order, growth observation and nurse authorization"
     },
     {
       "name": "prime_ants_test:validation_index_game_test_same_tick_availability_writes_jobs_markers_and_saved_data_replacement_revalidate_actions",
