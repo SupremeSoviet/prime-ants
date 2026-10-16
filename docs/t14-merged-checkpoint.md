@@ -29,18 +29,30 @@ fresh test-scoped UUIDs change. Loads retain serialized UUIDs. Counters survive
 in-process reconstruction, preventing fresh identity reuse. Concurrent cases have
 disjoint namespaces; repeated colonies within a case receive distinct ordinals.
 
-The ordinary founding clutch has a per-queen sequence. Merged ordinary and catchup
-laying already use the same pure `prime_ants:egg:queen:loadedTick:slot` identity;
-this remains unchanged, including captured event-collision controls. Workers and
-custody retain their ordinary parent-derived identities. Different actual laying
-clocks remain different events, and are reported as physical trajectory divergence.
+The ordinary founding clutch has a per-queen sequence. The first implementation
+retained production's `prime_ants:egg:queen:loadedTick:slot` laying identity. Both
+fresh four-case executions passed their gameplay assertions, but real natural-birth
+sequences differed in F2, Mature and surface. That implementation is rejected for
+determinism; its evidence is retained in external `raw/t14-identity-comparison-v1.json`.
+
+Ordinary physical tests now use a per-queen successful-birth ordinal under the same
+namespace. Failed predictions do not advance it. A committed tick/slot replay map
+and the ordinal survive in-server nursery/entity reconstruction; loaded identities
+are retained. The dedicated adult/event-clock, catchup and reconciliation control
+classes retain the production event identity, including captured and deliberate
+collision controls. Workers and custody retain their ordinary parent-derived IDs.
+The effective prospective rule is external `raw/t14-determinism-plan-v2.json`.
 Original captured/serialized and generated seed/dimension/chunk authority IDs are
 retained. Test-only store release defaults are scoped; saved defaults still win.
 
+Identity context is thread-local. Explicit UUID assignment/load binds context
+without replacing loaded UUIDs; snapshot queries never grant another case ownership.
 The shared fixture worker view sorts by UUID text. GameTest due callbacks use
 registration order instead of object identity hashes. Neither change applies to
 production selection or ticking. Passive query-return observations retain actual
-production entity ordering and side-row/UUID comparator operands. Vanilla RNG,
+production entity ordering, actual min returns, claim changes and side-row/UUID
+comparator operands. The min observer preserves the original comparator and encounter
+order and invokes it once. Vanilla RNG,
 item velocity, navigation, chunk availability and server scheduling remain outside
 the identity contract; stable identities do not prove whole-world replay.
 

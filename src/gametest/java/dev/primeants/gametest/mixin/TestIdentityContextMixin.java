@@ -12,6 +12,7 @@ public abstract class TestIdentityContextMixin {
     @Inject(method="<init>",at=@At("RETURN")) private void orderedCallbacks(CallbackInfo ci){runAtTickTimeMap=new Object2LongLinkedOpenHashMap<>();}
     @Inject(method="tick",at=@At("HEAD")) private void enter(CallbackInfo ci){TestIdentities.enter((GameTestInfo)(Object)this);}
     @Inject(method="tick",at=@At("RETURN")) private void leave(CallbackInfo ci){var t=(GameTestInfo)(Object)this;if(t.hasStarted()&&!t.isDone()&&(t.getTick()<=1||t.getTick()%1000==0))TestIdentities.snapshot(t,"tick");TestIdentities.leave();}
+    @Inject(method="startTest",at=@At("HEAD")) private void begin(CallbackInfo ci){TestIdentities.lifecycle((GameTestInfo)(Object)this,"begin");}
     @Inject(method="startTest",at=@At("RETURN")) private void started(CallbackInfo ci){TestIdentities.lifecycle((GameTestInfo)(Object)this,"start");}
     @Inject(method="finish",at=@At("HEAD")) private void ended(CallbackInfo ci){TestIdentities.lifecycle((GameTestInfo)(Object)this,"finish");}
 }
