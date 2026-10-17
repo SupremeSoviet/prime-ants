@@ -95,3 +95,15 @@ nonexempt. T18 accepted current correctness without a causal repair. Performance
 limitations stay documented and outside this persistence gate. Version 0.2.0,
 clean-client acceptance, Survival screenshots, final EN/RU notes and GitHub publication
 remain release work.
+
+## Dated disposition, 2026-10-18 00:35 (stage1c T20)
+
+The owner qualifies the exact oversized-inventory **20,000-tick timeout** under the
+[documented policy](known-flaky-timeouts.md), superseding the nonexempt classification above.
+T19's sealed native results, exit1 and partial regression verdict are retained. The accepted
+default-speed natural-brood / simultaneous food-and-clay / two-fresh-process-reopen functional
+proof is carried forward unchanged. Exact actual-disk/first-decode comparisons and resumed
+ordinary service remain scoped to the exercised Young/Mature finite world and graceful shutdown.
+No causal repair, crash durability or broad modpack acceptance is inferred. T19's first cause
+remains UNKNOWN; catchup6 actor-order findings belong to that separate history. See the
+[current0.2.0 acceptance](release-0.2.0-acceptance.md).

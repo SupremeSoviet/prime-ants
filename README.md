@@ -29,16 +29,12 @@
 
 ---
 
-> **2026-10-11 — current status:** the published/tagged **0.1.0** release and gallery below remain historical release
-> material. `master` contains **unreleased partial Stage-1 work**: live colony stages, four chamber functions, physical
-> tier-two upgrades, supplied mining/material contributions and controlled Mature mound/arch completion. Great's
-> fortifications remain incomplete, with an unresolved deadline failure; complete Stage 1 and **0.2.0 are not accepted**.
-> See the [verified partial-delivery report](docs/stage-1-report.md).
-
-> **2026-10-17 — status correction:** unreleased `master` now has accepted controlled Great fortifications,
-> tier-three construction/effects and established Young/Mature generation. The older partial-delivery status above
-> records history. Persistence, clean-client acceptance, Survival screenshots and publication of **0.2.0** remain pending.
-> Performance is a documented limitation for 0.2.0; further performance work follows in a separate direction.
+> **2026-10-18 — 0.2.0 is unpublished:** versioning, final EN/RU note source and exact timeout policy are prepared,
+> but fresh complete T20 acceptance finds a new nonexempt miner-recovery **assertion**. Client acceptance,
+> current screenshots, tagging and publication are stopped at that gate. [Current acceptance](docs/release-0.2.0-acceptance.md) ·
+> [Blocker](docs/t20-release-blocker.md) · [Prepared EN/RU notes](docs/release-0.2.0.md).
+> Published 0.1.0 and the gallery below remain historical. The bounded T19 functional persistence proof is retained;
+> performance remains a known limitation.
 
 ## 🐜 What is this?
 
@@ -63,10 +59,15 @@ to raise a replacement.
 | 📈 **Growth that follows food** | a colony grows only as fast as food comes in; ants age, starve and die |
 | 🛡️ **They defend their home** | hurt an ant or break the nest, and nearby workers will bite |
 | 🔦 **You can visit** | walk down the stairs, light a chamber with a torch and watch the nursery |
+| 🏰 **Established nests** | Young and Mature colonies can appear in newly generated suitable terrain |
+| 🧱 **Colony development** | four chamber functions, physical upgrades through tier three and Great fortifications |
+| 💾 **Resuming after loading** | bounded automatic catch-up; persistence coverage is scoped in the release notes |
 
 > 🕰️ One in-game day is roughly one month in the life of a colony.
 
 ## 🖼️ Gallery
+
+**Historical 0.1.0 captures; current 0.2.0 images are not accepted yet.**
 
 | | |
 |:---:|:---:|
@@ -100,23 +101,28 @@ model revision.</sub>
 
 ## ⚠️ Good to know
 
-This is an **early release (0.1.0)**:
+**Unreleased 0.2.0 candidate: release acceptance is blocked by the fresh assertion above.**
 
-- one species so far, and only young colonies;
-- no nuptial flights, mature colonies at world generation or offline catch-up yet;
-- a colony can stall in awkward terrain or when food runs short;
-- long play sessions and multiplayer have barely been tested, so back up your worlds.
+- One species, *Lasius niger*. Established Young/Mature generation and automatic catch-up are implemented;
+  nuptial flights and active fruit harvesting remain future work.
+- Great fortifications and physical tier-three upgrades have controlled acceptance. This does not establish
+  a complete unattended player growth campaign.
+- Two fresh-process reopens of a finite Young/Mature world prove exact graceful persistence and resumed
+  ordinary service. They do not establish crash durability or broad modpack compatibility.
+- Terrain, food shortages and crowding can stall a colony. Long sessions and multiplayer have limited coverage;
+  back up your worlds.
 
-The full, honest list is in the [detailed release notes](docs/release-0.1.0-details.md) and the [technical report](docs/slice-1-report.md).
-
-On unreleased `master`, several simultaneously loaded Great colonies can cause substantial lag. Controlled T16
-development-server measurements found about **19 TPS** for one Great colony with **120 adults** (mean **52 ms**,
-p95 approximately **66 ms**), and about **6.7 TPS** for three loaded Great colonies with **360 adults** (mean **149 ms**,
-p95 approximately **216 ms**). These are measurements on a Ryzen 7 7700, Windows 11 Pro build 26200, about 95.1 GiB RAM,
-Temurin 25.0.3+9/G1 and a 3 GiB server heap, with Minecraft 26.3 and the documented Fabric development runtime.
-They are not universal hardware guarantees. The original mean 40 ms / p95 50 ms budgets failed; no performance pass
-is claimed. See the [conditions and retained negative results](docs/t16-cap-performance.md) and
-[draft 0.2.0 notes](docs/release-0.2.0-draft.md). Persistence and release acceptance remain pending.
+Several loaded Great colonies can cause substantial lag. T16 measured one colony with **120 adults:
+about 19 TPS; mean 52 ms; p95 approximately 66 ms**. Three colonies with **360 adults:
+about 6.7 TPS; mean 149 ms; p95 approximately 216 ms**.
+The controlled development server ran on a Ryzen 7 7700 (8 cores/16 threads), Windows 11 Pro build 26200,
+approximately 95.1 GiB RAM, Temurin 25.0.3+9/G1 and a 3 GiB heap; Minecraft 26.3, Loader 0.19.5,
+Fabric API 0.161.0+26.3 and Loom 1.18.2. Each supplied scene used 600 warm-up and 2,400 measured ticks,
+work/brood 1/1 and an ordinary 20 TPS request; shared-machine contention and test instrumentation remain included.
+These are server ticks, not client FPS or universal hardware guarantees. The mean 40 ms / p95 50 ms budgets failed.
+Performance remains a limitation outside the 0.2.0 gate; no new benchmark is claimed.
+See [T16 conditions](docs/t16-cap-performance.md), [final EN/RU notes](docs/release-0.2.0.md),
+[exact known-flaky timeouts](docs/known-flaky-timeouts.md) and [current acceptance](docs/release-0.2.0-acceptance.md).
 
 ## 🗺️ Roadmap
 
@@ -144,7 +150,7 @@ The separate every-turn fast suite and packaging can be run with:
 ```
 
 This checks the fast suite, not complete Stage-1 or release acceptance. Current branch jars still carry version
-**0.1.0** and are **unreleased master artifacts**, distinct from the previously accepted release jar linked above.
+**0.2.0** and are **unreleased candidate artifacts**, distinct from the previously accepted release jar linked above.
 
 ## 📚 More
 

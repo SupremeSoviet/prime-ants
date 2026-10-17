@@ -1,3 +1,13 @@
+> **T20 final release gate: BLOCKED.** A fresh complete miner named-unit recovery assertion is nonexempt;
+> its known 60,000-tick timeout qualification does not waive the 6,000-loaded-tick assertion.
+> [Actual current acceptance](release-0.2.0-acceptance.md) and [bounded diagnosis](t20-release-blocker.md).
+
+> **Current status —2026-10-18, T20:** this document retains historical checkpoints.
+> Great fortifications, worker-built tier three, established generation and T19's bounded graceful
+> persistence proof are delivered. The owner's00:35 oversized-timeout disposition supersedes
+> T19's earlier nonexempt classification only for that exact20,000-tick timeout.
+> [Current0.2.0 acceptance](release-0.2.0-acceptance.md) and [exact policy](known-flaky-timeouts.md) govern release.
+
 # Stage 1: verified partial delivery
 
 **Dated persistence addition, 2026-10-17 (stage1c T19):** the finite generated

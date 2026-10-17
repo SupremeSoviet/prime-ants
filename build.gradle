@@ -619,6 +619,12 @@ java {
     targetCompatibility = JavaVersion.VERSION_25
 }
 
+// Published source archives carry the same resolved mod identity as the runtime JAR.
+tasks.named('sourcesJar') {
+    inputs.property 'version', project.version
+    filesMatching('fabric.mod.json') { expand version: project.version }
+}
+
 test {
     useJUnitPlatform()
     failOnNoDiscoveredTests = true
