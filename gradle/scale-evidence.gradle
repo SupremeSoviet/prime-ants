@@ -1,6 +1,10 @@
 // Explicit development-only T10 runner. Historical restartServer settings are untouched.
 def scaleAttempt=providers.gradleProperty('primeAntsScaleAttempt').getOrElse('unset')
 def scalePhase=providers.gradleProperty('primeAntsScalePhase').getOrElse('probe')
+// This opt-in server must receive the same client-directory protection as GameTest servers.
+['deleteGameTestRunDir','acceptGameTestEula'].each { name ->
+    tasks.named(name) { onlyIf { !gradle.taskGraph.hasTask(':runColonyScaleServer') } }
+}
 loom.runs.register('colonyScaleServer') {
     server()
     sourceSet.set('gametest')

@@ -84,3 +84,7 @@ Exact historical identities in the fresh T15 complete run (tested code `e2e42b4`
 - `prime_ants_test:lifecycle_game_test_environmental_chicken_loot_funds_new_worker_then_queen_death_ends_colony`: PASS.
 - `prime_ants_test:mature_colony_game_test_upgrade_counts_every_clay_unit_in_each_place_through_its_builder_death`: PASS.
 - `prime_ants_test:mining_game_test_mid_haul_disk_reload_resumes_then_miner_death_releases_one_unit_exactly_once`: PASS.
+
+### T16 actual Great/cap120 performance (2026-10-17)
+
+Actual Great/cap120 performance is a valid negative: one colony has mean 51.738 / p95 66.497 ms; three have mean 149.034 / p95 215.943 ms, against absolute mean 40 / p95 50 ms budgets. All 2,400 rows per scene and exact ticking populations are retained. Fresh scoped correctness passes 77 fast, 13 selected long, 124 unit and 26 model cases, without an exemption. See the [bounded cap checkpoint](t16-cap-performance.md) for supplied setup, failed-setup recovery, a separate profile with 360 adults and machine/workload limits. Production is unchanged; performance, persistence and release remain unaccepted.
