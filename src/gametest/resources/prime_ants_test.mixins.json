@@ -57,6 +57,7 @@
     "InitialHabitatConnectionMixin",
     "LegacyAdultShadowMixin",
     "GrowthObservationMixin",
+    "FounderReceiptMixin",
     "StageClockObservationMixin",
     "StageFoodObservationMixin",
     "TestIdentityContextMixin",

@@ -130,6 +130,7 @@ public final class SurfaceGameTest {
     public void suppliedFoundingToMatureRetainsItsSmallMoundAndWorkersBuildLargerCrestsAndAnOpenArch(GameTestHelper c){
         var fixture=new SurfaceFixture();var player=new TierTwoFixture(40,true,TierTwoFixture.FeedingProfile.EARLY_PHYSICAL_DEVELOPMENT);var q=fixture.founder(c);
         FounderAccessProbe.watch(c,q,60000);
+        FounderGrowthProbe.watch(c,q);
         var legacy=LegacyAdultShadow.watch(c,q.getUUID(),"original_supplied_surface_60000_tick_bound");
         long[] settled={-1},mature={-1};int[] youngPeak={-1};boolean[] snapshot={false};BlockPos[] protectedPlayer={null};var walking=new Walking();
         c.onEachTick(()->{

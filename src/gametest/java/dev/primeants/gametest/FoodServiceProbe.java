@@ -18,6 +18,8 @@ import net.minecraft.world.phys.Vec3;
 
 /** Scoped evidence only: observes existing actions, never selects a path or invokes a second decision. */
 public final class FoodServiceProbe {
+    /** Passive one-shot view, without registering callbacks or choosing service actions. */
+    public static Map<String,Object> passiveSnapshot(GameTestHelper c,LasiusNigerEntity q){return new FoodServiceProbe(c,q,60000,"t15_founder").snapshot();}
     private static final Map<UUID,FoodServiceProbe> ACTIVE=new HashMap<>();
     private static final Gson JSON=new Gson();
     private final GameTestHelper c;
