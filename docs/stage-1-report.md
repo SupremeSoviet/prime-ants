@@ -88,3 +88,7 @@ Exact historical identities in the fresh T15 complete run (tested code `e2e42b4`
 ### T16 actual Great/cap120 performance (2026-10-17)
 
 Actual Great/cap120 performance is a valid negative: one colony has mean 51.738 / p95 66.497 ms; three have mean 149.034 / p95 215.943 ms, against absolute mean 40 / p95 50 ms budgets. All 2,400 rows per scene and exact ticking populations are retained. Fresh scoped correctness passes 77 fast, 13 selected long, 124 unit and 26 model cases, without an exemption. See the [bounded cap checkpoint](t16-cap-performance.md) for supplied setup, failed-setup recovery, a separate profile with 360 adults and machine/workload limits. Production is unchanged; performance, persistence and release remain unaccepted.
+
+### T17 empty job lookup experiment (2026-10-17)
+
+The bounded candidate is withdrawn after a nonexempt lifecycle assertion and nursery-upgrade timeout. Complete unfiltered long acceptance is raw red: 307/309 passed, with actual root/Gradle/native exits `1 / 1 / [0, 0, 2]`. Fresh candidate and restored fast each pass 77 server / 124 unit / 26 model. Matched 360-adult allocation evidence supports the empty-map mechanism but accepts no cap budget. All four final timing scenes are safety-blocked; T16 negatives remain historical. Two consecutive no-new-green performance turns require owner stop. See the [rejected checkpoint](t17-job-lookups.md). Production is restored; persistence and release 0.2.0 remain outstanding.

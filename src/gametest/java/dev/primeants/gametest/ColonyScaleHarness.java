@@ -48,6 +48,7 @@ public final class ColonyScaleHarness implements ModInitializer {
     private final List<long[]> ages=new ArrayList<>();
     private final List<long[]> liveStages=new ArrayList<>();
     private final List<long[]> workPhases=new ArrayList<>();
+    private final List<int[]> diagnosticJobMapSizes=new ArrayList<>();
     private jdk.jfr.Recording diagnosticRecording;
     private boolean initialized,done;
     private int ticks,loaded;
@@ -202,7 +203,13 @@ public final class ColonyScaleHarness implements ModInitializer {
         var phaseRow=new long[WorkerTasks.Phase.values().length];for(var a:ants)phaseRow[a.workerTasks().phase().ordinal()]++;
         long entities=0;for(var a:level.getAllEntities())entities++;int refused=0;for(var id:owners){var q=(LasiusNigerEntity)level.getEntity(id);var pile=(BroodPile)level.getBlockEntity(q.founding().plan().nursery());if(pile.condition().contains("capacity"))refused++;if(declaration.has("controlledGreat")&&declaration.get("controlledGreat").getAsBoolean())require(pile.stageEvaluation()!=null&&pile.stageEvaluation().stage()==ColonyStage.GREAT&&pile.stageEvaluation().cap()==120,"Every measured row requires the real live Great cap120");}
         long nativeNs=s.getTickTimesNanos()[s.getTickCount()%100];long end=System.nanoTime();rows.add(new long[]{s.getTickCount(),level.getGameTime(),nativeNs,end,end-observer,ants.size(),level.getChunkSource().getLoadedChunksCount(),entities,moved,search,hauling,nursing,consumed,refused});ages.add(age);liveStages.add(stageRow);workPhases.add(phaseRow);
+        // Diagnostic pair only: observe the current canonical tables after the timing boundary.
+        // No lookup result, job or SavedData instance is retained between observations.
+        if(declaration.has("diagnosticProfile"))diagnosticJobMapSizes.add(new int[]{
+            NestExpansion.CODEC.encodeStart(JsonOps.INSTANCE,NestExpansion.get(level)).getOrThrow().getAsJsonObject().size(),
+            Mining.CODEC.encodeStart(JsonOps.INSTANCE,Mining.get(level)).getOrThrow().getAsJsonObject().size()});
         int sampleCount=declaration.has("diagnosticProfile")?600:2400;
+        if(declaration.has("diagnosticProfile")&&rows.size()==sampleCount){var maps=new JsonObject();maps.add("columns",JSON.toJsonTree(List.of("NestExpansion","Mining")));maps.add("rows",JSON.toJsonTree(diagnosticJobMapSizes));write(phase+"-job-map-sizes",maps);}
         if(rows.size()==sampleCount){if(diagnosticRecording!=null){try{diagnosticRecording.stop();diagnosticRecording.dump(evidence.resolve("cap-diagnostic.jfr"));diagnosticRecording.close();}catch(Exception ex){throw new IllegalStateException("Bounded JFR dump",ex);}}var j=runtime(s);j.add("columns",JSON.toJsonTree(List.of("tick","gameTime","nativeNs","endNs","observerNs","adults","loadedChunks","entities","moving","searching","carrying","nursing","consumed","capRefusingColonies")));j.add("rows",JSON.toJsonTree(rows));j.add("ages",JSON.toJsonTree(ages));j.add("ageIdentityOrder",JSON.toJsonTree(expected));j.add("stageOwnerOrder",JSON.toJsonTree(owners));j.add("liveStages",JSON.toJsonTree(liveStages));j.add("stageColumnsPerOwner",JSON.toJsonTree(List.of("loadedTicks","normalEvaluatedAt","stageOrdinal","cap","knownAdults")));j.add("workPhaseOrder",JSON.toJsonTree(WorkerTasks.Phase.values()));j.add("workPhases",JSON.toJsonTree(workPhases));write(phase+"-samples",j);if(declaration.has("controlledGreat"))physicalBoundary(s,"end");finish(s);}
     }
     private void control(MinecraftServer s){

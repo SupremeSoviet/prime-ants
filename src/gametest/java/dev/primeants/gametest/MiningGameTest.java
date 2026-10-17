@@ -113,10 +113,12 @@ public final class MiningGameTest {
     @GameTest(maxTicks=60000,structure="prime_ants_test:idle_ground")
     public void unavailableTargetAndStoreForeignOwnershipAndSameStateReplacementRetainExactCargo(GameTestHelper c){
         var player=new TierTwoFixture(40,true);var q=player.fx.start(c);boolean[] seeded={false};int[] step={0},evals={0},baseline={0};long[] since={-1},settled={-1};
+        var lookup=new JobLookupTransition();lookup.mining(c,c.getLevel(),q.getUUID());
         UnavailableCells[] hidden={null};ColonyDevelopment.Evaluation[] seen={null};ItemStack[] kept={null};net.minecraft.nbt.CompoundTag[] originalStore={null};BlockPos[] replaced={null};
         TierTwoFixture.DamagePause[] damagePause={null};
         c.onEachTick(()->{
             var l=c.getLevel();var plan=q.founding().plan();if(plan!=null&&!seeded[0]){geology(c,q);seeded[0]=true;}
+            lookup.mining(c,l,q.getUUID());
             feedMining(c,player,q);player.ledgers(c,q,step[0]==5?damagePause[0]:null);miningLedger(c,player,q);traceMining(c,player,q,"AVAILABILITY");
             // Once replacement stops the plan, its empty claim is expected to clear. Continue the full negative
             // observation and settlement with no worker; requiring a claim here skipped the phase completion.
@@ -127,6 +129,13 @@ public final class MiningGameTest {
                 case 0->{
                     if(j.removed()!=2||j.deposited!=2||w==null||!w.workerTasks().reason().equals("physical_mining_action")||w.workerTasks().harvestingTicks()<1)return;
                     var target=j.tasks.get(2);c.assertTrue(q.founding().ready()&&Mining.unlocked(l,plan)&&j.compatible(l,q.getUUID(),target,j.expected.get(2))&&MaterialStore.confirmed(l,q.getUUID(),plan)!=null,"The claimed worker is actually acting at a positively authorized exposed supported resource before the unavailable intervention");
+                    var previous=Mining.get(l);var encoded=Mining.CODEC.encodeStart(JsonOps.INSTANCE,previous).getOrThrow();
+                    c.assertTrue(DigJob.claimedBy(l,w)==j,"Current mining job owns the actual acting worker before replacement");
+                    var empty=new Mining();l.getDataStorage().set(Mining.TYPE,empty);
+                    c.assertTrue(Mining.get(l)==empty&&empty.job(q.getUUID())==null&&DigJob.claimedBy(l,w)==null&&previous.job(q.getUUID())==j,"Current empty replacement immediately refuses the real mining action claim; obsolete instance stays obsolete");
+                    var restored=Mining.CODEC.parse(JsonOps.INSTANCE,encoded).getOrThrow();l.getDataStorage().set(Mining.TYPE,restored);
+                    c.assertTrue(Mining.get(l)==restored&&restored.job(q.getUUID())!=j&&DigJob.claimedBy(l,w)==restored.job(q.getUUID())&&encoded.equals(Mining.CODEC.encodeStart(JsonOps.INSTANCE,restored).getOrThrow()),"Decoded current replacement immediately restores the exact ordinary claim and entire serialized mining ledger");
+                    PrimeAnts.LOGGER.info("T17 MINING REPLACEMENT owner={} worker={} tick={} refusedThenRestored=true obsoleteDidNotFollow=true",q.getUUID(),w.getUUID(),c.getTick());
                     hidden[0]=UnavailableCells.hide(c,target);baseline[0]=j.removed();since[0]=p.loadedTicks();step[0]=1;
                     PrimeAnts.LOGGER.info("T09 TARGET UNKNOWN START queen={} tick={} loaded={} removed={}",q.getUUID(),c.getTick(),since[0],baseline[0]);
                 }

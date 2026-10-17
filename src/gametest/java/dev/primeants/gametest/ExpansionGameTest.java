@@ -81,7 +81,9 @@ public final class ExpansionGameTest {
     public void automaticWorkerBuildsConnectedUsefulExtensionWithConservedSoil(GameTestHelper c){
         var q=f.start(c);boolean[] supplied={false},snapshot={false},cargo={false},column={false};int[] last={0};Map<BlockPos,BlockState> before=new HashMap<>();Set<UUID> initial=new HashSet<>();
         var trace=new ConstructionTrace();
+        var lookup=new JobLookupTransition();lookup.expansion(c,c.getLevel(),q.getUUID());
         c.onEachTick(()->{
+            lookup.expansion(c,c.getLevel(),q.getUUID());
             growth(c,q,supplied);balance(c,q);var p=q.founding().plan();if(p==null)return;var ws=f.workers(c,q);
             if(!snapshot[0]&&q.founding().lifecycle()==QueenFounding.Lifecycle.OPEN){snapshot[0]=true;ws.forEach(w->initial.add(w.getUUID()));for(int x=-7;x<=7;x++)for(int z=-7;z<=7;z++)for(int y=-4;y<=3;y++){var b=p.entrance().offset(x,y,z);before.put(b,c.getLevel().getBlockState(b));}}
             var j=NestExpansion.get(c.getLevel()).job(q.getUUID());if(j==null)return;
