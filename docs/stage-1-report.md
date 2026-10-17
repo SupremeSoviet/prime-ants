@@ -1,5 +1,29 @@
 # Stage 1: verified partial delivery
 
+**Current-status correction, 2026-10-17 (stage1c T18):** the partial-delivery statements below retain historical
+scope. Controlled Great construction, tier-three effects and established Young/Mature generation have since
+passed accepted coverage. T16's actual Great/cap120 performance budgets failed. The owner's 15:01 UTC redirect
+makes that a documented 0.2.0 limitation and schedules further performance work separately. Persistence,
+clean-client acceptance, Survival screenshots, release notes and publication remain pending. The version is unchanged.
+
+### Additional exact known-flaky timeout, 2026-10-17
+
+`prime_ants_test:nursery_upgrade_game_test_young_colony_reaches_mature_by_real_play_then_rebuilds_its_nursery_in_packed_clay_and_its_brood_develops_faster`
+retains its **60,000-tick** bound. Complete-run **native XML** shows PASS in t11-final-long (682e807 plus frozen C4,
+later 18a875d), t11-final-long-c7 (18a875d), t13-owner-complete-1 (bd191a0), t13-revised-complete-1 (de2c202),
+t14-final-long-1 (227c13c) and t15-final-long-1 (e2e42b4); t17-final-long-1 (bc93cf8 plus rejected lookup candidate)
+times out at 60,000. T15 and T17's archived NurseryUpgradeGameTest source hash is identical:
+`22ba54952feca517cabfde5522cc4354e28ec2c13a5e94d7edfa77aefc58519c`.
+Earlier C4/C7 canonical-service revisions, the T13 miner feeding revision, and T14's merged catch-up,
+identity/birth-ordinal and nested-callback fixture revisions differ between contexts. None identifies this timeout's
+physical cause. Full native elements, hashes, tested revisions and archived fixture references are in external local
+`<turnloop>/directions/prime-ants-stage1c/turns/T18/raw/t18-nursery-timeout-history.json`.
+
+Under the owner's exact-identity policy, only this evidenced timeout is additionally qualified when every other
+test is green. It does not exempt assertions, corruption, crashes, another identity or the nursery family.
+All registrations and native failures/exits remain. An isolated pass alone did not qualify it, and no unchanged
+complete run was launched to manufacture qualification. The lifecycle assertion remains nonexempt.
+
 **Partial Stage-1 delivery; Great remains valid-red with unresolved cause; release 0.2.0 is not accepted.**
 The 0.1.0 physical engine supports useful parts of the first fantasy layer: live stages, functional chambers,
 physical tier-two work, supplied mining and contributions, and completed Mature surface structures in controlled
@@ -92,3 +116,10 @@ Actual Great/cap120 performance is a valid negative: one colony has mean 51.738 
 ### T17 empty job lookup experiment (2026-10-17)
 
 The bounded candidate is withdrawn after a nonexempt lifecycle assertion and nursery-upgrade timeout. Complete unfiltered long acceptance is raw red: 307/309 passed, with actual root/Gradle/native exits `1 / 1 / [0, 0, 2]`. Fresh candidate and restored fast each pass 77 server / 124 unit / 26 model. Matched 360-adult allocation evidence supports the empty-map mechanism but accepts no cap budget. All four final timing scenes are safety-blocked; T16 negatives remain historical. Two consecutive no-new-green performance turns require owner stop. See the [rejected checkpoint](t17-job-lookups.md). Production is restored; persistence and release 0.2.0 remain outstanding.
+
+
+### T18 current release-correctness checkpoint (2026-10-17)
+
+Current correctness: **ACCEPTED_CURRENT_CORRECTNESS**; raw complete suite **green**. Fresh 77 fast + 309 unfiltered long server identities, 124 unit / 26 model; exact native/merged XML. Lifecycle passes: **True**. Qualified timeouts 0; nonexempt results 0. No behavioral repair was supported or applied. The unchanged original diagnostic is an unrepaired physical birth/queen-death/extinction positive, not attribution to restoration. See the [current checkpoint](t18-release-correctness.md).
+
+Persistence: first prove feasible default-speed Young brood preparation; require actual food AND material cargo with claims/tasks at the close boundary; then two fresh-process reopens with consistency and resumed physical service. Do not reuse crashed T10 preparation or its brood-empty reopen as acceptance. Performance remains a documented limitation; release/publication remain pending.

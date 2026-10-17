@@ -35,6 +35,11 @@
 > fortifications remain incomplete, with an unresolved deadline failure; complete Stage 1 and **0.2.0 are not accepted**.
 > See the [verified partial-delivery report](docs/stage-1-report.md).
 
+> **2026-10-17 — status correction:** unreleased `master` now has accepted controlled Great fortifications,
+> tier-three construction/effects and established Young/Mature generation. The older partial-delivery status above
+> records history. Persistence, clean-client acceptance, Survival screenshots and publication of **0.2.0** remain pending.
+> Performance is a documented limitation for 0.2.0; further performance work follows in a separate direction.
+
 ## 🐜 What is this?
 
 Prime Ants fills your world with wild colonies of the black garden ant, *Lasius niger*.
@@ -104,14 +109,19 @@ This is an **early release (0.1.0)**:
 
 The full, honest list is in the [detailed release notes](docs/release-0.1.0-details.md) and the [technical report](docs/slice-1-report.md).
 
-Development on `master` also lacks tier-three construction/effects, established Young/Mature world generation,
-120-adult/multiple-colony performance, broad persistence and fresh Stage-1 clean-client/Survival screenshot acceptance.
-The configured 120-adult cap is not a demonstrated colony or performance result.
+On unreleased `master`, several simultaneously loaded Great colonies can cause substantial lag. Controlled T16
+development-server measurements found about **19 TPS** for one Great colony with **120 adults** (mean **52 ms**,
+p95 approximately **66 ms**), and about **6.7 TPS** for three loaded Great colonies with **360 adults** (mean **149 ms**,
+p95 approximately **216 ms**). These are measurements on a Ryzen 7 7700, Windows 11 Pro build 26200, about 95.1 GiB RAM,
+Temurin 25.0.3+9/G1 and a 3 GiB server heap, with Minecraft 26.3 and the documented Fabric development runtime.
+They are not universal hardware guarantees. The original mean 40 ms / p95 50 ms budgets failed; no performance pass
+is claimed. See the [conditions and retained negative results](docs/t16-cap-performance.md) and
+[draft 0.2.0 notes](docs/release-0.2.0-draft.md). Persistence and release acceptance remain pending.
 
 ## 🗺️ Roadmap
 
 - 🪽 nuptial flights, with young queens founding new colonies nearby
-- 🏰 mature colonies with large nests at world generation
+- 🏰 established Young/Mature nests at world generation — accepted on unreleased `master`, pending 0.2.0
 - 🌿 aphid herding and honeydew
 - ⚔️ border fights and wars between colonies
 - 📓 a field journal for your observations
@@ -125,8 +135,9 @@ The configured 120-adult cap is not a demonstrated colony or performance result.
 
 You need JDK 25. The jar ends up in `build/libs/`, and the build also runs the unit, model and in-game server tests.
 
-Complete build acceptance on current `master` is **red because of Great's unchanged 12,000-tick timeout**. The separate
-every-turn fast suite and packaging can be run with:
+The old Great timeout is retained in the historical report; Great later passed controlled acceptance.
+The current release-correctness checkpoint is recorded in the [Stage-1 report](docs/stage-1-report.md).
+The separate every-turn fast suite and packaging can be run with:
 
 ```bash
 ./gradlew checkFast assemble --console=plain --rerun-tasks

@@ -31,6 +31,7 @@ public final class LifecycleGameTest {
         var q=start(c,7000,3500,5);boolean[] supplied={false},sugarProvided={false},killed={false},finished={false},lootClosed={false};var original=new HashSet<UUID>();var all=new HashSet<UUID>();var loot=new HashMap<UUID,ItemStack>();
         var observedWorld=new HashMap<UUID,ItemEntity>();var expired=new HashMap<UUID,Integer>();
         var mobs=new ArrayList<net.minecraft.world.entity.animal.chicken.Chicken>();var hazards=new ArrayList<net.minecraft.core.BlockPos>();
+        String[] observed={""};
         c.onEachTick(()->{
             if(finished[0])return;
             var p=q.founding().plan();var b=pile(c,q);var ws=f.workers(c,q);if(p==null||b==null)return;ws.forEach(w->all.add(w.getUUID()));
@@ -62,9 +63,15 @@ public final class LifecycleGameTest {
             long carriedRaw=ws.stream().filter(w->w.getMainHandItem().is(Items.CHICKEN)).mapToInt(w->w.getMainHandItem().getCount()).sum();
             var cache=f.cache(c,q);long storedRaw=cache==null?0:cache.contents().stream().filter(s->s.is(Items.CHICKEN)).mapToInt(ItemStack::getCount).sum();
             long custodyRaw=TransferCustody.get(c.getLevel()).contents().stream().filter(t->t.stack().is(Items.CHICKEN)&&c.getBounds().inflate(8).contains(t.position())).mapToInt(t->t.stack().getCount()).sum();
+            String state=ColonyMembers.get(c.getLevel()).members(q.getUUID())+"|"+b.records().stream().map(r->r.id()+":"+r.stage()+":"+r.nutrition().consumedUnits()).toList()+"|"+q.nutrition().consumedUnits()+"|"+b.consumedChickens()+"|"+sugarProvided[0]+"|"+actual+":"+worldRaw+":"+carriedRaw+":"+storedRaw+":"+custodyRaw;
+            if(!state.equals(observed[0])||c.getTick()%200==0){
+                observed[0]=state;
+                observeWorldFood(c,q,b,ws,original,all,sugarProvided[0],mobs,actual,worldRaw,carriedRaw,storedRaw,custodyRaw,expired,"sequence");
+            }
             c.assertTrue(actual==worldRaw+carriedRaw+storedRaw+custodyRaw+q.nutrition().chickens()+b.consumedChickens()+expired.values().stream().mapToInt(Integer::intValue).sum(),"Actual environmental raw loot = world/cargo/cache/custody + terminal ingestion + witnessed vanilla expiry; releases are not new loot");
             if(!killed[0]&&ws.stream().anyMatch(w->!original.contains(w.getUUID()))){
                 killed[0]=true;var added=ws.stream().filter(w->!original.contains(w.getUUID())).findFirst().orElseThrow();
+                observeWorldFood(c,q,b,ws,original,all,sugarProvided[0],mobs,actual,worldRaw,carriedRaw,storedRaw,custodyRaw,expired,"assertion_callback");
                 c.assertTrue(sugarProvided[0]&&actual>0&&mobs.stream().allMatch(m->!m.isAlive())&&q.nutrition().chickens()>0&&b.consumedChickens()>0&&b.consumed().contains(added.broodId())&&!b.original().contains(added.broodId())&&b.records().isEmpty(),"Actual environmental raw chicken protein funds unique additional worker; all live brood completed within five-adult cap");
                 q.hurtServer(c.getLevel(),q.damageSources().genericKill(),1000);c.assertTrue(!q.isAlive(),"Normal queen death after world-food worker birth");
                 dev.primeants.PrimeAnts.LOGGER.info("T18 WORLD FOOD BIRTH queen={} mobs={} actualRawLoot={} controlledApples=6 originalWorkers={} additional={} brood={} adultCap=5 receiptsQueen={} receiptsBrood={}",q.getUUID(),mobs.stream().map(Entity::getUUID).toList(),actual,original,added.getUUID(),added.broodId(),q.nutrition().chickens(),b.consumedChickens());
@@ -75,6 +82,29 @@ public final class LifecycleGameTest {
                 c.runAfterDelay(30,()->{c.assertTrue(all.stream().allMatch(id->c.getLevel().getEntity(id)==null)&&c.getLevel().getEntity(q.getUUID())==null&&b.records().isEmpty(),"Normal body removal yields true bounded controlled extinction");dev.primeants.PrimeAnts.LOGGER.info("T18 WORLD FOOD EXTINCTION queen={} members={} living=0 dependentBrood=0 actualRawLoot={} witnessedExpiry={}",q.getUUID(),all,actual,expired);c.succeed();});
             }
         });
+    }
+    /** Read-only evidence at the real callback; terminal receipts are kept separate from current actors. */
+    private void observeWorldFood(GameTestHelper c,LasiusNigerEntity q,BroodPile b,List<LasiusNigerEntity> ws,
+            Set<UUID> original,Set<UUID> all,boolean sugar,List<net.minecraft.world.entity.animal.chicken.Chicken> mobs,
+            long actual,long world,long carried,long stored,long custody,Map<UUID,Integer> expired,String why){
+        var gson=new com.google.gson.Gson();var j=new com.google.gson.JsonObject();
+        j.addProperty("why",why);j.addProperty("helperTick",c.getTick());j.addProperty("gameTime",c.getLevel().getGameTime());j.addProperty("pileTick",b.loadedTicks());j.addProperty("queen",q.getUUID().toString());
+        j.addProperty("physicalSugarSupplied",sugar);j.addProperty("actualEnvironmentalLoot",actual);j.addProperty("allVanillaChickensDead",mobs.stream().allMatch(m->!m.isAlive()));
+        j.addProperty("worldRaw",world);j.addProperty("carriedRaw",carried);j.addProperty("storedRaw",stored);j.addProperty("custodyRaw",custody);j.add("witnessedExpiry",gson.toJsonTree(expired));
+        j.addProperty("queenChickenReceipts",q.nutrition().chickens());j.addProperty("broodChickenReceipts",b.consumedChickens());j.add("queenNutrition",gson.toJsonTree(q.nutrition().snapshot()));j.addProperty("queenAlive",q.isAlive());
+        j.add("originalWorkers",gson.toJsonTree(original));j.add("allWorkersEverObserved",gson.toJsonTree(all));
+        var members=ColonyMembers.get(c.getLevel());j.add("members",gson.toJsonTree(members.members(q.getUUID())));
+        j.addProperty("occupiedWorkers",members.occupied(q.getUUID()));j.addProperty("reservedBrood",b.records().size());j.addProperty("occupiedReservedIncludingQueen",members.occupied(q.getUUID())+b.records().size()+(q.isAlive()?1:0));j.addProperty("birthSelectedCap",b.adultCapacity());
+        j.addProperty("originalWorkersStillAlive",original.stream().filter(id->members.member(id)!=null&&!members.member(id).dead()).count());j.addProperty("liveBroodEmpty",b.records().isEmpty());
+        j.add("consumedBrood",gson.toJsonTree(b.consumed()));j.add("originalBrood",gson.toJsonTree(b.original()));j.add("expiredBrood",gson.toJsonTree(b.expired()));
+        var workers=new com.google.gson.JsonArray();for(var w:ws){
+            var a=new com.google.gson.JsonObject();a.addProperty("id",w.getUUID().toString());a.addProperty("brood",String.valueOf(w.broodId()));a.addProperty("additional",!original.contains(w.getUUID()));a.addProperty("canonical",c.getLevel().getEntity(w.getUUID())==w&&w.getUUID().equals(ColonyMembers.workerId(w.broodId())));a.addProperty("consumedLineage",b.consumed().contains(w.broodId()));a.addProperty("originalLineage",b.original().contains(w.broodId()));a.addProperty("age",w.elapsedAgeTicks());a.addProperty("health",w.getHealth());a.addProperty("phase",w.workerTasks().phase().name());a.addProperty("cargo",w.getMainHandItem().toString());a.add("life",gson.toJsonTree(w.adultLife().snapshot()));a.add("nutrition",gson.toJsonTree(w.nutrition().snapshot()));workers.add(a);
+        }j.add("currentWorkers",workers);
+        var records=new com.google.gson.JsonArray();for(var r:b.records()){
+            var a=new com.google.gson.JsonObject();a.addProperty("id",r.id().toString());a.addProperty("stage",r.stage().name());a.addProperty("progress",r.progress());a.addProperty("founding",r.founding());a.add("nutrition",gson.toJsonTree(r.nutrition().snapshot()));records.add(a);
+        }j.add("liveBrood",records);
+        var history=new com.google.gson.JsonObject();AdultHistory.get(c.getLevel()).records().forEach((id,row)->{if(all.contains(UUID.fromString(id))||id.equals(q.getUUID().toString()))history.add(id,com.google.gson.JsonParser.parseString(row));});j.add("terminalHistory",history);
+        dev.primeants.PrimeAnts.LOGGER.info("T18 LIFECYCLE OBS {}",j);
     }
     @GameTest(maxTicks=22000,structure="prime_ants_test:idle_ground")
     public void restoredProteinCarrierStarvesReleasesCargoAndKeepsDeathReceipts(GameTestHelper c){carrier(c,false);}
