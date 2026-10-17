@@ -1,5 +1,15 @@
 # Stage 1: verified partial delivery
 
+**Dated persistence addition, 2026-10-17 (stage1c T19):** the finite generated
+Young/Mature world now has a nonempty normal save and two genuine process reopens,
+with exact first-decoded state, resumed physical food/material service and settled
+brood development. The [T19 persistence note](t19-functional-persistence.md) states
+the preserved preparation negative, source/observation distinctions and actual scope.
+This addition leaves the historical evidence below intact. Release/client/publication
+work remains pending; performance limitations remain visible. Fresh T19 fast checks
+pass, but one required selected long inventory case times out and remains nonexempt;
+the T19 turn is partial despite its positive functional persistence proof.
+
 **Current-status correction, 2026-10-17 (stage1c T18):** the partial-delivery statements below retain historical
 scope. Controlled Great construction, tier-three effects and established Young/Mature generation have since
 passed accepted coverage. T16's actual Great/cap120 performance budgets failed. The owner's 15:01 UTC redirect

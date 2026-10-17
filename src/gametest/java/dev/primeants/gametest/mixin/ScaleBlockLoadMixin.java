@@ -11,5 +11,5 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(BlockEntity.class)
 public abstract class ScaleBlockLoadMixin {
     @Inject(method="loadStatic",at=@At("RETURN"))
-    private static void decoded(BlockPos pos,BlockState state,CompoundTag tag,HolderLookup.Provider registries,CallbackInfoReturnable<BlockEntity> cir){if(cir.getReturnValue()!=null)ColonyScaleHarness.decoded(cir.getReturnValue(),registries);}
+    private static void decoded(BlockPos pos,BlockState state,CompoundTag tag,HolderLookup.Provider registries,CallbackInfoReturnable<BlockEntity> cir){if(cir.getReturnValue()!=null){dev.primeants.gametest.PersistenceHarness.blockDecoded(cir.getReturnValue(),state,tag,registries);ColonyScaleHarness.decoded(cir.getReturnValue(),registries);}}
 }

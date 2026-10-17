@@ -58,11 +58,15 @@ public final class ColonyScaleHarness implements ModInitializer {
     private UUID controlBrood;
     private long controlProgress=-1,controlObserved;
     private boolean controlLateSupply;
+    private final YoungPersistenceControl t19Control=new YoungPersistenceControl();
     private ChunkPos youngSite;private UUID youngOwner;private boolean youngRegistered;
     private static final List<String> TABLES=List.of("founding.NaturalPlacement","founding.EstablishedNest","founding.NaturalSoil","founding.GenerationAir","founding.ColonyTerrain","founding.ColonyPlugs","founding.ChamberExcavation","worker.ColonyMembers","colony.ChamberRegistry","worker.AdultHistory","brood.BroodHistory","worker.TransferCustody","founding.NestExpansion","founding.ChamberUpgrade","founding.SurfaceWork","founding.Mining","worker.ColonyAlarm");
     @Override public void onInitialize(){
         if(phase.isEmpty())return;active=this;
         try{declaration=JsonParser.parseString(Files.readString(Path.of(System.getProperty("prime_ants.scaleDeclaration")))).getAsJsonObject();}catch(Exception ex){throw new IllegalStateException("Frozen declaration required",ex);}
+        if(declaration.has("t19Persistence")&&declaration.get("t19Persistence").getAsBoolean()){
+            new PersistenceHarness(phase,evidence,declaration).register();return;
+        }
         ticket=Registry.register(BuiltInRegistries.TICKET_TYPE,Identifier.fromNamespaceAndPath("prime_ants_test","t10_scale"),new TicketType(0,14));
         ServerEntityEvents.ENTITY_LOAD.register((a,l)->{if(reopen()&&a instanceof LasiusNigerEntity)firstActors.add(a.getUUID().toString(),actor(a,l));});
         ServerLifecycleEvents.SERVER_STARTED.register(s->{try{start(s);}catch(Throwable ex){fail(s,ex);}});
@@ -76,7 +80,7 @@ public final class ColonyScaleHarness implements ModInitializer {
     private static JsonElement actor(Entity a,ServerLevel l){var out=TagValueOutput.createWithContext(ProblemReporter.DISCARDING,l.registryAccess());require(a.save(out),"Actor save");return tag(out.buildResult());}
     private static void require(boolean b,String m){if(!b)throw new IllegalStateException(m);}
     private void write(String n,JsonElement j){try{Files.createDirectories(evidence);Files.writeString(evidence.resolve(n+".json"),JSON.toJson(j),StandardCharsets.UTF_8);}catch(Exception e){throw new RuntimeException(e);}}
-    private JsonObject process(MinecraftServer s){var j=new JsonObject();j.addProperty("pid",ProcessHandle.current().pid());j.addProperty("phase",phase);j.addProperty("tick",s.getTickCount());j.addProperty("gameTime",level==null?-1:level.getGameTime());j.addProperty("world",s.getWorldPath(LevelResource.ROOT).toAbsolutePath().normalize().toString());j.addProperty("java",System.getProperty("java.version"));j.addProperty("maxHeap",Runtime.getRuntime().maxMemory());j.add("jvmArgs",JSON.toJsonTree(java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));return j;}
+    private JsonObject process(MinecraftServer s){var j=new JsonObject();j.addProperty("pid",ProcessHandle.current().pid());j.addProperty("processStart",ProcessHandle.current().info().startInstant().orElseThrow().toString());j.addProperty("phase",phase);j.addProperty("tick",s.getTickCount());j.addProperty("gameTime",level==null?-1:level.getGameTime());j.addProperty("world",s.getWorldPath(LevelResource.ROOT).toAbsolutePath().normalize().toString());j.addProperty("java",System.getProperty("java.version"));j.addProperty("maxHeap",Runtime.getRuntime().maxMemory());j.add("jvmArgs",JSON.toJsonTree(java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));return j;}
     private void fail(MinecraftServer s,Throwable ex){done=true;var j=process(s);j.addProperty("failure",ex.toString());j.addProperty("harnessTicks",ticks);write(phase+"-failure",j);PrimeAnts.LOGGER.error("T10 scale failure",ex);s.halt(false);}
     private void hold(ChunkPos p){level.getChunkSource().addTicketWithRadius(ticket,p,4);level.getChunkSource().getChunk(p.x(),p.z(),ChunkStatus.FULL,true);}
     private void start(MinecraftServer s){
@@ -214,6 +218,11 @@ public final class ColonyScaleHarness implements ModInitializer {
     }
     private void control(MinecraftServer s){
         var q=(LasiusNigerEntity)level.getEntity(owners.getFirst());var pile=(BroodPile)level.getBlockEntity(q.founding().plan().nursery());
+        if(declaration.has("t19Control")&&declaration.get("t19Control").getAsBoolean()){
+            if(t19Control.observe(level,q,pile,ants(),loaded,declaration,
+                (item,units,name)->drop(q.founding().plan().outside(),item,units,name),this::write))finish(s);
+            return;
+        }
         require(declaration.has("controlBound"),"Prospective small-control bound required");
         if(loaded==5800){require(!controlLateSupply,"One finite scheduled physical food wave only");drop(q.founding().plan().outside(),Items.APPLE,8,"T11 finite control apples");drop(q.founding().plan().outside(),Items.CHICKEN,4,"T11 finite control chickens");controlLateSupply=true;}
         for(var b:pile.records())if(!b.founding()){
