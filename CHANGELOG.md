@@ -4,6 +4,15 @@ All notable changes to Prime Ants are listed here. Versions follow [Semantic Ver
 
 ## [Unreleased]
 
+### Added
+
+- Live shell validation regression covering solid dry, open, fluid and waterlogged blocks, fault order, unavailable
+  cells and repairs within the same tick.
+
+### Changed
+
+- Corrected benchmark descriptions to reflect shared-machine measurements and the limits of nursing-phase activity.
+
 ## [0.2.0] - 2026-10-18
 
 Colonies now grow past their first chambers: they move through four stages, dig and upgrade chambers, mine, build on

@@ -7,10 +7,10 @@ ticks, then check what the ants actually did.
 
 | Suite | What it covers | Size |
 |---|---|---:|
-| Unit tests | rules and calculations without a world (JUnit) | about 125 |
+| Unit tests | rules and calculations without a world (JUnit) | 124 |
 | Model tests | the ant model's geometry and textures | 26 |
-| Fast in-game tests | short GameTests: founding, food, nursing, defence, saving | about 80 |
-| Long in-game tests | whole stretches of colony life: growth, stages, chambers, mining, surface building, reloads | about 310 |
+| Fast in-game tests | short GameTests: founding, food, nursing, defence, saving | 77 |
+| Long in-game tests | whole stretches of colony life: growth, stages, chambers, mining, surface building, reloads | 311 |
 
 ## Running them
 
@@ -59,3 +59,15 @@ complete runs. Anything else blocks it:
 - a timeout in any other test.
 
 If one of these tests starts failing in a new way, it comes off this list and gets investigated.
+
+Only the exact outer timeout at the original tick limit qualifies. A focused pass or a pass with an extended limit
+does not replace the required pass in another complete run. The earlier lifecycle assertion remains unexplained;
+later passes do not establish its cause.
+
+A complete run also reached the full-store mining test's 60,000-tick outer limit and failed the miner death test's
+inner 6,000 nursery-loaded-tick recovery check. The full-store timeout is unlisted, and the inner assertion is a
+blocking failure even though that test's outer timeout is listed. Both causes remain unresolved.
+
+Live shell regressions compare the solid-and-dry predicate with separate world reads and cover waterlogged blocks,
+unavailable cells, fault order and repairs in the same tick. They complement the physical nursing, delivery and
+generated-colony tests, including pending legacy nursery initialization.

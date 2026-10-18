@@ -19,6 +19,63 @@ import net.minecraft.util.ProblemReporter;
 
 /** Successive synchronous queries must never share live authority, even within the same server tick. */
 public final class ValidationIndexGameTest {
+    @GameTest(maxTicks=2000)
+    public void liveShellPredicatesPreserveDrynessFaultOrderAndSameTickRepairs(GameTestHelper c){
+        var l=NaturalPlacementGameTest.level(c,"placement_soil");
+        var cp=NaturalPlacementGameTest.prepare(c,l,7800,ColonyStage.YOUNG);
+        c.onEachTick(()->{
+            if(!NaturalPlacementGameTest.status(l,cp).equals("PLACED"))return;
+            var q=EstablishedGenerationGameTest.queen(l,cp);var p=q.founding().plan();var owner=q.getUUID();
+            if(!q.founding().ready())return;
+            long tick=l.getGameTime();var generated=EstablishedNest.get(l);var initial=generated.initial(owner);
+            var wall=p.at(1,1,-1);var second=p.at(6,0,-1);
+            c.assertTrue(p.undergroundSurfaces().contains(wall)&&initial.shell().contains(wall)
+                &&initial.shell().contains(second),"Both live scans contain the representative shell cells");
+            var original=l.getBlockState(wall);var back=l.getBlockState(second);
+            var wet=Blocks.OAK_SLAB.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.SLAB_TYPE,net.minecraft.world.level.block.state.properties.SlabType.DOUBLE)
+                .setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED,true);
+            var states=List.of(Blocks.DIRT.defaultBlockState(),Blocks.STONE.defaultBlockState(),Blocks.AIR.defaultBlockState(),
+                Blocks.WATER.defaultBlockState(),Blocks.LAVA.defaultBlockState(),wet);
+            for(var state:states){
+                l.setBlock(wall,state,2);
+                var live=l.getBlockState(wall);
+                boolean twoRead=live.isSolidRender()&&l.getFluidState(wall).isEmpty();
+                var next=l.getBlockState(wall);boolean oneRead=next.isSolidRender()&&next.getFluidState().isEmpty();
+                c.assertTrue(live==state&&oneRead==twoRead,"Original two-read predicate equals the single live state: "+state);
+                c.assertTrue(twoRead==(state.is(Blocks.DIRT)||state.is(Blocks.STONE)),"Only the solid dry representatives pass: "+state);
+                if(state==wet)c.assertTrue(live.isSolidRender()&&!l.getFluidState(wall).isEmpty(),"Waterlogged full shell exercises the fluid branch after solid succeeds");
+                var own=new Findings();generated.findings(l,owner,own);
+                c.assertTrue(own.verdict()==(twoRead?Findings.Verdict.CLEAR:Findings.Verdict.DAMAGED)
+                    &&(twoRead||"generated_shell_open".equals(own.problem())),"Generated physical shell retains its fault: "+own.problem());
+                var nursery=p.nurseryFindings(l,owner,true);
+                c.assertTrue(nursery.verdict()==(twoRead?Findings.Verdict.CLEAR:Findings.Verdict.DAMAGED)
+                    &&(twoRead||"enclosure_shell_open".equals(nursery.problem())),"Underground physical shell retains its earlier fault: "+nursery.problem());
+                own.fault("caller_contamination");nursery.fault("caller_contamination");
+                l.setBlock(wall,original,2);
+                var fresh=new Findings();generated.findings(l,owner,fresh);
+                c.assertTrue(fresh.verdict()==Findings.Verdict.CLEAR&&p.nurseryFindings(l,owner,true).verdict()==Findings.Verdict.CLEAR,
+                    "Next same-tick query sees repair and owns independent Findings");
+            }
+            try(var hidden=UnavailableCells.hide(c,l,wall)){
+                var unknown=new Findings();generated.findings(l,owner,unknown);
+                c.assertTrue(unknown.verdict()==Findings.Verdict.UNKNOWN&&"generated_shell_unavailable".equals(unknown.problem())
+                    &&p.nurseryFindings(l,owner,true).verdict()==Findings.Verdict.UNKNOWN,"Unavailable shell remains UNKNOWN");
+                l.setBlock(second,Blocks.AIR.defaultBlockState(),2);
+                var damaged=new Findings();generated.findings(l,owner,damaged);
+                c.assertTrue(damaged.verdict()==Findings.Verdict.DAMAGED&&"generated_shell_open".equals(damaged.problem())
+                    &&"enclosure_shell_open".equals(p.nurseryFindings(l,owner,true).problem()),"Loaded later damage wins over the earlier unavailable shell");
+                var first=new Findings().fault("original_first_fault");generated.findings(l,owner,first);
+                c.assertTrue("original_first_fault".equals(first.problem()),"Generated scan preserves an earlier caller fault");
+                l.setBlock(second,back,2);
+                c.assertTrue(p.nurseryFindings(l,owner,true).verdict()==Findings.Verdict.UNKNOWN,"Loaded repair leaves unavailable terrain unknown");
+            }
+            c.assertTrue(p.nurseryFindings(l,owner,true).verdict()==Findings.Verdict.CLEAR&&q.founding().ready()
+                &&tick==l.getGameTime(),"All writes and repairs are visible within one tick and normal readiness resumes");
+            PrimeAnts.LOGGER.info("SHELL LIVE PREDICATES ACCEPTED states={} tick={} generatedFault=generated_shell_open nurseryFault=enclosure_shell_open",states.size(),tick);
+            c.succeed();
+        });
+    }
     @GameTest(maxTicks=6000)
     public void realDeliveryRechecksOwnershipAfterReadBoundaryWrite(GameTestHelper c){
         var l=NaturalPlacementGameTest.level(c,"placement_soil");var cp=NaturalPlacementGameTest.prepare(c,l,7500,ColonyStage.MATURE);

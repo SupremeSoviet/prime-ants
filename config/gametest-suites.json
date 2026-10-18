@@ -3347,6 +3347,14 @@
       "suite": "long",
       "weight_ticks": 18000,
       "reason": "T02 selector ordering, whole-food boundaries, live readiness and reconstruction after real founding"
+    },
+    {
+      "name": "prime_ants_test:validation_index_game_test_live_shell_predicates_preserve_dryness_fault_order_and_same_tick_repairs",
+      "max_ticks": 2000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\ValidationIndexGameTest.java",
+      "suite": "long",
+      "weight_ticks": 2000,
+      "reason": "Live physical shell predicates, first faults, unavailable cells and same-tick repair regression"
     }
   ]
 }

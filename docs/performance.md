@@ -17,10 +17,11 @@ At 20 TPS the server has 50 ms per tick for everything. A colony scene should le
 - Scenes: one Great colony (120 adults), three Great colonies (360 adults), and empty worlds as controls.
 - The game runs at normal speed and a normal 20 TPS, with a 3 GiB heap.
 - Times are for the whole server tick, not just the mod's code. Percentiles cover every measured tick.
-- In these scenes ants move, carry food and nurse brood. They do not forage, build or mine while being measured, so
-  real play can cost more.
-- Machine: AMD Ryzen 7 7700 (8 cores, 16 threads), 95 GB RAM, Windows 11, Temurin 25 with G1. Nothing else runs on the
-  machine during a measurement.
+- These scenes record movement, carried food and time spent in nursing phases. Phase occupancy alone does not prove
+  completed brood feeding. No foraging, building or mining activity was observed while measuring, so real play can
+  cost more.
+- Machine: AMD Ryzen 7 7700 (8 cores, 16 threads), 95 GB RAM, Windows 11, Temurin 25 with G1. The machine was shared;
+  unrelated processes were not stopped. Benchmark servers and builds ran sequentially during timing.
 
 The benchmark server task is `runColonyScaleServer` (see `gradle/scale-evidence.gradle` and
 `scripts/run-colony-scale.py`).
@@ -57,6 +58,9 @@ Profiling with Java Flight Recorder points at a few hot spots:
 
 ## What has been tried
 
+- **Reusing a live block state in adjacent shell checks** (2026-10-18). The source audit and focused physical,
+  ownership and readiness tests passed. Complete validation then hit an unlisted full-store mining timeout and the
+  miner's inner recovery assertion. The change was withdrawn before timing. Its tick-time effect remains unknown.
 - **Checking the queen's hunger first** (2026-10-18). When a nurse picks whom to feed, the idea was to ask whether the
   queen needs food before running the nursery readiness check. It was rejected: the readiness check also finishes
   loading a nursery saved by an older version of the mod and starts its saved clock, so skipping it could leave such a
