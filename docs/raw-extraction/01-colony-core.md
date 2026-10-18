@@ -651,7 +651,7 @@ Live-play reality:
 
 ### 6.3 Pacing — from my re-implementation, not the mod
 
-I re-implemented in Python the ET passes `ColonyEconomy`, `ColonyLogistics`, `CasteJobLoop`, `ColonyStageProgression`, `CasteBalancer`, `NativeBlockRole` and `ColonyBuilder`, including upgrades and endgame projects, following the Java logic line by line. It excludes recurring events, raids, diplomacy and caravans, entity deliveries and any player action. Script: scratchpad `colonysim.py`.
+I re-implemented in Python the ET passes `ColonyEconomy`, `ColonyLogistics`, `CasteJobLoop`, `ColonyStageProgression`, `CasteBalancer`, `NativeBlockRole` and `ColonyBuilder`, including upgrades and endgame projects, following the Java logic line by line. It excludes recurring events, raids, diplomacy and caravans, entity deliveries and any player action. Script: `colonysim.py`.
 
 It reproduces the hand-computed first second exactly. Exact seconds may still differ from the real mod, but the qualitative result follows directly from the code.
 
@@ -1029,7 +1029,7 @@ The comments call these "gametests", but they are plain JUnit tests on pure data
 
 ## 16. Design intent vs. reality
 
-Intent sources: `docs/content-intent/formic-content-intent.md:19-52`, `docs/roadmap.md`, `docs/mvp-architecture.md`, code comments ("Content pillar", "Content row …"). The comments show each system was added by an autonomous AI loop to satisfy one narrow acceptance row with a unit test (`docs/content-intent/content-feature-matrix.template.json`). That explains why mechanics are stacked instead of integrated.
+Intent sources: `docs/content-intent/formic-content-intent.md:19-52`, `docs/roadmap.md`, `docs/mvp-architecture.md`, code comments ("Content pillar", "Content row …"). The comments show each system was added separately to satisfy one narrow acceptance row with a unit test (`docs/content-intent/content-feature-matrix.template.json`). That explains why mechanics are stacked instead of integrated.
 
 | Intent | Reality |
 |---|---|

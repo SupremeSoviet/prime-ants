@@ -7,7 +7,7 @@ life density, and insect realism.
 
 ## Reference Slots
 
-Place the user-provided reference images here when binary attachments are
+Place the reference images here when they are
 available:
 
 - `reference-forest-foraging.png`: forest floor with realistic ants foraging
@@ -20,8 +20,8 @@ available:
 If these PNG files are missing, this Markdown file and
 `reference-manifest.json` are still the authoritative intent.
 
-Current status: the three PNG references are present locally and must be sent to
-the image-capable assessor before Minecraft screenshots.
+Current status: the three PNG references are present locally and must be
+reviewed before Minecraft screenshots.
 
 ## North Star
 
@@ -133,13 +133,13 @@ structures should use Formic Frontier's own blocks and textures wherever a
 material is part of the colony identity.
 
 Current acceptance: the material palette is good enough for the active world
-architecture loop. Mark the broad material-palette row as accepted by user. The
+architecture work. The broad material-palette row is accepted. The
 remaining asset task is narrow: redraw the visible "block with a hole" so it
 does not read as an unrelated honeycomb/placeholder surface.
 
 Texture resolution requirement: Formic Frontier's custom block and item
 textures should be authored at 32x32 pixels, not 16x16. Existing 16x16 Formic
-textures are visual debt. The architecture loop should not be interrupted for a
+textures are visual debt. The architecture work should not be interrupted for a
 mass texture migration, but the visual baseline cannot move to mechanics until
 the asset slice upgrades the custom texture set to 32x32 and the holey block is
 redrawn at 32x32.
@@ -198,8 +198,7 @@ requires a family resemblance to the reference intent:
 
 Mechanics and playability are no longer globally locked behind this baseline.
 They progress on the parallel content track (see
-`docs/content-intent/formic-content-intent.md` and
-`build/autonomous-loop/content-feature-matrix.json`), accepted by gametests via
-the content gate. The rule here is narrower: world-architecture *visual* changes
+`docs/content-intent/formic-content-intent.md`), accepted by gametests.
+The rule here is narrower: world-architecture *visual* changes
 are gated by this visual baseline, and content work must keep `test-mod` green
 and must not visually regress the existing QA scenes.

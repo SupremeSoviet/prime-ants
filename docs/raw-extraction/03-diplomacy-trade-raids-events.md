@@ -162,7 +162,7 @@ Observations:
   (shapeless recipe: honeycomb + chitin shard → 2 dust, `src/main/resources/data/formic_frontier/recipe/pheromone_dust.json`);
   Colony Seal (shaped: token + 2 dust + chitin plate + paper, `recipe/colony_seal.json`); War Banner (shaped: 2 chitin plate +
   3 red dye + black banner + stick, `recipe/war_banner.json`). Seal and banner can also be bought (2.2). Item crafting is
-  another agent's scope.
+  covered in extraction 04.
 
 ### 1.4 Player diplomacy flow (`ColonyService.performDiplomacy`) — [Partial]
 
@@ -390,7 +390,7 @@ No buy→sell arbitrage loop exists at any modifier level (checked for resin, fu
   buy offers, `:150-161`) → `Available`.
 - Research gates reference: Scented Ledger (MARKET, 160 duration, KNOWLEDGE 18 + RESIN 8), Treaty Sigils (DIPLOMACY_SHRINE, needs
   Scented Ledger, KNOWLEDGE 26 + FUNGUS 8 + RESIN 8), Fungus Symbiosis, Venom Drills, Mandible Plating, Resin Masonry
-  (`sim/ResearchNode.java:9-15`; research itself is another agent's scope). Lang: `formic_frontier.research.scented_ledger` "Scented
+  (`sim/ResearchNode.java:9-15`; research itself is covered in extraction 01). Lang: `formic_frontier.research.scented_ledger` "Scented
   Ledger" / "Пахучая книга", detail "Record exchange routes in durable pheromone trails." / "Хранит торговые пути в стойких феромонных
   следах."; `treaty_sigils` "Treaty Sigils" / "Знаки договора", detail "Shape colony scents into trusted diplomatic marks." /
   "Превращает запахи колонии в знаки доверия." (lang:146-149). Neither description mentions the actual effects (trade visibility +
@@ -439,7 +439,7 @@ Trade UI strings (lang:150-160):
 There is **no travelling caravan**. Three separate things carry the name, none of which moves over the terrain or can be
 intercepted: (a) an instant resource transfer every second, (b) a recurring event that instantly swaps resources and leaves a static
 camp with two standing ants, (c) the tribute-pact camp (1.5). Spawned carrier ants are not scripted to walk anywhere; afterwards the
-generic ant AI takes over (another agent's scope).
+generic ant AI takes over (see extraction 01).
 
 ### 3.1 Economy-pass caravan (`TradeCaravan.exchange`) — [Implemented] (it is really a one-way gift)
 
@@ -585,7 +585,7 @@ Loadout (`:63-106`):
   (early return), but not weapon research.
 - `weaponAttack` is added to `militaryStrength`; `armorDefense` is added to `defenseRating` (`world/RaidPlanner.java:430,443`).
 
-Actual items for players (cross-link, other agent): Mandible Saber `FormicWeaponItem(5.0f, false)`, durability 420; Venom Spear
+Actual items for players (cross-link, extraction 04): Mandible Saber `FormicWeaponItem(5.0f, false)`, durability 420; Venom Spear
 `FormicWeaponItem(4.0f, true)`, durability 360; chitin armour durability ×15, resin-chitin ×21
 (`src/main/java/com/formicfrontier/registry/ModItems.java:81-90`). They are obtainable by crafting and by trade (2.2) regardless of
 whether the colony owns an armory.
@@ -660,7 +660,7 @@ defense ≈ 2× attack); raid theft is the main consequence.
 5. Messages (below).
 6. Spawns **3 attacker SOLDIER entities** at defender origin + (2..4, 0, −2) — at the origin's Y, unlike other spawns that use +1 (possible embedding in terrain; unverified) (`:130-132`). They accumulate (3 per raid).
 
-What damage actually does (cross-link to buildings agent): a damaged building still counts as complete/functional. Next world pass
+What damage actually does (cross-link, extraction 02): a damaged building still counts as complete/functional. Next world pass
 `ColonyBuilder.repairDamagedBuilding` either consumes chitin (`max(4, chitinCost/2 + 2×level)`), drops the building to 55 % progress
 (now non-functional) and repairs `10 + 4×workers + culture bonus` per pass until 100 % (typically ~3 s), or, without chitin, opens a
 `repair <type>` contract and waits (`world/ColonyBuilder.java:18,83-160`). Meanwhile patrols tick `disabledTicks` down (180 → 45–180 s)

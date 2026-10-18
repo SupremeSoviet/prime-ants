@@ -1,33 +1,154 @@
-> Current 0.2.0 status and coverage: [T20 summary](release-0.2.0-acceptance.md). The T30/client/gallery references below are explicitly historical 0.1.0 evidence. Release 0.2.0 is blocked by a fresh nonexempt assertion.
-
 # Player guide / Руководство игрока
 
-The complete equivalent English and Russian player instructions are in the [release README](../README.md). Both cover installation, implemented colony life, discovery, founding delays, loaded-chunk progression, watching, entering, feeding, lighting, defense and limitations.
+[English](#english) · [Русский](#русский)
 
-Полные равноценные инструкции для игрока на английском и русском языках находятся в [README выпуска](../README.md). Оба раздела описывают установку, реализованную жизнь колонии, поиск, ожидание основания, развитие в загруженных чанках, наблюдение, вход, подкормку, освещение, защиту и ограничения.
+## English
 
-## English: practical reminders
+### Installing
 
-Use Minecraft Java 26.3, Java 25, Loader 0.19.5 and API 0.161.0+26.3. Install the runtime mod and API in the selected profile's `mods` folder. Natural founding is enabled in newly generated suitable plains, meadows and flower forests. Discovery near spawn and sustained growth at every site are not guaranteed.
+You need Minecraft Java Edition 26.3, Java 25, Fabric Loader 0.19.5 and Fabric API 0.161.0+26.3. Put the Prime Ants
+jar and Fabric API into the `mods` folder of your Fabric profile. For multiplayer, the server and every player need
+both. Back up existing worlds before adding the mod.
 
-At default speed, allow roughly thirty minutes of loaded play for the first brood after laying, plus founding and travel. Safe habitat, actual care and food matter. Singleplayer pause stops live progression. Automatic catch-up is bounded; the exercised graceful-save coverage and limits are in the [0.2.0 notes](release-0.2.0.md). Wait for workers to open the existing two-high stairs, give ants room, and preserve the enclosure and owned components.
+### Finding a colony
 
-Drop apples/sweet berries for sweetness and raw chicken/rotten flesh for protein near a trail, then immediately retreat at least four blocks. Food must be physically collected, delivered and nursed. Use supported wall torches in an opened room, keeping nursery/cache cells and work targets clear. An occupied future nursery is preserved and waits for explicit player removal.
+Colonies live in **plains, meadows and flower forests**, in newly generated terrain. You may find:
 
-Watching and feeding do not raise an alarm. Actual survival-player harm or breaking an owned component can provoke mature workers: half a heart per visible close bite, about one second cooldown, thirty loaded seconds of alarm, response within twelve blocks and pursuit limited to sixteen. Ordinary hostile mobs remain dangerous to observers.
+- a **founding queen** digging alone, or a small soil mound next to a stair entrance;
+- a **Young or Mature colony** with an established nest, a bigger mound and worker traffic.
 
-Only Lasius niger is implemented; Great fortifications and worker-built tier three have controlled coverage. Established Young/Mature generation is implemented; nuptial flights and active fruit harvesting are deferred. Terrain, food and crowding can stall colonies. Native Java/C2 reliability, long sessions and broader compatibility remain qualified; T30 passed fresh full acceptance and one ordinary clean-client fresh-world check of the delivered JAR, including advancing natural queens and normal saving/exit. This short check does not establish continuing sustainability or long-session stability.
+Terrain has to suit a nest (dry natural soil, enough support), so not every meadow has ants, and there may be none
+right at spawn.
 
-## Русский: краткие напоминания
+### How long things take
 
-Нужны Minecraft Java 26.3, Java 25, Loader 0.19.5 и API 0.161.0+26.3. Поместите основной JAR мода и API в папку `mods` выбранного профиля. Естественное основание включено на новых подходящих участках равнин, лугов и цветочных лесов. Обнаружение рядом с точкой появления и устойчивый рост на каждом участке не гарантированы.
+At normal speed each brood stage (egg, larva, cocoon) takes about ten minutes. A queen's first workers appear about
+half an hour after she lays her first eggs, plus the time she needs to dig. After that, the colony grows as fast as its
+food allows. It moves to a new stage when it has enough adults, the chambers it needs and enough supplies.
 
-На обычной скорости первому выводку нужно около тридцати минут загруженной игры после кладки, плюс основание и перемещения. Важны безопасная среда, настоящий уход и пища. Пауза останавливает живое развитие. Автоматическое догоняющее моделирование ограничено; область проверки штатных сохранений описана в [заметках0.2.0](release-0.2.0.md). Дождитесь открытия рабочими существующей лестницы высотой в два блока, пропускайте муравьёв и сохраняйте оболочку и принадлежащие колонии части гнезда.
+Colonies are fully alive only while their chunks are loaded. Pausing a singleplayer game stops them too. When you
+come back to an area, the colonies there catch up on the time you were away, in a simplified way.
 
-Бросайте возле тропы яблоки или сладкие ягоды для сладкого, сырую курятину или гнилую плоть для белка и сразу отходите хотя бы на четыре блока. Пищу должны действительно собрать, доставить и скормить. В открытой комнате ставьте факелы с опорой на стену; оставляйте свободными клетки яслей, склада и рабочих задач. Занятая клетка будущих яслей сохраняется и ждёт явного удаления препятствия игроком.
+### Feeding
 
-Наблюдение и подкормка не вызывают тревогу. Настоящий вред от игрока в выживании или разрушение принадлежащей колонии части гнезда может вызвать защиту зрелых рабочих: половина сердца за близкий укус при наличии видимости, примерно секунда между укусами, тридцать загруженных секунд тревоги, отклик в пределах двенадцати блоков и предел преследования шестнадцать. Обычные враждебные мобы остаются опасными для наблюдателя.
+Drop food near a trail, then step back at least four blocks so you don't pick it up again:
 
-Реализован один вид Lasius niger; укрепления великой колонии и третий уровень проверены в контролируемых условиях. Генерация молодых/зрелых колоний реализована; брачные лёты и активный сбор плодов отложены. Рельеф, пища и теснота могут остановить рост. Надёжность Java/C2, долгие сеансы и широкая совместимость остаются ограничениями; T30 прошёл свежую полную приёмку и одну проверку выдаваемого JAR в обычном чистом клиенте с новым миром, развивающимися естественными матками и нормальным сохранением и выходом. Короткая проверка не подтверждает дальнейшую жизнеспособность и устойчивость долгих сеансов.
+- **sugar**: apples or sweet berries;
+- **protein**: raw chicken or rotten flesh.
 
-[Current gallery / Текущая галерея](screenshots/t28-release.md) contains three accepted current views and a historical queen illustration labelled **T25 — previous model revision**; current queen visual acceptance remains incomplete. В галерее три принятых текущих вида и историческая иллюстрация матки с пометкой **T25 — предыдущая редакция модели**; визуальная приёмка нынешней матки остаётся незавершённой. [Technical report / Технический отчёт](slice-1-report.md).
+Foragers pick the food up and carry it home, and nurses pass it on to the queen and the larvae. Larvae need protein:
+sugar alone cannot raise them. Feeding helps a colony, but you can't give it orders.
+
+### Materials
+
+Once a colony has a material store, its foragers also carry home clay, stone, gravel, sand and ore that you drop near
+a trail, one item per trip. Colonies use these to upgrade chambers and build on the surface, and they depend on you
+for most of it:
+
+- A Young colony needs **16 clay balls** to become Mature, and it doesn't mine yet.
+- A Mature colony needs about **40 more clay balls** to rebuild its chambers in packed clay. It mines and builds on
+  the surface only after that.
+- Stone chambers need **smooth stone**. Cobblestone counts towards the Great stage but can't be used for the walls.
+
+### Visiting
+
+When the workers have opened the entrance, you can walk down the stairs, which are two blocks high. Give the ants room
+to pass.
+
+**Don't place torches or any other blocks inside the nest.** A block placed in a cell the ants dug takes that cell
+from the colony for good: the nest counts as damaged, and the colony stops raising brood. A potion of night vision
+lets you see inside. Damaging the walls or flooding the nest can also stop a colony from developing.
+
+### Defence
+
+Watching and feeding are always fine. If you hurt an ant or break part of the nest in Survival, the colony raises an
+alarm:
+
+- adult workers within twelve blocks come after you and bite when they can reach you;
+- each bite takes half a heart, about once per second;
+- the alarm lasts about thirty seconds, and the ants give up the chase beyond sixteen blocks.
+
+Back away and stop causing harm. Ordinary hostile mobs are still dangerous while you watch.
+
+### Limitations
+
+- One species, *Lasius niger*. Nuptial flights and fruit harvesting are not in yet.
+- Awkward terrain, food shortages and crowding can stall a colony. Damage to the nest is not always repaired.
+- A block placed inside a nest, even a torch, damages it for good. This is a known issue.
+- Large colonies are heavy on the server; see [performance](performance.md).
+- Long sessions and multiplayer have had limited testing.
+
+## Русский
+
+### Установка
+
+Нужны Minecraft Java Edition 26.3, Java 25, Fabric Loader 0.19.5 и Fabric API 0.161.0+26.3. Положите jar Prime Ants и
+Fabric API в папку `mods` вашего профиля Fabric. Для мультиплеера оба файла нужны и на сервере, и у каждого игрока.
+Перед установкой мода сделайте резервную копию существующих миров.
+
+### Где найти колонию
+
+Колонии живут на **равнинах, лугах и в цветочных лесах**, в новом рельефе. Можно встретить:
+
+- **матку-основательницу**, которая копает в одиночку, или маленький курган земли рядом со входом-лесенкой;
+- **молодую или зрелую колонию** с готовым гнездом, курганом побольше и движением рабочих.
+
+Для гнезда нужен подходящий рельеф (сухая естественная почва, надёжная опора), так что муравьи живут не на каждом
+лугу, и рядом с точкой появления их может не оказаться.
+
+### Сколько ждать
+
+На обычной скорости каждая стадия выводка (яйцо, личинка, кокон) длится около десяти минут. Первые рабочие у матки
+появляются примерно через полчаса после первых яиц, плюс время на копание. Дальше колония растёт так быстро, как
+позволяет еда. На новую стадию она переходит, когда у неё хватает взрослых, нужных камер и запасов.
+
+Колонии полностью живут, только пока их чанки загружены; пауза в одиночной игре тоже их останавливает. Когда вы
+возвращаетесь, колонии наверстывают время вашего отсутствия в упрощённом виде.
+
+### Подкормка
+
+Бросьте еду рядом с тропой и отойдите хотя бы на четыре блока, чтобы не подобрать её обратно:
+
+- **сахар**: яблоки или сладкие ягоды;
+- **белок**: сырая курица или гнилая плоть.
+
+Фуражиры подберут еду и унесут домой, а няньки передадут её матке и личинкам. Личинкам нужен белок: на одном сахаре
+их не вырастить. Подкормка помогает колонии, но приказывать ей нельзя.
+
+### Материалы
+
+Когда у колонии появится склад материалов, фуражиры будут уносить туда и глину, камень, гравий, песок и руду,
+брошенные у тропы, по одному предмету за ходку. Из них колония улучшает камеры и строит на поверхности, и почти всё это
+зависит от вас:
+
+- молодой колонии нужно **16 комков глины**, чтобы стать зрелой, а копать шахту она ещё не умеет;
+- зрелой колонии нужно ещё около **40 комков глины**, чтобы перестроить камеры в утрамбованной глине; только после
+  этого она копает шахту и строит на поверхности;
+- для каменных камер нужен **гладкий камень**; булыжник засчитывается для великой стадии, но для стен не годится.
+
+### В гостях
+
+Когда рабочие откроют вход, можно спуститься по ступенькам высотой в два блока. Пропускайте муравьёв.
+
+**Не ставьте внутри гнезда факелы и любые другие блоки.** Блок, поставленный в выкопанную муравьями клетку, навсегда
+отнимает её у колонии: гнездо считается повреждённым, и колония перестаёт выращивать выводок. Чтобы видеть внутри,
+пригодится зелье ночного зрения. Повреждённые стены или затопленное гнездо тоже могут остановить развитие колонии.
+
+### Защита
+
+Смотреть и кормить можно всегда. Если в режиме выживания ударить муравья или сломать часть гнезда, колония поднимает
+тревогу:
+
+- взрослые рабочие в радиусе двенадцати блоков бросаются к вам и кусают, когда могут дотянуться;
+- каждый укус отнимает полсердца, примерно раз в секунду;
+- тревога длится около тридцати секунд, а дальше шестнадцати блоков муравьи погоню бросают.
+
+Отойдите и перестаньте вредить. Обычные враждебные мобы рядом с колонией по-прежнему опасны.
+
+### Ограничения
+
+- Пока есть один вид, *Lasius niger*. Брачных лётов и сбора плодов ещё нет.
+- Сложный рельеф, нехватка еды и теснота могут остановить колонию. Повреждения гнезда чинятся не всегда.
+- Блок, поставленный внутри гнезда, даже факел, повреждает его навсегда. Это известная проблема.
+- Большие колонии нагружают сервер; см. [производительность](performance.md) (на английском).
+- Долгие сеансы и мультиплеер проверены мало.

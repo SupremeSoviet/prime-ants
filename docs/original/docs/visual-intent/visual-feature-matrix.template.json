@@ -79,8 +79,8 @@
       "evidenceScenes": ["colony_ground", "work_cycle", "worldgen_encounter", "settlement_scale"],
       "intentRefs": ["reference-forest-foraging.png", "reference-mega-nest-wide.png"],
       "acceptance": "Accepted by user for the current visual baseline; forest-floor cleanup is not an active blocker.",
-      "lastVerdict": "2026-06-23 user directive: forest floor should not be fixed in the active loop.",
-      "nextAction": "Do not select this row unless the user explicitly reopens forest-floor work."
+      "lastVerdict": "2026-06-23 user directive: forest floor should not be fixed for now.",
+      "nextAction": "Do not select this row unless forest-floor work is explicitly reopened."
     },
     {
       "id": "ants_read_as_real_insects",
@@ -182,7 +182,7 @@
       "required": true,
       "evidenceScenes": [],
       "intentRefs": [],
-      "acceptance": "Autonomous loop prompt and gate prevent mechanics/playability work until every required visual_baseline row is pass.",
+      "acceptance": "Mechanics/playability work stays blocked until every required visual_baseline row is pass.",
       "lastVerdict": "",
       "nextAction": "Keep visual_baseline active until matrix required rows pass."
     }

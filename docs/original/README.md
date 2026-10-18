@@ -38,7 +38,7 @@ JDK and a valid `gradle-wrapper.jar` are present.
 
 ## Texture Direction
 
-Stage 3 uses an AI-generated ant-colony pixel-art reference sheet as the art
+Stage 3 uses an ant-colony pixel-art reference sheet as the art
 target, then bakes Minecraft-compatible 16x16 textures through the local
 texture generator. The reference is stored in `docs/imagegen-ant-colony-stage3-reference.png`.
 
@@ -52,37 +52,6 @@ texture generator. The reference is stored in `docs/imagegen-ant-colony-stage3-r
 Server GameTests are wired into `build`; client smoke tests are documented in
 `docs/manual-playtest.md`.
 
-## Autonomous QA
-
-For Codex-driven development, run:
-
-```powershell
-.\scripts\doctor.cmd
-.\scripts\test-mod.cmd
-.\scripts\prepare-gui-world.cmd
-.\scripts\gui-smoke.cmd
-.\scripts\autonomous-gate.cmd -AllowMissingGitHub
-```
-
-`doctor.cmd` requires Java 21+ on `PATH`; the current project target remains
-Java 21 and will auto-select a compatible JDK from common Windows install
-locations when one is present. Visual QA scenes are available through
-`/formic qa scene <name>` and are described in `docs/autonomous-dev.md`.
+Visual QA scenes are available through `/formic qa scene <name>`.
 
 The long-term roadmap is tracked in `docs/roadmap.md`.
-
-## GLM Autonomous Loop
-
-GLM 5.2 runs through a local Z.AI-to-Codex compatibility proxy because the
-current Codex CLI expects a Responses-style custom provider.
-
-```powershell
-$env:ZAI_API_KEY = "<secret>"
-scripts\start-autonomous-loop.cmd -AllowMissingGitHub -CodexProfile zai-glm52 -MaxIterations 1
-```
-
-The user-level profile is `%USERPROFILE%\.codex\zai-glm52.config.toml`. The
-supervisor generates the local `ZAI_CODEX_PROXY_TOKEN` automatically. Proxy logs
-and loop state are under `build/`, and the Z.AI key must remain environment-only.
-Each visual iteration uses a freshness marker so old screenshots or stale
-assessment reports cannot satisfy the autonomous gate.

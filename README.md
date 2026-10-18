@@ -24,14 +24,11 @@
   <a href="https://github.com/SupremeSoviet/prime-ants/releases/latest"><b>⬇️ Download</b></a> ·
   <a href="#-getting-started">Getting started</a> ·
   <a href="#%EF%B8%8F-gallery">Gallery</a> ·
-  <a href="#%EF%B8%8F-roadmap">Roadmap</a>
+  <a href="#%EF%B8%8F-roadmap">Roadmap</a> ·
+  <a href="CHANGELOG.md">Changelog</a>
 </p>
 
 ---
-
-> **[Release 0.2.0](https://github.com/SupremeSoviet/prime-ants/releases/tag/v0.2.0):** accepted T21 complete6, a fresh T23 fast checkpoint and the existing native client/four PNGs.
-> On 2026-10-18 at 08:33:25 UTC the owner accepted the client recording exception: chunk `(10,9)`, cell `(2,2)`, 0–2,351 cumulative loaded search/wait ticks against 1,200. Compliance remains unproved; release acceptance does not prove the bound was met.
-> [Current acceptance](docs/release-0.2.0-acceptance.md) · [EN/RU notes](docs/release-0.2.0.md) · [Known timeouts](docs/known-flaky-timeouts.md).
 
 ## 🐜 What is this?
 
@@ -39,7 +36,8 @@ Prime Ants fills your world with wild colonies of the black garden ant, *Lasius 
 
 A young queen chooses a patch of meadow, digs a small chamber and raises her first workers on her own. Then the
 colony takes over: workers open the entrance, carry soil out into a mound, bring home nectar and prey, and feed the
-brood mouth to mouth.
+brood mouth to mouth. With enough food, and some clay and stone from you, a colony keeps growing: it digs new
+chambers, rebuilds them in clay and stone, mines, and finally fortifies its mound.
 
 There are no hidden counters. **A colony is exactly the ants you can see.** If one dies, it is gone, and the colony has
 to raise a replacement.
@@ -54,105 +52,102 @@ to raise a replacement.
 | 🌼 **Real food, carried home** | nectar from flowers, small prey in the grass, and tasty things you drop |
 | 🤝 **Sharing** | nurses feed the queen and the larvae, and workers pass sugar mouth to mouth |
 | 📈 **Growth that follows food** | a colony grows only as fast as food comes in; ants age, starve and die |
+| 🏛️ **Colony stages** | Founding → Young → Mature → Great, up to 120 adults, and back down if things go wrong |
+| 🧱 **Chambers and upgrades** | nursery, food store, material store and queen's hall, rebuilt in packed clay and then stone |
+| ⛏️ **Mining** | a miner digs a gallery and carries stone, clay, gravel and sand home, one piece at a time |
+| 🏰 **Great fortifications** | a gate, ramparts and watch posts around the mound of a Great colony |
+| 🌍 **Established nests** | Young and Mature colonies already live in newly generated terrain |
+| 💾 **Catch-up** | when you come back to an area, its colonies catch up on the time you were away |
 | 🛡️ **They defend their home** | hurt an ant or break the nest, and nearby workers will bite |
-| 🔦 **You can visit** | walk down the stairs, light a chamber with a torch and watch the nursery |
-| 🏰 **Established nests** | Young and Mature colonies can appear in newly generated suitable terrain |
-| 🧱 **Colony development** | four chamber functions, physical upgrades through tier three and Great fortifications |
-| 💾 **Resuming after loading** | bounded automatic catch-up; persistence coverage is scoped in the release notes |
+| 🔦 **You can visit** | walk down the stairs into the nest and watch the nursery |
 
 > 🕰️ One in-game day is roughly one month in the life of a colony.
 
 ## 🖼️ Gallery
 
-Four individually reviewed native F2 PNGs from the accepted 0.2.0 runtime in the existing T21 fresh Survival world. The owner accepted the disclosed recording exception; no new client or screenshot campaign was run.
-
 | | |
 |:---:|:---:|
-| <img src="docs/images/v0.2.0-t21/exterior.png" width="420" alt="Generated Young nest exterior beside a village; grass left intact."><br><sub>Generated Young nest exterior beside a village; grass left intact.</sub> | <img src="docs/images/v0.2.0-t21/worker-at-entrance.png" width="420" alt="Real worker at the existing entrance, before player lighting."><br><sub>Real worker at the existing entrance, before player lighting.</sub> |
-| <img src="docs/images/v0.2.0-t21/populated-interior.png" width="420" alt="Living queen, workers and food cache in the existing chamber."><br><sub>Living queen, workers and food cache in the existing chamber.</sub> | <img src="docs/images/v0.2.0-t21/cache-detail.png" width="420" alt="Chamber, workers and physical cache detail from the opposite corner."><br><sub>Chamber, workers and physical cache detail from the opposite corner.</sub> |
+| <img src="docs/images/0.2.0/exterior.png" width="420" alt="A young colony's nest next to a village"><br><sub>A young colony's nest next to a village</sub> | <img src="docs/images/0.2.0/worker-at-entrance.png" width="420" alt="A worker at the nest entrance"><br><sub>A worker at the nest entrance</sub> |
+| <img src="docs/images/0.2.0/populated-interior.png" width="420" alt="The queen, workers and the food store inside the nest"><br><sub>The queen, workers and the food store inside the nest</sub> | <img src="docs/images/0.2.0/cache-detail.png" width="420" alt="The food store seen from the other side of the chamber"><br><sub>The food store seen from the other side of the chamber</sub> |
 
-<sub>Generated initial state, ordinary speed, player-camera access and one normal torch. Uninterrupted service after lighting is not claimed. [Provenance](docs/release-0.2.0-acceptance.md). The banner depicts an earlier model revision.</sub>
+<sub>Screenshots from version 0.2.0 in a new Survival world. The banner shows an earlier ant model.</sub>
 
 ## 🚀 Getting started
 
 **You need:** Minecraft Java Edition 26.3 · Java 25 · Fabric Loader 0.19.5 · Fabric API 0.161.0+26.3
 
 1. Install a [Fabric](https://fabricmc.net/use/installer/) profile for Minecraft 26.3.
-2. Put [`prime_ants-0.2.0.jar`](https://github.com/SupremeSoviet/prime-ants/releases/download/v0.2.0/prime_ants-0.2.0.jar) and the matching
-   [Fabric API](https://modrinth.com/mod/fabric-api) into your `mods` folder.
+2. Download `prime_ants-0.2.0.jar` from the [latest release](https://github.com/SupremeSoviet/prime-ants/releases/latest)
+   and put it, together with the matching [Fabric API](https://modrinth.com/mod/fabric-api), into your `mods` folder.
 3. Create a **new world** and go looking for ants. 🔍
+
+For multiplayer, install the mod and Fabric API on the server and on every client.
 
 ## 🔎 Finding and enjoying a colony
 
 - **Where to look.** Plains, meadows and flower forests. Look for a small mound of soil next to a stair entrance, or a
-  queen busy digging.
+  queen busy digging. Older colonies have bigger mounds, and Great colonies are walled.
 - **Be patient.** Each brood stage takes about 10 minutes, and the first workers appear about half an hour after the
-  first eggs. Colonies live only while their chunks are loaded, so stay nearby.
+  first eggs.
 - **Feeding.** Drop apples or sweet berries (sugar) and raw chicken or rotten flesh (protein) near a trail, then step
   back at least four blocks. Foragers pick the food up and carry it home.
-- **Visiting.** Once the workers open the entrance, walk down the two-block-high stairs. Put a torch on a wall to see
-  inside, and leave the walls, the nursery and the food store alone.
+- **Helping with materials.** Colonies need clay to grow: a Young colony needs 16 clay balls to become Mature, and it
+  can't mine yet. Drop clay balls near a trail and foragers carry them to the material store. Stone chambers need
+  smooth stone (cobblestone doesn't work). Gravel, sand and ore are welcome too.
+- **Visiting.** Once the workers open the entrance, walk down the two-block-high stairs. **Don't place torches or any
+  other blocks inside the nest**: right now that permanently damages it for the colony. A potion of night vision
+  helps you see.
 - **Manners.** Watching and feeding are welcome. Hitting ants or breaking their nest makes the workers bite (half a
   heart per bite).
 
+More in the [player guide](docs/player-guide.md).
+
 ## ⚠️ Good to know
 
-**Release 0.2.0 retains the disclosed owner-accepted recording exception and limitations below.**
-
-- One species, *Lasius niger*. Established Young/Mature generation and automatic catch-up are implemented;
-  nuptial flights and active fruit harvesting remain future work.
-- Great fortifications and physical tier-three upgrades have controlled acceptance. This does not establish
-  a complete unattended player growth campaign.
-- Two fresh-process reopens of a finite Young/Mature world prove exact graceful persistence and resumed
-  ordinary service. They do not establish crash durability or broad modpack compatibility.
-- Terrain, food shortages and crowding can stall a colony. Long sessions and multiplayer have limited coverage;
-  back up your worlds.
-
-Several loaded Great colonies can cause substantial lag. T16 measured one colony with **120 adults:
-about 19 TPS; mean 52 ms; p95 approximately 66 ms**. Three colonies with **360 adults:
-about 6.7 TPS; mean 149 ms; p95 approximately 216 ms**.
-The controlled development server ran on a Ryzen 7 7700 (8 cores/16 threads), Windows 11 Pro build 26200,
-approximately 95.1 GiB RAM, Temurin 25.0.3+9/G1 and a 3 GiB heap; Minecraft 26.3, Loader 0.19.5,
-Fabric API 0.161.0+26.3 and Loom 1.18.2. Each supplied scene used 600 warm-up and 2,400 measured ticks,
-work/brood 1/1 and an ordinary 20 TPS request; shared-machine contention and test instrumentation remain included.
-These are server ticks, not client FPS or universal hardware guarantees. The mean 40 ms / p95 50 ms budgets failed.
-Performance remains a limitation outside the 0.2.0 gate; no new benchmark is claimed.
-See [T16 conditions](docs/t16-cap-performance.md), [final EN/RU notes](docs/release-0.2.0.md),
-[exact known-flaky timeouts](docs/known-flaky-timeouts.md) and [current acceptance](docs/release-0.2.0-acceptance.md).
+- There is one species so far, *Lasius niger*.
+- **Don't build inside a nest.** A block you place in a cell the ants dug, even a torch, takes that cell from the
+  colony for good, and the colony stops raising brood. This is a known issue.
+- **Colonies rely on your clay and stone.** Without clay from players, wild colonies stay Young. Mature colonies need
+  more clay for their upgrades, and stone chambers need smooth stone. Their own mining is a single short gallery.
+- Colonies are fully alive only while their chunks are loaded. When you return, a simplified
+  [catch-up](docs/catch-up.md) moves them forward by the time you were away.
+- **Large colonies are heavy on the server.** One Great colony with 120 ants runs at 20 TPS on a fast desktop CPU,
+  with little headroom. Three Great colonies close together drop the server to about 7 TPS. Performance work is under
+  way; see [performance](docs/performance.md).
+- Awkward terrain, food shortages and crowding can stall a colony.
+- Long sessions and multiplayer have had limited testing. Back up your worlds.
 
 ## 🗺️ Roadmap
 
+- ⚡ large colonies without lag (in progress)
+- ⚒️ a forge chamber that smelts ore, and soldiers in resin, copper and iron armour
+- 🤝 relations between colonies: gifts, tribute, alliances, border fights and wars
+- 🎁 barter with the player, and a guest house from an allied colony
 - 🪽 nuptial flights, with young queens founding new colonies nearby
-- 🏰 established Young/Mature nests at world generation — delivered in 0.2.0
 - 🌿 aphid herding and honeydew
-- ⚔️ border fights and wars between colonies
-- 📓 a field journal for your observations
 - 🐜 more species: the red wood ant, a harvester ant and a leaf-cutter ant
 
 ## 🛠️ Building from source
+
+You need JDK 25.
 
 ```bash
 ./gradlew build
 ```
 
-You need JDK 25. The jar ends up in `build/libs/`, and the build also runs the unit, model and in-game server tests.
-
-The old Great timeout is retained in the historical report; Great later passed controlled acceptance.
-The current release-correctness checkpoint is recorded in the [Stage-1 report](docs/stage-1-report.md).
-The separate every-turn fast suite and packaging can be run with:
-
-```bash
-./gradlew checkFast assemble --console=plain --rerun-tasks
-```
-
-This checks the fast suite, not complete Stage-1 or release acceptance. Local builds carry version **0.2.0**; use the published asset and SHA256SUMS above to identify the exact tested release bytes.
+The jar ends up in `build/libs/`. `build` also runs the whole test suite, including the long in-game tests, which takes
+a while. For a quick check while you work, run `./gradlew checkFast`. See [development](docs/development.md) and
+[testing](docs/testing.md).
 
 ## 📚 More
 
 - [Player guide](docs/player-guide.md)
-- [Technical report for 0.1.0](docs/slice-1-report.md)
-- [Partial Stage-1 report](docs/stage-1-report.md)
-- [Design decisions](docs/00-decisions.md) (in Russian)
+- [Changelog](CHANGELOG.md)
+- [How a colony develops](docs/colony-development.md)
+- [Catch-up for unloaded colonies](docs/catch-up.md)
+- [Performance](docs/performance.md)
+- [Development](docs/development.md) and [testing](docs/testing.md)
+- [Design documents](docs/README.md) (mostly in Russian)
 
 ## 📄 License
 

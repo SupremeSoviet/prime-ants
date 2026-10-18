@@ -5,7 +5,7 @@ Extraction from the old "Prime Ants" / `formic_frontier` project for a from-scra
 - Repo (read-only): `<original-project>`, branch `rebuild/anthills-from-scratch` at `75a70f7` (2026-07-13). `master` = `946ea44` (it is the merge-base; master has no commits the rebuild branch lacks).
 - Citations are `path:line`, relative to the repo root. `src/main/java/com/formicfrontier/` is abbreviated as `…/` where it helps readability.
 - Status tags: **[IMPL]** implemented and reachable in normal play · **[PARTIAL]** · **[STUB]** · **[DEAD]** dead code / unreachable · **[QA-ONLY]** only used by visual-QA scenes · **[BUG]** confirmed from code · **[LIKELY-BUG]** reasoned from code + vanilla behaviour, not verified at runtime.
-- Axes: Minecraft convention, +X east, +Z south, **−Z north**. Every building entrance ("mouth") lies on the **−Z side (north)**. The code and docs call these "south-facing" mouths (`…/world/structure/TieredMoundBlueprint.java:381-382` requires `frontZ < 0`; `docs/llm-minecraft-building-workflow.md:57`). That word is wrong for the world axes: ant patrol points use `.north(n)` (`…/entity/AntEntity.java:390-398`), and QA "front" cameras sit at −Z (`…/qa/VisualQaScenes.java:1500`).
+- Axes: Minecraft convention, +X east, +Z south, **−Z north**. Every building entrance ("mouth") lies on the **−Z side (north)**. The code and docs call these "south-facing" mouths (`…/world/structure/TieredMoundBlueprint.java:381-382` requires `frontZ < 0`). That word is wrong for the world axes: ant patrol points use `.north(n)` (`…/entity/AntEntity.java:390-398`), and QA "front" cameras sit at −Z (`…/qa/VisualQaScenes.java:1500`).
 - Time: a "tick" is a game tick (1/20 s). The colony simulation runs a **pass every 20 game ticks (1 s)**: `tickEconomy` and then `tickWorld` (`…/FormicFrontier.java:34-47`). Every "per pass" number below is therefore also "per second".
 - **Measured sizes** (W×D×H, footprint, volume) come from a scratch Python re-implementation of the Java geometry (`contains`/`isSolid`, including the 64-bit noise). It reproduces every size invariant the unit tests assert (for example stage 1 is 24 tall, 21 wide and 17 deep; the trade hub footprint is 436). Treat the numbers as reliable but derived.
 
@@ -1259,7 +1259,7 @@ All three classes re-derive geometry from the blueprint (`isSolid` over bounds y
   - `repeatedRoleSitesSelectEveryAuthoredVariant`: with origin (11,0,−7), `siteFor` sites use every variant. Spacing: armory ≥34; shrine, resin depot ≥42; fungus garden, venom press ≥46; watch posts pairwise ≥90 (first 4).
   - The trade-hub test also checks spacing from market #1, venom press #1 and watch post #1 (not market #2, §4.5).
 
-Structure behaviour in the world (furnishings, the in-place upgrade, renovation, raids on the vault, label visibility, starter-ant spawn height, expansion markers, …) is covered by GameTests in `src/gametest/.../FormicFrontierGameTest.java` (3085 lines; see the tests/QA extraction).
+Structure behaviour in the world (furnishings, the in-place upgrade, renovation, raids on the vault, label visibility, starter-ant spawn height, expansion markers, …) is covered by GameTests in `src/gametest/.../FormicFrontierGameTest.java` (3085 lines).
 
 ---
 
@@ -1335,17 +1335,16 @@ Structure behaviour in the world (furnishings, the in-place upgrade, renovation,
 - **2026-04-29** `9ed2fa7` Add Prime Ants mod project.
   - First layout: rings of radius 22 (`git show 9ed2fa7:…/ColonyBuilder.java`, `siteFor`), +10–12 per repeat.
   - Structures were already placed through `StructurePlacer.placeBuilding`. ColonyService also carried unused helpers from the start — 5×5 "pods" (core, shell, accents) and a 7×7, 3-layer core mound — that were deleted in `6fb5bcd`.
-- **2026-05-01** `a74a7fa` autonomous QA harness; `b9f9faa` **"Renovate colony scale and tablet UI"**.
+- **2026-05-01** `a74a7fa` visual QA harness; `b9f9faa` **"Renovate colony scale and tablet UI"**.
   - The ring radius grew from 22 to **38**, with +18–20 per repeat.
   - Sites were added for GREAT_MOUND, QUEEN_VAULT and TRADE_HUB. This matches roadmap R1's "1.7–2× linear scale" (`docs/roadmap.md:64-74`).
-- **2026-06-23** the **R2 series**: `15b5932`, `7af4b42` ("Checkpoint: fresh screenshots + GPT-5.4 mini assessment (attempt 6)"), `59fba60`, `4bd779b`, `556111f` ("R2 retry-07"), `33c1659` ("R2 retry-07 fix").
+- **2026-06-23** the **R2 series**: `15b5932`, `7af4b42`, `59fba60`, `4bd779b`, `556111f`, `33c1659`.
   - Procedural "satellite campus crowns": tapering native-earth crowns from y6 to 16/19, later a broad ogive dome, plus deep 5×5/5×6 tunnel mouths on the −Z face, buttress ribs, approach aprons and spoil piles.
   - The commit bodies show that the **reach of each change was capped at ±5 blocks so gametest markers would not break** (diplomacy caches at ±6, an expansion crew post).
-  - Changes were driven by an external LLM screenshot assessor.
   - Forest-floor dressing was added and then limited to native ground.
-  - "R2" is the roadmap slice "Architecture polish". "retry-NN" and "attempt N" are autonomous-loop retries.
-- **2026-06-28** `cc9db89` **"Stabilize autonomous loop + one-mound colony with carved chambers"**.
-  - Harness and proxy fixes, 10 content rows.
+  - "R2" is the roadmap slice "Architecture polish".
+- **2026-06-28** `cc9db89`: **one-mound colony with carved chambers**.
+  - 10 content rows.
   - "single shared-mound landmass fuses the colony into ONE earthen organism" (§4.11) and "carved dark chamber mouths".
 - **2026-06-28** `f5e9857`: the queen and food store switched to FormicSchematic JSON; `c3a7aeb`: tablet UI rebuild.
 - **2026-07-11** `946ea44` "Add caste balancing and refine colony landmass". This is the last master commit.
@@ -1353,7 +1352,7 @@ Structure behaviour in the world (furnishings, the in-place upgrade, renovation,
   - Deleted 6,846 lines: StructurePlacer −3,214, FormicSchematic, all 7 structure JSONs, the generator script, and 746 lines of gametests.
   - Every building became a single marker block.
   - The new StructurePlacer Javadoc explains that the old generators were deleted, not feature-flagged, so "new mound work cannot accidentally inherit their geometry" (`StructurePlacer.java:17-25`).
-- **2026-07-11** `87d8192` "Build the first-stage queen mound": the TieredMound IR, compiler, stage-1 JSON, unit test and `docs/llm-minecraft-building-workflow.md`.
+- **2026-07-11** `87d8192` "Build the first-stage queen mound": the TieredMound IR, compiler, stage-1 JSON and unit test.
 - **2026-07-11 → 07-12**, the **blueprint series**, one family per commit, each with unit tests and GameTests:
   - food store `9a4ec36`;
   - nursery `84f0e27`;
@@ -1424,7 +1423,7 @@ Structure behaviour in the world (furnishings, the in-place upgrade, renovation,
 | "Several role-specific landmarks … readable spacing … no colliding/overlapping houses" (`formic-visual-intent.md:38-41, 169`; `roadmap.md:54-56`) | **Mostly met** for the first instance of each family: 14 families, unit-tested spacing. **Not met** for repeated instances: collisions in §4.5, no cap on repetition. |
 | Every visible floor leads to a real furnished chamber, joined by stairs with 2-block headroom (`formic-visual-intent.md:118-121`) | **Met** and enforced by tests. The furniture is decorative only (empty containers). |
 | Tunnel mouths "scatter entrance positions with noise (varied X/Y/Z and size 1×1 up to 3×3)", dark throat 4–6 deep (`formic-visual-intent.md:109-114`) | **Partly met.** Mouths are authored, 3–5 wide and 4–8 deep, with a MUD rear wall that the chamber usually cuts away. There is no noise, and **every mouth faces −Z**. |
-| "Every role building must be CLOSED on top … no open-topped boxes" (player feedback 2026-06-27, `formic-visual-intent.md:53-58`) | **Deliberately contradicted later**: the market, the shrine and the trade-hub court are `openToSky` by design (`docs/llm-minecraft-building-workflow.md:99-137`). |
+| "Every role building must be CLOSED on top … no open-topped boxes" (player feedback 2026-06-27, `formic-visual-intent.md:53-58`) | **Deliberately contradicted later**: the market, the shrine and the trade-hub court are `openToSky` by design. |
 | Native Formic material language, avoid honey/honeycomb/amethyst/blue-crystal accents; 32×32 textures (`formic-visual-intent.md:129-157`) | **Not met.** Palettes use HONEYCOMB, HONEY, AMETHYST, GOLD and CUT_COPPER accents. Mod blocks are plain 16×16 `cube_all` textures, the chitin bed has no growth stages, and the ledger has no texture. |
 | Building visual stages: planned, building, complete, upgraded, damaged and repairing "visually distinct" (`roadmap.md:229-237`) | **Not met in the world.** Only PLANNED (a pin) and CONSTRUCTION (one block) differ. UPGRADED, DAMAGED and REPAIRING look like COMPLETE; only labels differ, and they are stale or duplicated. |
 | Culture architecture: Amber warm clay/resin, Leafcutter fungus/green, Fire dark/military, Carpenter wood/resin — "four cultures recognizable in one screenshot" (`roadmap.md:239-249`) | **Not met.** The `culture` parameter is ignored by every placer. The `culture_styles` QA scene differs only in each culture's first starter building. Culture affects only the landmark blocks of wild colonies (§7.3). |
@@ -1436,7 +1435,7 @@ Structure behaviour in the world (furnishings, the in-place upgrade, renovation,
 | Survival discovery "without debug commands"; "trails, foraging zones, ruined nests, rival borders" (`roadmap.md:361-389`) | **Implemented** as encounter spawning near players, with landmarks for wild colonies only. It is **probably broken by the phase lock** (§7.4), capped at 6 colonies in total, and there are no worldgen structures. |
 | Endgame "great mound, pheromone archive network, underground queen vault, trade hub" (`roadmap.md:418-425`) | Great Mound, vault and trade hub **exist**. The "archive network" existed on master (`placeGreatMoundArchiveNetwork`) and was removed in the reset. The endgame buildings give only small bonuses. |
 | Time-based development over "ticks/days" (`formic-content-intent.md:46-52`) | Stage age thresholds are 3/6/12 *seconds* (§1.3); growth is gated by resources only. |
-| LLM-editable data with Java owning validation (`docs/llm-minecraft-building-workflow.md:31-61`) | **Largely met.** Exceptions: furniture offsets live in Java and throw at runtime, there is no rotation, and the blueprints and layout rely on the absolute-coordinate variant hash. |
+| Data-driven blueprints with Java owning validation (`formic-visual-intent.md:87-88`) | **Largely met.** Exceptions: furniture offsets live in Java and throw at runtime, there is no rotation, and the blueprints and layout rely on the absolute-coordinate variant hash. |
 
 ---
 
@@ -1445,9 +1444,9 @@ Structure behaviour in the world (furnishings, the in-place upgrade, renovation,
 1. **The tiered-mound IR and compiler as a concept** (tiers + terraces + chambers + pits + stairs + mouths; stable-core radius 0.82 with ±7% boundary noise; vaulted ceilings at 0.9/0.72; a MUD rear wall behind each mouth; PACKED_MUD floors; purpose-driven furnishing).
    - It is compact: 60–245 lines of JSON per building.
    - It validates ranges, overlap, anchoring, fit and reachability before touching the world.
-   - It produced 30 convincing silhouettes, and each family's design notes are in `docs/llm-minecraft-building-workflow.md:69-235`.
+   - It produced 30 convincing silhouettes.
    - Worth adding: **rotation** (facing the hub or a path), per-site **terrain adaptation** (anchor each site, fill foundations, blend skirts), and furniture defined in data rather than Java offsets.
-2. **The structural test suite**: 6-neighbour connectivity, the rear-shell and "enclosed except authored mouths" checks, stair-headroom walks, minimum footprints, distinct variants, spacing contracts. It is cheap and caught real defects, such as a sky hole in the armory (`docs/llm-minecraft-building-workflow.md:123-125`).
+2. **The structural test suite**: 6-neighbour connectivity, the rear-shell and "enclosed except authored mouths" checks, stair-headroom walks, minimum footprints, distinct variants, spacing contracts. It is cheap and caught real defects, such as a sky hole in the armory.
 3. **The in-place evolution of the central mound**: stage 2 keeps stage 1's rooms at the same coordinates, then adds annexes and a crown. The separate **subterranean IR** has shell envelopes, BFS reachability and a `safeCarve` excavation policy. Both are good patterns; guard against re-placing an older stage over a newer one.
 4. **Variant families with a stable position hash**, so repeated buildings do not look cloned. Compute the hash relative to the colony, or store the chosen variant, if layouts must be predictable.
 5. **The building catalog and roles**: the cost table (§1.1) and effect table (§1.2) are a usable starting balance. They need real differentiation, such as build time scaled by cost, upgrades with effects, capacity, and damage that matters.

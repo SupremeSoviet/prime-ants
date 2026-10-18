@@ -8,7 +8,7 @@ Extraction from the old "Prime Ants" project (code name **Formic Frontier**, mod
 - "Verified against MC jar" means I disassembled the Mojang-mapped 1.21.11 jar in the local Loom cache (`~/.gradle/caches/fabric-loom/minecraftMaven/...`, read-only) with `javap`, to confirm vanilla behaviour the mod relies on.
 - The name "Prime Ants" appears only in the first commit (`9ed2fa7 Add Prime Ants mod project`). Every in-game string and all metadata say "Formic Frontier" (`src/main/resources/fabric.mod.json:5`).
 
-Cross-links to other extractions: castes/resources/research → 01/02-style docs; buildings/structures; diplomacy/trade/raids/events; tests/QA. They are mentioned below but not documented in depth.
+Cross-links to other extractions: castes/resources/research → 01/02-style docs; buildings/structures; diplomacy/trade/raids/events. They are mentioned below but not documented in depth.
 
 ---
 
@@ -516,8 +516,8 @@ All asset paths are under `src/main/resources/assets/formic_frontier/`.
   - 4 armor layer textures at 128×64 (`equipment_texture`, `:453-478`).
 - It does **not** generate block textures, and neither did any earlier version of the script (`git show 9ed2fa7:` and `a74a7fa:` of this file contain no block code).
   - The 18 block PNGs arrived in commit `a74a7fa`; `nest_mound.png` changed in `cc9db89`.
-  - `README.md:39-43` says an AI-generated reference sheet (`docs/imagegen-ant-colony-stage3-reference.png`) was the "art target", baked "through the local texture generator".
-  - **How the block textures were actually made is unclear from the repo.** No AI images are shipped as textures.
+  - `README.md:39-43` says a pixel-art reference sheet (`docs/imagegen-ant-colony-stage3-reference.png`) was the "art target", baked "through the local texture generator".
+  - **How the block textures were actually made is unclear from the repo.** The reference images themselves are not shipped as textures.
 - The generator overwrites files in `src/main/resources/...`; it is deterministic.
 
 ### 8.2 `tools/render_texture_contact_sheet.py` (36 lines)
@@ -1057,7 +1057,7 @@ The command list in `README.md:20-31` matches these commands, apart from the "n 
 | Gradle JVM args | `-Xmx2G -Djdk.net.hosts.file=<original-project>/.local/hosts.gradle -Djava.net.preferIPv4Stack=true`; `org.gradle.parallel=true`. A **machine-specific WSL path**; `.local/` is gitignored. When `jdk.net.hosts.file` is set the JDK resolves names from that file only, so this probably breaks dependency download on machines without it, including CI (inferred, not verified) | `gradle.properties:1-2`; `.gitignore:2` |
 | fabric.mod.json | id `formic_frontier`, name "Formic Frontier", description "A single-colony MVP for large ant economies, castes, chambers, and debug-driven testing." (stale), authors "Formic Frontier contributors", license MIT, icon `assets/formic_frontier/icon.png`, environment `*`, entrypoints main `com.formicfrontier.FormicFrontier` and client `com.formicfrontier.client.FormicFrontierClient`. No mixins, no access widener | `src/main/resources/fabric.mod.json:1-28` |
 | CI | GitHub Actions `Build`: (1) asset validation (Python 3.12); (2) `./gradlew build` (runs the server GameTests) on JDK 25 with wrapper validation, uploading reports on failure; (3) visual-QA manifest check (`tools/visual_qa_report.py --ci-manifest-only`) | `.github/workflows/build.yaml:1-52` |
-| Local QA scripts | `scripts/test-mod.ps1` runs `gradlew build` and greps the logs for CRASH / Exception / ERROR / "Missing texture" (`:38-80`). Also doctor, gui-smoke, autonomous-loop and gate scripts (QA doc) | `scripts/` |
+| Local QA scripts | `scripts/test-mod.ps1` runs `gradlew build` and greps the logs for CRASH / Exception / ERROR / "Missing texture" (`:38-80`). Also doctor and gui-smoke scripts | `scripts/` |
 | Repo hygiene | An empty stray file at the root named `II, data[16:24]))⏎PY⏎rm -rf assets` (a broken heredoc), hidden by the `.gitignore` pattern `/II, data*` | repo root; `.gitignore:14` |
 
 ---

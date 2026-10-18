@@ -1,7 +1,7 @@
 # 00. Решения для перезапуска
 
-> Приняты 25.09.2026: ответы на 12 вопросов из `11-lessons-and-restart.md` и то, что из них следует.
-> **Этот документ главнее разделов 01–11.** Те описывают старый мод, здесь задано направление нового. Где старые разделы
+> Приняты 25.09.2026: ответы на 12 главных вопросов перезапуска и то, что из них следует.
+> **Этот документ главнее разделов 01–09.** Те описывают старый мод, здесь задано направление нового. Где старые разделы
 > противоречат этому документу, действует он. Пометка «предложение» означает мой вариант, который ещё нужно подтвердить.
 
 ## Главный принцип: реализм
@@ -284,30 +284,10 @@
 
 ## Что дальше
 
-1. Выбрать модель (или связку моделей) для разработки и процесс приёмки.
-2. Написать короткий GDD v2 на основе этого документа (он заменит описания старого мода в разделах 01–08).
-3. Создать проект на 26.3 и начать с вертикального среза: **одна колония Lasius niger** — матка, выводок, рабочие, гнездо
-   в земле, фуражировка, брачный лёт.
+GDD v2 написан ([12-gdd-v2-civilization.md](12-gdd-v2-civilization.md)). Первая колония Lasius niger (матка, выводок,
+рабочие, гнездо в земле, фуражировка) вышла в 0.1.0, развитие колонии по стадиям — в 0.2.0. Ближайшие планы — в
+[README](../README.ru.md).
 
-
-## Implementation notes - 2026-10-05 (T16 owner-authorized terrain and nestmate rules)
-
-The latest owner terrain/pass-through decisions permit bounded removal of witnessed short native plants only in declared queen excavation columns, untouched witnessed mineral floor support, one-block supported exterior adaptation and a 64-column (offsets 4..11) search. Excavation remains 24 soil cells, a connected two-high chamber and intact dry shell; plants provide no material/food. Exact native generation authority is revoked by later writes. Matching queen/worker and worker/worker lineage pairs pass without pushing/cramming; foreign contacts, terrain, gravity, damage, death and occupied-body block placement stay physical.
-
-Five automatic queens began protected soil excavation in all three fixed sample regions. Production overworld placement is therefore enabled by default as instructed; explicit opt-out is JVM option -Dprime_ants.naturalPlacement=false (legacy explicit setting compatible). This promotes early founding, not the complete unattended life cycle. Two native queens later stop conservatively on changed soil. Fresh full acceptance passes 15 unit/120 server/24 model cases; the two retained traffic reproducers recover without a wider throat. Details and limitations are in natural-placement-feasibility.md and T16/report.md; earlier design text remains historical.
-
-## Implementation notes - 2026-10-06 (T21 owner-authorized food policy)
-
-Physical crop sharing uses twenty loaded mouth-action ticks, up to 1,500 existing sugar and a 1,000 donor reserve, retaining work/cargo and separate protein. The owner-authorized prospective maintenance choice is one sugar prepaid for four covered loaded ticks, with persisted remainder and unchanged historical spending, lifespan, fasting grace and 39,000 founding budget. A descriptive 2,400-loaded-tick actual-intake window gates new laying against current adult/brood commitments and a 25% maintenance margin; unavailable data pauses growth. Physical protein stays available for larvae once the queen has an egg's 2,000 protein, rather than being trapped in her ingested store. Native survival and player evidence must be judged from the T21 report, independently of green component tests; no broad persistence, defense or performance claim is added.
-
-
-## Implementation notes - 2026-10-06 (T22 actual-stock funding and local defense)
-
-Recent receipts remain a separate laying-rate observation; only current stores fund existing brood commitments, a new egg/larva and the unchanged 25% maintenance margin. Sharing, physical costs, food values, adult lifespan/fasting and the 39,000 founding reserve are unchanged. T21 native survival is historical evidence under its earlier admission rule.
-
-Actual accepted survival-player ant damage or a successful break of a currently owned component signals that colony. Mature registered workers respond within 12 blocks of the current harm anchor, pursue only its provoking player within 16, and bite at physical reach/visibility for one normal health point with a 20-loaded-tick cooldown. Alarm duration is 600 loaded ticks; repeated genuine harm may renew it. Ownership is captured before block mutation and consumed only after successful break. The existing worker owner suspends/resumes tasks and retains equipment/claims; no reputation, automatic repair or resource credit is introduced.
-
-Fresh-client checks use ordinary vanilla overworld generation/survival, seed 2026100501 declared in advance, render/simulation 8/8 and no experiment FULL limits. Imported dimension-transfer recovery is excluded. The current report records actual acceptance/client results and their limits; performance, feeding and broad restart remain T23.
 
 ## Решения 22–28 (06.10.2026): фэнтези-слой, «цивилизация из экологии»
 
@@ -324,364 +304,224 @@ Fresh-client checks use ordinary vanilla overworld generation/survival, seed 202
 | 27 | **Дипломатия:** отношения между колониями (вражда → настороженность → нейтралитет → дружба → союз) от событий и действий — послы с дарами, дань, союзы, войны | меняет 10 и 21; дипломатия держится на дарах и поступках, без валюты |
 | 28 | **Игрок:** отношение у каждой колонии своё, обмен натурой на изделия колонии, гостевой дом от колонии-союзника | дополняет 9 и 15; жетоны, валюта, лавки с ценами и планшет-пульт по-прежнему убраны (21 в этой части в силе) |
 
-Порядок работ: этап 1 «Развитие и дома» (20 ходов turnloop) → этап 2 «Шахты, кузница, броня» → этап 3 «Дипломатия и игрок».
+Порядок работ: этап 1 «Развитие и дома» → этап 2 «Шахты, кузница, броня» → этап 3 «Дипломатия и игрок».
 
-## Implementation notes - 2026-10-07 (stage-1 T01 colony stages)
+## Implementation notes
 
-Decision 23 is implemented as one live rule table, `dev.primeants.colony.StageRules`. The model and the extension plan are in [stage-1-design.md](stage-1-design.md).
+These notes cover implementation work from 2026-10-05 to 2026-10-11. Each subsection gives the rule as the code implements it now; where a rule changed over time, only the final rule is described. Times are in loaded ticks: game ticks counted only while the chunks involved are loaded (20 per second). Positions in the nest use the nest's frame: forward along the nest direction from the entrance (negative values lie behind it, where the mound is), side positive to the right of that direction, and height relative to the entrance level.
 
-**Counting rule.** Every stage cap and adult threshold counts living adults including the queen. Brood reserves cap space exactly as in 0.1.0: laying is refused at workers + brood ≥ cap − 1, and emergence at workers + queen ≥ cap. The caps stay **5 / 30 / 60 / 120**, so 0.1.0's 30 keeps its meaning.
+A block counts as natural only if the mod saw it in freshly generated terrain ("witnessed"). Any later write to that block, even one that leaves the same block in place, cancels this. Old, upgraded or retro-generated terrain is never witnessed.
 
-**Deadlock fix.** The GDD's "Young: 5+ workers" was unreachable under a five-adult Founding cap, which holds at most four workers. The default fix is adopted:
+### Founding and natural placement
 
-- **Young** needs **5 adults (queen + 4 workers)**, a confirmed nursery and a confirmed food store.
-- **Mature** needs 25 adults, a queen's hall, a material store, 4 stored food units and 16 clay units.
-- **Great** needs 50 adults, all four functions at tier 2 or higher, and 32 stone units, counted as stored or laid in the colony's own tier-3 walls.
+- A founding queen digs 24 soil cells: the entrance stairs and a connected chamber two blocks high, inside an intact, dry shell.
+- She digs only witnessed natural soil. Short natural plants (grass, ferns, small flowers) standing on the soil she digs may be removed, but only in her own excavation columns; they drop nothing and give no material or food.
+- Natural stone is allowed only as untouched support under the chamber floor, never as a dug cell, wall or roof.
+- Behind the entrance, the standing spots and the cells that receive her soil may sit one block higher or lower than planned, as long as each stands on natural soil and connects to the entrance. A site needs at least 22 such deposit cells; she keeps the last two soil units to close the entrance passage with a two-block plug.
+- If soil in her plan is replaced, or loses its natural status, before she digs it, her founding fails rather than dig changed terrain.
 
-Stages are cumulative, and the stock numbers are starting values. Invariant: each next threshold fits under the current cap (5 ≤ 5, 25 ≤ 30, 50 ≤ 60), including right after a regression. It is checked at class load and by unit tests.
+Natural placement is on by default in the overworld. Turn it off with the JVM option `-Dprime_ants.naturalPlacement=false`; the older `prime_ants.experimentalNaturalPlacement` setting is still read when the new one is absent. Only freshly generated chunks are candidates, and the site search tries 64 columns at offsets 4–11 inside the candidate chunk. Pending placements saved by earlier versions keep their original 8-column search. Natural placement starts a colony's founding; it does not by itself carry an unattended colony through its whole life cycle (see the clay note under Mining).
+
+### Nestmate contacts
+
+- Ants of the same colony (queen and worker, or two workers) do not push each other and take no cramming damage from each other.
+- Everything else stays physical: ants of other colonies, terrain, gravity, damage and death.
+- A block is never placed into a space where any body stands, nestmate or not.
+
+### Food sharing, upkeep and laying
+
+**Crop sharing.** A worker with more than 1,000 sugar in its crop can feed a fasting nestmate of its own colony (a worker or the queen) within 16 blocks. The two must stay in mouth-to-mouth reach for 20 loaded ticks; then up to 1,500 sugar moves, never leaving the donor with less than 1,000 and never filling the recipient past 8,000. A recipient qualifies when it holds less than 1,500 sugar and has fasted for at least a quarter of its fasting grace. Only sugar is shared; protein stays separate. Sharing interrupts the donor's work without changing its role or what it carries.
+
+**Upkeep.** Each adult pays its upkeep from the sugar it has eaten: one unit of sugar covers four loaded ticks and is paid in advance, and the unused remainder is saved with the ant. An adult without sugar fasts, and is harmed once its fasting grace runs out. By default workers live 144,000 loaded ticks and the fasting grace is 24,000 loaded ticks; the JVM options `prime_ants.adultLifespanTicks` and `prime_ants.adultFastingTicks` change them for ants born afterwards. Spending recorded in older saves is kept as it was.
+
+**Founding queen.** She raises her first clutch from her body reserve of 39,000 units (enough for three eggs and three larvae) and pays no upkeep until then. Afterwards nurses feed her protein only while she holds less than 2,000 (one egg's worth), so further protein goes to the larvae instead of staying in her store.
+
+**Laying gate.** The queen lays a new egg only when all of these hold:
+
+- The colony's food data are complete: every member is loaded and ticking, and the food cache is loaded. Otherwise growth pauses.
+- No adult has fasted for a quarter of its fasting grace.
+- Sugar actually received over the last 2,400 loaded ticks covers the upkeep of all adults and brood plus the new egg over that window, with a 25% margin (750 sugar per head). Receipts only measure the colony's income; they never pay for anything.
+- Food that is here now (eaten but not yet used by adults and brood, carried by workers, or stored in the cache) covers what the existing eggs and larvae still need, a new egg and larva (1,000 + 4,000 sugar and 2,000 + 8,000 protein) and the same upkeep margin.
+- The laying interval has passed, a nursery slot is free, and the colony has room under its adult cap (see the next section).
+
+### Colony stages and caps
+
+Decision 23 is implemented as one rule table, `dev.primeants.colony.StageRules`. [colony-development.md](colony-development.md) describes the model in more detail.
+
+| Stage | Requirements (each stage also needs everything below it) | Adult cap |
+|---|---|---|
+| Founding | founding chamber registered: the queen has settled and laid her first clutch | 5 |
+| Young | 5 adults (the queen and 4 workers), a nursery, a food store | 30 |
+| Mature | 25 adults, a queen's hall, a material store, 4 stored food units, 16 clay units | 60 |
+| Great | 50 adults; nursery, food store, material store and queen's hall all at tier 2 or higher; 32 stone units | 120 |
+
+- Caps and thresholds count living adults including the queen, so 0.1.0's cap of 30 keeps its meaning. As in 0.1.0, brood reserve room under the cap: laying is refused once workers plus brood reach the cap minus one, and emergence once workers plus the queen reach the cap. A lower cap never removes adults.
+- Young counts the queen by design: the GDD's "5+ workers" could never be reached under a five-adult Founding cap, which holds at most four workers. Each next threshold fits under the current cap (5 ≤ 5, 25 ≤ 30, 50 ≤ 60), also right after a regression; this is checked when the class loads and by unit tests.
+- The stock numbers are starting values.
+- Clay counts while it lies in a confirmed material store, is carried by an upgrade builder, or is built into the colony's own walls of a confirmed chamber. Stone (cobblestone or stone) counts while stored, carried by a tier-3 builder, or laid into the colony's own tier-3 walls.
 
 **Only live state counts.**
 
-- A function needs its owned marker (brood pile or cache) in an open, enclosed chamber.
-- An adult needs a found, living body. A failed lookup is unknown: a colony is promoted only when confirmed state meets the stage, and demoted only when even its unknowns could not.
-- A lower cap never removes adults.
-- 0.1.0 founding chambers are recognized as built (tier 1, nursery and food store), with no terrain change.
-- Mature and Great stay unreachable until later turns add queen's halls, material stores and tiers.
+- A chamber function counts only with its owned marker block (brood pile, food cache or material store) in an open, enclosed chamber. The queen's hall has no marker block; it counts while the living queen is settled in her room.
+- An adult counts only as a found, living body. A failed lookup is unknown, not dead; only a recorded death removes an adult.
+- A colony is promoted only when confirmed state meets the stage, and demoted only when even its unknowns could not. An unknown store adds its largest possible content (18 food units; 96 clay or 48 other units) to the possible count only.
 
-**Configured limit.** `prime_ants.colonyAdultCapacity` is now an upper bound (decision 17): default 120, valid 4..120, and the effective cap is min(stage cap, bound). A bound below a threshold deliberately holds that stage.
+**Adult limit setting.** `prime_ants.colonyAdultCapacity` is an upper bound (decision 17): default 120, valid 4–120. The effective cap is the smaller of the stage cap and this bound, so a bound below a threshold holds the colony at that stage.
 
-**0.1.0 migration.**
+**0.1.0 saves.**
 
-- New saves write `ColonyAdultCapacityBound` on the queen and `AdultCapacityBound` on the pile.
-- A 0.1.0 save's `ColonyAdultCapacity` or `AdultCapacity` is read only when the new key is absent, and is still validated 4..30.
-- It migrates once. A saved 30, the 0.1.0 default and maximum, becomes 120, so the colony can pass 30 once Mature is reachable. A saved 4..29 is kept as a deliberate reduction.
+- 0.1.0 founding chambers count as built: tier 1, with a nursery and a food store. No terrain changes.
+- New saves write `ColonyAdultCapacityBound` on the queen and `AdultCapacityBound` on the brood pile. A 0.1.0 save's `ColonyAdultCapacity` or `AdultCapacity` is read only when the new key is absent, is still validated as 4–30, and migrates once: a saved 30 (0.1.0's default and maximum) becomes 120, so the colony can grow past 30 later; a saved 4–29 is kept as a deliberate reduction.
 
-## Implementation notes - 2026-10-07 (stage-1 T03 first dug chamber)
+### Stage hysteresis and regression
 
-Decisions 6 and 24 now have concrete numbers. The nest plan (`dev.primeants.founding.NestBlueprint`) is a declarative table of rooms and passages in the founding nest's frame, compiled into a dig-task queue that real workers carry out block by block; it never places blocks.
+- Promotion is immediate.
+- A stage the colony holds drops only after one of its requirements, or a lower stage's, has been certainly unmet for 24,000 loaded ticks in a row (one Minecraft day).
+- Each requirement has its own unmet-since clock. It counts the nursery's loaded ticks and is saved with the colony's chambers and stage, so it survives save and reload. A saved clock that is ahead of the current tick restarts.
+- Shortfalls that wait for their clock: food, clay and stone; a chamber that is still confirmed but below the tier a stage needs; adults below the held stage's threshold but not below the threshold of the stage beneath it. A Young colony reduced to its queen waits too, because one adult is not below Founding's threshold.
+- Losses that apply at once:
+  - The queen observed dead. The colony drops to Founding (cap 5) at the next evaluation, all clocks clear, and it cannot be promoted, even with five living workers and an intact nursery and cache.
+  - A chamber function observed absent, held by no confirmed or unknown chamber: a breached shell, a missing or foreign marker, or the hall without its living queen.
+  - Adults certainly below the threshold of the stage beneath the one held. The colony drops to the stage its adults support.
+- Unknown terrain or members never demote and run no clock; a clock starts again once its shortfall is certain.
+- While the queen is observed alive, an unloaded entrance or plug cell leaves the hall unknown rather than lost; damage seen in loaded blocks still counts as a loss.
 
-- **Bounds.** Every planned and shell cell lies within 10 blocks of the entrance forward or sideways, and from 3 blocks below the entrance level up to that level. One placement digs at most 32 cells. The 0.1.0 widening keeps its own radius 6 and depth 3.
-- **First chamber.** A Young colony that certainly lacks a material store digs a two-high 3x3 store room and a passage through the founding chamber's back wall (24 cells), on the left or right of the passage, keeping the other side free for the queen's hall. Only witnessed natural or colony-prepared soil is dug; the 0.1.0 widening goes first.
-- **Confirmation.** A fault seen in loaded blocks now beats unavailable terrain in every chamber check and in brood care, so an unloaded cell can no longer hide observed damage. Only reason labels changed for mixed cases.
+### Caregivers, builders and foragers
 
-## Implementation notes - 2026-10-07 (stage-1 T04 queen's hall and material hauling)
+- **One builder.** A colony has one builder at a time, shared by the 0.1.0 widening, room digging, wall upgrades, mining and surface work, and it takes work in that order. An empty miner gives way to upgrade work as soon as there is some.
+- **Two caregivers.** A worker is taken as a builder, or as an extra forager, only if at least two authorized caregivers remain without it. Nursing is authorized only while the habitat is confirmed (see the next section).
+- **Foragers.** A colony keeps one forager for every ten living workers, and at least one: one forager up to 19 workers, two from 20 to 29, three from 30 to 39, five at Mature's cap of 60 adults and eleven at Great's 120. A further forager is claimed only while the colony keeps two caregivers without it and, unless a builder is already at work, one more worker for the builder slot. A further forager that comes back from a trip when the colony no longer needs it returns to the colony's care; the first forager always keeps its claim. Each forager carries its own cargo, and every claim is saved with the queen.
 
-- **Store capacity.** A tier-1 material store holds 32 units. Sixteen of them are kept for clay, so Mature's 16 clay always fit beside up to 16 units of stone, gravel, sand and ore. For the stage, clay and stone count as known only in a confirmed store; an unknown store adds 32 clay or 16 stone to the possible count only.
-- **Units.** One item is one unit: clay ball (clay); cobblestone and stone (stone); gravel; sand; coal, raw copper and raw iron (ore, kept for stage 2). Nothing else is accepted. A forager hauls only items lying on the ground in its search area, one per trip, and only once its trip found no dropped or native food.
-- **Queen's hall.** It is the 0.1.0 widening side the colony's widening did not take: three by two columns, two high, 12 cells, dug from the queen's own chamber, so the queen and her brood pile never move. It registers once as its own tier-1 chamber without a marker block; it counts while its cells and the habitat are intact and the living queen is settled inside her room.
+### Damaged and unknown habitat
 
-## Implementation notes - 2026-10-07 (stage-1 T05 nursery upgrade and brood capacity)
+The founding chamber's habitat covers the stairs, the widening and every dug chamber and gallery: one connected nest that brood care and every chamber check read live.
 
-- **Walls and tiers.** A chamber's wall cells are the horizontal faces of its open cells that the nest plan never opens; floor and roof are not walls (the floor may be witnessed stone, the roof is the surface layer). Its confirmed tier is the lowest tier of its wall cells, read live: anything solid counts 1, the colony's own packed clay or resin masonry 2, its own nest-cut stone 3. A block a player places never raises a tier. The founding chamber, which holds the nursery, has eight wall cells.
-- **Upgrade work.** Mature unlocks tier 2 (Great tier 3). One worker at a time takes one clay ball from the confirmed store, carries it and rams it into the next wall cell's own earth: one clay per packed-clay cell, and no soil goes to the mound. A cell that is no longer natural or colony earth stops the job. Clay in the colony's own walls of a confirmed chamber, and in the builder's mandibles, keeps counting toward Mature's 16 clay.
-- **Brood capacity.** At default timing (144,000-tick adult lives, three 12,000-tick brood stages, one egg per 1,200 ticks) a nursery sustains slots x speed x 4 workers, and never more than 120 (the laying limit). The founding chamber gives 3 slots at x1 (12 workers, enough for Young's 5); the queen's hall adds 4 slots (28 workers, enough for Mature's 25); tier-2 nursery walls add 3 slots and x1.5 (60 workers, enough for Great's 50); tier-3 walls, built from T06, add 8 more slots and x2 (120 workers, Great's cap). Speed applies to running and new brood stages alike.
-- **Store display.** The material store shows a clay heap of up to eight levels, a heap of other stock of up to four, four units a level, and one lump for each other material present, so two stores whose totals differ by eight units or whose materials differ always look different.
+- A fault seen in loaded blocks always wins over unloaded terrain, in every chamber check and in brood care, so an unloaded cell cannot hide damage seen elsewhere. Unloaded terrain alone only makes a result unknown.
+- Nursing pauses while the habitat is damaged or unknown. For example, if the next mining face is unloaded and is also part of the shell of the gallery already dug, the habitat is unknown and nursing pauses.
+- By design, a pause costs the colony neither its caregivers nor its builder. While the habitat is only unknown, workers that keep valid nursing roles still count as caregivers, though their work stays paused. While loaded damage pauses nursing, a builder already at work (for example a miner) keeps its claim and cargo until the habitat is restored, even with no authorized caregivers. In both cases no worker is newly taken for work, and the ordinary rule of two authorized caregivers applies again as soon as the habitat is restored.
+- Unknown terrain never grants permission to work.
 
-## Implementation notes - 2026-10-07 (stage-1 T06 stage mound and food shares)
+### The nest plan and the first dug chamber
 
-- **Stage mound.** Soil dug out of nest-plan rooms (the material store, the queen's hall, later rooms) is laid on the mound plan of the colony's current stage, its first plan-based surface structure. The plan uses the old blueprint's tiers primitive (stacked elliptical truncated cones) and lies behind the entrance in two lobes, one either side of the approach lane; the lane, the exterior standing spot and the stairs stay clear. Young: two lobes three layers high, a footprint 15 columns wide (side -7 to 7) and 8 deep (forward -8 to -1), 98 columns and 214 cells. Mature: two lobes five layers high, 23 columns wide (side -11 to 11) and 13 deep (forward -13 to -1), 242 columns and 798 cells, containing the Young mound. Great keeps Mature's plan for now. A founding colony has no plan: its 0.1.0 founding deposits and the 0.1.0 widening keep their own lists, inside the Young lobes.
-- **Mound cells.** Each column sits on its own ground: the highest witnessed natural soil or stone within two blocks of the entrance's level. A cell takes soil only if it is air or a witnessed short native plant, which is buried without drops, and rests on natural ground or the colony's own mound soil. Fluids, blocks a player placed, block entities, logs, leaves, crops and any other block stop the column beneath them and are never covered or removed. A room is planned only if the plan's free cells hold its soil; a builder with nowhere to lay keeps its soil and waits. Mound soil is the colony's own nest soil, a counted stock; nothing removes it when the colony regresses.
-- **Food shares.** The six-slot food cache keeps two slots for each kind of food: it holds at most four sugar units (apples, berries, nectar) and at most four protein units (chicken, rotten flesh, prey). A forager picks up dropped food only while its kind is below that share. Caches saved before this change load as they were.
-- **Upgrade ledger.** An upgrade job counts the units dead builders released to transfer custody cumulatively (its equation: taken = carried + built + released) and names each release's custody transfer, so the units still in custody now are a separate figure.
+The nest plan (`dev.primeants.founding.NestBlueprint`) is a declarative table of rooms and passages in the founding nest's frame. It compiles into a queue of dig tasks that real workers carry out block by block; it never places blocks. Every space is two blocks high.
 
-## Implementation notes - 2026-10-07 (stage-1 T07 stage hysteresis, foragers, plug soil and legacy caches)
+- **Bounds.** Every planned cell and shell cell lies within 10 blocks of the entrance forward or sideways, and between 3 blocks below the entrance level and that level. One placement digs at most 32 cells. The 0.1.0 widening keeps its own radius of 6 and depth of 3.
+- **First chamber.** A Young colony that certainly lacks a material store digs a 3 × 3 store room, two high, and a passage to it through the founding chamber's back wall: 24 cells. The room goes to the left of the passage if the terrain allows, otherwise to the right, and the room on the other side is kept free for a later room. Only witnessed natural soil, or soil the colony prepared itself, is dug, and the 0.1.0 widening goes first.
+- A room is planned only if the free cells of the colony's mound plan can take all of its soil (see Stage mound and plug soil).
+- When the room is dug, its worker sets up the colony's store block on the floor and the chamber is registered.
 
-- **Stage hysteresis (the owner's decision of 2026-10-07).** Promotion stays immediate. A stage the colony holds drops only once one of its requirements, or a lower stage's, has been certainly unmet for 24,000 loaded ticks in a row. Each requirement has its own unmet-since clock, counted in the colony's nursery's loaded ticks and saved with the colony's chambers and stage, so it survives save and reload. Shortfalls that wait for their clock: food, clay and stone; a chamber still confirmed below the tier a stage needs; adults below the held stage's threshold but not below the threshold of the stage beneath it (a Young colony's queen alone is not below Founding's one adult). Losses that apply at once: the queen observed dead; a chamber function observed absent, held by no confirmed or unknown chamber (a breached shell, a missing or foreign marker, the hall without its living queen); adults certainly below the threshold of the stage beneath the one held, which drop the colony to the stage its adults support. Unknown terrain or members never demote and run no clock; the clock starts again once the shortfall is certain.
-- **Foragers.** A colony keeps one forager for every ten living workers, and at least one: up to 19 workers exactly one, as 0.1.0's test colonies (at most ten workers) and stage-1's earlier test colonies (at most seventeen) do; 20 to 29 workers two, 30 to 39 three, five at Mature's cap of 60 adults and eleven at Great's 120. A further forager is claimed only while the colony keeps two caregivers without it and, unless a builder already works, one more worker for the builder slot. A further forager that comes back from a trip when the colony no longer keeps it returns to the colony's care. Each forager carries its own cargo, and every claim is saved with the queen. The T22 growth gate is unchanged.
-- **Plug soil.** When the queen's founding deposit list is full, the forager that opens the nest lays the two plug units on the colony's stage mound plan; a Founding colony has no plan of its own and uses Young's, its first. Founding-site validation (at least 22 deposits) is unchanged.
-- **Caches saved before the food shares.** A cache that holds more of one kind than its share sheds the units beyond the share when the other kind arrives: they leave through transfer custody onto the chamber floor beside the cache, where they stay in the world until their kind has room again, and the arriving unit gets in.
+### Material store and hauling
 
+- **Units.** One item is one unit: clay ball (clay); cobblestone and stone (stone); gravel; sand; coal, raw copper and raw iron (ore, stored for the planned forge). Nothing else is accepted.
+- **Capacity.** It depends on the store chamber's confirmed tier: 32 units at tier 1, 64 at tier 2, 96 at tier 3. Other materials may fill at most half of the store, so the clay half always stays available: at tier 1, Mature's 16 clay always fit beside up to 16 units of stone, gravel, sand and ore.
+- **Hauling.** Food comes first: a forager looks for dropped material only after its trip found no dropped food and no natural food (nectar or prey). It takes only items lying on the ground in its search area (24 blocks around the nest's exterior standing spot, 3 blocks up or down), one unit per trip, and only while the confirmed store has room for that material, checked again at the moment of pickup. If collectable dropped food appears before then, the forager leaves the material where it lies and goes for the food.
+- **Capacity changes.** While the store's terrain is unknown, its capacity is held. A loaded fault or a lower confirmed tier reduces what it accepts at once but never removes contents; an overfull store accepts nothing until it has room again.
 
-## Implementation notes - 2026-10-08 (stage-1 T08 chamber tier two)
+### Queen's hall
 
-- **Catastrophic interpretation.** Observed queen death independently forces Founding/cap five at the next production
-  evaluation, clears grace clocks and prevents promotion, even with five surviving workers and intact nursery/cache.
-  Catastrophic population loss retains immediate regression to the stage supported by remaining adults; the owner may
-  override this interpretation. An unavailable entrance/plug is unknown with an observed living queen; loaded damage wins.
-- **Physical ownership.** Founding walls serve nursery and food store through one upgrade job; material store and hall
-  follow. Shared physical walls count once, each converted with one clay fetched from the confirmed store. One builder
-  and two retained caregivers, player-wall preservation, saved claims/cargo/work and exact custody accounting remain.
-  A low store heap permits a supported diagonal work stand only with actual ray visibility and the existing reach.
-- **Tier-two numbers.** Nursery retains +3 slots and ×1.5 development. Food capacity 6→12, reservation 2→4 per kind;
-  material capacity 32→64, clay reservation 16→32. Hall base cadence 1,200→600 loaded ticks uses the existing time multiplier
-  and live confirmed tier. Brood capacity calculations agree. Food gates, costs, nutrition, stage caps/thresholds,
-  founding reserve/site validation and adult lifespan/fasting remain unchanged.
-- **Inventory and display.** Canonical inventory format 2 extends only the declared ranges; old unversioned format 1
-  retains old-range validation. Unknown terrain and capacity loss never truncate contents. Overfull stores wait; food
-  share shedding uses physical, exactly-once custody. Food total plus six kind samples gives 832 runtime states/eighteen
-  model parts; material clay 0..16, other stock 0..8 and four samples gives 2,448 runtime states/twenty-nine parts. Equal
-  material projections preserve kind sets and totals within seven units. Meaningful asset and 16×16 guards remain.
-- **Evidence boundary.** q1 and restored f2 each passed with two identical concurrent copies in attempt 2. r22's XML,
-  exit metadata and milestones prove three safety passes; they passed fresh revalidation after the shared-fixture edit. Deterministic
-  five-record serialization remains separate from natural growth. Fresh tier-two original and two copies completed all
-  unchanged acceptances at 51,328 / 55,689 / 53,127 ticks, versus r23's original pass and two 60,000-tick timeouts. A finite
-  player-style twelve-apple wave after stocks fall below 24,000 restored actual sugar receipts for the stalled colony;
-  production growth/care/cadence and acceptance predicates were not changed. HallAvailability's original and two copies
-  passed the 20,000-tick bound, 600-loaded-tick unknown interval and two restored confirmations, with both actual hall
-  clock suffixes checked. Full-build and older-regression results are recorded separately in T08's report.
-- **Retention.** Fresh server UUIDs retain the newest ten direct runs, current included, with Gradle leases/session locks
-  protecting active runs and escaping/link/reparse paths rejected. Non-run entries, client worlds and evidence are untouched.
-  The existing legacy client deletion action is skipped for server runs. The prior disposable selection/junction/lock
-  fixture and initial cleanup evidence are retained; only automatic rolling retention runs now. Console evidence is
-  explicitly UTF-8; prior UTF-16 originals remain preserved.
-- **Next scope.** Placement-survey walking-route/dig-timeline exclusions and the unattended pre-Mature clay gap remain.
-  Mature-gated mining does not fill the earlier supply gap. T09 prioritizes mining/player contributions and precisely
-  diagnosed reliability carryovers; tier three and Great remain after mining.
+- The hall extends the queen's own chamber on the 0.1.0 widening side that the colony's widening did not take (the left side if there was no widening): 3 × 2 columns, two high, 12 cells, dug from the chamber itself, so the queen and her brood pile never move.
+- A Young colony digs it once its material store is confirmed and the hall is certainly missing.
+- It registers once as its own tier-1 chamber without a marker block, and counts while its cells and the habitat are intact and the living queen is settled in her room.
 
-### Implementation validation addendum - 2026-10-08 (T08 forager recovery)
+### Food cache shares
 
-The first unfiltered T08 build executed all 236 server/94 unit cases but failed f2 at 30,000 and f3 at 60,000 ticks; its model task did not execute. A full protein share retained a forager's food cargo; f3 also plateaued in Young at 21 adults with a full cache before a late clay drop. The fixture now opens with three apples/two chickens and counts all ground/cache/worker-cargo/custody food before finite refills, leaving one actual delivery slot and kind margins. It offers f2's same eight clay only when both real claimed foragers are empty and searching. No cargo, AI, nutrients, stage/growth rules, assertion or bound is changed. An intermediate recovery still missed overlap in one copy despite storing all eight clay. The final targeted recovery passes all three identical f2 bodies (ends 19,853 / 20,004 / 20,027), and f3 reaches 31 adults at 33,317 (Mature 28,083). The additional unfiltered build follows this positive recovery; its result is recorded in T08's report. Tier-two/safety production dependencies are unchanged by this test-only repair; their full-build and concurrent passes remain separate evidence.
+- **Capacity.** It depends on the founding chamber's confirmed tier: 6 slots at tier 1, 12 at tier 2, 18 at tier 3. A third of the slots is kept for each kind of food, so one kind fills at most two thirds: at tier 1, at most 4 sugar units (apples, sweet berries, nectar) and 4 protein units (chicken, rotten flesh, prey); 8 of each at tier 2; 12 of each at tier 3.
+- A forager picks up dropped food only while its kind is below that share; at tier 3, food already being carried back to the cache counts toward it. A forager that reaches a full cache waits there with its unit.
+- **Older caches.** Caches saved before the shares existed load as they were. If such a cache holds more of one kind than its share, then when the other kind arrives, the units beyond the share leave through transfer custody onto the chamber floor beside the cache, where they stay until their kind has room again, and the arriving unit gets in.
 
-## Implementation notes - 2026-10-08 (stage-1 T09 bounded physical mining)
+### Chamber walls, tiers and upgrades
 
-- **Concrete mining limits.** Horizontal Euclidean radius **16 blocks from the entrance**, edited cells **1–6 blocks below
-  entrance level**, at most **64 new mining excavation cells per colony**, including connector soil. Existing founding,
-  widening and chamber bounds are unchanged. This first conservative compiler supplies one connected, supported,
-  two-high route beyond the store passage (forward 8..15, side zero, depths one/two), at most sixteen cells; it does not
-  search arbitrary deposits or replan a partially dug stopped route.
-- **Deterministic units.** One successfully removed natural resource block produces one carried item, with no vanilla
-  loot as another producer: **stone → cobblestone; clay → clay ball; gravel → gravel; sand → sand; coal ore → coal;
-  copper ore → raw copper; iron ore → raw iron**. Ore remains stockpiled without processing. Connector soil remains dirt
-  cargo on the physical soil-to-mound path and joins the existing soil ledger.
-- **Authority and work.** Only a held Mature/Great production evaluation admits mining. Separate `NaturalMaterials`
-  observations at genuine witnessed ProtoChunk-to-LevelChunk conversion cover the surface through sixteen blocks below;
-  they do not broaden `NaturalSoil` eligibility. Loading, old/retrogen terrain and geological appearance grant no mining
-  authority. Later writes, including same-state replacement, revoke it. A real claimed worker approaches, performs a
-  twenty-loaded-tick action, carries one unit and deposits within physical reach of the confirmed owned store. Loaded
-  state, expected block, positive origin, bounds, budget, ray reach, exposure, support and room are rechecked at removal.
-  Gravity stays enabled; falling roofs and survival violations are refused. Unknown or changed availability holds work
-  and cargo. A lower held stage stops new removal while ordinary authorized delivery remains possible.
-- **Priority and persistence.** One exclusive builder and two retained caregivers, existing excavation/upgrade priority
-  and food foraging remain. An empty miner yields to available upgrade work; a worker on the surface then walks through
-  the existing stair before fetching clay. Plans, claims, successful edits, deliveries and named death releases are saved,
-  without abstract mining income. Current ground/carried/store/custody/incorporated units are counted independently of
-  cumulative history; clay wall incorporation and connector soil are included. Only actual declared worker openings join
-  integrity checks. Planning inspects a bounded fixed queue on a slow cadence; mining terrain is never force-loaded.
-- **Evidence boundary.** Permanent mining/interruption bodies keep 60,000 total ticks, negative windows 600 nursery
-  loaded ticks, restoration two fresh production evaluations plus actual work, and settlement 200 loaded ticks. Test-only
-  food openings change 12 apples/10 chickens to three/two for new mining fixtures, with counted finite later waves;
-  all legacy supplies and assertions remain. Unavailable-caregiver, preparation, handoff and other diagnostic results
-  remain explicit in T09's report. Mature-gated mining does not resolve unattended pre-Mature clay supply. Placement
-  survey walking routes/dig timelines, unattended development and arbitrary deposit reliability remain uncovered.
+- **Walls.** A chamber's wall cells are the horizontal faces of its open cells that the nest plan never opens. Floor and roof are not walls: the floor may be witnessed stone, and the roof is the surface layer. The founding chamber, which holds the nursery and the food store, has eight wall cells.
+- **Tiers.** A wall cell is tier 1 if it is anything solid (natural or colony earth, natural stone, a block a player placed), tier 2 if it is the colony's own packed clay (resin masonry, also tier 2, is meant for other species), and tier 3 if it is the colony's own nest-cut stone. A chamber's confirmed tier is the lowest tier of its walls, read live. A block a player places never raises a tier and is never converted.
+- **Unlocks and order.** Mature unlocks tier 2 and Great unlocks tier 3. Upgrades go chamber by chamber: the founding chamber first (one job serves both the nursery and the food store), then the material store, then the queen's hall; all three reach tier 2 before tier-3 work starts. A wall shared by two chambers is converted and counted once.
+- **Tier-2 work.** One builder takes one clay ball from the confirmed store, carries it and rams it into the next wall cell's own earth, which becomes packed clay: one clay per cell, no soil leaves the nest and nothing goes to the mound. A cell that is no longer natural or colony earth stops the job, and the unspent clay goes back to the store.
+- **Tier-3 work.** The builder faces each packed-clay cell the colony built with nest-cut stone, using one intact stone item (`minecraft:stone`) per cell; cobblestone stays bulk stock and is not used. The clay core stays in place.
+- **Counting.** Clay in the colony's own walls of a confirmed chamber, and in the builder's mandibles, keeps counting toward Mature's 16 clay. Stone in tier-3 walls, or carried for them, keeps counting toward Great's 32 stone.
+- **Builder.** An upgrade needs a recipe unit in the confirmed store, no other builder at work, finished room digging, and a free worker that leaves two caregivers.
+- **Ledger.** Each upgrade job keeps exact accounts: taken = carried + built + released, where released counts the units that dead builders handed to transfer custody. Each transfer is recorded by its ID, so the units still waiting in custody are a separate figure.
+- **Effects.** At tier 2 the nursery gains 3 brood slots and raises brood 1.5 times as fast, the food cache grows from 6 to 12 slots, the material store from 32 to 64 units, and the queen's hall halves the laying interval from 1,200 to 600 loaded ticks. At tier 3 the nursery has 8 extra slots instead of 3 and raises brood twice as fast, the cache holds 18 and the store 96, and the hall's interval is 300 ticks. Tiers change nothing else: food rules, costs, stage caps and thresholds, the founding reserve and adult lifespan stay the same.
 
-## Implementation notes - 2026-10-09 (T09 strict interruption diagnosis)
+### Brood capacity and laying speed
 
-- **Preserved physical scope.** Radius sixteen, depths one-six and sixty-four new mining edits including connector
-  soil remain the runtime guards. The supplied fixed gallery still exercises sixteen actual cells, fourteen resource
-  units and two mound-soil units; it does not establish excavation of the whole sixty-four-cell budget or arbitrary veins.
-  The seven deterministic natural-block/item mappings and unchanged soil authority are in the preceding T09 notes.
-- **Unknown habitat.** The next face is also the shell of the already excavated connector. Its unavailability correctly
-  makes the connected habitat unknown and pauses nursing authorization. Fresh diagnosis records zero active caregivers
-  but twenty-seven saved nursery roles in the latest unfiltered run (the earlier isolated diagnosis had thirty-one);
-  the unchanged two-active-caregiver assertion fails. It is not silently reinterpreted
-  as retained roles. The permanent failure and its incomplete 600-tick window remain. Later unavailable/foreign-store and
-  same-state-replacement phases in that body are unverified. A new shape guard confirms that this unknown cannot hide a
-  separately loaded gallery breach. No production protection or acceptance assertion is relaxed.
-- **Recovery evidence.** The main gallery and two identical isolated concurrent copies pass at 45,444 / 46,766 / 54,041
-  total ticks with every material, exact custody/soil/clay-wall accounting, confirmed functions and two-hundred settled
-  loaded ticks. The last copy performs the surface-soil/available-hall-upgrade handoff and continues actual work. The
-  tier-two diagnostic passes at 49,146, including four natural brood, normal reload/first resumed step and 600 unknown
-  loaded ticks plus two restored evaluations. Separate safety and unfiltered build outcomes are recorded in T09's report.
-- **Restored-recipe evidence.** Final targeted main copies pass at 46,049 / 46,371 / 48,638; tier two at 51,452 and
-  reload/death at 46,790, with current stone stock eight, ground/carried/custody zero and the release entity absent.
-  r02's successful gravity and stage-regression windows remain separate evidence. The restored targeted full-store
-  preparation timed out, then passed in the unfiltered r06 build at 56,913. All fifty mining assertions and all original bounds stay identical; only diagnostic
-  observers and the shape guard remain in the recovery diff. Fresh unfiltered acceptance is reported independently.
-- **Abandoned supply experiment.** A temporary fixture-only late hall-wave trigger 24,000 to 8,000 retained the same
-  twelve physical apples, initial supplies, production gates, nutrition and bounds. The r01 natural-four/reload recovery
-  occurred during unchanged work meals before any late hall wave, so it did not establish a causal repair. r02 added a
-  final death-unit recovery failure and a 60,000-tick full-store preparation timeout. The accepted 24,000 trigger was
-  restored before final recovery and acceptance. No supply change remains in the delivery. A test-only observer records current
-  ground/carried/store/custody, transfer-entity state, food cache and real foragers at the unchanged death endpoint.
-- **Limits retained.** Mature-gated mining does not resolve unattended pre-Mature clay supply. Placement-survey walking
-  routes/dig timelines remain uncovered; supplied fixtures do not establish unattended development or arbitrary deposit
-  reliability. Tier-three construction, Great growth acceptance and release work remain deferred.
+At default timing (adults live 144,000 loaded ticks, a brood passes three stages of 12,000 ticks each, and the queen lays one egg per 1,200 ticks), a nursery sustains slots × speed × 4 workers, but never more workers than the queen can lay eggs for in one lifespan (120 at the base laying interval). Slots: 3 for the founding chamber, 4 more with the queen's hall, and 3 more with tier-2 nursery walls or 8 more with tier-3 walls.
 
-### Closeout addendum - 2026-10-09 (T09 retry)
+| Nursery | Slots | Speed | Workers sustained | Enough for |
+|---|---|---|---|---|
+| Founding chamber, earth walls | 3 | ×1 | 12 | Young (5) |
+| With the queen's hall | 7 | ×1 | 28 | Mature (25) |
+| With tier-2 nursery walls | 10 | ×1.5 | 60 | Great (50) |
+| With tier-3 nursery walls | 15 | ×2 | 120 | Great's cap (120) |
 
-The recovered r06 build executed 244 server cases (243 passing; strict caregiver failure at 43,175) and 98 passing unit
-cases in 7,574.56 seconds, exit 1. Source stayed unchanged. Its model XML predates that invocation and is not fresh model
-execution. Gallery, tier two, reload/death, full-store backpressure and contributions passed supplied scenarios; T09's
-report records the retry independently. Unknown gallery terrain still pauses nursing authorization while the miner
-retains its claim. The unanswered requirement is preserved: two currently authorized caregivers, not merely saved roles.
-Later store/foreign-store/worker replacement phases in the failing body remain unverified.
+- Speed applies to running and new brood stages alike.
+- The hall's live confirmed tier sets the laying interval (1,200, 600 or 300 loaded ticks for tiers 1, 2 and 3), scaled by the brood time multiplier `prime_ants.broodMultiplier`.
+- A check at class load makes sure that what each stage can build sustains its next threshold with workers alone.
 
-Public client evidence now serializes repository-relative capture/save paths and placeholders for external inputs;
-absolute runtime properties remain rooted for the client's different working directory. The build checks newly indexed
-and existing tracked text for profile absolute paths without printing their contents, and preserves binary assets.
-Model/validator tasks precede the server workload so even a red build can record fresh model execution. Acceptance names,
-assertions and bounds are unchanged. No surface-structure checkpoint or semantic caregiver repair is included.
+### Store and cache display
 
-## Implementation notes - 2026-10-09 (T09 owner caregiver decision, 15:25)
+- The material store block shows a clay heap and a heap of other stock, one level per four units (clay up to 8 levels at tier 1, 16 at tier 2 and 24 at tier 3; other stock up to 4, 8 and 12), and one lump for each other material present (stone, gravel, sand, ore). Two stores whose totals differ by eight or more units, or whose materials differ, always look different.
+- The food cache block shows how many units it holds and which of the six foods are present (apple, chicken, sweet berries, nectar, rotten flesh, prey).
+- The block state is only a display. The inventory is the list of one-unit stacks saved in the block entity.
+- **Inventory formats.** Stores and caches save a format number. A save without one (format 1) is checked against tier-1 limits, format 2 against tier-2 limits, and format 3, the current one, against tier-3 limits. Unknown terrain or a lost tier never truncates contents.
 
-The owner decided that during an **unknown habitat** pause, living colony members retaining valid nursing roles count
-toward the requirement for at least two caregivers; their work remains paused. This supersedes the formerly unanswered
-interpretation recorded in the strict-interruption and retry notes above. Historical evidence and those notes are retained.
+### Stage mound and plug soil
 
-The fixture uses `Findings.Verdict.UNKNOWN`, so loaded damage retains precedence. It counts real loaded, ticking, living,
-mature, enabled members with the correct brood lineage, home and nursing task plan, an owned operational nursery and
-living physically present queen, excluding every forager, digging/mining builder and upgrade claim. It requires ordinary
-authorized caregivers again after restoration and keeps that predicate for `DAMAGED` habitat. Production nursing,
-feeding, excavation, upgrade and delivery authorization is unchanged; unknown terrain grants no work authority.
+- Soil dug out of nest-plan rooms and mining connectors is laid on the mound plan of the colony's current stage. The plan uses the old blueprint's tiers primitive (stacked elliptical truncated cones) and lies behind the entrance in two lobes, one on each side of the approach lane. The lane, the exterior standing spot and the stairs stay clear.
+- **Young:** two lobes three layers high in a footprint 15 columns wide (side -7 to 7) and 8 deep (forward -8 to -1): 98 columns, 214 cells.
+- **Mature:** two lobes five layers high, 23 columns wide (side -11 to 11) and 13 deep (forward -13 to -1): 242 columns, 798 cells, containing the Young mound.
+- **Great** keeps the Mature mound; its additions are the surface structures below.
+- **Founding** has no mound plan. Its 0.1.0 founding deposits and the 0.1.0 widening's deposits keep their own lists, inside the Young lobes.
+- **Cells.** Each column sits on its own ground: the highest witnessed natural soil or stone within two blocks of the entrance level. A cell takes soil only if it is air or a witnessed short plant, which is buried without drops, and only if it rests on natural ground or the colony's own mound soil. Fluids, blocks a player placed, block entities, logs, leaves, crops and any other block stop the column beneath them and are never covered or removed.
+- A builder with nowhere to lay its soil keeps it and waits.
+- Mound soil is the colony's own nest soil, a counted stock. Nothing removes it when the colony regresses.
+- **Plug soil.** When the queen's founding deposit list is full, the forager that opens the nest lays the two plug units on the colony's mound plan; a Founding colony, which has no plan of its own, uses Young's.
 
-The targeted recovery completed the two unknown windows and their restored evaluations, then exposed the prescribed
-observed-damage stop condition at tick 42,849. A loaded foreign-owned store is a revoked completed chamber opening
-(`material_store_completed_opening_revoked`), hence `DAMAGED`: nursing authorization pauses while the miner retains
-one clay ball and its existing claim. The ordinary two-authorized-caregiver assertion remains red. The recovery stops
-without extending the decision to damage or changing existing production handling; later interruption phases are unverified.
+### Mining
 
-## Implementation notes - 2026-10-09 (T10 owner damage-pause decision)
+- **When.** Only a colony held at Mature or Great mines, and only after widening, room digging and upgrade work. A drop to a lower stage stops new removals, but a miner can still deliver a unit it already carries.
+- **Limits.** Within 16 blocks of the entrance horizontally, 1 to 6 blocks below the entrance level, and at most 64 new mining cells per colony, connector soil included. Founding, widening and chamber bounds are unchanged.
+- **Gallery.** The current planner digs one fixed, connected, supported gallery two blocks high beyond the store passage: forward 8 to 15, straight ahead, at most 16 cells. It is planned only if it contains at least one natural resource block, and it ends after the last one. It does not look for deposits elsewhere and does not replan a partly dug gallery that has stopped.
+- **Units.** One removed block gives one carried item, never vanilla loot: stone → cobblestone, clay → clay ball, gravel → gravel, sand → sand, coal ore → coal, copper ore → raw copper, iron ore → raw iron. Ore is stored without processing. Connector soil becomes dirt and goes to the mound like other dug soil.
+- **Natural materials.** Resource blocks are recorded as natural when a newly generated chunk is converted, from the surface down to 16 blocks below it. This record is separate from the soil rules and does not widen them. Loading old terrain, or a block merely looking natural, never grants it; any later write, even of the same block, cancels it.
+- **Work.** A claimed miner walks up, works for 20 loaded ticks, carries one unit and puts it into the confirmed store within reach. At each removal the game rechecks loaded state, the expected block and its origin, bounds, budget, line of sight and reach, exposure, support, and room in the store (or a free mound cell for soil). Gravity stays on: a block under a falling block such as sand or gravel is never removed (this is checked before a miner is even picked), and neither is a block whose removal would break support. Unknown or changed terrain holds the work and the cargo.
+- **Saving.** Plans, claims, successful removals, deliveries and the units dead miners released are saved; there is no abstract mining income. Only cells the miner actually dug join the habitat checks. Mining never force-loads terrain, and planning inspects a small fixed queue on a slow cadence.
+- **Known gap.** Mining does not help a colony reach Mature. Until then its clay must come from clay balls lying on the ground near the nest, for example dropped by a player.
 
-The owner decided that while loaded damage pauses all nursing, an existing miner retains its cargo and claim until
-habitat restoration even with zero authorized caregivers. The two-caregiver admission guard prevents taking nurses
-away for work; no worker is newly taken during this pause. This supersedes the historical unanswered damage
-interpretation in the T09 notes above, which remain preserved.
+### Surface structures
 
-The expectation changes only in the foreign-store interruption phase. Its snapshot proves prior productive mining,
-the same living worker, claim and exact cargo, loaded DAMAGED habitat, foreign-store and nursing nonauthorization,
-unchanged removal/delivery/release history, no replacement builder or nurse diversion, one-builder exclusivity and
-all physical food, clay, soil and mining ledgers. The shared UNKNOWN nurse qualifications and loaded-damage precedence
-remain unchanged. Ordinary authorized caregivers apply again immediately after restoration, with two fresh production
-evaluations and actual retained-miner delivery before the same-state replacement phase. Production handling is unchanged.
-The permanent interruption now observes a genuinely resumed Mature mining action before replacing its next target;
-a delivery below Mature alone is insufficient. Its replacement observation continues after the empty claim clears,
-correcting a fixture completion guard that skipped the negative window. Fresh recovery finishes at 44,755 total ticks:
-four separate 600-nursery-loaded-tick windows, two fresh restored evaluations and 200 settled ticks. During foreign
-damage the same living miner holds one clay ball and its claim with zero authorized caregivers, unchanged removal /
-delivery / release counts 5 / 4 / 0; restored delivery is observed with 30 authorized caregivers. All physical ledgers hold.
+- Surface plans are bundled data (`data/prime_ants/surface_plans/`), compiled into an ordered queue of cells and kept separate from the mound's spoil capacity. Young has no structures beyond its mound.
+- **Mature (19 cells):** an entrance arch three blocks high just behind the entrance (two pillars, a lintel over the open lane and a one-block step beside each pillar), and one mound crest four blocks high with one-block steps up to it.
+- **Great (57 cells, including Mature's 19):** two-high ramparts on both sides of the arch, a five-high watch post at each end with one-block steps behind it, and the base of each arch pillar converted into a mound gate.
+- **Bounds.** Up to 14 blocks behind the entrance and 12 to either side, six layers high, each column on ground found within two blocks of the entrance level; at most 64 structure cells. The approach lane stays open two blocks high and the exterior standing spot stays clear. A plan's sizes, costs and order are fixed before any block is built.
+- **Cost.** Each structure block uses one soil unit taken from the colony's own mound. A gate is compacted earth around the open two-high passage: converting a pillar base keeps the soil already paid there and costs no extra unit, stone or clay. Mound soil that already sits in a structure cell is kept as a paid foundation instead of being replaced, and cells finished under the Mature plan carry over into the Great plan.
+- **When.** Work starts at Mature (the Great part at Great), only when no widening, room digging, upgrade or mining work is waiting. It uses the one builder slot and keeps two caregivers.
+- **Work.** The builder takes a unit only from the colony's own removable mound soil (open air above, solid support below, outside the approach lane and the Great structure's columns, nothing standing on it), carries it in its mandibles, walks to a supported stand and works 20 loaded ticks for each removal and each placement. Loaded state, the colony's claim on the cells, stage, support, collisions, line of sight and reach are rechecked at each action. The builder keeps its chosen stand through normal stair jumps and reloads, rechecking it every tick. If its own body is in the target cell, it keeps its claim and walks on until the cell is clear; nothing is placed into an occupied cell.
+- **Stops and waits.** Unloaded terrain pauses the work. Any later write to a target cell, even one that leaves the same block, revokes permission to build there, and because cells are built in order, a blocked cell keeps the plan from completing. A drop below the plan's stage stops new work; blocks already paid stay. An empty builder that cannot go on (no stand, a route stuck for 1,200 ticks, other work taking priority) is released and the job waits. A builder that has to give up while carrying a unit leaves it in transfer custody as a named item, and the job stops.
+- **Saving.** The plan description, each column's ground level, one receipt per paid cell (naming that cell), the claim, the carried unit and named releases are saved. A save whose receipts do not match the plan's cells is rejected, so a receipt can never move to another cell. Moving mound soil into structures does not change excavation history; the colony's current soil count includes surface blocks and gates.
 
-The instrumented full-store original offered 32 stone at 28,711, first picked up at 45,644 and filled its share at 55,782;
-upgrade completion was already 42,698. The supported contribution moves from forward -5 to -1 on the existing clear
-approach lane, at the same nursery-tier trigger. Quantities, one-unit trips, food/clay waves and the 24,000 hall trigger
-remain unchanged. Original and two identical concurrent copies finish at 56,141 / 54,110 / 55,527 with all frozen windows.
-The three eighteen-unit food bodies also pass; the historical 10,323 cause remains unresolved. The broader diagnostic
-exposes untouched regression/death endpoint assertions and a gravity preparation timeout. Their negative evidence remains
-in T10's report; no further assertion relaxation, production change or deadline extension is claimed.
-Fresh T10 dependency revalidation is separate from the passing mining interruption/full-store bodies. The isolated
-tier-two body times out at 60,000: all four functions are tier two by 41,738, but natural expanded brood, fractional
-reload, faster hall laying and the later unknown/restoration window remain unobserved. At 59,000 it holds Mature,
-41 adults, no brood, eight food units and 36 stored clay; the recent-income gate is closed. Its accepted recipe,
-24,000 hall trigger, growth/care predicates and bound are preserved. Store-upgrade safety passes fresh. Final unfiltered
-acceptance and any unresolved red results are recorded independently in T10's report. No further expectation is relaxed.
+### Founder access
 
-## Implementation notes - 2026-10-10 (stage-1 T11 mining recovery)
+A queen-founded colony on flat ground can get stuck on its Mature plan: after four paid cells, the next cell, the base of the mound crest (forward -4, side 3, layer 0), is mound soil already in place but buried on all sides, so no worker can reach it. By design, the surface job then gets one finite access step, run by the same single builder. Here layer 0 is the first block above the ground at the entrance level.
 
-- **Safety and assignment.** Actual production consideration refuses natural stone beneath sand before worker selection.
-  An empty yielded claim need not be reacquired for that refusal. A scoped test observer returns the original guard result
-  unchanged. Assigned-miner gravity coverage now prepares real chamber upgrades first, using only remote unopened-cell
-  unavailability; habitat, origins, supplies and completed work remain physical. A separate declared first unsafe face
-  proves refusal with an eligible living worker and two authorized caregivers, without an assignment. Both original/copy
-  sets retain 60,000 total ticks and complete 600 negative plus 200 settled nursery-loaded ticks with intact blocks/ledgers.
-- **Full-store preparation.** The same 32 cobble are offered at the same nursery-tier trigger/location. Only their pickup
-  waits for the live store's actual tier-two capacity; each unit remains on the ground and is then normally hauled. The
-  diagnosed tier-one share had trapped two cobble carriers while upgrades waited for clay. Smallest recovery and permanent
-  mining revalidation pass every unchanged backpressure, release, restored-evaluation, cargo/delivery and settlement check.
-  Food/clay waves, the 24,000 hall trigger, production priorities and all substantive assertions remain unchanged.
-- **Evidence limits.** Regression and tier-two original/two-copy campaigns pass; their historical causes remain unresolved.
-  Three death bodies fail immediate recovery after gallery completion with seven stored/one named ground cobble, zero
-  pending and eight conserved. Later real foragers restore eight stored. No deficit is demonstrated; the fixture couples
-  independent completion times. The frozen assertion is retained, not replaced by a wait. A later original pass is separate
-  evidence. The eighteen-unit historical failure is still unexplained. No production/growth/nursing/terrain-policy change,
-  unsafe assignment or deadline increase is included. Final build outcome and exact fresh discovery belong to T11's report.
-  Pre-Mature clay, arbitrary veins/all64 edits, survey walking/dig timelines and unattended development remain uncovered;
-  surface construction stays deferred and T12 is at risk.
+- It applies only to the bundled Mature plan, with exactly four paid cells (two kept as foundations, two placed), the buried crest base next, every column on ground at the entrance level, and exactly 72 blocks of the colony's soil on the surface.
+- Two fixed moves: the soil unit at forward -4, side 2, layer 1 goes to forward -9, side 8, layer 0; then the unit at forward -4, side 2, layer 0 goes to forward -10, side 7, layer 0. This opens a stand beside the crest base. Both destinations must be free cells of the Mature mound plan.
+- Each removal and each redeposit takes 20 consecutive loaded action ticks. The lower unit must still pass the ordinary removability check after the first redeposit. There is no exception for structure columns and no third move.
+- Both destinations hold saved reservations for the colony and the unit; any write there, even air to air, cancels them and stops the access.
+- The moved unit is a tagged dirt item and is always in exactly one place: the builder's mandibles, transfer custody, or a named item on the ground. If the carrier dies, one other worker may pick up that named item and carry on; a second carrier death ends the access, with the unit left in named custody.
+- A cancelled or completed access is saved and is never started again for the same job.
+- The access keeps its own history (removed + named pickups = redeposited + carried + released) and earns no excavation or structure credit. Only the ordinary surface work that follows adds the usual receipt for the crest base.
+- If the next target is still buried after the access, the job stops; no wider clearing follows.
+- The access stops if the queen dies, the colony's home changes, paid surface blocks change, the stage falls below Mature, the excavation history changes, or a source or destination is revoked. If the crest base becomes unloaded, the access pauses and resumes only after two fresh evaluations confirm Mature.
+- Normal saving and reloading keep the access state; recovery from an abrupt crash is not guaranteed.
 
-## Implementation notes - 2026-10-10 (stage-1 T12 bounded surface work and death ordering)
+### Colony defence
 
-- **Owner's death ordering.** Gallery completion is a frozen milestone followed by at most 6,000 nursery-loaded recovery ticks inside the unchanged 60,000 total. The original 600 unavailable-custody and 200 settled windows, reload/lethal/repeated-death/claim/custody/removal/delivery assertions remain. Read-only test wrappers forward the actual pickup hand write and owned-store deposit once; every canonical hand write invalidates the active source identity. Named pickup and deposit, rather than stock totals or entity disappearance, are required. The isolated original passes with early recovery; a concurrent copy passes after 2,237 recovery ticks. The cohort's original and second copy time out in earlier preparation/remaining mining. T11's 47,187 / 47,078 / 46,424 negatives remain: eight conserved cobble at those endpoints establish an event-order conflict, not demonstrated material loss. Existing mining priorities remain.
-- **Plans and recipe.** Bundled semantic earth plans reuse the mound/IR/shape approach. Young's 214-cell and Mature's 798-cell spoil envelopes remain capacities. Mature desires 19 paid cells: supported three-high open entrance arch and one four-high mound crest with one-block steps. Great desires 57 unique cells including Mature, two paid gate conversions, connected two-high ramparts and two five-high posts with one-block step access. Bounds remain back fourteen, side twelve, six structural layers, ground search plus/minus two; new structural locations stay below sixty-four. Dimensions, costs and queue order were frozen before physical execution. Each structural block incorporates one recovered soil unit, including each mound-gate jamb. Gate masonry is compacted earthen structure around the open two-high passage; conversion keeps the soil already paid at that location. It consumes no additional unit or mining stone/clay.
-- **Physical owner.** One ordinary worker shares the existing builder, retaining two caregivers and all earlier food/dig/upgrade/mining priorities. It takes only a currently owned removable mound unit, retains canonical mandible cargo, walks to an actually supported stand and acts for twenty loaded ticks. Loaded state, ownership, stage, support, body collision and the same ray/reach checks are revalidated. Sources under other blocks or bodies and protected access are refused. Previously selected supported goals persist through normal stair jumps and normal actor/data reload; their current validity remains checked. A surface-only 1,200-controller-tick route limit releases an empty stalled builder or names and preserves its carried unit in custody; it does not widen any acceptance deadline. Unknown terrain pauses, same-state player writes revoke permission and a blocked essential component cannot complete. A regression stops newly admitted work while already paid blocks remain. Descriptive plan/binding, actual receipts, claim, cargo and named releases persist. Historical excavation deposits remain unchanged when deposited soil moves; current soil locations include surface soil and gate units.
-- **Measured partial delivery.** Controlled starting habitats declare real registered adults, actual tier-two chambers/stores, eighty owned soil units and finite existing food. Production computes their stage; scoped initial opening ownership grants no excavation, upgrade or surface work receipt. A first nursery initialization failed before actions; its original identities now refer to three actual declared initial adults. The first placement exposed a receipt-index crash; the one-index correction precedes focused recovery. The cached-stand repair prevents treating a normal airborne path query as a missing work stand. Fifteen actual Mature placements then conserve all eighty units, but the next raised mound step has no reachable stand in the declared habitat. Complete Mature/Great forms are cut at this measured component; the arch lintel, finished crest, gate conversions, ramparts and watch posts are unobserved. The supplied founder reaches real Mature, but its first physical attempt builds zero surface units. No footprint, cost, reach, supply or deadline is widened and no completed form is claimed.
-- **Protection and reload boundary.** Same-state target revocation survives actual disk reload through 600 loaded ready ticks and 200 settled ticks, with zero recovery/placement and the empty builder released. The separate protection body observes 600 target-unavailable ticks, two fresh restored confirmations, actual hauling disk/data and canonical actor reload, resumed placement, lethal worker death, one named soil release and a replacement hauling worker. Construction/settlement is incomplete at 12,000. Final unfiltered execution and dependency checks are recorded separately in `<turnloop>/directions/prime-ants-stage1/turns/T12/report.md`.
-- **Limits retained.** Historical regression/tier-two timing causes and the eighteen-unit failure at 10,323 remain unresolved. Mature mining still cannot supply unattended pre-Mature clay. The fixed sixteen-cell gallery proves neither arbitrary veins nor all sixty-four edits; placement-survey walking/dig timelines and unattended development remain uncovered. Tier three, established colonies, 120-adult performance, broad persistence and release acceptance require later turns. The T12 surface checkpoint is partially delivered.
+- **What alarms a colony.** Damage a player in survival mode deals to one of its ants, or a player's successful break of a block the colony currently owns (for example its nest soil, plugs, brood pile, food cache or material store). The game reads which colony owns the block before the block changes, and raises the alarm only after the break succeeds. Creative and spectator players never alarm a colony.
+- **Response.** Adult workers of that colony (not callows) within 12 blocks of the harm point respond. They pursue only the player who caused the harm, and only while that player is within 16 blocks of the harm point; a worker already pursuing keeps going up to 16 blocks from it. They bite at physical reach with a clear line of sight, for one health point per bite, with a 20-tick cooldown.
+- **Duration.** The alarm lasts 600 loaded ticks; new harm renews it.
+- Defence interrupts work: the worker keeps its task, cargo and claims and resumes afterwards, and crop sharing in progress is cancelled. There is no reputation, automatic repair or resource credit.
 
-## Implementation notes - 2026-10-10 (stage-1 T13 surface access diagnosis)
+### Transfer custody and saves
 
-- **A builder's own body.** The supplied founder's first surface target can intersect its claimed empty-handed worker
-  while that worker walks to the owned source. The old controller released the claim on that genuine collision, then
-  repeatedly reassigned the same task. Six bounded original-guard observations identified the same worker, its exact
-  body bounds and zero cargo; other occupants were absent. The repair lets that claimed worker follow its already
-  validated supported goal through ordinary navigation until its body clears. Recovery and placement still recheck
-  occupancy, ownership, loaded support, visible physical reach and twenty loaded work ticks. No action occurs in the
-  occupied branch. The scoped permanent regression observes the original guard once before movement and requires the
-  same living identity's actual first paid block, independent eighty-unit conservation and 200 nursery-loaded settled
-  ticks. Its separate initial habitat declares a diagonal source approach; setup creates no labor receipts.
-- **The raised prefix.** Three actual selectors reject all 32 candidates at the fifteen-paid-cell Mature prefix:
-  28 floor/two-high-clearance refusals and four candidates whose in-reach rays all clip, with no unloaded candidate, body refusal
-  or navigation query. Raised supported stands put their head cell in the closed GameTest's barrier ceiling. The
-  unchanged 64x8x64 template has local ground four; the four-high crest's last cell coincides with that ceiling and the
-  five-high posts exceed it. Prefix coverage proves supported, connected, visible next-task stands on open declared
-  ground and separately reproduces the ceiling refusal. This does not prove physical complete construction. The actual
-  T12 compiled next cell is `-4,3,2`; its `-5,3,2` narrative label was incorrect. The frozen form and test enclosure are
-  preserved; complete Mature and Great acceptance remain blocked by this boundary.
-- **Existing payments.** Queue, cell membership, plan description and job codec are unchanged. Golden coverage uses two
-  actual T12 disk prefixes with fifteen paid receipts and one named historical release, retains all keys, identities
-  and balances on decoding, and rejects reassignment to another cell. A real fourteen-paid-cell hauling disk/data and
-  canonical actor reload retains its claim, source, receipts and one dirt cargo, then resumes the fifteenth physical
-  placement. Historical excavation receipts remain separate. Full verification, protection/reload results, discovery,
-  counts and the one unfiltered build belong to `<turnloop>/directions/prime-ants-stage1/turns/T13/report.md`.
-- **Limits.** The T12 death-order correction and its 6,000-loaded recovery within 60,000 total, with 600/200 windows,
-  remain unchanged. Its two concurrent preparation/mining timeouts, historical regression/tier-two timing causes and
-  unexplained eighteen-unit failure at 10,323 remain negative. Paid-stall handoff and retained-building regression are
-  unverified. Unattended pre-Mature clay, arbitrary veins/all64 edits, survey walking/dig timelines and unattended
-  development remain uncovered; tier three, established colonies, 120-adult performance, broad persistence and release
-  acceptance need later turns.
-
-## Implementation notes - 2026-10-10 (stage-1 T14 enclosure and sharded acceptance)
-
-- **Owner-authorized enclosure.** The six surface bodies alone use a dedicated 64 x 16 x 64 template. Actual Minecraft
-  ceiling, horizontal barriers and air clearance are checked; local ground four, terrain, positions, supplies, forms,
-  reach, twenty-loaded-tick actions and deadlines are retained. `idle_ground` and production planning/codec are unchanged.
-- **Protection oracle.** The original snapshot remains fixed. A scoped observer records only an original ordinary
-  upgrade's exact registered chamber wall, legal pre-state, canonical clay consumption, built prefix and exact ledger.
-  Only that evidenced before/after transition is accepted while current colony ownership remains valid. A new physical
-  negative rejects off-footprint player glass and packed clay with fabricated mod ownership but no chamber payment.
-  Protected supports and other off-footprint cells remain checked. Great's abstract prefix coverage now starts with all
-  nineteen Mature cells and remaining physical spoil, testing seventeen inherited cells and both retaining conversions;
-  it remains separate from real navigation.
-- **Recovered and blocked milestones.** Controlled Mature completes nineteen actual placements, fourteen-paid hauling
-  disk/data and actor reload, real forager passage walking and two hundred settled loaded ticks at 4,521. Protection
-  completes at 5,450 with the original six hundred unavailable ticks, two restored confirmations, hauling reload,
-  resumed payment, exactly one named lethal/repeated-death release, another hauling worker, nineteen placements and
-  two hundred settled ticks; twenty recovered units equal nineteen placed plus one released, with eighty conserved.
-  Founder recovery passes the old snapshot conflict but remains four of nineteen at 60,000: two new placements and
-  two retained paid foundations. Three original selectors reject the already-paid buried Young cell `-4,3,0`: thirty
-  floor/clearance and two visibility/reach refusals each, no accepted stand. All six adjacent faces are solid; readiness,
-  Mature, thirty caregivers, no priority and no dig claim are observed. This is not repaired by changing reach, clearing
-  surrounding paid spoil or fabricating inheritance. Targeted Great advancement and the six-body surface cohort stop
-  at this Mature boundary. The complete build still executes every permanent identity and reports its result separately.
-- **Harness and limits.** An explicit 73-fast/179-long partition preserves all 252 permanent server cases, 108 unit and
-  26 model cases. One frozen compilation feeds separate fresh UUID server processes with original environments and
-  multipliers, weighted frozen assignments and configurable total concurrency one through four (default four). Exact
-  subsets remain diagnostic. Child and merged XML, exits, identities, timestamps and input hashes are validated without
-  hiding failures. Registration/pruning share a mutex and keep newest ten plus every older active lease/session. Real
-  multi-process smoke and adversarial harness/retention checks precede the one complete final invocation. An early new
-  graph exposed the legacy client-directory Delete task; both that action and its client EULA writer are now skipped
-  for sharded server graphs, with preserved client-directory hash evidence. A one-ULP NTFS timestamp race was reproduced
-  and corrected by reading a later post-write clock, retaining the strict freshness interval. Operational timings are
-  compared with T13's 11,227.441 seconds, not treated as a controlled speed benchmark or colony MSPT.
-- **Future cadence and carryover.** Fast acceptance every turn plus affected exact long names; complete long acceptance
-  at T15, T18, release and after broadly shared colony changes. Historical concurrent mining-death preparation timeouts,
-  regression/tier-two timing causes and eighteen-unit failure at 10,323 remain unresolved; the named-unit pickup/deposit,
-  6,000 nursery-loaded recovery inside 60,000 total and original 600/200 windows are unchanged. Paid-stall handoff,
-  retained-building regression, unattended pre-Mature clay/development, arbitrary veins/all sixty-four edits and survey
-  walking/dig timelines remain uncovered. Tier three, established colonies, 120-adult performance, broad persistence
-  and release acceptance remain outstanding.
-
-## Implementation notes - 2026-10-11 (stage-1 T16 owner-authorized founder access)
-
-The supplied T16 contract records the owner's 2026-10-11 answer: **"authorizes implementation now. Do not ask again."**
-The exact granted sequence is `(-4,2,1) -> (-9,8,0)`, then `(-4,2,0) -> (-10,7,0)` in the entrance material-cell frame.
-It is one SurfaceWork subjob under the existing exclusive builder, bound to the actual owner/home, immutable Mature
-plan and the four-receipt prefix whose next existing paid cell is `(-4,3,0)`. Two removals and two redepositions each
-require twenty consecutive loaded action ticks. The lower source must pass unchanged `recoverable` after the first
-redeposition; no structural-column exception or third relocation is authorized.
-
-Access destinations have two exact saved owner/unit reservations; every write, including air-to-air, revokes them.
-Canonical actor equipment, existing TransferCustody pending, or its verified named ground entity owns the only unit.
-At most one actual named pickup per operation may continue after a real carrier death; a second actual carrier death
-ends continuation in named custody. Saved cancellation/completion cannot re-admit the same attempt. Access has separate
-`removed + named_pickups = redeposited + carried + released` history and grants no excavation/structural credit.
-Only the later ordinary selector and retained-foundation action may append its usual receipt. Normal coherent reload
-evidence is distinct from abrupt-crash durability. Current physical acceptance and any next obstruction are recorded in
-`<turnloop>/directions/prime-ants-stage1/turns/T16/raw/access-acceptance.json`; no broader clearing or Great repair follows.
+- Items that leave a worker or a block without being delivered (a dead worker's cargo, units shed by an older cache, the contents of a broken store or cache, a surface unit given up) go into transfer custody: the level's saved data keeps each stack under an ID until it can be set down in the world as an item entity with that ID. A unit is therefore always in exactly one place: a store, a worker's mandibles, custody or the ground.
+- Jobs record each release by its transfer ID, so their accounts stay exact across deaths and reloads.
+- State is consistent across normal saves and reloads; recovery from a crash in the middle of a handoff is not guaranteed.

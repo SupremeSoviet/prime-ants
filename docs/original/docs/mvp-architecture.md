@@ -42,5 +42,5 @@ through C2S trade packets, but rendered with the existing tablet screen.
   needs rank and a crafted seal; truce is Hive-gated; war pacts are Citadel-gated.
 - Chitin armor now uses `chitin_plate`, which itself needs fiber and resin. This
   makes armor a mid-game goal rather than the first thing crafted from raw shards.
-- The imagegen reference sheet is stored at `docs/imagegen-ant-colony-stage3-reference.png`;
+- The reference sheet is stored at `docs/imagegen-ant-colony-stage3-reference.png`;
   generated Minecraft PNGs remain small, readable, and deterministic.

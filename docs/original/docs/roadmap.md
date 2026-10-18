@@ -8,23 +8,20 @@ Every roadmap slice must pass:
 
 - `scripts/test-mod.cmd -AllowMissingGitHub`
 - `scripts/gui-smoke.cmd`
-- manual original-resolution review of every latest screenshot (no GPT-5.4 mini)
-- `scripts/autonomous-gate.cmd -AllowMissingGitHub -NoLaunch`
+- manual original-resolution review of every latest screenshot
 
 `P0` and `P1` visual findings block the slice. `PASS` and `PASS WITH NOTES` are
 acceptable only when remaining findings are `P2`/`P3` polish debt.
 
 The active visual north star is `docs/visual-intent/formic-visual-intent.md`.
-The autonomous loop must not switch to mechanics/playability until
-`build/autonomous-loop/visual-feature-matrix.json` has every required row at
-`pass` and `scripts/autonomous-gate.cmd -AllowMissingGitHub -NoLaunch` accepts
-fresh screenshots plus image-capable assessment. Current must-have visual rows
+Work must not switch to mechanics/playability until the visual feature matrix
+has every required row at `pass` on fresh screenshots. Current must-have visual rows
 include multiple large organic chambers, visible tunnel mouths, no
 single-mound-only pass, realistic insect-like ants, unclipped ant lineup,
 complete mound camera framing, organic/asymmetrical ant-like buildings,
 non-overlapping structure spacing, the later holey-block redraw, and tablet
-visual hierarchy. Current user retargeting accepts forest-floor density and the
-broad material palette for now; do not reopen those rows unless the user asks.
+visual hierarchy. Current retargeting accepts forest-floor density and the
+broad material palette for now; do not reopen those rows without a new decision.
 Custom Formic block/item textures must be 32x32 rather than 16x16 before the
 visual baseline can unlock mechanics.
 
@@ -148,7 +145,7 @@ visual-baseline work is the separate 32x32 asset slice described above.
 
 Slice R3: Colony Tablet 2.0.
 
-Status: complete (2026-07-12 manual original-resolution QA, no GPT-5.4 mini).
+Status: complete (2026-07-12 manual original-resolution QA).
 
 - Player promise: the tablet feels like a living colony journal, not a 2000s RTS
   ledger.
@@ -171,17 +168,6 @@ hover inspector; integrated request Help actions; and complete EN/RU layouts.
 All seven tablet scenes pass at 1600x900. The remaining P2 texture-resolution
 rows are intentionally tracked as a later asset slice rather than hidden by the
 R3 completion status.
-
-## Slice Format For Autonomous Work
-
-Each roadmap item should be implemented as a playable slice, not as an invisible
-subsystem-only task.
-
-- Player promise: what the player can see or do after the slice.
-- Implementation notes: the smallest code/content change that delivers it.
-- Tests: unit/GameTest/build checks required for the slice.
-- Visual QA coverage: existing or new `/formic qa scene <name>` coverage.
-- Done criteria: player-facing proof and visual assessment threshold.
 
 ## Stage 1: Playable Visual Baseline
 

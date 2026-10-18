@@ -11,3 +11,6 @@ replay_*.log
 *.hprof
 *.jfr
 logs/
+
+# Client capture output (screenshots and provenance written by the capture tasks)
+docs/screenshots/

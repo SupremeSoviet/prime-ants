@@ -83,8 +83,8 @@ A content row may be marked `pass` only when:
 - A deterministic gametest exercises the feature end to end and asserts the
   state change (resource delta, caste reassignment, stage advance, relation
   change, combat outcome, unlock), and `scripts/test-mod.cmd` is green with that
-  test included. Anthropic harness guidance: features are atomic and testable,
-  and you only mark a feature passing after the test actually proves it.
+  test included. Features are atomic and testable, and a feature is marked
+  passing only after the test actually proves it.
 - The feature is reachable in normal play (wired into colony tick / tablet /
   worldgen), not dead code.
 - If the feature has UI, a targeted tablet screenshot proves labels/icons do not
