@@ -1,3 +1,5 @@
+> **Historical T20 negative.** T21 complete6 now passes the general exact-timeout policy with383raw passes and3qualified timeouts; production behavior is unchanged and the historical cause below remains UNKNOWN. Native client checks/images pass; T23 records the owner-accepted client recording exception dated 2026-10-18 08:33:25 UTC; the measured waiting bound remains unresolved. [Current acceptance](release-0.2.0-acceptance.md).
+
 # T20 release blocker — miner named-unit recovery assertion
 
 **Nonexempt assertion; publication blocked.** The exact identity's documented 60,000-tick timeout is the only
@@ -32,7 +34,7 @@ this named item in the unchanged fixture; an isolated pass cannot replace comple
 External local evidence under `<turnloop>/directions/prime-ants-stage1c/turns/T20/`:
 `raw/t20-miner-assertion-diagnosis.json`, `raw/t20-failed-miner-native-boundary.json`, full native/merged XML,
 the filtered queen trace and the CRC/hash-verified closed shard world archive (396 files).
-[Current acceptance](release-0.2.0-acceptance.md) · [Final prepared EN/RU notes](release-0.2.0.md).
+[Current acceptance](release-0.2.0-acceptance.md) · [Final EN/RU notes](release-0.2.0.md).
 
 ## Русский
 

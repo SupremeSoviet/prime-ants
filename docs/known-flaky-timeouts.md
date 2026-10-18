@@ -46,3 +46,40 @@ Fresh non-timeout failures still require preservation and supported diagnosis be
 T20's fresh complete oversized result is PASS, without an exemption. Its complete long suite is nevertheless raw red
 because the miner mid-haul identity fails the separate original 6,000-loaded-tick named-recovery assertion.
 That assertion is nonexempt under this exact policy. See the [current release blocker](t20-release-blocker.md).
+
+
+## T21 complete6 general-policy and native-exit reconciliation; T22 verification
+
+The owner policy is not a closed seven-name allowlist. Each actual native failure is checked by exact identity,
+original outer bound and complete-run pass/timeout history. Every current case outside the qualified set executes
+and passes. Assertions, inner miner6,000 assertions, errors, crashes, wrong outcomes and omissions remain blocking.
+Complete6 contains383/386 raw passes, three exact qualified outer timeouts and zero errors/skips. Original XML,
+root/Gradle/native exits and the old driver's STOPPED_FOR_REVIEW disposition remain unchanged.
+
+Additional exact qualifications, each with an exact native PASS in the complete386-identity T20 run:
+
+| Exact identity | Original outer bound | Complete T20 native XML SHA-256 |
+|---|---:|---|
+| `prime_ants_test:colony_stage_game_test_unavailable_entrance_never_hides_loaded_broken_wall_and_the_colony_regresses` | 24,000 | `8eb625f92288c138adcc827fb405ceb00ab4d43fbd2400c1c754265e5f2ea7e7` |
+| `prime_ants_test:nursery_upgrade_game_test_upgrade_keeps_every_unit_through_reload_and_killed_builder_and_never_converts_player_changed_wall` | 60,000 | `748aae3e9b4064e4f7ecc09822ba6d9a89452435b98e4b7614ce666fd8e219d4` |
+
+The already documented surface60,000 qualification is the third current timeout. Native long exits[0,2,1]
+equal required-failure counts[0,2,1] after complete XML and normal shutdown. Pinned GameTestServer.onServerExit
+returns getFailedRequiredCount; code2 is not changed to0 or treated as a crash. Eleven failure-shape and four
+exit/count controls reject assertions, wrong bounds/identities, missing completion and crashes. The obsolete
+0/1-only driver stopped after preserving reports/worlds; separate offline review completed the accounting.
+The report-name collision was fixed only in the offline consumer. Original failures remain preserved; no retry
+or gameplay change followed these reporting corrections. Historical physical causes remain UNKNOWN.
+
+Fresh T22 checkFast passed77fast/124unit/26model/29Python with exits0/0/[0]. It ran no309-case long suite;
+complete6 remains the unchanged source for long acceptance. T23 separately passed the same fast checkpoint77/124/26/29, exits0/0/[0]. On 2026-10-18 at08:33:25UTC, the owner
+accepted the existing T21 client recording exception for release. The measured per-site wait remains unresolved:
+chunk(10,9), cell(2,2),0–2351ticks against1200; acceptance does not prove the bound was met. [Current status](release-0.2.0-acceptance.md).
+
+Общая политика не ограничена семью именами. Два дополнительных точных имени/предела выше имеют native PASS полного
+T20; complete6 содержит три исходных внешних timeout и383прохода. Все прочие тесты выполнены успешно. Exits[0,2,1]
+равны required failures после полного XML/штатного shutdown; код2 не превращён в0. Assertions, внутренний miner6 000,
+ошибки, crashes и пропуски не освобождены. T22 выполнила только fast-проверку; long-доказательства повторно использованы.
+
+T23 также прошла fast77/124/26/29 с exits0/0/[0]. 2026-10-18 в08:33:25UTC владелец принял существующий клиент T21
+с исключением записи: chunk(10,9), cell(2,2),0–2351при1200; соблюдение предела не доказано.

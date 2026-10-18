@@ -28,6 +28,6 @@ public abstract class ServerShardSelectionMixin {
                 ||actual.size()!=new HashSet<>(actual).size()||!new HashSet<>(actual).equals(new HashSet<>(permanent))
                 ||!actual.containsAll(names)||registered.stream().anyMatch(h->h.value().manualOnly()))throw new IllegalStateException("Exact frozen permanent/shard discovery differs");
         dev.primeants.PrimeAnts.LOGGER.info("Exact frozen shard selection label={} assigned={} permanent={} process={}",manifest.get("label"),names.size(),actual.size(),ProcessHandle.current().pid());
-        ci.setReturnValue(registered.stream().filter(h->names.contains(h.key().identifier().toString())));
+        ci.setReturnValue(dev.primeants.gametest.RecordedGameTestContext.select(registered,names,h->h.key().identifier().toString()));
     }
 }

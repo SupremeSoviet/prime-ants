@@ -29,12 +29,9 @@
 
 ---
 
-> **2026-10-18 — 0.2.0 is unpublished:** versioning, final EN/RU note source and exact timeout policy are prepared,
-> but fresh complete T20 acceptance finds a new nonexempt miner-recovery **assertion**. Client acceptance,
-> current screenshots, tagging and publication are stopped at that gate. [Current acceptance](docs/release-0.2.0-acceptance.md) ·
-> [Blocker](docs/t20-release-blocker.md) · [Prepared EN/RU notes](docs/release-0.2.0.md).
-> Published 0.1.0 and the gallery below remain historical. The bounded T19 functional persistence proof is retained;
-> performance remains a known limitation.
+> **[Release 0.2.0](https://github.com/SupremeSoviet/prime-ants/releases/tag/v0.2.0):** accepted T21 complete6, a fresh T23 fast checkpoint and the existing native client/four PNGs.
+> On 2026-10-18 at 08:33:25 UTC the owner accepted the client recording exception: chunk `(10,9)`, cell `(2,2)`, 0–2,351 cumulative loaded search/wait ticks against 1,200. Compliance remains unproved; release acceptance does not prove the bound was met.
+> [Current acceptance](docs/release-0.2.0-acceptance.md) · [EN/RU notes](docs/release-0.2.0.md) · [Known timeouts](docs/known-flaky-timeouts.md).
 
 ## 🐜 What is this?
 
@@ -67,22 +64,21 @@ to raise a replacement.
 
 ## 🖼️ Gallery
 
-**Historical 0.1.0 captures; current 0.2.0 images are not accepted yet.**
+Four individually reviewed native F2 PNGs from the accepted 0.2.0 runtime in the existing T21 fresh Survival world. The owner accepted the disclosed recording exception; no new client or screenshot campaign was run.
 
 | | |
 |:---:|:---:|
-| <img src="docs/screenshots/t28-release-entrance.png" width="420" alt="Nest entrance and soil mound"><br><sub>A young nest: the entrance and the queen's soil mound</sub> | <img src="docs/screenshots/t28-release-interior.png" width="420" alt="Torch-lit nest chamber"><br><sub>Inside by torchlight: the queen, workers, a pale young ant, a cocoon and a tiny white egg</sub> |
-| <img src="docs/screenshots/t26-final-review-a6-worker-worker-detail.png" width="420" alt="Worker close-up"><br><sub>A worker up close</sub> | <img src="docs/screenshots/t25-appearance-a5-queen-queen-daylight.png" width="420" alt="Queen in daylight"><br><sub>The queen out in the daylight</sub> |
+| <img src="docs/images/v0.2.0-t21/exterior.png" width="420" alt="Generated Young nest exterior beside a village; grass left intact."><br><sub>Generated Young nest exterior beside a village; grass left intact.</sub> | <img src="docs/images/v0.2.0-t21/worker-at-entrance.png" width="420" alt="Real worker at the existing entrance, before player lighting."><br><sub>Real worker at the existing entrance, before player lighting.</sub> |
+| <img src="docs/images/v0.2.0-t21/populated-interior.png" width="420" alt="Living queen, workers and food cache in the existing chamber."><br><sub>Living queen, workers and food cache in the existing chamber.</sub> | <img src="docs/images/v0.2.0-t21/cache-detail.png" width="420" alt="Chamber, workers and physical cache detail from the opposite corner."><br><sub>Chamber, workers and physical cache detail from the opposite corner.</sub> |
 
-<sub>All pictures are real in-game captures; the camera was moved for framing. The banner and the queen show an earlier
-model revision.</sub>
+<sub>Generated initial state, ordinary speed, player-camera access and one normal torch. Uninterrupted service after lighting is not claimed. [Provenance](docs/release-0.2.0-acceptance.md). The banner depicts an earlier model revision.</sub>
 
 ## 🚀 Getting started
 
 **You need:** Minecraft Java Edition 26.3 · Java 25 · Fabric Loader 0.19.5 · Fabric API 0.161.0+26.3
 
 1. Install a [Fabric](https://fabricmc.net/use/installer/) profile for Minecraft 26.3.
-2. Put [`prime_ants-0.1.0.jar`](https://github.com/SupremeSoviet/prime-ants/releases/latest) and the matching
+2. Put [`prime_ants-0.2.0.jar`](https://github.com/SupremeSoviet/prime-ants/releases/download/v0.2.0/prime_ants-0.2.0.jar) and the matching
    [Fabric API](https://modrinth.com/mod/fabric-api) into your `mods` folder.
 3. Create a **new world** and go looking for ants. 🔍
 
@@ -101,7 +97,7 @@ model revision.</sub>
 
 ## ⚠️ Good to know
 
-**Unreleased 0.2.0 candidate: release acceptance is blocked by the fresh assertion above.**
+**Release 0.2.0 retains the disclosed owner-accepted recording exception and limitations below.**
 
 - One species, *Lasius niger*. Established Young/Mature generation and automatic catch-up are implemented;
   nuptial flights and active fruit harvesting remain future work.
@@ -127,7 +123,7 @@ See [T16 conditions](docs/t16-cap-performance.md), [final EN/RU notes](docs/rele
 ## 🗺️ Roadmap
 
 - 🪽 nuptial flights, with young queens founding new colonies nearby
-- 🏰 established Young/Mature nests at world generation — accepted on unreleased `master`, pending 0.2.0
+- 🏰 established Young/Mature nests at world generation — delivered in 0.2.0
 - 🌿 aphid herding and honeydew
 - ⚔️ border fights and wars between colonies
 - 📓 a field journal for your observations
@@ -149,8 +145,7 @@ The separate every-turn fast suite and packaging can be run with:
 ./gradlew checkFast assemble --console=plain --rerun-tasks
 ```
 
-This checks the fast suite, not complete Stage-1 or release acceptance. Current branch jars still carry version
-**0.2.0** and are **unreleased candidate artifacts**, distinct from the previously accepted release jar linked above.
+This checks the fast suite, not complete Stage-1 or release acceptance. Local builds carry version **0.2.0**; use the published asset and SHA256SUMS above to identify the exact tested release bytes.
 
 ## 📚 More
 

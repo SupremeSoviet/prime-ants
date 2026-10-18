@@ -143,6 +143,7 @@ public final class TestIdentities {
         return j;
     }
     public static void chosen(UUID queen,List<? extends Entity> input,Entity chosen){
+        MinerCausalProbe.selection(queen,"actual_first_forager_chosen",String.valueOf(chosen==null?null:chosen.getUUID()));
         var s=owners.get(queen);if(s==null||!traced(s.test))return;
         selection(queen,"first_forager_min_input",input);
         var j=event(s,"selection_result");j.addProperty("queen",queen.toString());j.addProperty("site","first_forager_min");j.addProperty("chosen",chosen==null?null:chosen.getUUID().toString());emit(j);
@@ -154,6 +155,7 @@ public final class TestIdentities {
     }
     /** Observes the real production query's returned list without sorting/filtering/re-querying it. */
     public static void selection(UUID queen,String site,List<? extends Entity> rows){
+        MinerCausalProbe.selection(queen,"actual_"+site,rows.stream().map(e->e.getUUID()+":"+e.position()).toList());
         var s=owners.get(queen);if(s==null||!traced(s.test))return;
         var j=event(s,"selection_input");j.addProperty("queen",queen.toString());j.addProperty("site",site);var list=new JsonArray();
         var q=s.test.getLevel().getEntity(queen) instanceof LasiusNigerEntity a?a:null;

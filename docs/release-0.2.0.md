@@ -1,46 +1,41 @@
-# Prime Ants 0.2.0 — prepared EN/RU release-note source
+# Prime Ants 0.2.0 — EN/RU release notes
 
-**UNPUBLISHED / NOT ACCEPTED.** T20's fresh complete acceptance contains a new nonexempt miner-recovery
-assertion. The owner-authorized publication was not attempted. This is the final named note source for
-review, not a claim that a release or client acceptance exists.
+**Release acceptance finalized with an owner-accepted client recording exception.** [Public v0.2.0 release and assets](https://github.com/SupremeSoviet/prime-ants/releases/tag/v0.2.0). This document is the release-commit source; commit, upload and independent download verification are separate publication checks recorded after publication.
 
 ## English
 
-- **Great fortifications:** complete planned form, usable passage and settled loaded state have controlled coverage.
-- **Worker-built tier three:** workers physically haul and pay stone units for nursery, food store,
-  material store and queen's hall walls. Confirmed functions provide tested capacity, brood-development
-  and laying effects. Block registration alone is not construction.
-- **Established world generation:** supported new Overworld terrain may contain Founding, Young or Mature
-  colonies with production-generated nests, initial stocks and real actors. Initial generation is not
-  natural growth or worker construction history.
-- **Merged automatic catch-up and bounded persistence:** T19 proves naturally laid default-speed brood,
-  simultaneous food/clay work, two fresh-process reopens, exact actual-disk/first-decode comparisons and
-  resumed ordinary service in one finite generated Young/Mature world. Its accepted functional proof is
-  carried forward unchanged; sealed T19 failures and exits remain unchanged.
+- Great fortifications with controlled coverage of the complete plan and usable passage.
+- Physical worker-built tier-three nursery, food store, material store and queen's hall, with confirmed capacity, brood-development and laying effects.
+- Production-generated Founding, Young and Mature colonies in supported new Overworld terrain. Generated initial states are distinct from natural growth and worker construction history.
+- Merged automatic catch-up. T19's accepted graceful Young/Mature persistence chain is retained: default-speed natural brood, concurrent food/clay service, two fresh-process reopens, exact native-disk/first-decode comparisons and resumed ordinary service.
 
-**Compatibility:** Minecraft Java Edition **26.3**, **Java 25**, Fabric Loader **0.19.5** and Fabric API
-**0.161.0+26.3**. The pinned build/runtime uses Temurin **25.0.3+9**, Loom **1.18.2** and Gradle **9.7.1**;
-dependencies are unchanged. Intended runtime filename: `prime_ants-0.2.0.jar`, alongside the matching API.
-The local runtime and sources embed 0.2.0 and were audited/frozen for review; they are not a published release.
+**Compatibility:** Minecraft26.3, Java25, Fabric Loader0.19.5, Fabric API0.161.0+26.3; tested Temurin25.0.3+9, Loom1.18.2, Gradle9.7.1. Dependencies unchanged.
 
-**Fresh T20 result:** exactly **386 server identities = 77 fast + 309 long**, plus **124 unit / 26 model**
-and **28 Python harness checks**. Final server passes: **385/386**. Raw `checkLong` exit **1**;
-qualified documented timeouts **0**; nonexempt results **1**. Full native/merged testcase elements reconcile
-without omissions or substitutions. A separate owner-policy verdict is **BLOCKED**.
-The oversized-inventory identity passes in this fresh complete run without an exemption; this does not establish T19's cause or a repair.
+**Reused T21 complete6:** 386 distinct server identities (77 fast +309 long), **383 passes and three qualified exact original outer timeouts**; 124 unit,26 model and29 Python harness checks. Native/merged full testcase elements and recorded initial order/origin/rotation/namespace match. Exact owner-policy verdict: PASS. Raw exits remain `fast root/Gradle/native0/0/[0]; long1/1/[0,2,1]`. Historical physical causes and fresh JVM/entity RNG/scheduling remain distinct; no causal repair is claimed.
 
-The identity
-`prime_ants_test:mining_game_test_mid_haul_disk_reload_resumes_then_miner_death_releases_one_unit_exactly_once`
-fails its original **6,000 nursery-loaded tick named-unit recovery assertion**, not its outer 60,000-tick timeout.
-The gallery finishes at helper 46,344; the assertion callback is 52,344 and native XML reports 52,345.
-Those original labels are retained. The named cobblestone has **zero observed pickups/deposits** while other
-food/clay actions continue. First physical cause remains **UNKNOWN**; no supported repair, deadline change,
-supply change or unchanged rerun was made. Earlier passes do not exempt this assertion.
-See [the current blocker](t20-release-blocker.md) and [acceptance summary](release-0.2.0-acceptance.md).
+**Fresh T23 fast:** checkFast root/Gradle/native **0/0/[0]**, **77/77** fast server passes, **124 unit /26 model /29 Python** checks, 156.332s. Inputs, classes/resources, candidate and actual native initial contexts match the accepted freeze. T23 executed **zero long cases**; complete6 is reused unchanged with 383 raw passes and three qualified original outer timeouts. This fresh checkpoint is separate from inherited complete acceptance.
 
-**Exact known-flaky timeout list:** only each documented timeout at its original bound can qualify,
-and only when every other test executes and passes. Assertions, errors, crashes, skips, missing identities,
-save mismatches and wrong outcomes block release. All original guards, native XML and actual exits remain.
+T20's original miner recovery assertion remains a recorded nonexempt failure: death 42,322; named ground unit 42,936; gallery 46,344 (nursery-loaded 40,607); callback 52,344 and XML 52,345. Its first physical cause remains UNKNOWN. T21 added passive executed-decision capture without changing production, fixtures, supplies, identities, search limits or the 600/6,000/200 loaded-tick obligations. Isolation and the same assigned shard/cohort (with initial-order/origin qualifications) both demonstrate actual pickup and owned-store deposit of the original transfer UUID, exact conservation and settlement. This is current acceptance, not a causal repair of T20.
+
+T21's earlier complete runs also recorded a Role finite-food assertion and then-blocking full-store, population-regression and unsafe-first-face timeouts. Each received prospective scoped capture and targeted passes. A further correspondence check showed that sorted shard assignments did not preserve native case order or every50-case batch. Complete4 was intentionally stopped and retained as incomplete: root/Gradle1, native exits4294967295, missing native XML. It was never accepted. The GameTest harness now supplies initial case order, fixture origins and rotations from the FAILED T20 run before normal template construction. A two-case native control passed before fresh complete acceptance, and actual initial order/origin/rotation/namespace correspondence was verified for all386 cases. No worker decision, fixture body, supply, role, search limit or deadline was changed. Historical first physical causes remain UNKNOWN; this is current acceptance, not a behavioral repair. Fresh entity/server RNG and scheduling remain different, and two original shard-seed emissions are unavailable; no exact historical replay is claimed. Observer overcapture and a test-only null-scope crash were preserved, diagnosed and corrected with targeted recovery before broad execution. No assertion or infrastructure failure was waived; all original failed records remain.
+
+Complete5 failed the new harness's own actual-start-order guard before the expected original case began: long1/long2 exited1 without complete XML; the remaining owned native was stopped (4294967295), root/Gradle1. Sorted registration allowed native structure readiness to change body-start order. Historical readiness operands were not recorded, so no particular old missing-chunk cause is asserted. The correction is confined to GameTest prestart dispatch: unstarted mapped cases may wait at helper-1 for their recorded predecessor, bounded to200 ready dispatch calls. Original negative setup advances; already-started cases always invoke the original tick operation once. No positive gameplay counter is reset or deadline extended. Actual original chunk predicates and their short-circuit results are observed once. A three-case boundary control passed with recorded context; it observed real readiness false-to-true but zero dispatch waits, so overtaking was not reproduced in that control. Fresh fast6/long6 provide whole-cohort validation.
+
+The accepted evidence is the final union t21-final-fast-6 + t21-final-long-6 on the pinned context6 inputs, not isolated positives or incomplete complete4/5. Python harness29 includes the added strict context-projection guard. The original complete6 driver disposition and its old seven-name classification are retained unchanged. The separate owner-policy review qualifies the hidden-wall identity only for its original24,000-tick outer timeout: the exact identity passes in native T20's complete102-case long2 shard within the complete386-case run. Its current timeout establishes complete-run alternation; no physical cause or behavioral repair is claimed. The general policy is not a closed seven-name allowlist. Eleven offline classifier checks reject assertions, inner miner6,000-loaded-tick assertions, wrong bounds/identities, errors, skips and malformed failure elements. Every other current case must execute and pass; native XML, root/Gradle/native failures and previous gates stay unchanged. No hidden-wall gameplay probe or preferred-result full retry was needed. Transport max-output/403/channel-closed interruptions are retained as infrastructure history; they did not restart gameplay.
+
+Actual qualified current identities: `prime_ants_test:nursery_upgrade_game_test_upgrade_keeps_every_unit_through_reload_and_killed_builder_and_never_converts_player_changed_wall`, `prime_ants_test:surface_game_test_supplied_founding_to_mature_retains_its_small_mound_and_workers_build_larger_crests_and_an_open_arch`, `prime_ants_test:colony_stage_game_test_unavailable_entrance_never_hides_loaded_broken_wall_and_the_colony_regresses`.
+
+Complete6's actual raw result is383/386 passes with three original outer timeouts and native long exits[0,2,1]. The previously documented surface60,000 timeout qualifies at its original bound. Two additional exact identities have separately verified complete-T20 native passes: hidden-wall24,000 and nursery-upgrade60,000 (`upgrade_keeps_every_unit_through_reload_and_killed_builder_and_never_converts_player_changed_wall`). Each current native failure element is an exact original timeout; no assertion is reclassified. The pinned Minecraft GameTestServer.onServerExit bytecode returns the failed-required count, so native2 matches the two long1 failures. Eleven failure-shape checks and four exit/count controls reject assertions, wrong bounds/identities, missing completion and crashes. The old report consumer's0/1-only native-exit assumption stopped driver6b after it had preserved every report and all three closed worlds. Its STOPPED_FOR_REVIEW state, old coverage, native XML and raw exits are retained. Root completed the missing offline full-element/context/trace checks and wrote separate reviewed references. The first offline continuation also exposed a full-store/preparation report-name collision; that failure is retained, and changing only the preparation output suffix recovered0. No native retry or source change followed these reporting corrections.
+
+All revised broad workloads followed a concrete passive-capture addition or validated harness recovery. Complete2/3 retain their actual gameplay outcomes and qualified differences in initial native order/origins; isolation did not establish their historical physical causes. Complete4 was deliberately aborted, complete5 is infrastructure-incomplete, and neither is acceptance. Initial-context matching in complete6 does not reproduce JVM/entity RNG or historical physical/wall scheduling.
+
+**Ordinary client native evidence:** one actual start and one fresh Survival Overworld opening, seed2026100501,4,271 saved ordinary game ticks, KnotClient, exactly the frozen runtime plus matching Fabric API,81 official libraries and5,147 official assets, ordinary work/brood1/1. The same living queen and worker advance ordinary clocks; normal Save and Quit, Quit Game, actual exit0, all-dimension saves, settled files and the matching archive are verified. Four individually reviewed1280x800 native F2 PNGs remain byte-identical to the originals and archive. Player-only camera access is disclosed; no walk-from-spawn claim. Food0; four torches acquired, one normally placed, three remain. Generated initial state is not natural growth history. The later worker reports `home_unavailable_or_invalid_cargo_retained`; uninterrupted service after lighting and its first physical cause are not established.
+
+**T22 offline protocol audit:** the search union is bounded to **47–49 production-selected4x4 chunk cells, within64**. It includes search-time ledger candidates and later discovery; the47-row output retained38 complete rows and one partial UUID, so exact membership of eight rows is unavailable. Negative coordinates use floor division. The final65 automatically generated records (28pending) and three explicit target cells are separate measurements. Subsequent reads were reviewed through final closure/audit; none resumed site search.
+
+**Owner-accepted client exception — 2026-10-18 08:33:25 UTC:** the owner accepted the existing T21 client for v0.2.0 with this recording gap. Cumulative loaded search/wait at raw chunk `(10,9)`, selected cell `(2,2)`, remains **UNRESOLVED: 0–2,351 ticks against the original 1,200-tick protocol limit**. Compliance is unproved; neither compliance nor an overrun is established. Acceptance for release does not prove that the original bound was met. The initial lookup has no exact entry clock; the bracket includes all revisits without resetting the allowance. Other searched sites have upper bounds of 984 ticks. Young potential search/access is bounded by 323 ticks through both first living-actor snapshots. The complete 1,852-tick actor interval includes those potential 323 ticks plus 1,529 later observation, lighting, photography and closure ticks. Every other declared protocol bound passes. The sealed T21/T22 measurements and historical hold verdicts remain unchanged; no new client campaign was run.
+
+General exact-timeout policy: each actual original outer timeout requires exact identity, original bound and complete native pass/timeout history. The policy is not a closed seven-name list. Assertions, wrong outcomes, errors, crashes, skips, missing identities and save mismatches remain blocking; the miner inner6,000-loaded-tick assertion is nonexempt. The original seven qualifications, the owner oversized decision and the two separately verified additions remain documented. See [policy](https://github.com/SupremeSoviet/prime-ants/blob/v0.2.0/docs/known-flaky-timeouts.md).
 
 | Exact identity / точный идентификатор | Original tick bound / предел тактов |
 |---|---:|
@@ -51,91 +46,62 @@ save mismatches and wrong outcomes block release. All original guards, native XM
 | `prime_ants_test:mining_game_test_mid_haul_disk_reload_resumes_then_miner_death_releases_one_unit_exactly_once` | 60,000 |
 | `prime_ants_test:nursery_upgrade_game_test_young_colony_reaches_mature_by_real_play_then_rebuilds_its_nursery_in_packed_clay_and_its_brood_develops_faster` | 60,000 |
 | `prime_ants_test:tier_three_game_test_physical_oversized_inventories_survive_in_memory_reconstruction_and_capacity_loss` | 20,000 |
+| `prime_ants_test:colony_stage_game_test_unavailable_entrance_never_hides_loaded_broken_wall_and_the_colony_regresses` | 24,000 |
+| `prime_ants_test:nursery_upgrade_game_test_upgrade_keeps_every_unit_through_reload_and_killed_builder_and_never_converts_player_changed_wall` | 60,000 |
 
-The owner's **2026-10-18 00:35 (Asia/Yekaterinburg)** disposition additionally qualifies the exact
-20,000-tick oversized-inventory timeout. T15/T18 complete passes, the separately labelled catchup6 cohort/
-isolated observations and T19's selected-run timeout are documented in [the exact policy](known-flaky-timeouts.md).
-Actor-order analysis belongs to catchup6; T19's first cause remains UNKNOWN. The policy is not limited to
-T15's original five identities and does not exempt any whole family or this new miner assertion.
 
-**Performance remains a known limitation outside the 0.2.0 gate.** T16's controlled development-server measurements:
+**Performance remains a limitation (T16):** one Great/120 adults about19TPS, mean52ms/p95~66ms; three Great/360 adults about6.7TPS, mean149ms/p95~216ms. These controlled development results retain their machine/contention qualifications; no fresh benchmark or performance work occurred.
 
-| Loaded scene | TPS | Mean tick | p95 tick |
-|---|---:|---:|---:|
-| One Great colony, 120 adults | about 19 | 52 ms | approximately 66 ms |
-| Three Great colonies, 360 adults | about 6.7 | 149 ms | approximately 216 ms |
+Graceful persistence remains bounded to the exercised Young/Mature chain; it does not establish crash durability, Great/tier-three persistence, nonempty terminal-history/custody coverage, sustainability, broad modpack compatibility or long multiplayer sessions. Nuptial flights, additional species, aphids, wars and a full unattended growth campaign remain future work.
 
-Measured on Ryzen 7 7700 (8 cores/16 threads), Windows 11 Pro build 26200, approximately 95.1 GiB RAM,
-Temurin 25.0.3+9/G1 and a 3 GiB server heap; Minecraft 26.3, Loader 0.19.5, Fabric API 0.161.0+26.3 and
-Loom 1.18.2 development runtime. Each supplied scene used 600 warm-up and 2,400 measured ticks, work/brood
-1/1 and an ordinary 20 TPS request. Shared-machine contention and test instrumentation remain included.
-These are **server ticks, not client FPS or universal hardware guarantees**. Original mean 40 ms / p95 50 ms
-budgets failed. T17's rejected optimization remains withdrawn; no new benchmark was run.
-[T16 conditions and retained negative results](t16-cap-performance.md).
+Runtime SHA-256: `bb3bbb2777b8db43d33e64001d4b7f90b94b75e196b3f71f7d5ff784405480a0`
 
-Graceful persistence for the exercised Young/Mature states is not crash durability, Great/tier-three persistence,
-nonempty terminal-history/custody coverage, sustainability or broad modpack/migration testing. Long client
-sessions and multiplayer remain limited. No current 0.2.0 ordinary-client start, world opening or Survival PNG
-was claimed: those stages were held behind the failed correctness gate. Historical 0.1.0 reports/images remain
-labelled separately. Nuptial flights, additional species, aphids, wars and a full unattended growth campaign remain future work.
+Sources SHA-256: `729a2e9a09b5d8e2af01932f5fff5f715e96a675b9bc6e96b5d2d533ad7bad6a`
+
+[Current acceptance and image provenance](https://github.com/SupremeSoviet/prime-ants/blob/v0.2.0/docs/release-0.2.0-acceptance.md) · [T19 persistence scope](https://github.com/SupremeSoviet/prime-ants/blob/v0.2.0/docs/t19-functional-persistence.md) · [T16 performance](https://github.com/SupremeSoviet/prime-ants/blob/v0.2.0/docs/t16-cap-performance.md). [Release v0.2.0 and exact assets](https://github.com/SupremeSoviet/prime-ants/releases/tag/v0.2.0).
 
 ## Русский
 
-**НЕ ОПУБЛИКОВАНО / НЕ ПРИНЯТО.** Свежий полный набор T20 выявил новый неосвобождённый отказ утверждения
-в miner-recovery тесте. Публикация, которую владелец разрешил, не запускалась. Этот файл — подготовленный
-финальный источник заметок, а не свидетельство состоявшегося выпуска или клиентской приёмки.
+**Приёмка выпуска завершена с принятым владельцем исключением записи клиента.** [Публичный выпуск v0.2.0](https://github.com/SupremeSoviet/prime-ants/releases/tag/v0.2.0). Этот документ входит в release-коммит; коммит, загрузка и независимая проверка скачанных файлов фиксируются отдельно после публикации.
 
-- **Укрепления великой колонии:** полная форма по плану, проходимый проход и устойчивое загруженное состояние
-  проверены в контролируемых условиях.
-- **Третий уровень строят рабочие:** они физически переносят и оплачивают камнем стены яслей, пищевого и
-  материального складов и зала матки. Подтверждённые функции дают проверенные эффекты вместимости,
-  развития выводка и кладки. Регистрация блоков сама по себе не является строительством.
-- **Готовые колонии при генерации:** на подходящем новом рельефе обычного мира могут появляться
-  основательницы, молодые и зрелые гнёзда с начальным запасом и настоящими особями. Это начальное состояние,
-  а не доказательство естественного роста или строительства рабочими.
-- **Объединённое автоматическое догоняющее моделирование и ограниченная проверка сохранений:** T19 доказал
-  естественную кладку на обычной скорости, одновременную работу с пищей и глиной, два открытия в новых
-  процессах, точное сравнение диска с первым декодированием и продолжение обычной работы. Принятая функциональная
-  цепочка конечного молодого/зрелого мира переносится без повторения; исходные ошибки и коды T19 не переписаны.
+- Укрепления великой колонии с контролируемой проверкой полной формы и проходимого прохода.
+- Рабочие физически строят третий уровень яслей, пищевого и материального складов и зала матки; проверены эффекты подтверждённых функций.
+- Готовые основательницы, молодые и зрелые колонии на подходящем новом рельефе обычного мира. Сгенерированное начальное состояние не доказывает естественный рост или историю строительства рабочими.
+- Объединённое автоматическое догоняющее моделирование. Принятая цепочка T19 для штатных сохранений Young/Mature сохранена: естественный выводок на обычной скорости, одновременная работа с пищей/глиной, два открытия в новых процессах, точное сравнение диска с первым декодированием и продолжение работы.
 
-**Совместимость:** Minecraft Java Edition **26.3**, **Java 25**, Fabric Loader **0.19.5**, Fabric API
-**0.161.0+26.3**. Закреплённые Temurin **25.0.3+9**, Loom **1.18.2**, Gradle **9.7.1** не изменены.
-Ожидаемое имя runtime: `prime_ants-0.2.0.jar`, вместе с соответствующим API. Локальные runtime и sources
-содержат версию 0.2.0, проверены и заморожены для просмотра; это не опубликованный выпуск.
+**Совместимость:** Minecraft26.3, Java25, Fabric Loader0.19.5, Fabric API0.161.0+26.3; проверены Temurin25.0.3+9, Loom1.18.2, Gradle9.7.1. Зависимости прежние.
 
-**Свежий результат T20:** все **386 серверных идентификаторов (77 + 309)**, **124 модульных / 26 модельных**
-и **28 проверок Python-harness** сохранены. Серверных проходов **385/386**, исходный exit `checkLong`
-**1**, квалифицированных тайм-аутов **0**, остальных отказов **1**. Сопоставлены полные native/merged
-элементы без пропусков и подмен. Отдельное решение по правилу владельца: **БЛОКИРОВКА**.
-Oversized-тест прошёл в свежем полном наборе без исключения; причина T19 и её исправление из этого не выводятся.
+**Повторно использована complete6 T21:**386 уникальных серверных тестов (77 fast +309 long), **383 прохода и три точных квалифицированных внешних timeout**,124 unit,26 model,29 Python. Полные native/merged XML и начальные порядок/координаты/поворот/namespace совпали. Отдельное решение по общей политике: ПРОХОД. Сырые exits сохранены: `fast root/Gradle/native0/0/[0]; long1/1/[0,2,1]`. Физические причины исторических отказов неизвестны; причинное исправление и совпадение RNG/расписания не заявляются.
 
-Указанный выше miner mid-haul тест нарушил исходное утверждение о восстановлении именованной единицы за
-**6 000 загруженных тактов яслей**; это не тайм-аут внешнего предела 60 000. Галерея готова на helper 46 344;
-callback отказа — 52 344, сообщение native XML — 52 345. Разница меток сохранена. Для нужного булыжника
-наблюдается **0 подборов / 0 доставок**, хотя другие действия с пищей и глиной продолжаются. Первая физическая
-причина **неизвестна**. Поддержанного исправления, изменения сроков/снабжения или повторения ради зелёного нет.
-См. [блокер](t20-release-blocker.md) и [приёмку](release-0.2.0-acceptance.md).
+**Свежая fast-проверка T23:** root/Gradle/native **0/0/[0]**, **77/77** серверных fast, **124 unit /26 model /29 Python**, 156.332с. Исходники, классы/ресурсы, candidate и начальный native-контекст совпали с принятым freeze. T23 выполнила **ноль long-тестов**; complete6 сохранена с 383 сырыми проходами и тремя квалифицированными исходными внешними timeout. Свежая fast-проверка учитывается отдельно от прежней полной приёмки.
 
-**Точный список нестабильных тайм-аутов — семь строк общей таблицы выше.** Решение владельца от
-**2026-10-18 00:35 (Asia/Yekaterinburg)** добавляет только точный 20 000-тактовый oversized-timeout.
-Полные проходы T15/T18 отделены от когорт и одиночного запуска catchup6 и выбранного запуска T19.
-Анализ порядка особей относится к catchup6; причина T19 неизвестна. Исключения не ограничены исходными
-пятью именами, но действуют только для документированного тайм-аута при успешных остальных тестах.
-Утверждения, ошибки, сбои, пропуски, неверные исходы и несовпадения сохранений не освобождены.
-Новый miner assertion не квалифицируется. [Доказательства и точное правило](known-flaky-timeouts.md).
+Исходный miner assertion T20 остаётся зафиксированным неосвобождённым отказом: смерть 42 322, именованный предмет на земле 42 936, галерея 46 344 (загруженные ясли 40 607), callback 52 344 и XML 52 345. Первая физическая причина неизвестна. T21 добавил пассивную запись реально исполненных решений без изменения production, тестовых условий, снабжения, идентификаторов, поиска или обязательств 600/6 000/200 загруженных тактов. Одиночный запуск и та же назначенная когорта (с оговорками о начальных порядке/координатах) показали настоящий подбор исходного transfer UUID, доставку в собственный склад, точный баланс и выдержку. Это текущая приёмка, а не доказанное исправление причины T20.
 
-**Производительность — известное ограничение вне допуска 0.2.0.** T16: одна загруженная великая колония,
-120 взрослых — **около 19 TPS, среднее 52 мс, p95 примерно 66 мс**; три колонии, 360 взрослых —
-**около 6,7 TPS, среднее 149 мс, p95 примерно 216 мс**. Контролируемая среда разработки:
-Ryzen 7 7700 (8 ядер/16 потоков), Windows 11 Pro build 26200, около 95,1 ГиБ ОЗУ, Temurin 25.0.3+9/G1,
-куча сервера 3 ГиБ; Minecraft 26.3, Loader 0.19.5, Fabric API 0.161.0+26.3, Loom 1.18.2.
-На сцену — 600 прогревочных и 2 400 измеренных тактов, работа/выводок 1/1, обычный запрос 20 TPS.
-Нагрузка общей машины и инструменты тестирования включены. Это **такты сервера, не FPS клиента и не гарантия
-для любого оборудования**. Бюджеты среднего 40 мс / p95 50 мс не выполнены. Оптимизация T17 остаётся отклонённой;
-новых замеров нет. [Условия T16](t16-cap-performance.md).
+Предыдущие полные запуски T21 также зафиксировали Role food assertion и тогда блокировавшие full-store, population-regression и unsafe-first-face timeout. Для каждого заранее объявили наблюдения и получили целевые проходы. Затем проверка обнаружила, что отсортированные списки шардов не сохраняли фактический порядок и весь состав50-тестовых пакетов. Complete4 намеренно остановлен и сохранён как неполный: root/Gradle1, native4294967295, native XML отсутствует; приёмкой он не считается. GameTest-harness теперь подаёт исходные порядок, координаты и повороты из НЕПРОШЕДШЕГО T20 до обычного размещения шаблонов. Сначала прошёл двухтестовый native-контроль, затем свежая полная приёмка; фактические начальные порядок/координаты/поворот/пространство идентификаторов сопоставлены для всех386 тестов. Решения рабочих, тела тестов, снабжение, роли, поиск и сроки не менялись. Исторические физические причины неизвестны; это текущая приёмка, а не исправление поведения. RNG и расписание новых процессов отличаются; исходные seed-записи двух шардов отсутствуют, поэтому точное историческое воспроизведение не заявлено. Избыточные наблюдения и test-only null-scope crash сохранены; исправление наблюдателя проверено целевым запуском до полного. Исходные записи отказов сохранены; assertion и инфраструктурные отказы не освобождались.
 
-Штатная сохранность проверенных молодых/зрелых состояний не является устойчивостью к авариям, проверкой
-великой колонии/третьего уровня, непустых терминальных историй/владения, самодостаточности или широкой
-совместимости со сборками и миграциями. Долгие сеансы и мультиплеер проверены ограниченно. Текущие клиентские
-запуски/открытия миров/PNG из выживания 0.2.0 равны нулю: эти этапы остановлены на красном допуске.
-Исторические материалы 0.1.0 отделены. Брачные полёты, другие виды, тля, войны и полная кампания роста остаются будущей работой.
+Complete5 завершился ошибкой собственного нового контроля фактического порядка старта до начала ожидаемого исходного теста: long1/long2 вышли1 без полных XML; оставшийся собственный native остановлен (4294967295), root/Gradle1. Готовность структур могла менять порядок начала тел при отсортированной регистрации. Исторические операнды готовности не записаны, поэтому конкретная старая причина недостающих чанков не установлена. Исправлен только GameTest-dispatch до старта: ещё не начатый mapped-тест на helper-1 ждёт записанного предшественника не более200 готовых вызовов. Исходная отрицательная подготовка идёт дальше; начатые тесты вызывают исходный tick ровно один раз. Положительные игровые счётчики не сбрасываются, сроки не расширяются. Реальные исходные chunk-предикаты и короткое замыкание наблюдаются по одному разу. Трёхтестовый контроль прошёл с записанным контекстом; он видел реальную смену готовности false-to-true, но0 dispatch-ожиданий: обгон в нём не воспроизвёлся. Свежие fast6/long6 проверяют всю когорту.
+
+Принят итоговый союз t21-final-fast-6 + t21-final-long-6 на замороженных context6-входах, не отдельные проходы и не неполные complete4/5. Python29 включает новый строгий context-projection guard. Исходное решение драйвера complete6 и его старый классификатор семи имён сохранены. Отдельный пересмотр по общей политике владельца квалифицирует hidden-wall только для исходного внешнего timeout24 000: тот же точный идентификатор проходит в native102-тестовом long2 полного386-тестового T20. Нынешний timeout показывает чередование полных запусков; физическая причина и исправление поведения не заявлены. Политика не ограничена закрытым списком семи имён.11 офлайн-проверок отвергают assertions, внутренний miner assertion6 000, другие пределы/имена, errors, skips и неверную форму failure. Все остальные текущие тесты обязаны выполниться и пройти; исходные XML, ненулевые exits и прежние решения не менялись. Новый hidden-wall игровой probe или полный повтор ради прохода не потребовались. Max-output/403/channel-closed сохранены как история транспортной инфраструктуры и не приводили к перезапуску игры.
+
+Фактически квалифицированные текущие идентификаторы: `prime_ants_test:nursery_upgrade_game_test_upgrade_keeps_every_unit_through_reload_and_killed_builder_and_never_converts_player_changed_wall`, `prime_ants_test:surface_game_test_supplied_founding_to_mature_retains_its_small_mound_and_workers_build_larger_crests_and_an_open_arch`, `prime_ants_test:colony_stage_game_test_unavailable_entrance_never_hides_loaded_broken_wall_and_the_colony_regresses`.
+
+Сырой итог complete6:383/386 проходов, три исходных внешних timeout, native exits long[0,2,1]. Ранее документированный surface60 000 квалифицирован в прежнем пределе. Для двух дополнительных точных имён отдельно проверены native PASS полного T20: hidden-wall24 000 и nursery-upgrade60 000 (`upgrade_keeps_every_unit_through_reload_and_killed_builder_and_never_converts_player_changed_wall`). Каждый нынешний failure — точный исходный timeout; assertions не переименовывались. Bytecode закреплённого GameTestServer.onServerExit возвращает число failed required tests: exit2 соответствует двум отказам long1.11 проверок формы отказа и4 проверки exit/count отвергают assertions, другие пределы/имена, отсутствие завершения и crashes. Старый consumer ошибочно допускал только0/1 и остановил driver6b уже после сохранения всех отчётов и трёх закрытых миров. Его STOPPED_FOR_REVIEW, прежняя coverage, native XML и exits сохранены. Root выполнил недостающие офлайн-сверки полных элементов/контекста/трасс и записал отдельные reviewed references. Первая офлайн-попытка также обнаружила одинаковые имена отчётов full-store/preparation; отказ сохранён, изменение только суффикса preparation дало0. Игровых повторов и изменений исходников после этих исправлений отчётности не было.
+
+Каждому пересмотренному полному запуску предшествовали конкретное расширение пассивных наблюдений либо проверенное восстановление harness. Complete2/3 сохраняют реальные игровые исходы и оговорки о начальных порядке/координатах; одиночные проходы не установили исторических физических причин. Complete4 намеренно прерван, complete5 инфраструктурно неполон; приёмкой они не считаются. Совпадение начального контекста complete6 не воспроизводит RNG новых процессов/особей и историческое физическое/стенное расписание.
+
+**Обычный клиент, native-доказательства:** один фактический запуск, одно открытие свежего Survival Overworld, seed2026100501,4 271 сохранённый игровой такт, KnotClient, только frozen runtime и соответствующий Fabric API,81 официальная библиотека,5 147 assets, обычные work/brood1/1. У тех же живых матки и рабочего растут обычные часы. Проверены штатные Save and Quit/Quit Game, реальный exit0, сохранения всех измерений, стабильные файлы и точный архив. Четыре отдельно просмотренных F2 PNG1280x800 побайтно совпадают с оригиналами и архивом. Доступ только камеры раскрыт; путь пешком от spawn не заявлен. Пища0; получены четыре факела, один штатно поставлен, три остались. Сгенерированное начальное состояние не доказывает естественный рост. Поздний рабочий сообщает `home_unavailable_or_invalid_cargo_retained`; непрерывная работа после освещения и её первая физическая причина не установлены.
+
+**Офлайн-учёт T22:** объединение поиска ограничено **47–49 selected-ячеек4x4 чанка при лимите64**. Учтены кандидаты поисковых ledger-read и последующее обнаружение. Из47 записей вывод сохранил38 целых и UUID39-й; состав восьми строк неизвестен. Отрицательные координаты делятся с округлением вниз.65 автоматически созданных записей (28pending) и три явных target — отдельные измерения. Поздние чтения проверены до итогового аудита закрытого мира; нового поиска участка не было.
+
+**Исключение принято владельцем — 2026-10-18 08:33:25 UTC:** владелец принял существующий клиент T21 для v0.2.0 с этим пробелом записи. Суммарный загруженный поиск/ожидание у raw chunk `(10,9)`, selected cell `(2,2)`, остаётся **UNRESOLVED: 0–2 351 такт при исходном протокольном лимите 1 200**. Соблюдение лимита не доказано; ни соблюдение, ни превышение не установлены. Принятие для выпуска не доказывает соблюдения исходного предела. Точного времени начала первого lookup нет; скобка включает все повторные обращения без сброса лимита. Для остальных рассмотренных участков верхние границы — 984 такта. Для Young потенциальный поиск/доступ ограничен 323 тактами до обоих первых полных снимков живых особей. Полный интервал особей в 1 852 такта включает эти потенциальные 323 такта и 1 529 последующих тактов наблюдения, освещения, съёмки и закрытия. Все прочие объявленные протокольные границы проходят. Измерения и исторические hold-решения T21/T22 сохранены; новой клиентской кампании не было.
+
+Общая политика точных timeout и исходные пределы приведены выше. Assertions, ошибки, неверные исходы и пропуски не освобождены; внутренний miner6 000 также не освобождён.
+
+**Ограничение производительности T16 сохранено:** одна Great/120 взрослых — около19TPS, среднее52мс/p95~66мс; три Great/360 — около6,7TPS, среднее149мс/p95~216мс. Это прежние контролируемые development-результаты с оговорками о машине/конкуренции; нового benchmark и оптимизации не было.
+
+Штатная сохранность ограничена проверенной цепочкой Young/Mature; устойчивость к авариям, Great/третий уровень, непустые терминальные истории/владение, самодостаточность, широкие сборки и длительный мультиплеер не приняты. Брачные полёты, другие виды, тля, войны и полная кампания роста остаются будущими этапами.
+
+
+T17 lifecycle and T20 miner assertion causes remain unresolved. Later passes are current functional evidence, without demonstrating causal repairs. T16 used a controlled development runtime (Ryzen 7 7700, Windows 11, Temurin 25/G1, 3 GiB heap, 600 warm-up and 2,400 measured ticks per scene, shared-machine contention included); the mean 40 ms / p95 50 ms budgets failed.
+
+Причины assertion жизненного цикла T17 и miner T20 остаются неразрешёнными. Поздние проходы — текущие функциональные доказательства без доказанного причинного исправления. T16: контролируемый runtime разработки (Ryzen 7 7700, Windows 11, Temurin 25/G1, куча 3 ГиБ, 600 прогревочных и 2 400 измеренных тактов на сцену, с нагрузкой общей машины); бюджеты среднего 40 мс / p95 50 мс не выполнены.

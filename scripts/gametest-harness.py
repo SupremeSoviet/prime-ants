@@ -88,6 +88,35 @@ def balance(rows, count):
         i=min(range(len(bins)),key=lambda i:(weights[i],i));bins[i].append(row['name']);weights[i]+=row['weight_ticks']
     return [{'index':i,'names':sorted(names),'weight_ticks':weights[i]} for i,names in enumerate(bins)]
 
+
+def recorded_context_for(assigned, policy):
+    """Project exact frozen initial context, rejecting omitted/duplicate/foreign identities."""
+    if not assigned or any(not isinstance(n,str) for n in assigned) or len(assigned)!=len(set(assigned)):
+        raise ValueError('Recorded context requires unique nonempty assigned identities')
+    order=policy.get('case_order');cases=policy.get('cases')
+    if not isinstance(order,list) or not order or any(not isinstance(n,str) for n in order) or len(order)!=len(set(order)):
+        raise ValueError('Recorded context order must be unique and nonempty')
+    if not isinstance(cases,dict) or set(order)!=set(cases) or not set(assigned)<=set(cases):
+        raise ValueError('Recorded context has omitted/unknown identities')
+    if policy.get('namespace_version')!='prime_ants:gametest:identity:v1' or not re.fullmatch('[0-9a-f]{64}',policy.get('policy_sha256','')):
+        raise ValueError('Recorded namespace/source identity differs')
+    for name,row in cases.items():
+        origin=row.get('origin') if isinstance(row,dict) else None
+        if not isinstance(origin,list) or len(origin)!=3 or any(type(v) is not int for v in origin):
+            raise ValueError('Recorded origin must contain three exact integers')
+        if abs(origin[0])>29999984 or abs(origin[2])>29999984 or row.get('rotation')!='NONE' or row.get('scope_namespace')!=name+':replica:0':
+            raise ValueError('Recorded geometry/rotation/scope identity differs')
+    selected=set(assigned);projected=[name for name in order if name in selected]
+    return dict(namespace_version=policy['namespace_version'],policy_sha256=policy['policy_sha256'],case_order=projected,cases={n:cases[n] for n in projected})
+
+def load_recorded_context(rows):
+    path=ROOT/'src/gametest/resources/prime_ants_test.recorded-context.json'
+    policy=read(path);policy['policy_sha256']=sha(path)
+    expected={r['name'] for r in rows}
+    if set(policy.get('cases',{}))!=expected:raise ValueError('Recorded context differs from complete permanent discovery')
+    recorded_context_for(sorted(expected),policy)
+    return policy
+
 def inputs(launch):
     paths=[]
     for base in ['src','scripts','gradle','config','build/classes','build/resources']:
@@ -107,6 +136,7 @@ def prepare(folder, launch_path, shards, concurrency, names=None):
         long=[r for r in long if r['name'] in selected]
     assignment={'fast':balance([r for r in rows if r['suite']=='fast'],1), 'long':balance(long,shards)}
     freeze={'launch':launch,'inputs':inputs(launch),'inventory':rows,'assignments':assignment,'concurrency':concurrency,
+            'native_context':load_recorded_context(rows),
             'unit_cases':sorted(unit_cases()),'model_cases':sorted(model_cases()),
             'long_scope':'targeted exact names' if names else 'complete long suite','prepared_epoch':time.time()}
     write(folder/'frozen.json',freeze)
@@ -168,7 +198,7 @@ def child(folder, suite, assignment, freeze):
         record.update(world=str(run),lease=str(run.parent/'.leases'/(run_id+'.lock')),retention=retained)
         (run/'eula.txt').write_text('eula=true\n',encoding='utf-8')
         # Same vanilla GameTest environment/properties. No simulation, terrain, heap or clock changes.
-        manifest=folder/'execution.json';write(manifest,{'label':suite,'names':assignment['names'],'permanent_names':[r['name'] for r in freeze['inventory']],'world_uuid':run_id,'frozen_sha256':sha(folder.parent/'frozen.json')})
+        manifest=folder/'execution.json';write(manifest,{'label':suite,'names':assignment['names'],'permanent_names':[r['name'] for r in freeze['inventory']],'world_uuid':run_id,'frozen_sha256':sha(folder.parent/'frozen.json'),'recorded_context':recorded_context_for(assignment['names'],freeze['native_context'])})
         report=folder/'server.xml';launch=freeze['launch'];args=[]
         for arg in launch['jvm_args']:
             if arg.startswith(('-Dfabric-api.gametest.report-file=','-Dfabric-api.gametest.filter=')): continue
@@ -272,7 +302,9 @@ def fast_guards(folder, since):
 def main():
     p=argparse.ArgumentParser();p.add_argument('action',choices=['inventory','registered-names','prepare','run','merge','fast-guards']);p.add_argument('--folder',type=Path);p.add_argument('--launch',type=Path);p.add_argument('--suite',choices=['fast','long','smoke']);p.add_argument('--shards',type=int,default=4);p.add_argument('--concurrency',type=int,default=4);p.add_argument('--names');p.add_argument('--since',type=float);p.add_argument('--defer-failures',action='store_true');a=p.parse_args()
     if a.action=='registered-names': print(json.dumps(sorted(discover())),flush=True);return
-    if a.action=='inventory': print('Verified exact permanent partition:',len(inventory()),'unit:',len(unit_cases()),'model:',len(model_cases()));return
+    if a.action=='inventory':
+        rows=inventory();load_recorded_context(rows)
+        print('Verified exact permanent partition:',len(rows),'unit:',len(unit_cases()),'model:',len(model_cases()));return
     if a.action=='prepare': prepare(a.folder,a.launch,a.shards,a.concurrency,a.names);return
     result=run_suite(a.folder,a.suite) if a.action=='run' else fast_guards(a.folder,a.since) if a.action=='fast-guards' else merge_complete(a.folder)
     # Full per-report hashes remain in JSON. A >4 KiB inherited Windows pipe can block Gradle's wait.

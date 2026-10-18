@@ -371,4 +371,21 @@ with patch.object(d,'correspondence',return_value={}),patch.object(d.h,'inputs',
         wrappers=[r for r in results if r['fixture'].startswith('wrapper-')]
         self.assertEqual(21,len(wrappers));self.assertTrue(all(r['result']=='rejected' and 'expected testsuite' in r['reason'] for r in wrappers))
 
+
+    def test_recorded_context_projection_rejects_missing_duplicate_foreign_and_changed_geometry(self):
+        policy={'namespace_version':'prime_ants:gametest:identity:v1','policy_sha256':'a'*64,'case_order':['b','a'],'cases':{
+            'a':{'origin':[10,6,20],'rotation':'NONE','scope_namespace':'a:replica:0'},
+            'b':{'origin':[-10,6,-20],'rotation':'NONE','scope_namespace':'b:replica:0'}}}
+        assigned=['a','b'];projected=h.recorded_context_for(assigned,policy)
+        self.assertEqual(['b','a'],projected['case_order']);self.assertEqual(['a','b'],assigned)
+        self.assertEqual({'a','b'},set(projected['cases']))
+        for bad in [[],['a','a'],['a','unknown']]:
+            with self.assertRaises(ValueError):h.recorded_context_for(bad,policy)
+        for mutate in [lambda p:p['case_order'].append('a'),lambda p:p['cases'].pop('a'),
+                       lambda p:p['cases']['a'].update(origin=[True,6,20]),
+                       lambda p:p['cases']['a'].update(rotation='CLOCKWISE_90'),
+                       lambda p:p['cases']['a'].update(scope_namespace='a:replica:1')]:
+            bad=json.loads(json.dumps(policy));mutate(bad)
+            with self.assertRaises(ValueError):h.recorded_context_for(assigned,bad)
+
 if __name__=='__main__':unittest.main(verbosity=2)

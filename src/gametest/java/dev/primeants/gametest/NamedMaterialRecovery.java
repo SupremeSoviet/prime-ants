@@ -19,7 +19,7 @@ public final class NamedMaterialRecovery implements AutoCloseable {
     private final Map<UUID,Pickup> active=new HashMap<>();
     public final List<Pickup> pickups=new ArrayList<>();
     public final List<Deposit> deposits=new ArrayList<>();
-    private NamedMaterialRecovery(GameTestHelper c,UUID queen){test=c;owner=queen;scopes.add(this);}
+    private NamedMaterialRecovery(GameTestHelper c,UUID queen){test=c;owner=queen;scopes.add(this);MinerCausalProbe.attach(c,queen);}
     public static NamedMaterialRecovery watch(GameTestHelper c,UUID queen){
         var scope=new NamedMaterialRecovery(c,queen);
         ((GameTestHelperAccessor)c).primeAntsTestInfo().addListener(new GameTestListener(){
