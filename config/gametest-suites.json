@@ -3339,6 +3339,14 @@
       "suite": "long",
       "weight_ticks": 6000,
       "reason": "T11 immutable geometry and immediate same-tick validation/index reconstruction regression"
+    },
+    {
+      "name": "prime_ants_test:nursing_guard_game_test_recipient_selector_preserves_order_food_boundaries_and_live_readiness",
+      "max_ticks": 18000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NursingGuardGameTest.java",
+      "suite": "long",
+      "weight_ticks": 18000,
+      "reason": "T02 selector ordering, whole-food boundaries, live readiness and reconstruction after real founding"
     }
   ]
 }

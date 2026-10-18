@@ -387,7 +387,8 @@
     "prime_ants_test:catchup_lifecycle_game_test_eight_prospective_small_colony_cold_and_warm_samples",
     "prime_ants_test:established_generation_game_test_missing_ticking_area_defers_without_mutation_or_neighbor_acquisition",
     "prime_ants_test:established_generation_game_test_interrupted_completion_readback_and_observed_deaths_never_replace_young",
-    "prime_ants_test:established_generation_game_test_genuine_raised_exterior_keeps_validated_route_through_initialization_and_readback"
+    "prime_ants_test:established_generation_game_test_genuine_raised_exterior_keeps_validated_route_through_initialization_and_readback",
+    "prime_ants_test:nursing_guard_game_test_recipient_selector_preserves_order_food_boundaries_and_live_readiness"
   ],
   "cases": {
     "prime_ants_test:bootstrap_game_test_food_item_lifecycle": {
@@ -5021,6 +5022,15 @@
       "source_suite": "long",
       "source_shard": "long-2",
       "source_log_line": 325311
+    },
+    "prime_ants_test:nursing_guard_game_test_recipient_selector_preserves_order_food_boundaries_and_live_readiness": {
+      "origin": [
+        12868732,
+        4,
+        0
+      ],
+      "rotation": "NONE",
+      "scope_namespace": "prime_ants_test:nursing_guard_game_test_recipient_selector_preserves_order_food_boundaries_and_live_readiness:replica:0"
     }
   },
   "original_shards": [

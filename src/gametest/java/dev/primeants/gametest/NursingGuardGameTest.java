@@ -14,6 +14,72 @@ public final class NursingGuardGameTest {
     private final WorkerForagingGameTest f=new WorkerForagingGameTest();
     private final NursingGameTest audit=new NursingGameTest();
     @GameTest(maxTicks=18000,structure="prime_ants_test:idle_ground")
+    public void recipientSelectorPreservesOrderFoodBoundariesAndLiveReadiness(GameTestHelper c){
+        var queen=f.start(c);boolean[] checked={false};
+        c.onEachTick(()->{
+            if(checked[0]||queen.founding().lifecycle()!=QueenFounding.Lifecycle.OPEN||!queen.founding().ready())return;
+            var pile=audit.pile(c,queen);if(pile==null||!pile.records().isEmpty())return;checked[0]=true;
+            var q=queen;var home=q.founding().plan();var apple=new ItemStack(Items.APPLE);var chicken=new ItemStack(Items.CHICKEN);
+            var calls=new ArrayList<UUID>();java.util.function.Predicate<UUID> accept=id->{calls.add(id);return true;};
+            c.assertTrue(q.nutrition().consumedUnits()==0&&q.nutrition().sugar()==0&&q.nutrition().protein()==0,"Boundary fixture begins with real unfed founded queen");
+            c.assertTrue(WorkerTasks.selectNursingRecipient(null,q,apple,accept).equals(q.getUUID())&&calls.equals(List.of(q.getUUID())),"Eligible queen invokes callback once after live physical readiness");calls.clear();
+            c.assertTrue(WorkerTasks.selectNursingRecipient(null,q,apple,id->{calls.add(id);return false;})==null&&calls.equals(List.of(q.getUUID())),"Queen callback refusal is terminal");calls.clear();
+            c.assertTrue(WorkerTasks.selectNursingRecipient(null,null,apple,accept)==null,"Missing queen refuses");
+            q.setNoAi(true);c.assertTrue(WorkerTasks.selectNursingRecipient(null,q,apple,accept)==null,"Disabled queen refuses");q.setNoAi(false);
+            q.setOnGround(false);c.assertTrue(WorkerTasks.selectNursingRecipient(null,q,apple,accept)==null,"Physically unready queen refuses");q.setOnGround(true);
+            c.assertTrue(calls.isEmpty(),"Missing/disabled/unready queens never invoke eligibility callback");
+            try(var hidden=UnavailableCells.hide(c,home.entrance())){
+                c.assertTrue(home.nurseryFindings(c.getLevel(),q.getUUID(),true).verdict()==Findings.Verdict.UNKNOWN&&WorkerTasks.selectNursingRecipient(null,q,apple,accept)==null,"UNKNOWN habitat cannot select an otherwise food-eligible queen");
+                var shell=home.undergroundSurfaces().stream().filter(p->!p.equals(home.entrance())&&c.getLevel().getBlockState(p).isSolidRender()).findFirst().orElseThrow();var state=c.getLevel().getBlockState(shell);
+                c.getLevel().setBlock(shell,net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(),3);
+                c.assertTrue(home.nurseryFindings(c.getLevel(),q.getUUID(),true).verdict()==Findings.Verdict.DAMAGED&&WorkerTasks.selectNursingRecipient(null,q,apple,accept)==null,"Loaded damage wins beside UNKNOWN and still refuses selection");
+                c.getLevel().setBlock(shell,state,3);
+            }
+            c.assertTrue(calls.isEmpty()&&q.founding().ready(),"Restored availability and shell recover readiness without callback on refusal");
+            // A detached negative save fixture exercises ordered larvae without adding world dependents or food.
+            var tag=pile.saveWithFullMetadata(c.getLevel().registryAccess());var rows=new net.minecraft.nbt.ListTag();var larvae=new ArrayList<UUID>();
+            for(int slot=0;slot<2;slot++){
+                var id=TestIdentities.next();larvae.add(id);var row=new net.minecraft.nbt.CompoundTag();row.putString("Id",id.toString());row.putString("Queen",q.getUUID().toString());row.putInt("Slot",slot);row.putString("Stage","LARVA");row.putLong("Progress",0);row.putLong("Nourishment",0);row.putBoolean("Founding",false);rows.add(row);
+            }
+            tag.put("Brood",rows);var detached=new BroodPile(pile.getBlockPos(),pile.getBlockState());
+            detached.loadCustomOnly(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING,c.getLevel().registryAccess(),tag));
+            c.assertTrue(detached.records().stream().allMatch(r->detached.accepts(r,apple))&&WorkerTasks.queenNeedsFood(q,apple),"Both ordered larvae and queen accept the same food");
+            c.assertTrue(WorkerTasks.selectNursingRecipient(detached,q,apple,accept).equals(larvae.getFirst())&&calls.equals(List.of(larvae.getFirst())),"First eligible larva precedes eligible queen; no later callback");calls.clear();
+            c.assertTrue(WorkerTasks.selectNursingRecipient(detached,q,apple,id->{calls.add(id);return !id.equals(larvae.getFirst());}).equals(larvae.get(1))&&calls.equals(larvae),"Larval callback refusal retains original record order");calls.clear();
+            c.assertTrue(WorkerTasks.selectNursingRecipient(detached,q,apple,id->{calls.add(id);return id.equals(q.getUUID());}).equals(q.getUUID())&&calls.equals(List.of(larvae.get(0),larvae.get(1),q.getUUID())),"Queen callback follows both refused larvae");calls.clear();
+            // Local predicate boundaries use ordinary Nutrition ingestion/spending, never a claimed physical feed.
+            c.assertTrue(q.nutrition().ingest(apple,Nutrition.QUEEN_SUGAR_CAPACITY,Nutrition.QUEEN_PROTEIN_CAPACITY),"Local boundary fixture ingests one accounted apple");
+            c.assertTrue(WorkerTasks.selectNursingRecipient(null,q,apple,accept).equals(q.getUUID()),"Exact sugar capacity after next whole apple is accepted");calls.clear();
+            c.assertTrue(q.nutrition().ingest(apple,Nutrition.QUEEN_SUGAR_CAPACITY,Nutrition.QUEEN_PROTEIN_CAPACITY)&&WorkerTasks.selectNursingRecipient(null,q,apple,accept)==null,"Full sugar store refuses next whole apple");
+            c.assertTrue(q.nutrition().spend(3999,0)&&WorkerTasks.selectNursingRecipient(null,q,apple,accept)==null,"One sugar above whole-portion boundary refuses");
+            c.assertTrue(q.nutrition().spend(1,0)&&WorkerTasks.selectNursingRecipient(null,q,apple,accept).equals(q.getUUID()),"Exact whole-portion sugar boundary accepts");calls.clear();
+            c.assertTrue(WorkerTasks.selectNursingRecipient(null,q,ItemStack.EMPTY,accept)==null&&WorkerTasks.selectNursingRecipient(null,q,new ItemStack(Items.APPLE,2),accept)==null&&WorkerTasks.selectNursingRecipient(null,q,new ItemStack(Items.DIRT),accept)==null,"Empty, count-two and nonfood refuse without callback");
+            c.assertTrue(WorkerTasks.selectNursingRecipient(null,q,chicken,accept).equals(q.getUUID()),"Protein-empty queen accepts whole chicken");calls.clear();
+            c.assertTrue(q.nutrition().ingest(chicken,Nutrition.QUEEN_SUGAR_CAPACITY,Nutrition.QUEEN_PROTEIN_CAPACITY)&&q.nutrition().spend(0,6000)&&WorkerTasks.selectNursingRecipient(null,q,chicken,accept)==null,"Protein exactly EGG_PROTEIN refuses despite remaining capacity");
+            c.assertTrue(q.nutrition().spend(0,1)&&WorkerTasks.selectNursingRecipient(null,q,chicken,accept).equals(q.getUUID()),"Protein one below EGG_PROTEIN accepts");calls.clear();
+            c.assertTrue(q.nutrition().ingest(chicken,Nutrition.QUEEN_SUGAR_CAPACITY,Nutrition.QUEEN_PROTEIN_CAPACITY)&&q.nutrition().ingest(new ItemStack(Items.ROTTEN_FLESH),Nutrition.QUEEN_SUGAR_CAPACITY,Nutrition.QUEEN_PROTEIN_CAPACITY)&&!q.acceptsFood(chicken)&&WorkerTasks.selectNursingRecipient(null,q,chicken,accept)==null,"Protein capacity overflow refuses");
+            var restored=f.restore(c,q);var before=ReconciliationGameTest.save(c,restored);
+            c.assertTrue(WorkerTasks.selectNursingRecipient(null,restored,apple,accept).equals(restored.getUUID())&&before.equals(ReconciliationGameTest.save(c,restored)),"Reconstructed eligible queen is selected without changing serialized entity state");calls.clear();
+            // Explicit reconstruction boundary: vanilla pending NBT must still acquire its legacy clock baseline.
+            // This is a negative boundary fixture, not a claim that an ordinary loaded nursery remains pending.
+            var legacy=pile.saveWithFullMetadata(c.getLevel().registryAccess());legacy.remove(dev.primeants.time.ColonyClock.FIELD);legacy.remove("LastOrdinaryGameTime");
+            var chunk=c.getLevel().getChunkAt(home.nursery());chunk.removeBlockEntity(home.nursery());chunk.setBlockEntityNbt(legacy);
+            c.assertTrue(!chunk.getBlockEntities().containsKey(home.nursery())&&!WorkerTasks.queenNeedsFood(restored,chicken),"Pending legacy nursery and food-refusing queen are the explicit boundary inputs");
+            long now=c.getLevel().getGameTime();var refused=WorkerTasks.selectNursingRecipient(null,restored,chicken,accept);
+            var actual=chunk.getBlockEntities().get(home.nursery());boolean promoted=actual instanceof BroodPile;
+            long actualClock=promoted?((BroodPile)actual).lastSimulationGameTime().orElse(-1):-1;
+            // Probe the original skipped path only after capturing the actual selector's effects.
+            boolean referenceReady=restored.founding().ready();var reference=chunk.getBlockEntities().get(home.nursery());
+            long referenceClock=reference instanceof BroodPile b?b.lastSimulationGameTime().orElse(-1):-1;
+            long savedClock=reference instanceof BroodPile b?b.saveWithFullMetadata(c.getLevel().registryAccess()).getLongOr(dev.primeants.time.ColonyClock.FIELD,-1):-1;
+            dev.primeants.PrimeAnts.LOGGER.info("T02 SELECTOR LAZY BOUNDARY promoted={} actualClock={} referenceReady={} referenceClock={} savedClock={} now={} refused={} callbackCount={}",promoted,actualClock,referenceReady,referenceClock,savedClock,now,refused,calls.size());
+            c.assertTrue(refused==null&&calls.isEmpty()&&referenceReady&&referenceClock==now&&savedClock==now,"Original readiness path promotes valid pending legacy nursery and initializes its exact saved observation boundary");
+            c.assertTrue(promoted&&actualClock==now,"Food-refusing selector retains readiness's required legacy clock initialization");
+            restored.setHealth(0);c.assertTrue(WorkerTasks.selectNursingRecipient(null,restored,apple,accept)==null&&calls.isEmpty(),"Dead queen refuses before callback");
+            c.succeed();
+        });
+    }
+    @GameTest(maxTicks=18000,structure="prime_ants_test:idle_ground")
     public void nursesFeedDisplacedQueenAtHerLivePosition(GameTestHelper c){
         var q=f.start(c);boolean[] supplied={false},offCenterFeed={false};
         c.onEachTick(()->{
