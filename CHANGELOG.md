@@ -15,6 +15,7 @@ All notable changes to Prime Ants are listed here. Versions follow [Semantic Ver
 
 ### Fixed
 
+- Surface construction jobs now save consistently when several colonies share a world.
 - Supported dry torches, soul torches and lanterns now preserve the colony's existing openings, including wall
   torches and standing or hanging lanterns. Removing a light leaves the original opening usable. Ants still collide
   with lanterns. Lighting damage already saved by 0.2.0 cannot be repaired automatically; lost ownership cannot

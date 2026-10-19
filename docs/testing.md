@@ -10,7 +10,7 @@ ticks, then check what the ants actually did.
 | Unit tests | rules and calculations without a world (JUnit) | 124 |
 | Model tests | the ant model's geometry and textures | 26 |
 | Fast in-game tests | short GameTests: founding, food, nursing, defence, saving | 78 |
-| Long in-game tests | whole stretches of colony life: growth, stages, chambers, mining, surface building, reloads | 320 |
+| Long in-game tests | whole stretches of colony life: growth, stages, chambers, mining, surface building, reloads | 321 |
 
 ## Running them
 
@@ -80,9 +80,18 @@ A recovery diagnostic also failed food conservation before mining, and
 `forager_scaling_game_test_scaled_foragers_grow_colony_past_thirty_adults` reached an unlisted 60,000-tick timeout.
 Both remain blocking; neither is qualified by the timeout rule.
 
-A surface-access named-pickup safety case has also failed its exact disk-roundtrip assertion when an unrelated
-colony's Great-stage surface job changed the JSON property order of its ground map. The decoded fields remained
-equal. This is a failed assertion, not a qualifying timeout; it still blocks complete acceptance.
+The surface-access named-pickup exact disk-roundtrip failure was traced to property order in an unrelated colony's
+Great-stage ground map. Ground encoding now uses deterministic lexical key order. The original exact assertion,
+focused surface/lighting cases and the complete long suite pass with this repair; the earlier failed run remains
+a failed assertion, without a timeout qualification.
+
+`SurfaceSerializationGameTest` retains both legacy ground-property orders in a shared two-owner ledger: the bound
+access attempt and the unrelated Great job, including columns `-2,1` and `-2,-4`. It checks 25 input variants
+(both legacy orders and 23 cyclic rotations, 24 distinct ground orders), four codec and real SavedData disk
+roundtrips per variant, exact string equality and separate decoded-value equality.
+The latter also preserves ordered receipts, access operations, releases, transitions, plan cells and derived positions.
+Historical jobs stay in separate test storage, without live actors or terrain authority. Ground keys are encoded in
+lexical string order; runtime iteration, construction order and the save schema remain unchanged.
 
 Live shell regressions compare the solid-and-dry predicate with separate world reads and cover waterlogged blocks,
 unavailable cells, fault order and repairs in the same tick. They complement the physical nursing, delivery and

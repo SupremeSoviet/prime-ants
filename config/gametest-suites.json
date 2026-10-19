@@ -3435,6 +3435,14 @@
       "suite": "long",
       "weight_ticks": 20000,
       "reason": "Real worker widening through a generated Young shell retains unknown light support and loaded-fault precedence"
+    },
+    {
+      "name": "prime_ants_test:surface_serialization_game_test_foreign_great_job_ground_order_survives_disk_roundtrips",
+      "max_ticks": 200,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\SurfaceSerializationGameTest.java",
+      "suite": "long",
+      "weight_ticks": 200,
+      "reason": "Two-owner legacy ground ordering across repeated codec and real SavedData disk roundtrips"
     }
   ]
 }

@@ -84,7 +84,8 @@
       "dev.primeants.gametest.CatchupLifecycleGameTest",
       "dev.primeants.gametest.EstablishedGenerationGameTest",
       "dev.primeants.gametest.ValidationIndexGameTest",
-      "dev.primeants.gametest.FiniteEnvironmentGameTest"
+      "dev.primeants.gametest.FiniteEnvironmentGameTest",
+      "dev.primeants.gametest.SurfaceSerializationGameTest"
     ]
   },
   "depends": {

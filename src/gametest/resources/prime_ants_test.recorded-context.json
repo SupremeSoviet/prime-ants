@@ -399,7 +399,8 @@
     "prime_ants_test:nest_lighting_game_test_lighting_never_restores_revoked_unknown_pending_wet_foreign_or_unavailable_authority",
     "prime_ants_test:nest_lighting_game_test_light_in_actual_pending_expansion_target_never_authorizes_removal_or_replacement",
     "prime_ants_test:nest_lighting_game_test_opened_entrance_torches_retain_plug_authority_and_never_repair_solid_revocation",
-    "prime_ants_test:nest_lighting_game_test_generated_shell_worker_opening_preserves_unknown_lighting_support"
+    "prime_ants_test:nest_lighting_game_test_generated_shell_worker_opening_preserves_unknown_lighting_support",
+    "prime_ants_test:surface_serialization_game_test_foreign_great_job_ground_order_survives_disk_roundtrips"
   ],
   "cases": {
     "prime_ants_test:bootstrap_game_test_food_item_lifecycle": {
@@ -5144,6 +5145,15 @@
       ],
       "rotation": "NONE",
       "scope_namespace": "prime_ants_test:nest_lighting_game_test_generated_shell_worker_opening_preserves_unknown_lighting_support:replica:0"
+    },
+    "prime_ants_test:surface_serialization_game_test_foreign_great_job_ground_order_survives_disk_roundtrips": {
+      "origin": [
+        -1098848,
+        6,
+        -1100000
+      ],
+      "rotation": "NONE",
+      "scope_namespace": "prime_ants_test:surface_serialization_game_test_foreign_great_job_ground_order_survives_disk_roundtrips:replica:0"
     }
   },
   "original_shards": [

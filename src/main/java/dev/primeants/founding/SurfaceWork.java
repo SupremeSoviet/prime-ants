@@ -71,7 +71,7 @@ public final class SurfaceWork extends SavedData {
         }
         private String encode(){
             var o=new JsonObject();o.addProperty("entrance",home.entrance().asLong());o.addProperty("direction",home.direction().getName());o.add("plan",JsonParser.parseString(plan.description()));
-            var g=new JsonObject();ground.forEach(g::addProperty);o.add("ground",g);var r=new JsonArray();receipts.forEach(r::add);o.add("receipts",r);
+            var g=new JsonObject();new TreeMap<>(ground).forEach(g::addProperty);o.add("ground",g);var r=new JsonArray();receipts.forEach(r::add);o.add("receipts",r);
             o.addProperty("claim",claim==null?"":claim.toString());if(source!=null)o.addProperty("source",source.asLong());o.addProperty("reason",reason);
             o.addProperty("recovered",recovered);o.addProperty("placed",placed);o.addProperty("released",released);o.addProperty("ticks",ticks);
             var t=new JsonObject();transfers.forEach(t::addProperty);o.add("transfers",t);if(access!=null)o.add("access",access.encode());return o.toString();
