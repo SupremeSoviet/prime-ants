@@ -398,7 +398,8 @@
     "prime_ants_test:nest_lighting_game_test_lantern_collision_requires_actual_ant_detour_through_alternate_owned_route",
     "prime_ants_test:nest_lighting_game_test_lighting_never_restores_revoked_unknown_pending_wet_foreign_or_unavailable_authority",
     "prime_ants_test:nest_lighting_game_test_light_in_actual_pending_expansion_target_never_authorizes_removal_or_replacement",
-    "prime_ants_test:nest_lighting_game_test_opened_entrance_torches_retain_plug_authority_and_never_repair_solid_revocation"
+    "prime_ants_test:nest_lighting_game_test_opened_entrance_torches_retain_plug_authority_and_never_repair_solid_revocation",
+    "prime_ants_test:nest_lighting_game_test_generated_shell_worker_opening_preserves_unknown_lighting_support"
   ],
   "cases": {
     "prime_ants_test:bootstrap_game_test_food_item_lifecycle": {
@@ -5134,6 +5135,15 @@
       ],
       "rotation": "NONE",
       "scope_namespace": "prime_ants_test:nest_lighting_game_test_opened_entrance_torches_retain_plug_authority_and_never_repair_solid_revocation:replica:0"
+    },
+    "prime_ants_test:nest_lighting_game_test_generated_shell_worker_opening_preserves_unknown_lighting_support": {
+      "origin": [
+        -1098976,
+        6,
+        -1100000
+      ],
+      "rotation": "NONE",
+      "scope_namespace": "prime_ants_test:nest_lighting_game_test_generated_shell_worker_opening_preserves_unknown_lighting_support:replica:0"
     }
   },
   "original_shards": [

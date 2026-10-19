@@ -200,6 +200,78 @@ public final class NestLightingGameTest {
             }
         });
     }
+    private static void generatedShellVerdict(GameTestHelper c,ServerLevel l,LasiusNigerEntity q,Findings.Verdict expected){
+        var generated=new Findings();EstablishedNest.get(l).findings(l,q.getUUID(),generated);
+        var shared=q.founding().plan().nurseryFindings(l,q.getUUID(),true);
+        PrimeAnts.LOGGER.info("LIGHTING SHELL verdict expected={} generated={} generatedProblem={} shared={} sharedProblem={} gameTime={}",
+            expected,generated.verdict(),generated.problem(),shared.verdict(),shared.problem(),l.getGameTime());
+        c.assertTrue(generated.verdict()==expected,"Generated original shell must be "+expected+": "+generated.problem());
+        c.assertTrue(shared.verdict()==expected,"Shared nursery findings must be "+expected+": "+shared.problem());
+    }
+    @GameTest(maxTicks=20000)
+    public void generatedShellWorkerOpeningPreservesUnknownLightingSupport(GameTestHelper c){
+        var l=NaturalPlacementGameTest.level(c,"placement_soil");var cp=NaturalPlacementGameTest.prepare(c,l,8600,ColonyStage.YOUNG);
+        boolean[] inspected={false},ended={false};int[] observedRemovals={0},lastRemoved={0},evaluations={0};long[] hiddenAt={-1},evaluatedAt={-1};
+        UnavailableCells[] hidden={null};String[] authority={null};BlockState[] light={null};var completed=new ArrayList<BlockPos>();
+        var openingRecords=new HashMap<BlockPos,String>();var builders=new HashSet<UUID>();
+        c.onEachTick(()->{
+            if(ended[0])return;
+            try{
+            var status=NaturalPlacementGameTest.status(l,cp);
+            c.assertTrue(!Set.of("REJECTED","INDETERMINATE").contains(status),"Young production initialization completes: "+NaturalPlacementGameTest.decision(l,cp));
+            if(!status.equals("PLACED"))return;
+            var q=EstablishedGenerationGameTest.queen(l,cp);var owner=q.getUUID();var home=q.founding().plan();
+            if(!inspected[0]){EstablishedGenerationGameTest.physical(c,l,cp,ColonyStage.YOUNG);inspected[0]=true;}
+            var job=NestExpansion.get(l).job(owner);if(job==null)return;
+            if(job.claim!=null&&l.getEntity(job.claim) instanceof LasiusNigerEntity w){
+                c.assertTrue(!w.isNoAi()&&w.workerTasks().construction(),"Widening belongs to an enabled physical builder");builders.add(w.getUUID());
+            }
+            if(job.removed()>lastRemoved[0]){observedRemovals[0]+=job.removed()-lastRemoved[0];lastRemoved[0]=job.removed();}
+            if(!job.complete()||job.claim!=null)return;
+            var at=home.at(3,2,-1);var support=home.at(2,2,-1);var initial=EstablishedNest.get(l).initial(owner);
+            var pile=(BroodPile)l.getBlockEntity(home.nursery());
+            if(hidden[0]==null){
+                if(!q.founding().ready()||pile.stageEvaluation()==null||pile.stageEvaluation().stage()!=ColonyStage.YOUNG)return;
+                c.assertTrue(observedRemovals[0]==12&&!builders.isEmpty()&&job.removed()==12&&job.deposited==12&&job.released==0,"Twelve observed real worker removals and deposits finish the widening");
+                c.assertTrue(initial.profile()==ColonyStage.YOUNG&&job.completed().contains(at)&&initial.shell().contains(at)&&!initial.space().contains(at),"Exact light cell intersects completed widening and original Young shell, outside original space");
+                c.assertTrue(job.side==1&&NestPlan.loaded(l,support)&&l.getBlockState(support).isSolidRender(),"Original forward wall remains the wall torch support");
+                authority[0]=record(l,at);light[0]=Blocks.WALL_TORCH.defaultBlockState().setValue(WallTorchBlock.FACING,home.direction());
+                c.assertTrue((owner+":worker_open:air").equals(authority[0])&&NestLighting.supported(l,at,light[0]),"Exact worker opening has a supported wall torch facing away from home.at(2,2,-1)");
+                c.assertTrue(l.setBlock(at,light[0],3),"Normal supported wall torch write succeeds");
+                generatedShellVerdict(c,l,q,Findings.Verdict.CLEAR);
+                completed.addAll(job.completed());for(var p:completed)openingRecords.put(p,record(l,p));
+                for(var p:initial.space())openingRecords.put(p,record(l,p));
+                hidden[0]=UnavailableCells.hide(c,l,support);hiddenAt[0]=l.getGameTime();evaluatedAt[0]=pile.stageEvaluatedAt();
+                c.assertTrue(NestPlan.loaded(l,at)&&!NestPlan.loaded(l,support),"Only support knowledge is hidden; wall torch cell remains observable");
+                PrimeAnts.LOGGER.info("LIGHTING SHELL intersection owner={} light={} support={} originalShell={} originalSpace={} completed={} record={} builders={} removed={} deposited={} released={}",
+                    owner,at,support,initial.shell().contains(at),initial.space().contains(at),job.completed().contains(at),authority[0],builders,job.removed(),job.deposited,job.released);
+                generatedShellVerdict(c,l,q,Findings.Verdict.UNKNOWN);
+            }
+            c.assertTrue(job.completed().equals(completed)&&job.removed()==12&&job.deposited==12&&job.released==0&&job.claim==null,"Uncertainty preserves completed excavation and settled soil accounting");
+            for(var entry:openingRecords.entrySet())c.assertTrue(Objects.equals(entry.getValue(),record(l,entry.getKey())),"Uncertainty preserves exact original opening authority at "+entry.getKey());
+            c.assertTrue(l.getBlockState(at).equals(light[0])&&authority[0].equals(record(l,at)),"Same torch and worker authority remain without replacement or reassignment");
+            var generated=new Findings();EstablishedNest.get(l).findings(l,owner,generated);
+            c.assertTrue(generated.verdict()==Findings.Verdict.UNKNOWN&&home.nurseryFindings(l,owner,true).verdict()==Findings.Verdict.UNKNOWN,"Support uncertainty remains UNKNOWN across ordinary ticks");
+            c.assertTrue(ChamberRegistry.get(l).colony(owner).stage()==ColonyStage.YOUNG,"Unavailable support never causes damage-driven regression to Founding");
+            if(pile.stageEvaluatedAt()>evaluatedAt[0]){
+                evaluatedAt[0]=pile.stageEvaluatedAt();evaluations[0]++;var evaluation=pile.stageEvaluation();
+                c.assertTrue(evaluation.stage()==ColonyStage.YOUNG&&evaluation.chambers().stream().filter(ch->ch.id().equals(ChamberRegistry.FOUNDING))
+                    .allMatch(ch->ch.functions().values().stream().allMatch(p->p==ColonyDevelopment.Presence.UNKNOWN)),"Ordinary controller evaluation retains unknown chamber functions and Young stage");
+                PrimeAnts.LOGGER.info("LIGHTING SHELL controllerEvaluation count={} nurseryTick={} stage={} chambers={}",evaluations[0],evaluatedAt[0],evaluation.stage(),evaluation.chambers());
+            }
+            if(l.getGameTime()-hiddenAt[0]<350||evaluations[0]<3)return;
+            var broken=home.at(4,-2,-1);var original=l.getBlockState(broken);
+            c.assertTrue(initial.shell().contains(broken)&&!job.tasks.contains(broken)&&NestPlan.loaded(l,broken)&&original.isSolidRender(),"Independent observable original shell wall outside completed widening");
+            l.setBlock(broken,Blocks.AIR.defaultBlockState(),3);generatedShellVerdict(c,l,q,Findings.Verdict.DAMAGED);
+            l.setBlock(broken,original,3);generatedShellVerdict(c,l,q,Findings.Verdict.UNKNOWN);
+            hidden[0].close();generatedShellVerdict(c,l,q,Findings.Verdict.CLEAR);
+            c.assertTrue(l.getBlockState(at).equals(light[0])&&authority[0].equals(record(l,at))&&DigJob.anyOpening(l,at,owner)
+                &&job.completed().equals(completed)&&job.deposited==12&&job.released==0&&job.claim==null,"Restoring support knowledge alone recovers original torch, opening and completed accounting");
+            PrimeAnts.LOGGER.info("LIGHTING ACCEPT generatedShell sequence=CLEAR,UNKNOWN,DAMAGED,UNKNOWN,CLEAR unavailableTicks={} controllerEvaluations={} record={} removed={} deposited={} released={} stage={}",
+                l.getGameTime()-hiddenAt[0],evaluations[0],record(l,at),job.removed(),job.deposited,job.released,ChamberRegistry.get(l).colony(owner).stage());ended[0]=true;c.succeed();
+            }catch(RuntimeException|Error failure){ended[0]=true;throw failure;}
+        });
+    }
     @GameTest(maxTicks=20000,structure="prime_ants_test:idle_ground")
     public void openedEntranceTorchesRetainPlugAuthorityAndNeverRepairSolidRevocation(GameTestHelper c){
         var f=new WorkerForagingGameTest();var q=f.start(c);int[] variant={0};long[] since={-1};BlockPos[] at={null};BlockState[] torch={null};String[] authority={null};boolean[] ended={false};

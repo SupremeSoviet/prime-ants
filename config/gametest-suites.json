@@ -3427,6 +3427,14 @@
       "suite": "long",
       "weight_ticks": 20000,
       "reason": "Real-tick supported lighting, ownership, collision and persistence regression"
+    },
+    {
+      "name": "prime_ants_test:nest_lighting_game_test_generated_shell_worker_opening_preserves_unknown_lighting_support",
+      "max_ticks": 20000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NestLightingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 20000,
+      "reason": "Real worker widening through a generated Young shell retains unknown light support and loaded-fault precedence"
     }
   ]
 }

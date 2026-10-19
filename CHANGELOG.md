@@ -19,6 +19,8 @@ All notable changes to Prime Ants are listed here. Versions follow [Semantic Ver
   torches and standing or hanging lanterns. Removing a light leaves the original opening usable. Ants still collide
   with lanterns. Lighting damage already saved by 0.2.0 cannot be repaired automatically; lost ownership cannot
   safely be distinguished from a player's edits.
+- A wall torch in a worker-dug widening of a generated nest no longer makes the colony treat unavailable support
+  as a broken wall. Independently visible nest damage still stops development.
 
 ## [0.2.0] - 2026-10-18
 

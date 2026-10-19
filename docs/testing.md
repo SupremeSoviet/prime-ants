@@ -10,7 +10,7 @@ ticks, then check what the ants actually did.
 | Unit tests | rules and calculations without a world (JUnit) | 124 |
 | Model tests | the ant model's geometry and textures | 26 |
 | Fast in-game tests | short GameTests: founding, food, nursing, defence, saving | 78 |
-| Long in-game tests | whole stretches of colony life: growth, stages, chambers, mining, surface building, reloads | 319 |
+| Long in-game tests | whole stretches of colony life: growth, stages, chambers, mining, surface building, reloads | 320 |
 
 ## Running them
 
@@ -80,6 +80,10 @@ A recovery diagnostic also failed food conservation before mining, and
 `forager_scaling_game_test_scaled_foragers_grow_colony_past_thirty_adults` reached an unlisted 60,000-tick timeout.
 Both remain blocking; neither is qualified by the timeout rule.
 
+A surface-access named-pickup safety case has also failed its exact disk-roundtrip assertion when an unrelated
+colony's Great-stage surface job changed the JSON property order of its ground map. The decoded fields remained
+equal. This is a failed assertion, not a qualifying timeout; it still blocks complete acceptance.
+
 Live shell regressions compare the solid-and-dry predicate with separate world reads and cover waterlogged blocks,
 unavailable cells, fault order and repairs in the same tick. They complement the physical nursing, delivery and
 generated-colony tests, including pending legacy nursery initialization.
@@ -98,6 +102,13 @@ Entrance torches retain the original plug opening records. A light in the comple
 left untouched until removed, after which ordinary store establishment resumes. Negative cases retain revoked ownership, actual pending
 excavation, wet-cell, shell, foreign-component and unavailable-cell protections. Geometry never repairs lost authority.
 Unavailable light supports remain UNKNOWN in habitat and occupancy checks; a loaded fault still wins over that uncertainty.
+The generated-shell regression starts with a production-generated Young nest and lets enabled workers finish its
+widening. A wall torch in the completed widening at `home.at(3,2,-1)` also intersects the original shell, outside the
+original generated space. Only its support at `home.at(2,2,-1)` is reported unavailable. Both the generated-shell and
+shared nursery scans must observe CLEAR, UNKNOWN, DAMAGED, UNKNOWN, CLEAR as an independent loaded wall is broken
+and repaired, then support knowledge returns. At least three ordinary nursery controller evaluations run during
+350 or more unavailable ticks, preserving Young stage, unknown chamber functions, exact opening records and all
+twelve settled worker removals and soil deposits. The torch is never replaced to recover knowledge.
 
 Lighting growth fixtures declare finite supplies: ten apples and eight chicken for expansion; twelve apples and ten
 chicken for the chamber. The gallery uses the existing supplied progression fixture, capped at 2,048 apples, 1,024

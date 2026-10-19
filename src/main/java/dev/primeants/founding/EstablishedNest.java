@@ -45,6 +45,6 @@ public final class EstablishedNest extends SavedData {
         var store=n.profile()==ColonyStage.MATURE?dev.primeants.worker.MaterialStore.marker(n.home(),"left"):null;
         for(var p:n.space())if(r.cell(t.openingLoaded(l,p,owner),"generated_space_unavailable")&&!p.equals(nursery)&&!p.equals(cache)
                 &&!p.equals(store)&&!t.generatedOpeningIntact(l,p,owner))r.fault("generated_space_revoked_or_obstructed");
-        for(var p:n.shell())if(r.cell(NestPlan.loaded(l,p),"generated_shell_unavailable")&&(!l.getBlockState(p).isSolidRender()||!l.getFluidState(p).isEmpty())&&!DigJob.anyOpening(l,p,owner))r.fault("generated_shell_open");
+        for(var p:n.shell())if(r.cell(t.openingLoaded(l,p,owner),"generated_shell_unavailable")&&(!l.getBlockState(p).isSolidRender()||!l.getFluidState(p).isEmpty())&&!DigJob.anyOpening(l,p,owner))r.fault("generated_shell_open");
     }
 }
