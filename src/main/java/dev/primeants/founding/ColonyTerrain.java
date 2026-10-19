@@ -42,6 +42,17 @@ public final class ColonyTerrain extends SavedData {
     public static ColonyTerrain get(ServerLevel l){return l.getDataStorage().computeIfAbsent(TYPE);}
     private static String key(BlockPos p){return Long.toString(p.asLong());}
     public void invalidate(BlockPos p){ownership.remove(p.asLong());if(records.remove(key(p))!=null)setDirty();}
+    /** Preserve only an existing opening through a dry, supported light edit. Air-to-air writes and every
+     * other replacement still revoke authority. No plan, edit history or geometry can recreate a lost record. */
+    public void write(ServerLevel l,BlockPos p,BlockState replacement){
+        var prior=ownership.get(p.asLong());
+        if(prior!=null&&(prior.kind().equals("worker_open:air")||prior.kind().equals("generated:open"))&&NestPlan.loaded(l,p)){
+            var before=l.getBlockState(p);
+            if(NestLighting.transition(l,p,before,replacement)
+                    &&java.util.Objects.equals(prior,get(l).ownership.get(p.asLong())))return;
+        }
+        get(l).invalidate(p);
+    }
     public UUID componentOwner(ServerLevel l,BlockPos p){
         String r=records.get(key(p));if(r==null)return null;UUID owner=UUID.fromString(r.substring(0,36));
         return prepared(l,p,owner)||mound(l,p,owner)||surface(l,p,owner)||built(l,p,owner,l.getBlockState(p).getBlock())?owner:null;
@@ -80,6 +91,22 @@ public final class ColonyTerrain extends SavedData {
     public boolean surfacePermission(ServerLevel l,BlockPos p,UUID owner){return NestPlan.loaded(l,p)&&(owner+":surface_target:"+l.getBlockState(p)).equals(records.get(key(p)));}
     public boolean opened(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"worker_open:air",Blocks.AIR.defaultBlockState())||generatedOpen(l,p,owner);}
     public boolean generatedOpen(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"generated:open",Blocks.AIR.defaultBlockState());}
+    /** Live ownership/integrity, independent of physical walking space. Lantern collision remains real. */
+    public boolean openingIntact(ServerLevel l,BlockPos p,UUID owner){return opened(l,p,owner)||litOpening(l,p,owner,"worker_open:air")||litOpening(l,p,owner,"generated:open");}
+    public boolean generatedOpeningIntact(ServerLevel l,BlockPos p,UUID owner){return generatedOpen(l,p,owner)||litOpening(l,p,owner,"generated:open");}
+    /** Preserve Findings.UNKNOWN for a retained light whose support cannot be observed. Revoked/foreign cells
+     * remain known faults, even when a nearby support is unavailable. */
+    public boolean openingLoaded(ServerLevel l,BlockPos p,UUID owner){
+        if(!NestPlan.loaded(l,p))return false;
+        if(!owns(p,owner,"worker_open:air")&&!owns(p,owner,"generated:open"))return true;
+        var state=l.getBlockState(p);var current=get(l);
+        return !current.owns(p,owner,"worker_open:air")&&!current.owns(p,owner,"generated:open")||NestLighting.supportLoaded(l,p,state);
+    }
+    private boolean litOpening(ServerLevel l,BlockPos p,UUID owner,String kind){
+        if(!owns(p,owner,kind)||!NestPlan.loaded(l,p))return false;
+        var state=l.getBlockState(p);
+        return NestLighting.supported(l,p,state)&&get(l).owns(p,owner,kind);
+    }
     public boolean generatedSurface(ServerLevel l,BlockPos p,UUID owner){return matches(l,p,owner,"generated:surface",NurseryBlocks.NEST_SOIL.defaultBlockState());}
     void generated(BlockPos p,UUID owner,String kind){record(p,owner,"generated:"+kind);}
     private static String id(net.minecraft.world.level.block.Block b){return net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(b).toString();}

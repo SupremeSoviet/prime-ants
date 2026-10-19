@@ -390,7 +390,15 @@
     "prime_ants_test:established_generation_game_test_genuine_raised_exterior_keeps_validated_route_through_initialization_and_readback",
     "prime_ants_test:nursing_guard_game_test_recipient_selector_preserves_order_food_boundaries_and_live_readiness",
     "prime_ants_test:validation_index_game_test_live_shell_predicates_preserve_dryness_fault_order_and_same_tick_repairs",
-    "prime_ants_test:finite_environment_game_test_ambient_monsters_are_disabled_but_explicit_mobs_keep_vanilla_loot"
+    "prime_ants_test:finite_environment_game_test_ambient_monsters_are_disabled_but_explicit_mobs_keep_vanilla_loot",
+    "prime_ants_test:nest_lighting_game_test_worker_expansion_lights_survive_disk_reload_physical_nursing_and_brood_progress",
+    "prime_ants_test:nest_lighting_game_test_completed_chamber_lights_preserve_both_integrity_scans_and_settled_soil",
+    "prime_ants_test:nest_lighting_game_test_mining_gallery_lights_preserve_completed_openings_and_resource_balance",
+    "prime_ants_test:nest_lighting_game_test_generated_nest_lights_preserve_authority_stage_and_activity_across_disk_readback",
+    "prime_ants_test:nest_lighting_game_test_lantern_collision_requires_actual_ant_detour_through_alternate_owned_route",
+    "prime_ants_test:nest_lighting_game_test_lighting_never_restores_revoked_unknown_pending_wet_foreign_or_unavailable_authority",
+    "prime_ants_test:nest_lighting_game_test_light_in_actual_pending_expansion_target_never_authorizes_removal_or_replacement",
+    "prime_ants_test:nest_lighting_game_test_opened_entrance_torches_retain_plug_authority_and_never_repair_solid_revocation"
   ],
   "cases": {
     "prime_ants_test:bootstrap_game_test_food_item_lifecycle": {
@@ -5054,6 +5062,78 @@
       "source_suite": "fast",
       "source_shard": "additive",
       "source_log_line": 0
+    },
+    "prime_ants_test:nest_lighting_game_test_worker_expansion_lights_survive_disk_reload_physical_nursing_and_brood_progress": {
+      "origin": [
+        -1100000,
+        6,
+        -1100000
+      ],
+      "rotation": "NONE",
+      "scope_namespace": "prime_ants_test:nest_lighting_game_test_worker_expansion_lights_survive_disk_reload_physical_nursing_and_brood_progress:replica:0"
+    },
+    "prime_ants_test:nest_lighting_game_test_completed_chamber_lights_preserve_both_integrity_scans_and_settled_soil": {
+      "origin": [
+        -1099872,
+        6,
+        -1100000
+      ],
+      "rotation": "NONE",
+      "scope_namespace": "prime_ants_test:nest_lighting_game_test_completed_chamber_lights_preserve_both_integrity_scans_and_settled_soil:replica:0"
+    },
+    "prime_ants_test:nest_lighting_game_test_mining_gallery_lights_preserve_completed_openings_and_resource_balance": {
+      "origin": [
+        -1099744,
+        6,
+        -1100000
+      ],
+      "rotation": "NONE",
+      "scope_namespace": "prime_ants_test:nest_lighting_game_test_mining_gallery_lights_preserve_completed_openings_and_resource_balance:replica:0"
+    },
+    "prime_ants_test:nest_lighting_game_test_generated_nest_lights_preserve_authority_stage_and_activity_across_disk_readback": {
+      "origin": [
+        -1099616,
+        6,
+        -1100000
+      ],
+      "rotation": "NONE",
+      "scope_namespace": "prime_ants_test:nest_lighting_game_test_generated_nest_lights_preserve_authority_stage_and_activity_across_disk_readback:replica:0"
+    },
+    "prime_ants_test:nest_lighting_game_test_lantern_collision_requires_actual_ant_detour_through_alternate_owned_route": {
+      "origin": [
+        -1099488,
+        6,
+        -1100000
+      ],
+      "rotation": "NONE",
+      "scope_namespace": "prime_ants_test:nest_lighting_game_test_lantern_collision_requires_actual_ant_detour_through_alternate_owned_route:replica:0"
+    },
+    "prime_ants_test:nest_lighting_game_test_lighting_never_restores_revoked_unknown_pending_wet_foreign_or_unavailable_authority": {
+      "origin": [
+        -1099360,
+        6,
+        -1100000
+      ],
+      "rotation": "NONE",
+      "scope_namespace": "prime_ants_test:nest_lighting_game_test_lighting_never_restores_revoked_unknown_pending_wet_foreign_or_unavailable_authority:replica:0"
+    },
+    "prime_ants_test:nest_lighting_game_test_light_in_actual_pending_expansion_target_never_authorizes_removal_or_replacement": {
+      "origin": [
+        -1099232,
+        6,
+        -1100000
+      ],
+      "rotation": "NONE",
+      "scope_namespace": "prime_ants_test:nest_lighting_game_test_light_in_actual_pending_expansion_target_never_authorizes_removal_or_replacement:replica:0"
+    },
+    "prime_ants_test:nest_lighting_game_test_opened_entrance_torches_retain_plug_authority_and_never_repair_solid_revocation": {
+      "origin": [
+        -1099104,
+        6,
+        -1100000
+      ],
+      "rotation": "NONE",
+      "scope_namespace": "prime_ants_test:nest_lighting_game_test_opened_entrance_torches_retain_plug_authority_and_never_repair_solid_revocation:replica:0"
     }
   },
   "original_shards": [

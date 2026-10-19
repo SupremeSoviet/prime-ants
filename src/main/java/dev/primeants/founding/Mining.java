@@ -73,12 +73,12 @@ public final class Mining extends SavedData {
         @Override public void findings(ServerLevel l,UUID owner,Findings r){
             var terrain=ColonyTerrain.get(l);
             DugSpace.scan(new DugSpace.Ground<BlockPos>(){
-                public boolean loaded(BlockPos p){return NestPlan.loaded(l,p);}
-                public boolean open(BlockPos p){return terrain.opened(l,p,owner);}
+                public boolean loaded(BlockPos p){return terrain.openingLoaded(l,p,owner);}
+                public boolean open(BlockPos p){return terrain.openingIntact(l,p,owner);}
                 public boolean closed(BlockPos p){return l.getBlockState(p).isSolidRender()&&l.getFluidState(p).isEmpty();}
                 public BlockPos face(BlockPos p,int i){return p.relative(Direction.values()[i]);}
             },completed,connections(),tasks,DugSpace.Labels.of("mining"),r);
-            for(var p:connections())if(r.cell(NestPlan.loaded(l,p),"mining_connection_unavailable")&&!terrain.opened(l,p,owner))r.fault("mining_connection_revoked");
+            for(var p:connections())if(r.cell(terrain.openingLoaded(l,p,owner),"mining_connection_unavailable")&&!terrain.openingIntact(l,p,owner))r.fault("mining_connection_revoked");
         }
         public boolean compatible(ServerLevel l,UUID owner,BlockPos p,BlockState expected){
             return bounded(p)&&NestPlan.loaded(l,p)&&l.getBlockState(p).equals(expected)

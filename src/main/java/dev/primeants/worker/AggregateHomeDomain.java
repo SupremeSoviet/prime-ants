@@ -38,7 +38,7 @@ public final class AggregateHomeDomain {
         if(extension!=null&&sameHome(home,extension.home))cells.addAll(NestExpansion.get(l).circulationSpace(l,owner));
         // Completed owned excavation cells also cover connected added halls and stores.
         for(var j:ChamberExcavation.get(l).jobs(owner))if(sameHome(home,j.home)&&j.problem(l,owner)==null)
-            for(var p:j.completed())if(j.completed().contains(p.above())&&loadedStand(l,p)&&ColonyTerrain.get(l).opened(l,p,owner))cells.add(p);
+            for(var p:j.completed())if(j.completed().contains(p.above())&&loadedStand(l,p)&&ColonyTerrain.get(l).openingIntact(l,p,owner))cells.add(p);
         return cells.contains(feet);
     }
     private static boolean loadedStand(ServerLevel l,BlockPos p){return NestPlan.loaded(l,p)&&NestPlan.loaded(l,p.above())&&NestPlan.loaded(l,p.below())&&NestPlan.walkable(l,p);}

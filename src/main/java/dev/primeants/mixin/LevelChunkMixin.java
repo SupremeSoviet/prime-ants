@@ -25,7 +25,7 @@ public abstract class LevelChunkMixin {
         dev.primeants.founding.NaturalPlacement.get(level).observeGenerated(level, proto);
     }
     // Includes ordinary placement, breaking/replacement, piston writes and ant deposits.
-    // Even a same-state write revokes permission conservatively.
+    // Even a same-state write revokes permission conservatively, except supported lights in existing openings.
     @Inject(method = "setBlockState", at = @At("HEAD"))
     private void primeAntsRevoke(BlockPos pos, BlockState state, int flags, CallbackInfoReturnable<BlockState> cir) {
         if (level instanceof ServerLevel server) {
@@ -34,8 +34,8 @@ public abstract class LevelChunkMixin {
             dev.primeants.founding.NaturalMaterials.get(server).invalidate(pos);
             if(!dev.primeants.founding.NativeGrassWrite.consume(server,pos,state)) NaturalSoil.get(server).invalidate(pos);
             dev.primeants.founding.NativeVegetation.get(server).invalidate(pos);
-            dev.primeants.founding.ColonyPlugs.get(server).invalidate(pos);
-            dev.primeants.founding.ColonyTerrain.get(server).invalidate(pos);
+            dev.primeants.founding.ColonyPlugs.get(server).write(server,pos,state);
+            dev.primeants.founding.ColonyTerrain.get(server).write(server,pos,state);
             dev.primeants.worker.FlowerNectar.get(server).write(pos,state);
             dev.primeants.worker.NativePrey.get(server).write(pos,state);
         }

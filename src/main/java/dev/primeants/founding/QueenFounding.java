@@ -105,7 +105,7 @@ public final class QueenFounding {
     }
     private String enclosureProblem(ServerLevel level, boolean operational) {
         if (plan == null) return "enclosure_plan_missing";
-        if (operational && lifecycle == Lifecycle.OPEN && plan.plugs().stream().anyMatch(p -> NestPlan.loaded(level,p) && !ColonyPlugs.get(level).opened(level,p,queen.getUUID()))) return "enclosure_operational_opening_incomplete";
+        if (operational && lifecycle == Lifecycle.OPEN && plan.plugs().stream().anyMatch(p -> ColonyPlugs.get(level).openingLoaded(level,p,queen.getUUID()) && !ColonyPlugs.get(level).opened(level,p,queen.getUUID()))) return "enclosure_operational_opening_incomplete";
         String habitat = plan.nurseryProblem(level, queen.getUUID(), operational);
         if (habitat != null) return habitat;
         return bodyProblem(level, operational);
@@ -118,7 +118,7 @@ public final class QueenFounding {
         if (phase != Phase.SETTLED || plan == null) { r.fault("queen_not_settled"); return; }
         boolean operational = lifecycle != Lifecycle.CLAUSTRAL;
         if (operational && lifecycle == Lifecycle.OPEN) for (var p : plan.plugs())
-            if (r.cell(NestPlan.loaded(level, p), "entrance_chunk_unavailable") && !ColonyPlugs.get(level).opened(level,p,queen.getUUID())) r.fault("enclosure_operational_opening_incomplete");
+            if (r.cell(ColonyPlugs.get(level).openingLoaded(level,p,queen.getUUID()), "entrance_chunk_unavailable") && !ColonyPlugs.get(level).opened(level,p,queen.getUUID())) r.fault("enclosure_operational_opening_incomplete");
         bodyFindings(level, operational, r);
     }
     /** occupancyFindings' first fault, else its first unavailable cell. */
@@ -139,7 +139,7 @@ public final class QueenFounding {
             // completed physical voids that fit this body. Planned cells and unauthorized holes confer no habitat.
             var usable=new java.util.ArrayList<BlockPos>(NestExpansion.get(level).bodyFloors(level,queen.getUUID(),body.maxY));
             var entrance=plan.at(2,0,-2);
-            boolean entranceKnown=NestPlan.loaded(level,entrance)&&plan.plugs().stream().allMatch(p->NestPlan.loaded(level,p));
+            boolean entranceKnown=NestPlan.loaded(level,entrance)&&plan.plugs().stream().allMatch(p->ColonyPlugs.get(level).openingLoaded(level,p,queen.getUUID()));
             if(entranceKnown&&plan.plugs().stream().allMatch(p->ColonyPlugs.get(level).opened(level,p,queen.getUUID()))
                 &&NestPlan.walkable(level,entrance))usable.add(entrance);
             inside=covered(body,interior,usable);

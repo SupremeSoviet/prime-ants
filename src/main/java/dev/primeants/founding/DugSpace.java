@@ -12,7 +12,7 @@ public final class DugSpace {
     /** What the scan reads: the live level in play, a table in unit tests. */
     public interface Ground<P> {
         boolean loaded(P p);
-        /** Still this colony's worker opening; the plan's marker cell may instead hold the colony's own marker block. */
+        /** Intact colony opening, independent of traversability; the marker may hold the colony's own marker block. */
         boolean open(P p);
         /** Solid and dry. */
         boolean closed(P p);

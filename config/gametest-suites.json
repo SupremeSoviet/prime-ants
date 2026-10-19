@@ -3363,6 +3363,70 @@
       "suite": "fast",
       "weight_ticks": 200,
       "reason": "Finite fixture environment and genuine explicit mob death-loot regression"
+    },
+    {
+      "name": "prime_ants_test:nest_lighting_game_test_worker_expansion_lights_survive_disk_reload_physical_nursing_and_brood_progress",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NestLightingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real-tick supported lighting, ownership, collision and persistence regression"
+    },
+    {
+      "name": "prime_ants_test:nest_lighting_game_test_completed_chamber_lights_preserve_both_integrity_scans_and_settled_soil",
+      "max_ticks": 48000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NestLightingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 48000,
+      "reason": "Real-tick supported lighting, ownership, collision and persistence regression"
+    },
+    {
+      "name": "prime_ants_test:nest_lighting_game_test_mining_gallery_lights_preserve_completed_openings_and_resource_balance",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NestLightingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Real-tick supported lighting, ownership, collision and persistence regression"
+    },
+    {
+      "name": "prime_ants_test:nest_lighting_game_test_generated_nest_lights_preserve_authority_stage_and_activity_across_disk_readback",
+      "max_ticks": 5000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NestLightingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 5000,
+      "reason": "Real-tick supported lighting, ownership, collision and persistence regression"
+    },
+    {
+      "name": "prime_ants_test:nest_lighting_game_test_lantern_collision_requires_actual_ant_detour_through_alternate_owned_route",
+      "max_ticks": 3000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NestLightingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 3000,
+      "reason": "Real-tick supported lighting, ownership, collision and persistence regression"
+    },
+    {
+      "name": "prime_ants_test:nest_lighting_game_test_lighting_never_restores_revoked_unknown_pending_wet_foreign_or_unavailable_authority",
+      "max_ticks": 3000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NestLightingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 3000,
+      "reason": "Real-tick supported lighting, ownership, collision and persistence regression"
+    },
+    {
+      "name": "prime_ants_test:nest_lighting_game_test_light_in_actual_pending_expansion_target_never_authorizes_removal_or_replacement",
+      "max_ticks": 30000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NestLightingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 30000,
+      "reason": "Real-tick supported lighting, ownership, collision and persistence regression"
+    },
+    {
+      "name": "prime_ants_test:nest_lighting_game_test_opened_entrance_torches_retain_plug_authority_and_never_repair_solid_revocation",
+      "max_ticks": 20000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NestLightingGameTest.java",
+      "suite": "long",
+      "weight_ticks": 20000,
+      "reason": "Real-tick supported lighting, ownership, collision and persistence regression"
     }
   ]
 }

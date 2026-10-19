@@ -55,9 +55,11 @@ for most of it:
 When the workers have opened the entrance, you can walk down the stairs, which are two blocks high. Give the ants room
 to pass.
 
-**Don't place torches or any other blocks inside the nest.** A block placed in a cell the ants dug takes that cell
-from the colony for good: the nest counts as damaged, and the colony stops raising brood. A potion of night vision
-lets you see inside. Damaging the walls or flooding the nest can also stop a colony from developing.
+Supported dry torches, wall torches, soul torches and lanterns can light openings already belonging to the colony.
+Lanterns may stand or hang from a solid support in workers' added rooms or generated nest rooms. The queen's original
+founding room still accepts torches as before. Ants collide with lanterns, so leave another route. Removing a light
+restores the original opening. Do not replace walls, stores or undug cells with lights; lighting does not give those
+cells to the colony. Broken walls, solid blocks and flooding can still stop development.
 
 ### Defence
 
@@ -74,7 +76,8 @@ Back away and stop causing harm. Ordinary hostile mobs are still dangerous while
 
 - One species, *Lasius niger*. Nuptial flights and fruit harvesting are not in yet.
 - Awkward terrain, food shortages and crowding can stall a colony. Damage to the nest is not always repaired.
-- A block placed inside a nest, even a torch, damages it for good. This is a known issue.
+- Solid blocks revoke the colony's openings permanently. Removing them or placing lights does not restore ownership.
+  Damage from lighting already saved in 0.2.0 cannot recover automatically either.
 - Large colonies are heavy on the server; see [performance](performance.md).
 - Long sessions and multiplayer have had limited testing.
 
@@ -130,9 +133,12 @@ Fabric API в папку `mods` вашего профиля Fabric. Для му�
 
 Когда рабочие откроют вход, можно спуститься по ступенькам высотой в два блока. Пропускайте муравьёв.
 
-**Не ставьте внутри гнезда факелы и любые другие блоки.** Блок, поставленный в выкопанную муравьями клетку, навсегда
-отнимает её у колонии: гнездо считается повреждённым, и колония перестаёт выращивать выводок. Чтобы видеть внутри,
-пригодится зелье ночного зрения. Повреждённые стены или затопленное гнездо тоже могут остановить развитие колонии.
+В уже принадлежащих колонии проёмах можно ставить сухие факелы и фонари с опорой, включая настенные факелы и варианты
+с огнём душ. Фонари можно ставить на пол или подвешивать в добавленных рабочими камерах или готовых сгенерированных
+гнёздах. В исходной камере матки по-прежнему можно ставить факелы. Оставляйте обход: муравьи сталкиваются с фонарями.
+Удаление
+света возвращает исходный проём. Не заменяйте светом стены, склады и ещё не выкопанные клетки: колония не получит их
+во владение. Сломанные стены, полные блоки и затопление по-прежнему могут остановить развитие.
 
 ### Защита
 
@@ -149,6 +155,7 @@ Fabric API в папку `mods` вашего профиля Fabric. Для му�
 
 - Пока есть один вид, *Lasius niger*. Брачных лётов и сбора плодов ещё нет.
 - Сложный рельеф, нехватка еды и теснота могут остановить колонию. Повреждения гнезда чинятся не всегда.
-- Блок, поставленный внутри гнезда, даже факел, повреждает его навсегда. Это известная проблема.
+- Полные блоки навсегда отнимают проёмы у колонии. Удаление блока или установка света владение не возвращает.
+  Повреждения от освещения, уже сохранённые в 0.2.0, тоже не восстанавливаются автоматически.
 - Большие колонии нагружают сервер; см. [производительность](performance.md) (на английском).
 - Долгие сеансы и мультиплеер проверены мало.

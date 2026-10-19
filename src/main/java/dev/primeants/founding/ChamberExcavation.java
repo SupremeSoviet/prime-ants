@@ -53,8 +53,8 @@ public final class ChamberExcavation extends SavedData {
     private static DugSpace.Ground<BlockPos> ground(ServerLevel l, UUID owner, Built built) {
         var terrain = ColonyTerrain.get(l);
         return new DugSpace.Ground<>() {
-            @Override public boolean loaded(BlockPos p) { return NestPlan.loaded(l, p); }
-            @Override public boolean open(BlockPos p) { return p.equals(built.marker()) ? l.getBlockState(p).isAir() || ownedStore(l, owner, built) : terrain.opened(l, p, owner); }
+            @Override public boolean loaded(BlockPos p) { return terrain.openingLoaded(l,p,owner); }
+            @Override public boolean open(BlockPos p) { return p.equals(built.marker()) ? l.getBlockState(p).isAir() || ownedStore(l, owner, built) || terrain.openingIntact(l,p,owner) : terrain.openingIntact(l, p, owner); }
             @Override public boolean closed(BlockPos p) {
                 return l.getBlockState(p).isSolidRender() && l.getFluidState(p).isEmpty()
                     || built.room().equals(STORE) && Mining.get(l).opening(l,p,owner);

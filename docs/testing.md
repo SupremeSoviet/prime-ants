@@ -10,7 +10,7 @@ ticks, then check what the ants actually did.
 | Unit tests | rules and calculations without a world (JUnit) | 124 |
 | Model tests | the ant model's geometry and textures | 26 |
 | Fast in-game tests | short GameTests: founding, food, nursing, defence, saving | 78 |
-| Long in-game tests | whole stretches of colony life: growth, stages, chambers, mining, surface building, reloads | 311 |
+| Long in-game tests | whole stretches of colony life: growth, stages, chambers, mining, surface building, reloads | 319 |
 
 ## Running them
 
@@ -83,3 +83,22 @@ Both remain blocking; neither is qualified by the timeout rule.
 Live shell regressions compare the solid-and-dry predicate with separate world reads and cover waterlogged blocks,
 unavailable cells, fault order and repairs in the same tick. They complement the physical nursing, delivery and
 generated-colony tests, including pending legacy nursery initialization.
+
+`NestLightingGameTest` exercises all six supported light blocks, including both lantern mountings, in real
+worker-dug expansion space, a completed material chamber, a mined gallery and a genuinely generated nest. Each
+variant stays lit for 240 server ticks, crosses actual terrain SavedData disk readback and normal chunk serialization,
+then is removed without another dig. Terrain, opening, job, chamber and membership ledgers are read back from disk.
+The growing-colony case also reconstructs live actors and nursery/cache through
+their normal serializers while lit and observes physical nursing and identified brood progression. These checks are
+not a server-process restart. A separate actor follows an actual ground path around a lantern in an owned generated
+widening along requested alternate-route waypoints, with collision and floor height checked on every movement tick.
+Its original generated actors are parked outside with AI disabled to prevent crowding from interfering with this
+separate navigation actor; colony activity is verified by the growth and generated-nest cases.
+Entrance torches retain the original plug opening records. A light in the completed store's pending marker cell is
+left untouched until removed, after which ordinary store establishment resumes. Negative cases retain revoked ownership, actual pending
+excavation, wet-cell, shell, foreign-component and unavailable-cell protections. Geometry never repairs lost authority.
+Unavailable light supports remain UNKNOWN in habitat and occupancy checks; a loaded fault still wins over that uncertainty.
+
+Lighting growth fixtures declare finite supplies: ten apples and eight chicken for expansion; twelve apples and ten
+chicken for the chamber. The gallery uses the existing supplied progression fixture, capped at 2,048 apples, 1,024
+chicken and 56 clay. These cases do not establish autonomous material progression.

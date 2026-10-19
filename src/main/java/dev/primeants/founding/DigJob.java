@@ -59,7 +59,7 @@ public abstract class DigJob {
     public List<BlockPos> floors(){return tasks.stream().filter(p->p.getY()==home.entrance().getY()-2).toList();}
     public String problem(ServerLevel l,UUID owner){var r=new Findings();findings(l,owner,r);return r.problem();}
     /** A completed cell still opened by this colony's own worker: an authorized opening in a neighbouring shell. */
-    public boolean opening(ServerLevel l,BlockPos p,UUID owner){return completedCells.contains(p)&&ColonyTerrain.get(l).opened(l,p,owner);}
+    public boolean opening(ServerLevel l,BlockPos p,UUID owner){return completedCells.contains(p)&&ColonyTerrain.get(l).openingIntact(l,p,owner);}
     /** Records one successful worker removal, in plan order and below the cap. */
     public void removed(ServerLevel l,BlockPos p){
         if(removed()>=cap()||!tasks.get(removed()).equals(p))throw new IllegalStateException(label()+" order/cap");
@@ -89,7 +89,7 @@ public abstract class DigJob {
     /** An authorized opening of any of the colony's jobs. */
     public static boolean anyOpening(ServerLevel l,BlockPos p,UUID owner){
         if(owner==null)return false;
-        if(ColonyTerrain.get(l).generatedOpen(l,p,owner))return true;
+        if(ColonyTerrain.get(l).generatedOpeningIntact(l,p,owner))return true;
         var widening=NestExpansion.get(l).job(owner);if(widening!=null&&widening.opening(l,p,owner))return true;
         for(var j:ChamberExcavation.get(l).jobs(owner))if(j.opening(l,p,owner))return true;
         if(Mining.get(l).opening(l,p,owner))return true;

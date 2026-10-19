@@ -94,9 +94,10 @@ For multiplayer, install the mod and Fabric API on the server and on every clien
 - **Helping with materials.** Colonies need clay to grow: a Young colony needs 16 clay balls to become Mature, and it
   can't mine yet. Drop clay balls near a trail and foragers carry them to the material store. Stone chambers need
   smooth stone (cobblestone doesn't work). Gravel, sand and ore are welcome too.
-- **Visiting.** Once the workers open the entrance, walk down the two-block-high stairs. **Don't place torches or any
-  other blocks inside the nest**: right now that permanently damages it for the colony. A potion of night vision
-  helps you see.
+- **Visiting.** Once the workers open the entrance, walk down the two-block-high stairs. Supported dry torches,
+  soul torches and lanterns can light the colony's existing openings. Wall torches and standing or hanging lanterns
+  work too. Use lanterns in workers' added rooms or generated nest rooms, and leave a route around them: ants collide
+  with them.
 - **Manners.** Watching and feeding are welcome. Hitting ants or breaking their nest makes the workers bite (half a
   heart per bite).
 
@@ -105,8 +106,8 @@ More in the [player guide](docs/player-guide.md).
 ## ⚠️ Good to know
 
 - There is one species so far, *Lasius niger*.
-- **Don't build inside a nest.** A block you place in a cell the ants dug, even a torch, takes that cell from the
-  colony for good, and the colony stops raising brood. This is a known issue.
+- **Preserve the nest.** Solid blocks still revoke the colony's openings; removing them or placing a light does
+  not restore ownership. Lighting damage already saved in 0.2.0 also cannot recover automatically.
 - **Colonies rely on your clay and stone.** Without clay from players, wild colonies stay Young. Mature colonies need
   more clay for their upgrades, and stone chambers need smooth stone. Their own mining is a single short gallery.
 - Colonies are fully alive only while their chunks are loaded. When you return, a simplified

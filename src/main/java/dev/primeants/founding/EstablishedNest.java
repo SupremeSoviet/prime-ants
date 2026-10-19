@@ -37,14 +37,14 @@ public final class EstablishedNest extends SavedData {
     }
     public List<BlockPos> floors(ServerLevel l,UUID owner){
         var n=initial(owner);if(n==null)return List.of();var terrain=ColonyTerrain.get(l);
-        return n.space().stream().filter(p->p.getY()==n.home().entrance().getY()-2&&terrain.generatedOpen(l,p,owner)&&terrain.generatedOpen(l,p.above(),owner)&&NestPlan.walkable(l,p)).toList();
+        return n.space().stream().filter(p->p.getY()==n.home().entrance().getY()-2&&terrain.generatedOpeningIntact(l,p,owner)&&terrain.generatedOpeningIntact(l,p.above(),owner)&&NestPlan.walkable(l,p)).toList();
     }
     public void findings(ServerLevel l,UUID owner,Findings r){
         var n=initial(owner);if(n==null)return;var t=ColonyTerrain.get(l);
         var nursery=n.home().nursery();var cache=n.home().cache();
         var store=n.profile()==ColonyStage.MATURE?dev.primeants.worker.MaterialStore.marker(n.home(),"left"):null;
-        for(var p:n.space())if(r.cell(NestPlan.loaded(l,p),"generated_space_unavailable")&&!p.equals(nursery)&&!p.equals(cache)
-                &&!p.equals(store)&&!t.generatedOpen(l,p,owner))r.fault("generated_space_revoked_or_obstructed");
+        for(var p:n.space())if(r.cell(t.openingLoaded(l,p,owner),"generated_space_unavailable")&&!p.equals(nursery)&&!p.equals(cache)
+                &&!p.equals(store)&&!t.generatedOpeningIntact(l,p,owner))r.fault("generated_space_revoked_or_obstructed");
         for(var p:n.shell())if(r.cell(NestPlan.loaded(l,p),"generated_shell_unavailable")&&(!l.getBlockState(p).isSolidRender()||!l.getFluidState(p).isEmpty())&&!DigJob.anyOpening(l,p,owner))r.fault("generated_shell_open");
     }
 }

@@ -184,7 +184,7 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
     /** The chamber shell: every face is planned space, an authorized opening of the colony's own dig jobs, or solid. */
     private void enclosedChamber(ServerLevel level,java.util.UUID owner,Findings r,boolean footprint) {
         for(var n:shape().chamberShell()) {
-            if (!inside(level,n,footprint,r) || DigJob.anyOpening(level,n,owner)) continue;
+            if (!inside(level,n,footprint,r) || !r.cell(ColonyTerrain.get(level).openingLoaded(level,n,owner),"enclosure_chunk_unavailable") || DigJob.anyOpening(level,n,owner)) continue;
             if (!level.getBlockState(n).isSolidRender()) r.fault("enclosure_shell_open");
         }
     }
@@ -213,16 +213,16 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
             if (!loaded(level, at(f, s, -3))) { r.unavailable("enclosure_chunk_unavailable"); footprint = false; }
         var plugs = ColonyPlugs.get(level);
         // Plug availability must be checked before opened(): false can mean unavailable, not missing.
-        for (BlockPos p : plugs()) if (r.cell(loaded(level,p),"enclosure_chunk_unavailable")
+        for (BlockPos p : plugs()) if (r.cell(plugs.openingLoaded(level,p,owner),"enclosure_chunk_unavailable")
                 && !(operational && plugs.opened(level,p,owner)) && !ColonyPlugs.material(level.getBlockState(p))) r.fault("enclosure_plug_missing");
         if (operational) {
-            for (BlockPos p : plugs()) if (loaded(level,p) && !plugs.opened(level,p,owner) && !plugs.owned(level,p,owner)) r.fault("enclosure_plug_ownership_revoked");
+            for (BlockPos p : plugs()) if (plugs.openingLoaded(level,p,owner) && !plugs.opened(level,p,owner) && !plugs.owned(level,p,owner)) r.fault("enclosure_plug_ownership_revoked");
             // The route leaves the corner-checked footprint: an unloaded cell is unknown, never an observed obstruction.
             for (int f=0;f<2;f++) if (r.cell(loaded(level,at(f,0,-f)),"enclosure_chunk_unavailable") && !walkable(level,at(f,0,-f))) r.fault("enclosure_route_obstructed");
             if (plugs().stream().allMatch(p -> plugs.opened(level,p,owner)) && inside(level,at(2,0,-2),footprint,r) && !walkable(level,at(2,0,-2))) r.fault("enclosure_route_obstructed");
             // The recorded plugs are the only new opening. Retain the underground corridor's support/shell too.
             for (BlockPos p : undergroundSurfaces()) {
-                if (!r.cell(loaded(level,p),"enclosure_chunk_unavailable") || DigJob.anyOpening(level,p,owner)) continue;
+                if (!r.cell(ColonyTerrain.get(level).openingLoaded(level,p,owner),"enclosure_chunk_unavailable") || DigJob.anyOpening(level,p,owner)) continue;
                 if (!level.getBlockState(p).isSolidRender() || !level.getFluidState(p).isEmpty()) r.fault("enclosure_shell_open");
             }
         }
@@ -237,9 +237,15 @@ public record NestPlan(BlockPos entrance, Direction direction, List<BlockPos> ta
             boolean owned = p.equals(nursery()) && level.getBlockEntity(p) instanceof dev.primeants.brood.BroodPile pile
                     && pile.ownedBy(owner, this);
             owned |= p.equals(cache()) && level.getBlockEntity(p) instanceof dev.primeants.worker.NestCache cache && cache.ownedBy(owner, this);
-            if ((!traversable(level,p) && !owned) || !traversable(level,p.above())
-                    || !level.getBlockState(p.below()).isSolidRender() || !level.getFluidState(p).isEmpty()
-                    || !level.getFluidState(p.below()).isEmpty()) r.fault("enclosure_chamber_obstructed");
+            // Owned lighting affects integrity here; physical stands and body checks still use collision.
+            var terrain=ColonyTerrain.get(level);
+            if (r.cell(terrain.openingLoaded(level,p,owner),"enclosure_chunk_unavailable")
+                    && !traversable(level,p) && !owned && !terrain.openingIntact(level,p,owner)) r.fault("enclosure_chamber_obstructed");
+            if (r.cell(terrain.openingLoaded(level,p.above(),owner),"enclosure_chunk_unavailable")
+                    && !traversable(level,p.above()) && !terrain.openingIntact(level,p.above(),owner)) r.fault("enclosure_chamber_obstructed");
+            if (!level.getFluidState(p).isEmpty())r.fault("enclosure_chamber_obstructed");
+            if (r.cell(loaded(level,p.below()),"enclosure_chunk_unavailable")
+                    && (!level.getBlockState(p.below()).isSolidRender() || !level.getFluidState(p.below()).isEmpty())) r.fault("enclosure_chamber_obstructed");
         }
         return r;
     }

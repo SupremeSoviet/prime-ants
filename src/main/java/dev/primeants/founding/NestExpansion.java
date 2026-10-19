@@ -61,8 +61,8 @@ public final class NestExpansion extends SavedData {
         /** The planned footprint is guarded from planning on: every pending cell and the whole shell stay solid. */
         @Override public void findings(ServerLevel l,UUID owner,Findings r){
             for(var p:tasks){
-                if(!r.cell(NestPlan.loaded(l,p),"extension_chunk_unavailable"))continue;
-                if(completed.contains(p)){if(!ColonyTerrain.get(l).opened(l,p,owner))r.fault("extension_completed_opening_revoked");}
+                if(!r.cell(ColonyTerrain.get(l).openingLoaded(l,p,owner),"extension_chunk_unavailable"))continue;
+                if(completed.contains(p)){if(!ColonyTerrain.get(l).openingIntact(l,p,owner))r.fault("extension_completed_opening_revoked");}
                 else if(!l.getBlockState(p).isSolidRender()||!l.getFluidState(p).isEmpty())r.fault("extension_unauthorized_pending_breach");
             }
             for(var p:surfaces())if(r.cell(NestPlan.loaded(l,p),"extension_chunk_unavailable")&&(!l.getBlockState(p).isSolidRender()||!l.getFluidState(p).isEmpty()))
@@ -91,12 +91,13 @@ public final class NestExpansion extends SavedData {
         var target=j.tasks.get(j.removed());return j.usable(l,owner).stream().filter(p->Math.abs(p.getX()-target.getX())+Math.abs(p.getZ()-target.getZ())>1).toList();
     }
     /** A completed lower removal can temporarily fit an adult below its unchanged pending roof.
-     * This is physical body containment only; usable space/emergence still require two completed air cells. */
+     * This is physical body containment only; usable space/emergence still require two completed walkable cells. */
     public List<BlockPos> bodyFloors(ServerLevel l,UUID owner,double bodyTop){
         var j=job(owner);if(j==null||j.problem(l,owner)!=null)return List.of();var terrain=ColonyTerrain.get(l);
-        return j.floors().stream().filter(p->j.completed.contains(p)&&terrain.opened(l,p,owner)
+        // The caller checks the entire actual body with noCollision, including partial lantern shapes.
+        return j.floors().stream().filter(p->j.completed.contains(p)&&terrain.openingIntact(l,p,owner)
             &&l.getBlockState(p.below()).isSolidRender()&&l.getFluidState(p.below()).isEmpty()
-            &&(j.completed.contains(p.above())?terrain.opened(l,p.above(),owner)&&bodyTop<=p.getY()+2
+            &&(j.completed.contains(p.above())?terrain.openingIntact(l,p.above(),owner)&&bodyTop<=p.getY()+2
                 :bodyTop<=p.getY()+1&&terrain.compatible(l,p.above(),owner,j.expected.get(j.tasks.indexOf(p.above()))))).toList();
     }
     public void changed(){setDirty();}

@@ -13,6 +13,13 @@ All notable changes to Prime Ants are listed here. Versions follow [Semantic Ver
 
 - Corrected benchmark descriptions to reflect shared-machine measurements and the limits of nursing-phase activity.
 
+### Fixed
+
+- Supported dry torches, soul torches and lanterns now preserve the colony's existing openings, including wall
+  torches and standing or hanging lanterns. Removing a light leaves the original opening usable. Ants still collide
+  with lanterns. Lighting damage already saved by 0.2.0 cannot be repaired automatically; lost ownership cannot
+  safely be distinguished from a player's edits.
+
 ## [0.2.0] - 2026-10-18
 
 Colonies now grow past their first chambers: they move through four stages, dig and upgrade chambers, mine, build on
@@ -46,8 +53,6 @@ the surface and fortify, and they also exist ready-made in new terrain.
 
 ### Known issues
 
-- A block placed inside a nest, even a torch, takes that cell from the colony for good. The nest then counts as
-  damaged and the colony stops raising brood.
 - Colonies rely on players for clay and stone. Wild colonies cannot reach Mature without dropped clay, Mature
   colonies need 40–44 clay for their upgrades, and stone chambers need smooth stone, which mining does not produce.
 - Large colonies are expensive for the server. On a Ryzen 7 7700, one Great colony (120 adults) runs at about
