@@ -3443,6 +3443,62 @@
       "suite": "long",
       "weight_ticks": 200,
       "reason": "Two-owner legacy ground ordering across repeated codec and real SavedData disk roundtrips"
+    },
+    {
+      "name": "prime_ants_test:natural_clay_game_test_controlled_clay_young_colony_completes_tier_two_without_material_gifts",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NaturalClayGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Physical Young clay acquisition and all tier-two chambers without material gifts"
+    },
+    {
+      "name": "prime_ants_test:natural_clay_game_test_legacy_mining_jobs_keep_targets_order_claims_and_accounting_through_disk",
+      "max_ticks": 20,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NaturalClayGameTest.java",
+      "suite": "long",
+      "weight_ticks": 20,
+      "reason": "Legacy mining schema and normal SavedData disk compatibility before clay route acceptance"
+    },
+    {
+      "name": "prime_ants_test:natural_clay_game_test_ordinary_overworld_clay_census",
+      "max_ticks": 20000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NaturalClayGameTest.java",
+      "suite": "long",
+      "weight_ticks": 20000,
+      "reason": "Frozen genuinely generated Overworld resource census, original authority, same-state revocation and disk/chunk readback; no colony progression claim"
+    },
+    {
+      "name": "prime_ants_test:natural_clay_game_test_young_clay_cargo_survives_disk_and_actor_readback_then_death_releases_exactly_once",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NaturalClayGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Young physical clay custody, persistence and target authority regression"
+    },
+    {
+      "name": "prime_ants_test:natural_clay_game_test_young_clay_refuses_unavailable_fluid_unsafe_and_same_state_replacement_targets",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NaturalClayGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Young physical clay custody, persistence and target authority regression"
+    },
+    {
+      "name": "prime_ants_test:natural_clay_game_test_young_clay_miner_descends_on_supported_steps_and_delivers_deep_natural_units",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NaturalClayGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Clay-serving downward access uses physical supported faces and unchanged reach before Mature"
+    },
+    {
+      "name": "prime_ants_test:natural_clay_game_test_young_clay_miner_uses_physical_bank_access_and_keeps_cargo_through_disk_readback",
+      "max_ticks": 60000,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\NaturalClayGameTest.java",
+      "suite": "long",
+      "weight_ticks": 60000,
+      "reason": "Physical clay bank access with one-unit haul, actual disk readback, and an untouched foreign barrier"
     }
   ]
 }

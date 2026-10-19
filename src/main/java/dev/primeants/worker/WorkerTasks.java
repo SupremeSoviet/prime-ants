@@ -583,8 +583,19 @@ public final class WorkerTasks {
     /** Outside or on the stairs, a builder bound beyond the founding chamber first walks into the chamber, as returning
      * foragers do; from the chamber's floor the passage leads on. */
     private void approach(ServerLevel l,DigJob j,BlockPos stand){
+        if(j instanceof Mining.Job&&!j.viaFoundingChamber()
+            &&worker.blockPosition().getY()<plan.entrance().getY()+1&&homeAccess(worker.blockPosition())){
+            var delta=worker.position().subtract(Vec3.atBottomCenterOf(plan.entrance()));
+            double forward=delta.x*plan.direction().getStepX()+delta.z*plan.direction().getStepZ();
+            if(forward>3.25)insideWorkStand();else arriveSupported(l,Vec3.atBottomCenterOf(plan.outside()));return;
+        }
         if(j.viaFoundingChamber()&&worker.blockPosition().getY()>plan.entrance().getY()-2)arriveSupported(l,Vec3.atBottomCenterOf(plan.at(3,0,-2)));
         else arriveSupported(l,Vec3.atBottomCenterOf(stand));
+    }
+    /** Routing only: original stairs include cells whose openings are held by the plug ledger. */
+    private boolean homeAccess(BlockPos p){
+        int x=p.getX()-plan.entrance().getX(),z=p.getZ()-plan.entrance().getZ();var forward=plan.direction();var side=forward.getClockWise();
+        return NestWalls.OPENABLE.contains(new dev.primeants.founding.NestBlueprint.Cell(x*forward.getStepX()+z*forward.getStepZ(),x*side.getStepX()+z*side.getStepZ(),p.getY()-plan.entrance().getY()));
     }
     /** The claimed builder walks onto an open floor beside the marker cell and sets up the job's marker block. */
     private void setUpMarker(ServerLevel l,DigJob j,BlockPos marker){
@@ -746,18 +757,18 @@ public final class WorkerTasks {
             harvestingTicks=0;j.claim=null;j.reason="yielded_to_available_chamber_upgrade";j.changed(l);
             next(Phase.NURSE_CACHE,"empty_miner_yields_existing_upgrade_priority");return;
         }
-        if(!Mining.unlocked(l,plan)){harvestingTicks=0;hold("mining_stage_below_mature");return;}
+        if(!Mining.unlocked(l,plan,j)){harvestingTicks=0;hold("mining_stage_below_mature");return;}
         var target=j.tasks.get(j.removed());
         var problem=j.removalProblem(l,worker.queenId());
         if(problem!=null){harvestingTicks=0;if(problem.equals("mining_origin_or_state_revoked"))j.stop(l,problem);else{j.reason=problem;j.changed(l);}hold(problem);return;}
-        var stand=digStand(l,target);if(stand==null){harvestingTicks=0;hold("mining_no_supported_exposed_face");return;}
+        var stand=miningStand(l,target);if(stand==null){harvestingTicks=0;hold("mining_no_supported_exposed_face");return;}
         if(!worker.blockPosition().equals(stand)||!worker.onGround()||!miningReach(l,target)){harvestingTicks=0;approach(l,j,stand);return;}
-        worker.getNavigation().stop();worker.getLookControl().setLookAt(Vec3.atCenterOf(target));
+        worker.getNavigation().stop();worker.getLookControl().setLookAt(miningPoint(target,worker.blockPosition()));
         // A real twenty-loaded-tick work action at the actual supported face, then ALL commit guards again.
         reason="physical_mining_action";
         if(++harvestingTicks<20)return;
         harvestingTicks=0;
-        if(!miningAuthorized(l)||!Mining.unlocked(l,plan)||!NestPlan.walkable(l,stand)||!exposed(l,target,stand)
+        if(!miningAuthorized(l)||!Mining.unlocked(l,plan,j)||!NestPlan.walkable(l,stand)||!miningExposed(l,target,stand)
             ||!miningReach(l,target)||!worker.getMainHandItem().isEmpty()
             ||!l.isPositionEntityTicking(target)||!l.isPositionEntityTicking(worker.blockPosition())||!l.mayInteract(worker,target)
             ||j.removalProblem(l,worker.queenId())!=null)return;
@@ -768,9 +779,27 @@ public final class WorkerTasks {
         PrimeAnts.LOGGER.info("T09 MINING REMOVED queen={} worker={} target={} cargo={} removed={} delivered={} released={} position={}",worker.queenId(),worker.getUUID(),target,cargo,j.removed(),j.deposited,j.released,worker.position());
         next(Phase.DIG_OUT,"physical_mining_unit_to_destination");cooldown=QueenFounding.cadence();
     }
+    /** A descending step is dug from its neighbour's intact higher floor, with a ray to the exposed top face.
+     * The worker never removes its own support, crosses a fluid, or works outside the existing reach. */
+    private boolean miningExposed(ServerLevel l,BlockPos target,BlockPos feet){
+        if(exposed(l,target,feet))return true;
+        if(feet.getY()!=target.getY()+1||Math.abs(feet.getX()-target.getX())+Math.abs(feet.getZ()-target.getZ())!=1)return false;
+        var mouth=Vec3.atBottomCenterOf(feet).add(0,0.25,0);var point=miningPoint(target,feet);
+        var hit=l.clip(new ClipContext(mouth,point,ClipContext.Block.COLLIDER,ClipContext.Fluid.ANY,worker));
+        return mouth.distanceToSqr(point)<=5.0&&hit.getType()==HitResult.Type.BLOCK&&hit.getBlockPos().equals(target)&&hit.getDirection()==Direction.UP;
+    }
+    private BlockPos miningStand(ServerLevel l,BlockPos target){
+        var stands=java.util.stream.StreamSupport.stream(Direction.Plane.HORIZONTAL.spliterator(),false)
+            .flatMap(d->java.util.stream.IntStream.rangeClosed(-1,1).mapToObj(y->target.relative(d).offset(0,y,0)))
+            .filter(p->NestPlan.loaded(l,p)&&NestPlan.walkable(l,p)&&miningExposed(l,target,p))
+            .sorted(java.util.Comparator.comparingLong(BlockPos::asLong)).toList();
+        if(stands.contains(worker.blockPosition())&&worker.onGround()&&worker.position().distanceToSqr(Vec3.atCenterOf(target))<=5.0)return worker.blockPosition();
+        return stands.isEmpty()?null:stands.get((phaseTicks/100)%stands.size());
+    }
+    private static Vec3 miningPoint(BlockPos target,BlockPos feet){return Vec3.atCenterOf(target).add(0,feet.getY()==target.getY()+1?0.49:0,0);}
     private boolean miningReach(ServerLevel l,BlockPos target){
         if(!worker.onGround()||worker.isInWater()||worker.position().distanceToSqr(Vec3.atCenterOf(target))>5.0)return false;
-        var hit=l.clip(new ClipContext(worker.position().add(0,0.25,0),Vec3.atCenterOf(target),ClipContext.Block.COLLIDER,ClipContext.Fluid.ANY,worker));
+        var hit=l.clip(new ClipContext(worker.position().add(0,0.25,0),miningPoint(target,worker.blockPosition()),ClipContext.Block.COLLIDER,ClipContext.Fluid.ANY,worker));
         return hit.getType()==HitResult.Type.BLOCK&&hit.getBlockPos().equals(target);
     }
     private void miningStore(ServerLevel l,Mining.Job j){
@@ -778,7 +807,15 @@ public final class WorkerTasks {
         var store=MaterialStore.confirmed(l,worker.queenId(),plan);
         if(store==null){hold("mining_store_unconfirmed_cargo_retained");cooldown=40;return;}
         var target=Vec3.atBottomCenterOf(store.getBlockPos()).add(0,0.15,0);
-        if(!reaches(l,worker,target)){var stand=store.stand(l,worker);if(stand==null){hold("mining_store_stand_unavailable");return;}approach(l,j,stand);return;}
+        if(!reaches(l,worker,target)){
+            var stand=store.stand(l,worker);if(stand==null){hold("mining_store_stand_unavailable");return;}
+            if(!j.viaFoundingChamber()&&worker.blockPosition().getY()<plan.entrance().getY()+1
+                &&!homeAccess(worker.blockPosition())){
+                arriveSupported(l,Vec3.atBottomCenterOf(plan.outside()));return;
+            }
+            if(worker.blockPosition().getY()>plan.entrance().getY()-2)arriveSupported(l,Vec3.atBottomCenterOf(plan.at(3,0,-2)));
+            else arriveSupported(l,Vec3.atBottomCenterOf(stand));return;
+        }
         var delivered=cargo.copy();
         if(store.deposit(worker,plan)){
             j.delivered(l,delivered);PrimeAnts.LOGGER.info("T09 MINING DELIVERED queen={} worker={} store={} cargo={} deliveries={} stored={}",worker.queenId(),worker.getUUID(),store.getBlockPos(),delivered,j.deliveries(),store.contents());

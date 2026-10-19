@@ -10,7 +10,7 @@ ticks, then check what the ants actually did.
 | Unit tests | rules and calculations without a world (JUnit) | 124 |
 | Model tests | the ant model's geometry and textures | 26 |
 | Fast in-game tests | short GameTests: founding, food, nursing, defence, saving | 78 |
-| Long in-game tests | whole stretches of colony life: growth, stages, chambers, mining, surface building, reloads | 321 |
+| Long in-game tests | whole stretches of colony life: growth, stages, chambers, mining, surface building, reloads | 328 |
 
 ## Running them
 
@@ -122,3 +122,46 @@ twelve settled worker removals and soil deposits. The torch is never replaced to
 Lighting growth fixtures declare finite supplies: ten apples and eight chicken for expansion; twelve apples and ten
 chicken for the chamber. The gallery uses the existing supplied progression fixture, capped at 2,048 apples, 1,024
 chicken and 56 clay. These cases do not establish autonomous material progression.
+
+## Clay progression coverage
+
+`NaturalClayGameTest` starts an egg-founded colony with zero clay, observes its genuine Young stage, then lets normal
+workers and nursery evaluations promote it and rebuild every tier-two chamber in controlled geology. The material
+ledger compares original block positions, successful removals, named one-unit carriers, physical deliveries,
+dropped items, custody and distinct owned wall payments on every tick. Historical deliveries are separate from
+current stock. The nursery and food store share one chamber; overlapping room walls are paid once. The actual
+placement determines the recipe, and the promotion stock is reused.
+
+The fixture supplies only finite food items during play, capped at 1,000 apples and 500 raw chicken; logs record the
+actual amounts. This establishes independence from material gifts in that geology, with food assistance. Complete
+ordinary-world progression remains unproven.
+
+Companion cases cover a depth-four clay face, a physical bank route and its stair return, mid-haul SavedData disk
+readback and normal actor reconstruction, death into existing custody, unavailable targets, unsafe supports,
+fluids, same-state replacement and unowned terrain. The completed-colony case requires resumed supply during an
+actual upgrade material gap, exclusive claims, confirmed tier-two functions and subsequent settled evaluations.
+Existing full-store, material-hauling, surface scheduling and lighting cases retain their assertions and limits.
+No fallen-cargo pickup priority or nursery-loaded recovery deadline changes.
+
+The mining population-regression case uses the same balanced finite physical-food profile as its reload/death
+companion. Its older preparation could remain at 17 adults with funded stocks but insufficient rolling ingestion,
+never reaching the mining phase. The real growth, clay total, population-loss action, assertions and original
+60,000-tick limit remain unchanged; the fixture still earns nutrition only from ordinary dropped-food ingestion.
+
+Legacy compatibility checks 152 partial, completed and cargo-bearing gallery records across lengths 2–16 and all
+seven original mineral mappings, through actual SavedData disk readback. It retains the original implicit target
+order and exact metadata. Separate boundary records accept 64 cumulative edits and reject 66, an escaped radius
+and seventh-depth targets. Runtime worker cases also check the shared cap across branch append and readback.
+
+The independent native census uses a saved vanilla Overworld-noise site, seed `0`, chunk `(2048, 758)`, with the
+[frozen positions and hashes](../src/gametest/resources/dev/primeants/gametest/native-clay-seed-zero.json) declared
+before the accepted run. The fixture preserves 49 original FULL chunk payloads and their four original natural-origin
+SavedData files, captured after genuine generation and a normal save. It contains no colony blocks, entities, colony
+jobs or saved inventory entries. Two unopened vanilla loot-table references remain unchanged and unused. Hashes are
+verified before loading; an existing snapshot marker prevents reinstalling authority over later edits on restart.
+This avoids assuming identical feature placement across fresh server generations, which the diagnostic censuses
+did not establish. Its 80 × 80 census footprint and every read neighbour are loaded in a fixed 49-chunk FULL halo.
+It checks 284 generation-observed clay blocks and 134 with initially dry neighbours, then tests same-state
+revocation, disk readback and normal FULL decoding without regranting permission. A declared potential chamber
+layout has 31 initially dry units in its mining bounds for 40 distinct wall payments. This is resource availability
+and provenance evidence; it does not assert a completed ordinary-world colony episode or release readiness.

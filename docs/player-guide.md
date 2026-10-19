@@ -45,9 +45,12 @@ Once a colony has a material store, its foragers also carry home clay, stone, gr
 a trail, one item per trip. Colonies use these to upgrade chambers and build on the surface, and they depend on you
 for most of it:
 
-- A Young colony needs **16 clay balls** to become Mature, and it doesn't mine yet.
-- A Mature colony needs about **40 more clay balls** to rebuild its chambers in packed clay. It mines and builds on
-  the surface only after that.
+- A Young colony needs **16 clay balls** to become Mature. Workers can mine natural clay and permitted soil access
+  once their material store is confirmed; water, stone or unsafe ground can still block them.
+- Tier-two chambers need **40 or 44 clay units in total**, depending on placement and shared walls. The first 16
+  remain available for those walls, leaving 24 or 28 more to acquire. Nursery and food store share one physical room.
+- Complete clay progression is demonstrated in controlled geology with finite food assistance. A complete
+  ordinary-world run remains unproven, so dropped materials may still be needed. Surface work waits for tier two.
 - Stone chambers need **smooth stone**. Cobblestone counts towards the Great stage but can't be used for the walls.
 
 ### Visiting

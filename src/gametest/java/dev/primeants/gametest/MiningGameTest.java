@@ -478,7 +478,7 @@ public final class MiningGameTest {
     }
     @GameTest(maxTicks=60000,structure="prime_ants_test:idle_ground")
     public void realPopulationRegressionStopsNewMiningButAuthorizedCarriedUnitStillReachesStore(GameTestHelper c){
-        var player=new TierTwoFixture(40,true);var q=player.fx.start(c);boolean[] seeded={false},killed={false},delivered={false};long[] since={-1},restoredSince={-1},settled={-1};int[] evals={0};UUID[] miner={null};UnavailableCells[] hidden={null};ColonyDevelopment.Evaluation[] seen={null};
+        var player=new TierTwoFixture(40,true,TierTwoFixture.FeedingProfile.NATURAL_HALL_AFTER_CONSTRUCTION);var q=player.fx.start(c);boolean[] seeded={false},killed={false},delivered={false};long[] since={-1},restoredSince={-1},settled={-1};int[] evals={0};UUID[] miner={null};UnavailableCells[] hidden={null};ColonyDevelopment.Evaluation[] seen={null};
         String[] deliveryTransition={""};int[] previousDeposited={-1};
         c.onEachTick(()->{
             var l=c.getLevel();var plan=q.founding().plan();if(plan!=null&&!seeded[0]){geology(c,q);seeded[0]=true;}

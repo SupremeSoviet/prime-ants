@@ -400,7 +400,14 @@
     "prime_ants_test:nest_lighting_game_test_light_in_actual_pending_expansion_target_never_authorizes_removal_or_replacement",
     "prime_ants_test:nest_lighting_game_test_opened_entrance_torches_retain_plug_authority_and_never_repair_solid_revocation",
     "prime_ants_test:nest_lighting_game_test_generated_shell_worker_opening_preserves_unknown_lighting_support",
-    "prime_ants_test:surface_serialization_game_test_foreign_great_job_ground_order_survives_disk_roundtrips"
+    "prime_ants_test:surface_serialization_game_test_foreign_great_job_ground_order_survives_disk_roundtrips",
+    "prime_ants_test:natural_clay_game_test_controlled_clay_young_colony_completes_tier_two_without_material_gifts",
+    "prime_ants_test:natural_clay_game_test_legacy_mining_jobs_keep_targets_order_claims_and_accounting_through_disk",
+    "prime_ants_test:natural_clay_game_test_ordinary_overworld_clay_census",
+    "prime_ants_test:natural_clay_game_test_young_clay_cargo_survives_disk_and_actor_readback_then_death_releases_exactly_once",
+    "prime_ants_test:natural_clay_game_test_young_clay_refuses_unavailable_fluid_unsafe_and_same_state_replacement_targets",
+    "prime_ants_test:natural_clay_game_test_young_clay_miner_descends_on_supported_steps_and_delivers_deep_natural_units",
+    "prime_ants_test:natural_clay_game_test_young_clay_miner_uses_physical_bank_access_and_keeps_cargo_through_disk_readback"
   ],
   "cases": {
     "prime_ants_test:bootstrap_game_test_food_item_lifecycle": {
@@ -5154,6 +5161,69 @@
       ],
       "rotation": "NONE",
       "scope_namespace": "prime_ants_test:surface_serialization_game_test_foreign_great_job_ground_order_survives_disk_roundtrips:replica:0"
+    },
+    "prime_ants_test:natural_clay_game_test_controlled_clay_young_colony_completes_tier_two_without_material_gifts": {
+      "origin": [
+        -1098720,
+        6,
+        -1100000
+      ],
+      "rotation": "NONE",
+      "scope_namespace": "prime_ants_test:natural_clay_game_test_controlled_clay_young_colony_completes_tier_two_without_material_gifts:replica:0"
+    },
+    "prime_ants_test:natural_clay_game_test_legacy_mining_jobs_keep_targets_order_claims_and_accounting_through_disk": {
+      "origin": [
+        -1098592,
+        6,
+        -1100000
+      ],
+      "rotation": "NONE",
+      "scope_namespace": "prime_ants_test:natural_clay_game_test_legacy_mining_jobs_keep_targets_order_claims_and_accounting_through_disk:replica:0"
+    },
+    "prime_ants_test:natural_clay_game_test_ordinary_overworld_clay_census": {
+      "origin": [
+        -1098464,
+        6,
+        -1100000
+      ],
+      "rotation": "NONE",
+      "scope_namespace": "prime_ants_test:natural_clay_game_test_ordinary_overworld_clay_census:replica:0"
+    },
+    "prime_ants_test:natural_clay_game_test_young_clay_cargo_survives_disk_and_actor_readback_then_death_releases_exactly_once": {
+      "origin": [
+        -1098336,
+        6,
+        -1100000
+      ],
+      "rotation": "NONE",
+      "scope_namespace": "prime_ants_test:natural_clay_game_test_young_clay_cargo_survives_disk_and_actor_readback_then_death_releases_exactly_once:replica:0"
+    },
+    "prime_ants_test:natural_clay_game_test_young_clay_refuses_unavailable_fluid_unsafe_and_same_state_replacement_targets": {
+      "origin": [
+        -1098208,
+        6,
+        -1100000
+      ],
+      "rotation": "NONE",
+      "scope_namespace": "prime_ants_test:natural_clay_game_test_young_clay_refuses_unavailable_fluid_unsafe_and_same_state_replacement_targets:replica:0"
+    },
+    "prime_ants_test:natural_clay_game_test_young_clay_miner_descends_on_supported_steps_and_delivers_deep_natural_units": {
+      "origin": [
+        -1098080,
+        6,
+        -1100000
+      ],
+      "rotation": "NONE",
+      "scope_namespace": "prime_ants_test:natural_clay_game_test_young_clay_miner_descends_on_supported_steps_and_delivers_deep_natural_units:replica:0"
+    },
+    "prime_ants_test:natural_clay_game_test_young_clay_miner_uses_physical_bank_access_and_keeps_cargo_through_disk_readback": {
+      "origin": [
+        -1097952,
+        6,
+        -1100000
+      ],
+      "rotation": "NONE",
+      "scope_namespace": "prime_ants_test:natural_clay_game_test_young_clay_miner_uses_physical_bank_access_and_keeps_cargo_through_disk_readback:replica:0"
     }
   },
   "original_shards": [

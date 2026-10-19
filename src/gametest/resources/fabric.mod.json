@@ -18,7 +18,8 @@
       "dev.primeants.gametest.PlacementSettings",
       "dev.primeants.gametest.PlacementDiagnosticHarness",
       "dev.primeants.gametest.T27ReleaseHarness",
-      "dev.primeants.gametest.ReconciliationChunkGameTest"
+      "dev.primeants.gametest.ReconciliationChunkGameTest",
+      "dev.primeants.gametest.NativeClaySnapshot"
     ],
     "fabric-client-gametest": [
       "dev.primeants.gametest.AntModelGameTest",
@@ -85,7 +86,8 @@
       "dev.primeants.gametest.EstablishedGenerationGameTest",
       "dev.primeants.gametest.ValidationIndexGameTest",
       "dev.primeants.gametest.FiniteEnvironmentGameTest",
-      "dev.primeants.gametest.SurfaceSerializationGameTest"
+      "dev.primeants.gametest.SurfaceSerializationGameTest",
+      "dev.primeants.gametest.NaturalClayGameTest"
     ]
   },
   "depends": {

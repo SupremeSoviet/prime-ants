@@ -91,8 +91,9 @@ For multiplayer, install the mod and Fabric API on the server and on every clien
   first eggs.
 - **Feeding.** Drop apples or sweet berries (sugar) and raw chicken or rotten flesh (protein) near a trail, then step
   back at least four blocks. Foragers pick the food up and carry it home.
-- **Helping with materials.** Colonies need clay to grow: a Young colony needs 16 clay balls to become Mature, and it
-  can't mine yet. Drop clay balls near a trail and foragers carry them to the material store. Stone chambers need
+- **Helping with materials.** A Young colony needs 16 clay balls to become Mature. Its workers can collect safely
+  reachable natural clay once the material store is confirmed. Dropped clay still helps where geology blocks access.
+  Foragers carry it to the material store. Stone chambers need
   smooth stone (cobblestone doesn't work). Gravel, sand and ore are welcome too.
 - **Visiting.** Once the workers open the entrance, walk down the two-block-high stairs. Supported dry torches,
   soul torches and lanterns can light the colony's existing openings. Wall torches and standing or hanging lanterns
@@ -108,8 +109,9 @@ More in the [player guide](docs/player-guide.md).
 - There is one species so far, *Lasius niger*.
 - **Preserve the nest.** Solid blocks still revoke the colony's openings; removing them or placing a light does
   not restore ownership. Lighting damage already saved in 0.2.0 also cannot recover automatically.
-- **Colonies rely on your clay and stone.** Without clay from players, wild colonies stay Young. Mature colonies need
-  more clay for their upgrades, and stone chambers need smooth stone. Their own mining is a single short gallery.
+- **Material autonomy remains limited.** Clay progression and tier-two rooms pass controlled-geology tests with finite
+  food supplies. A complete ordinary-world progression run remains unproven. General mineral mining is still a short
+  gallery, and stone chambers need player-supplied smooth stone.
 - Colonies are fully alive only while their chunks are loaded. When you return, a simplified
   [catch-up](docs/catch-up.md) moves them forward by the time you were away.
 - **Large colonies are heavy on the server.** One Great colony with 120 ants runs at 20 TPS on a fast desktop CPU,

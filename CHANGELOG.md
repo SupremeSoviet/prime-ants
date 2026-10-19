@@ -6,6 +6,8 @@ All notable changes to Prime Ants are listed here. Versions follow [Semantic Ver
 
 ### Added
 
+- Permanent real-tick clay progression, hauling, provenance, bank access, depth and save compatibility tests,
+  with a frozen ordinary Overworld resource census.
 - Live shell validation regression covering solid dry, open, fluid and waterlogged blocks, fault order, unavailable
   cells and repairs within the same tick.
 
@@ -15,6 +17,11 @@ All notable changes to Prime Ants are listed here. Versions follow [Semantic Ver
 
 ### Fixed
 
+- Young colonies can physically acquire witnessed natural clay through permitted soil access. Clay supply resumes
+  when tier-two work lacks material, while active builders retain their cargo and claims. Each removed block yields
+  one unit, and every clay branch shares the colony's cumulative 64-block mining budget.
+- Legacy mining jobs retain their original target order, claims and accounting. New clay routes save explicit targets
+  and access cells. Complete ordinary-world clay progression remains unqualified.
 - Surface construction jobs now save consistently when several colonies share a world.
 - Supported dry torches, soul torches and lanterns now preserve the colony's existing openings, including wall
   torches and standing or hanging lanterns. Removing a light leaves the original opening usable. Ants still collide
