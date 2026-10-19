@@ -19,10 +19,16 @@ public final class NursingGameTest {
     long consumed(GameTestHelper c,LasiusNigerEntity q){var p=pile(c,q);return q.nutrition().consumedUnits()+(p==null?0:p.consumedFood())+AdultReceipts.consumed(c.getLevel(),q);}
     long total(GameTestHelper c,LasiusNigerEntity q){
         var n=fixture.cache(c,q);var plan=q.founding().plan();
-        long world=c.getLevel().getEntitiesOfClass(ItemEntity.class,c.getBounds().inflate(8),i->i.isAlive()&&WorkerTasks.food(i.getItem())).stream().mapToInt(i->i.getItem().getCount()).sum();
-        long carried=fixture.workers(c,q).stream().filter(w->WorkerTasks.food(w.getMainHandItem())).mapToInt(w->w.getMainHandItem().getCount()).sum();
-        long custody=TransferCustody.get(c.getLevel()).contents().stream().filter(p->WorkerTasks.food(p.stack())&&c.getBounds().inflate(8).contains(p.position())).mapToInt(p->p.stack().getCount()).sum();
-        return world+carried+custody+(n==null?0:n.size())+consumed(c,q);
+        var box=c.getBounds().inflate(8);
+        var ground=c.getLevel().getEntitiesOfClass(ItemEntity.class,box,i->i.isAlive()&&WorkerTasks.food(i.getItem()));
+        long world=ground.stream().mapToInt(i->i.getItem().getCount()).sum();
+        var workers=fixture.workers(c,q);
+        long carried=workers.stream().filter(w->WorkerTasks.food(w.getMainHandItem())).mapToInt(w->w.getMainHandItem().getCount()).sum();
+        var pending=TransferCustody.get(c.getLevel()).contents().stream().filter(p->WorkerTasks.food(p.stack())&&c.getBounds().inflate(8).contains(p.position())).toList();
+        long custody=pending.stream().mapToInt(p->p.stack().getCount()).sum();
+        long cache=n==null?0:n.size(),eaten=consumed(c,q),total=world+carried+custody+cache+eaten;
+        FoodLedgerObservation.capture(c,world,carried,custody,cache,eaten,total,box,ground,workers,pending);
+        return total;
     }
     record FoodSnapshot(long ground,long carried,long cache,long custody,long queen,long brood,long adults,long history,String identities){
         long total(){return ground+carried+cache+custody+queen+brood+adults+history;}

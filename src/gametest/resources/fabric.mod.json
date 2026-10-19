@@ -82,7 +82,8 @@
       "dev.primeants.gametest.CatchupRecoveryGameTest",
       "dev.primeants.gametest.CatchupLifecycleGameTest",
       "dev.primeants.gametest.EstablishedGenerationGameTest",
-      "dev.primeants.gametest.ValidationIndexGameTest"
+      "dev.primeants.gametest.ValidationIndexGameTest",
+      "dev.primeants.gametest.FiniteEnvironmentGameTest"
     ]
   },
   "depends": {

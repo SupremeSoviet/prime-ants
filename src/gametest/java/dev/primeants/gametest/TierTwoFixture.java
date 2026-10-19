@@ -213,7 +213,12 @@ final class TierTwoFixture {
     void ledgers(GameTestHelper c,LasiusNigerEntity q,DamagePause pause){
         if(pause!=null)pause.waiting(c,q);
         fx.soil(c,q);if(!opened)return;
-        c.assertTrue(fx.food.total(c,q)==apples+chickens,"Every physical food unit: "+fx.food.total(c,q)+" / "+(apples+chickens));
+        FoodLedgerObservation.begin(c,apples,chickens);
+        long observedFood=fx.food.total(c,q),expectedFood=apples+chickens;boolean foodBalanced=observedFood==expectedFood;
+        FoodLedgerObservation.finished(c,q,observedFood,expectedFood,foodBalanced,fx.food);
+        long messageFood=fx.food.total(c,q),messageExpected=apples+chickens;
+        FoodLedgerObservation.messageValue(c,q,messageFood,messageExpected,fx.food);
+        c.assertTrue(foodBalanced,"Every physical food unit: "+messageFood+" / "+messageExpected);
         c.assertTrue(foodUnits(c,q,Items.APPLE)==apples&&foodUnits(c,q,Items.CHICKEN)==chickens,"Independent apple/chicken ledgers: "+foodUnits(c,q,Items.APPLE)+"/"+apples+" "+foodUnits(c,q,Items.CHICKEN)+"/"+chickens);
         fx.food.yields(c,q);
         var mining=Mining.get(c.getLevel()).job(q.getUUID());long minedClay=mining==null?0:mining.produced("minecraft:clay_ball");

@@ -3355,6 +3355,14 @@
       "suite": "long",
       "weight_ticks": 2000,
       "reason": "Live physical shell predicates, first faults, unavailable cells and same-tick repair regression"
+    },
+    {
+      "name": "prime_ants_test:finite_environment_game_test_ambient_monsters_are_disabled_but_explicit_mobs_keep_vanilla_loot",
+      "max_ticks": 200,
+      "source": "src\\gametest\\java\\dev\\primeants\\gametest\\FiniteEnvironmentGameTest.java",
+      "suite": "fast",
+      "weight_ticks": 200,
+      "reason": "Finite fixture environment and genuine explicit mob death-loot regression"
     }
   ]
 }
